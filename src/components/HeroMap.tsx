@@ -248,13 +248,6 @@ const HeroMap = ({
                           selectedKpi === "kpi3.1" ? "Cycling Infrastructure" : 
                           "Sensor Data";
           const valueLabel = selectedKpi === "kpi1.2" ? " bikes" : 
-                            selectedKpi === "kpi3.1" ? "%" : 
-                            "%";
-          
-          const dataType = selectedKpi === "kpi1.2" ? "Bicycle Count" : 
-                          selectedKpi === "kpi3.1" ? "Cycling Infrastructure" : 
-                          "Sensor Data";
-          const valueLabel = selectedKpi === "kpi1.2" ? " bikes" : 
                             selectedKpi === "kpi3.1" ? "" : 
                             "%";
           
