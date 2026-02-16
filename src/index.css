@@ -1,0 +1,125 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ELAB Brand Design System - Colors from Brand Guidelines */
+
+@layer base {
+  :root {
+    /* ELAB Brand Colors (from Brand Guidelines PDF) */
+    --purple: 259 60% 27%; /* #2F1B6D - Primary Purple */
+    --violet: 231 89% 68%; /* #657DF5 - Violet */
+    --lavender: 256 33% 62%; /* #8578C3 - Lavender */
+    --blue: 206 74% 76%; /* #96C2EF - Blue */
+    --blue-light: 218 100% 91%; /* #D3E3FF - Light Blue */
+    --green: 132 66% 81%; /* #B0EDBA - Green */
+    
+    /* Base tokens */
+    --bg: 218 50% 97%; /* Very light blue-tinted background */
+    --card: 0 0% 100%; /* #FFFFFF */
+    --ink: 259 60% 27%; /* Purple for main text */
+    --black: 0 0% 0%;
+    --muted: 259 20% 55%;
+    --border: 218 30% 90%;
+
+    /* Semantic tokens */
+    --background: 218 50% 97%;
+    --foreground: 259 40% 20%;
+
+    --card-bg: 0 0% 100%;
+    --card-foreground: 259 40% 20%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 259 40% 20%;
+
+    --primary: 259 60% 27%; /* Purple */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 231 89% 68%; /* Violet */
+    --secondary-foreground: 0 0% 100%;
+
+    --accent: 132 66% 81%; /* Green */
+    --accent-foreground: 259 60% 20%;
+
+    --destructive: 0 76% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --muted-bg: 218 30% 95%;
+    --muted-foreground: 259 20% 50%;
+
+    --border-color: 218 30% 90%;
+    --input: 218 30% 90%;
+    --ring: 231 89% 68%;
+
+    --radius: 0.75rem;
+
+    /* ELAB Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(259, 60%, 27%) 0%, hsl(231, 89%, 68%) 100%);
+    --gradient-blue: linear-gradient(135deg, hsl(206, 74%, 76%) 0%, hsl(231, 89%, 68%) 100%);
+    --gradient-green: linear-gradient(135deg, hsl(132, 66%, 81%) 0%, hsl(206, 74%, 76%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsla(231, 89%, 68%, 0.15) 0%, hsla(132, 66%, 81%, 0.1) 100%);
+    --gradient-accent: linear-gradient(90deg, hsl(259, 60%, 27%), hsl(231, 89%, 68%), hsl(132, 66%, 81%));
+  }
+
+  .dark {
+    --bg: 259 30% 8%;
+    --card: 259 25% 12%;
+    --ink: 0 0% 95%;
+    --muted: 259 15% 60%;
+    --border: 259 20% 20%;
+    
+    --background: 259 30% 8%;
+    --foreground: 0 0% 95%;
+    --card-bg: 259 25% 12%;
+    --card-foreground: 0 0% 95%;
+    
+    --primary: 231 89% 68%;
+    --secondary: 132 66% 75%;
+    --accent: 206 74% 70%;
+    --border-color: 259 20% 20%;
+    --input: 259 20% 20%;
+    --ring: 231 89% 68%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border-color;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  }
+
+  .font-numbers {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-weight: 700;
+  }
+
+  /* Gradient utilities */
+  .gradient-primary {
+    background: var(--gradient-primary);
+  }
+
+  .gradient-blue {
+    background: var(--gradient-blue);
+  }
+
+  .gradient-green {
+    background: var(--gradient-green);
+  }
+
+  .gradient-hero {
+    background: var(--gradient-hero);
+  }
+
+  .gradient-accent {
+    background: var(--gradient-accent);
+    height: 3px;
+  }
+}
+
+/* Leaflet map styles */
+@import 'leaflet/dist/leaflet.css';
