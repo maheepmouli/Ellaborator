@@ -243,7 +243,6 @@ const HeroMap = ({
             opacity: 0.9,
           }).addTo(mapRef.current!);
 
-          const props = point.properties || {};
           const dataType = selectedKpi === "kpi1.2" ? "Bicycle Count" : 
                           selectedKpi === "kpi3.1" ? "Cycling Infrastructure" : 
                           "Sensor Data";
