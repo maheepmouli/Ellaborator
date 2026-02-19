@@ -105,10 +105,19 @@ const InsightPanel = ({
 
       {/* Main Stat */}
       <div className="px-5 py-4 bg-card/60">
-        <div className="flex items-end gap-2">
-          <span className="text-4xl font-bold text-foreground tracking-tight">{kpiValue.mainValue}</span>
-          <span className="text-lg text-muted-foreground mb-1">{kpiValue.unit}</span>
-          <div className={`flex items-center gap-1 mb-1 ml-auto px-2 py-1 rounded-lg ${isPositiveChange ? 'bg-green/20' : 'bg-red-500/20'} ${changeColor}`}>
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex flex-col">
+            <div className="flex items-baseline gap-2 mb-1">
+              <span className="text-4xl font-bold text-foreground tracking-tight">{kpiValue.mainValue}</span>
+              <span className="text-lg font-bold text-foreground">{kpiValue.unit}</span>
+            </div>
+            {isModeShare && (
+              <span className="text-[10px] text-muted-foreground/70 mt-0.5 leading-relaxed">
+                Share of sustainable transport modes
+              </span>
+            )}
+          </div>
+          <div className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg ${isPositiveChange ? 'bg-green/20' : 'bg-red-500/20'} ${changeColor} flex-shrink-0`}>
             <TrendIcon className="h-3 w-3" />
             <span className="text-xs font-bold">
               {isPositiveChange ? "+" : ""}
