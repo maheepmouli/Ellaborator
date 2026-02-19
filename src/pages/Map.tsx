@@ -5,30 +5,29 @@ import HeroMap from "@/components/HeroMap";
 import InsightPanel from "@/components/InsightPanel";
 import MapControls from "@/components/MapControls";
 import MapTour from "@/components/MapTour";
-import ScenarioPanel from "@/components/ScenarioPanel";
+import ComparisonPanel from "@/components/ComparisonPanel";
 
 type ViewLevel = "europe" | "city" | "detail";
 
 const Map = () => {
-  const [showTour, setShowTour] = useState(false);
+  // Start with the tour open when the map first loads
+  const [showTour, setShowTour] = useState(true);
   const [selectedCity, setSelectedCity] = useState("Milan");
   const [selectedKpi, setSelectedKpi] = useState("kpi1.2");
   const [filterRange, setFilterRange] = useState<[number, number]>([0, 100]);
+  const [selectedModeTypes, setSelectedModeTypes] = useState<string[]>([
+    "Pedestrian",
+    "Cycle",
+    "Public Transport",
+    "Private Car",
+    "PTW",
+  ]);
   const [mapRef, setMapRef] = useState<any>(null);
   const [viewLevel, setViewLevel] = useState<ViewLevel>("europe");
-  const [activeScenario, setActiveScenario] = useState<"baseline" | "intervention" | "comparison" | null>(null);
-
-  // Show tour on first map visit
-  useEffect(() => {
-    const hasSeenTour = localStorage.getItem("elaborator-map-tour-seen");
-    if (!hasSeenTour) {
-      setShowTour(true);
-    }
-  }, []);
+  const [isComparisonOpen, setIsComparisonOpen] = useState(false);
 
   const handleTourClose = () => {
     setShowTour(false);
-    localStorage.setItem("elaborator-map-tour-seen", "true");
   };
 
   const handleZoomIn = useCallback(() => {
@@ -38,10 +37,6 @@ const Map = () => {
   const handleZoomOut = useCallback(() => {
     mapRef?.zoomOut();
   }, [mapRef]);
-
-  const handleScenarioSelect = (scenario: "baseline" | "intervention" | "comparison") => {
-    setActiveScenario(activeScenario === scenario ? null : scenario);
-  };
 
   const handleViewLevelChange = (level: ViewLevel) => {
     setViewLevel(level);
@@ -82,6 +77,7 @@ const Map = () => {
           selectedCity={selectedCity}
           selectedKpi={selectedKpi}
           filterRange={filterRange}
+          selectedModeTypes={selectedModeTypes}
         />
       </motion.div>
 
@@ -98,8 +94,7 @@ const Map = () => {
             onCityChange={setSelectedCity}
             onKpiChange={setSelectedKpi}
             onRangeChange={setFilterRange}
-            onScenarioSelect={handleScenarioSelect}
-            activeScenario={activeScenario}
+            onModeTypesChange={setSelectedModeTypes}
           />
         </motion.div>
       )}
@@ -119,28 +114,28 @@ const Map = () => {
         </motion.div>
       )}
 
-      {/* Scenario Bottom Panel */}
-      {!showTour && activeScenario && showPanel && (
-        <ScenarioPanel
-          scenario={activeScenario}
+      {/* Comparison Panel - Sidebar */}
+      {!showTour && showPanel && (
+        <ComparisonPanel
           selectedCity={selectedCity}
           selectedKpi={selectedKpi}
-          onClose={() => setActiveScenario(null)}
+          isOpen={isComparisonOpen}
+          onToggle={() => setIsComparisonOpen(!isComparisonOpen)}
         />
       )}
 
       {/* Bottom Attribution */}
       <div
-        className={`absolute bottom-4 left-4 z-20 text-[10px] text-primary-foreground/80 bg-purple/70 backdrop-blur-xl px-3 py-1.5 rounded-lg border border-primary-foreground/10 transition-opacity ${
-          showTour || activeScenario ? "opacity-0" : "opacity-100"
+        className={`absolute left-4 bottom-4 z-20 text-[10px] text-primary-foreground/80 bg-purple/70 backdrop-blur-xl px-3 py-1.5 rounded-lg border border-primary-foreground/10 transition-opacity ${
+          showTour ? "opacity-0" : "opacity-100"
         }`}
       >
         2024 data: ELABORATOR Consortium · © OpenStreetMap contributors
       </div>
 
       {/* How to Use Button */}
-      {!showTour && !activeScenario && (
-        <div className="absolute bottom-4 right-4 z-20">
+      {!showTour && (
+        <div className={`absolute bottom-4 z-20 transition-all ${isComparisonOpen ? "right-[440px]" : "right-4"}`}>
           <button
             onClick={() => setShowTour(true)}
             className="text-xs font-medium text-primary-foreground bg-violet/80 backdrop-blur-xl px-4 py-2 rounded-lg border border-violet/30 hover:bg-violet transition-all shadow-lg"

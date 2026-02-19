@@ -10,7 +10,7 @@ import { bicycleCountingToSegments, bicycleCountingToHexbin } from "@/services/b
 import { useLatestCyclingInfrastructure } from "@/hooks/use-cycling-infrastructure";
 import { cyclingInfrastructureToSegments, cyclingInfrastructureToHexbin } from "@/services/cyclingInfrastructureApi";
 import { getVisualizationType, isSegmentVisualization, isPointVisualization, isAreaVisualization } from "@/lib/visualization-types";
-import { generateIsochrones, generateGridAreas, type MapArea } from "@/services/areaGenerator";
+import { generateIsochrones, generateGridAreas, generateEmissionZones, type MapArea } from "@/services/areaGenerator";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -29,6 +29,7 @@ interface HeroMapProps {
   selectedKpi?: string;
   scenario?: "baseline" | "intervention" | "comparison";
   filterRange?: [number, number];
+  selectedModeTypes?: string[];
 }
 
 const HeroMap = ({
@@ -39,6 +40,7 @@ const HeroMap = ({
   selectedKpi = "kpi1.2",
   scenario = "baseline",
   filterRange = [0, 100],
+  selectedModeTypes = ["Pedestrian", "Cycle", "Public Transport", "Private Car", "PTW"],
 }: HeroMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -46,6 +48,7 @@ const HeroMap = ({
   const circlesRef = useRef<L.CircleMarker[]>([]);
   const polylinesRef = useRef<L.Polyline[]>([]);
   const polygonsRef = useRef<L.Polygon[]>([]);
+  const cityBoundaryRef = useRef<L.Polygon | null>(null);
   const [viewLevel, setViewLevel] = useState<ViewLevel>("europe");
   const [currentCity, setCurrentCity] = useState<string | null>(null);
 
@@ -81,6 +84,41 @@ const HeroMap = ({
     polylinesRef.current = [];
     polygonsRef.current.forEach((p) => p.remove());
     polygonsRef.current = [];
+    if (cityBoundaryRef.current) {
+      cityBoundaryRef.current.remove();
+      cityBoundaryRef.current = null;
+    }
+  }, []);
+
+  // Add city boundary polygon
+  const addCityBoundary = useCallback((cityData: { lat: number; lon: number; city: string }) => {
+    if (!mapRef.current || cityBoundaryRef.current) return;
+
+    // Create a simple rectangular boundary around the city center
+    // For a more accurate boundary, you would use Overpass API or GeoJSON data
+    const boundarySize = 0.15; // ~15km radius
+    const boundary: [number, number][] = [
+      [cityData.lat - boundarySize, cityData.lon - boundarySize * 1.5],
+      [cityData.lat - boundarySize, cityData.lon + boundarySize * 1.5],
+      [cityData.lat + boundarySize, cityData.lon + boundarySize * 1.5],
+      [cityData.lat + boundarySize, cityData.lon - boundarySize * 1.5],
+    ];
+
+    cityBoundaryRef.current = L.polygon(boundary, {
+      fillColor: "#657DF5",
+      fillOpacity: 0.1,
+      color: "#657DF5",
+      weight: 2,
+      opacity: 0.5,
+      dashArray: "5, 5",
+    }).addTo(mapRef.current);
+
+    // Add popup
+    cityBoundaryRef.current.bindPopup(`
+      <div style="font-family: 'DM Sans', sans-serif; padding: 8px;">
+        <p style="font-size: 12px; font-weight: 600; color: #2F1B6D; margin: 0;">${cityData.city} Boundary</p>
+      </div>
+    `);
   }, []);
 
   const getValueColor = (value: number, isGradient: boolean = false, infrastructureType?: string) => {
@@ -120,67 +158,92 @@ const HeroMap = ({
   };
 
   const addHexbinData = useCallback(
-    (cityName: string) => {
+    (cityName: string, modeTypes?: string[]) => {
       if (!mapRef.current) return;
 
       const cityData = CITY_DATA.find((c) => c.city === cityName);
       if (!cityData) return;
 
+      // Add city boundary
+      addCityBoundary(cityData);
+
       const visualizationType = getVisualizationType(selectedKpi);
       const isIssy = cityName.toLowerCase().includes("issy");
 
-      // SEGMENTS VISUALIZATION (Lines) - for traffic/congestion/emissions
-      if (isSegmentVisualization(selectedKpi)) {
-        let segments: MapSegment[] | undefined;
-        
-        if (isIssy && trafficData?.results && trafficData.results.length > 0) {
-          segments = trafficSegmentsToSegments(trafficData.results, selectedKpi);
-        } else {
-          // Generate synthetic segments for other cities
-          const hexPoints = generateHexbinData(cityData, selectedKpi, 50);
-          segments = hexPoints.map((point, i) => {
-            // Create small segments around points
-            const offset = 0.001;
-            return {
-              id: `segment-${i}`,
-              coordinates: [
-                [point.lat - offset, point.lon - offset],
-                [point.lat + offset, point.lon + offset],
-              ],
-              value: point.value,
-            };
-          });
-        }
+      // Always show road segments with traffic data (50% opacity, gradient) when available
+      if (isIssy && trafficData?.results && trafficData.results.length > 0) {
+        const roadSegments = trafficSegmentsToSegments(trafficData.results, selectedKpi);
+        roadSegments.forEach((segment) => {
+          const color = getValueColor(segment.value, true); // Use gradient colors
+          const opacity = 0.5; // 50% opacity as requested
+          const weight = 3;
 
-        if (segments && segments.length > 0) {
-          segments.forEach((segment) => {
-            if (segment.value < filterRange[0] || segment.value > filterRange[1]) return;
+          const polyline = L.polyline(segment.coordinates, {
+            color: color,
+            weight: weight,
+            opacity: opacity,
+            lineJoin: "round",
+            lineCap: "round",
+          }).addTo(mapRef.current!);
 
-            const color = getValueColor(segment.value, true); // Use gradient colors
-            const opacity = 0.7;
-            const weight = 3; // Constant width for clean look
+          const props = segment.properties || {};
+          const popupContent = `
+            <div style="font-family: 'DM Sans', sans-serif; padding: 8px; min-width: 150px;">
+              <p style="font-size: 11px; color: #8578C3; margin: 0 0 4px 0; text-transform: uppercase;">Road Segment</p>
+              <p style="font-size: 18px; font-weight: bold; color: #2F1B6D; margin: 0 0 6px 0;">${segment.value.toFixed(1)}%</p>
+              ${props.vitesse_km_h ? `<p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Speed: ${props.vitesse_km_h.toFixed(1)} km/h</p>` : ''}
+              ${props.indice_de_congestion ? `<p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Congestion: ${(props.indice_de_congestion * 100).toFixed(1)}%</p>` : ''}
+              <p style="font-size: 9px; color: #96C2EF; margin-top: 6px;">Live traffic data</p>
+            </div>
+          `;
+          
+          polyline.bindPopup(popupContent);
+          polylinesRef.current.push(polyline);
+        });
+      }
 
-            const polyline = L.polyline(segment.coordinates, {
-              color: color,
-              weight: weight,
-              opacity: opacity,
-            }).addTo(mapRef.current!);
+      // SEGMENTS VISUALIZATION (Lines) - for traffic/congestion/emissions (only if not already shown above)
+      if (isSegmentVisualization(selectedKpi) && !(isIssy && trafficData?.results && trafficData.results.length > 0)) {
+        // Generate synthetic segments for other cities or when no traffic data
+        const hexPoints = generateHexbinData(cityData, selectedKpi, 50);
+        const segments = hexPoints.map((point, i) => {
+          // Create small segments around points
+          const offset = 0.001;
+          return {
+            id: `segment-${i}`,
+            coordinates: [
+              [point.lat - offset, point.lon - offset],
+              [point.lat + offset, point.lon + offset],
+            ],
+            value: point.value,
+          };
+        });
 
-            const props = segment.properties || {};
-            const popupContent = `
-              <div style="font-family: 'DM Sans', sans-serif; padding: 8px; min-width: 150px;">
-                <p style="font-size: 11px; color: #8578C3; margin: 0 0 4px 0; text-transform: uppercase;">Traffic Segment</p>
-                <p style="font-size: 18px; font-weight: bold; color: #2F1B6D; margin: 0 0 6px 0;">${segment.value.toFixed(1)}%</p>
-                ${props.vitesse_km_h ? `<p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Speed: ${props.vitesse_km_h.toFixed(1)} km/h</p>` : ''}
-                ${props.indice_de_congestion ? `<p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Congestion: ${(props.indice_de_congestion * 100).toFixed(1)}%</p>` : ''}
-                ${isIssy ? `<p style="font-size: 9px; color: #96C2EF; margin-top: 6px;">Live data</p>` : ''}
-              </div>
-            `;
-            
-            polyline.bindPopup(popupContent);
-            polylinesRef.current.push(polyline);
-          });
-        }
+        segments.forEach((segment) => {
+          if (segment.value < filterRange[0] || segment.value > filterRange[1]) return;
+
+          const color = getValueColor(segment.value, true); // Use gradient colors
+          const opacity = 0.5; // 50% opacity as requested
+          const weight = 4; // Slightly thicker for visibility with opacity
+
+          const polyline = L.polyline(segment.coordinates, {
+            color: color,
+            weight: weight,
+            opacity: opacity,
+            lineJoin: "round",
+            lineCap: "round",
+          }).addTo(mapRef.current!);
+
+          const popupContent = `
+            <div style="font-family: 'DM Sans', sans-serif; padding: 8px; min-width: 150px;">
+              <p style="font-size: 11px; color: #8578C3; margin: 0 0 4px 0; text-transform: uppercase;">Traffic Segment</p>
+              <p style="font-size: 18px; font-weight: bold; color: #2F1B6D; margin: 0 0 6px 0;">${segment.value.toFixed(1)}%</p>
+            </div>
+          `;
+          
+          polyline.bindPopup(popupContent);
+          polylinesRef.current.push(polyline);
+        });
       }
       // POINTS VISUALIZATION (Aggregated) - for counts/intensity/sensors
       else if (isPointVisualization(selectedKpi)) {
@@ -215,8 +278,17 @@ const HeroMap = ({
         const maxValue = Math.max(...values);
         const valueRange = maxValue - minValue || 1;
 
+        // Filter by mode types for Mode Share KPI
+        const shouldFilterByMode = selectedKpi === "kpi1.2" && selectedModeTypes && selectedModeTypes.length > 0;
+        
         points.forEach((point) => {
           if (point.value < filterRange[0] || point.value > filterRange[1]) return;
+          
+          // For Mode Share, filter based on selected mode types
+          // Since bicycle counting data represents cycling mode, only show if Cycle is selected
+          if (shouldFilterByMode && !selectedModeTypes.includes("Cycle")) {
+            return;
+          }
 
           const props = point.properties || {};
           // Use infrastructure type for color if available (KPI3.1)
@@ -271,7 +343,7 @@ const HeroMap = ({
           circlesRef.current.push(circle);
         });
       }
-      // AREAS VISUALIZATION (Polygons) - for accessibility/catchment/coverage
+      // AREAS VISUALIZATION (Polygons) - for accessibility/catchment/coverage/emissions
       else if (isAreaVisualization(selectedKpi)) {
         let areas: MapArea[] = [];
         const kpiValue = cityData.kpiData[selectedKpi]?.mainValue || 50;
@@ -282,29 +354,57 @@ const HeroMap = ({
         } else if (selectedKpi === "kpi2.1") {
           // Safety Stars - generate grid areas
           areas = generateGridAreas(cityData.lat, cityData.lon, 8, 1, kpiValue);
+        } else if (selectedKpi === "kpi3.2") {
+          // CO2 Emissions - generate emission zones/heat map
+          // Convert reduction percentage to emission intensity (inverse)
+          const emissionIntensity = 100 - (typeof kpiValue === 'number' ? kpiValue : parseFloat(String(kpiValue)));
+          areas = generateEmissionZones(cityData.lat, cityData.lon, emissionIntensity, 5);
         }
 
         areas.forEach((area) => {
           if (area.value < filterRange[0] || area.value > filterRange[1]) return;
 
-          const color = getValueColor(area.value);
-          const opacity = 0.15 + (area.value / 100) * 0.25; // Soft opacity for areas
+          // Special color scheme for CO2 emissions - red to green gradient
+          let color: string;
+          let opacity: number;
+          
+          if (selectedKpi === "kpi3.2") {
+            // CO2: Red (high emissions) to Green (low emissions)
+            if (area.value >= 80) color = "#E02020"; // High emissions - red
+            else if (area.value >= 60) color = "#F97316"; // Medium-high - orange
+            else if (area.value >= 40) color = "#FBBF24"; // Medium - yellow
+            else if (area.value >= 20) color = "#84CC16"; // Low-medium - light green
+            else color = "#10B981"; // Very low - green
+            opacity = 0.25 + (area.value / 100) * 0.3; // Higher opacity for higher emissions
+          } else {
+            color = getValueColor(area.value);
+            opacity = 0.15 + (area.value / 100) * 0.25; // Soft opacity for areas
+          }
 
           const polygon = L.polygon(area.coordinates, {
             fillColor: color,
             fillOpacity: opacity,
-            color: color,
-            weight: 1,
-            opacity: 0.6,
+            color: selectedKpi === "kpi3.2" ? color : color,
+            weight: selectedKpi === "kpi3.2" ? 2 : 1,
+            opacity: selectedKpi === "kpi3.2" ? 0.7 : 0.6,
           }).addTo(mapRef.current!);
 
           const props = area.properties || {};
           const popupContent = `
             <div style="font-family: 'DM Sans', sans-serif; padding: 8px; min-width: 150px;">
-              <p style="font-size: 11px; color: #8578C3; margin: 0 0 4px 0; text-transform: uppercase;">${selectedKpi === "kpi4.2" ? "Accessibility Zone" : "Safety Area"}</p>
-              <p style="font-size: 18px; font-weight: bold; color: #2F1B6D; margin: 0 0 6px 0;">${area.value.toFixed(1)}${selectedKpi === "kpi4.2" ? " score" : " ⭐"}</p>
-              ${props.radius ? `<p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Radius: ${props.radius} km</p>` : ''}
+              <p style="font-size: 11px; color: #8578C3; margin: 0 0 4px 0; text-transform: uppercase;">${
+                selectedKpi === "kpi4.2" ? "Accessibility Zone" : 
+                selectedKpi === "kpi2.1" ? "Safety Area" : 
+                selectedKpi === "kpi3.2" ? "Emission Zone" : "Area"
+              }</p>
+              <p style="font-size: 18px; font-weight: bold; color: #2F1B6D; margin: 0 0 6px 0;">${
+                selectedKpi === "kpi3.2" 
+                  ? `${area.value.toFixed(1)}% intensity` 
+                  : `${area.value.toFixed(1)}${selectedKpi === "kpi4.2" ? " score" : " ⭐"}`
+              }</p>
+              ${props.radius ? `<p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Radius: ${props.radius.toFixed(2)} km</p>` : ''}
               ${props.coverage ? `<p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Coverage: ${props.coverage.toFixed(1)}%</p>` : ''}
+              ${selectedKpi === "kpi3.2" ? `<p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Reduction: ${(100 - area.value).toFixed(1)}%</p>` : ''}
             </div>
           `;
           
@@ -313,7 +413,7 @@ const HeroMap = ({
         });
       }
     },
-    [selectedKpi, filterRange, trafficData, bicycleData]
+    [selectedKpi, filterRange, trafficData, bicycleData, selectedModeTypes, addCityBoundary]
   );
 
   const addCityMarkers = useCallback(() => {
@@ -389,11 +489,11 @@ const HeroMap = ({
         mapRef.current!.flyTo([city.lat, city.lon], 12, { duration: 1.2 });
         setTimeout(() => {
           clearLayers();
-          addHexbinData(city.city);
+          addHexbinData(city.city, selectedModeTypes);
         }, 800);
       });
     });
-  }, [clearLayers, onCitySelect, selectedKpi, addHexbinData]);
+  }, [clearLayers, onCitySelect, selectedKpi, addHexbinData, selectedModeTypes]);
 
   const resetToEurope = useCallback(() => {
     if (!mapRef.current) return;
@@ -414,18 +514,18 @@ const HeroMap = ({
         mapRef.current.flyTo([cityData.lat, cityData.lon], 12, { duration: 1.2 });
         setTimeout(() => {
           clearLayers();
-          addHexbinData(selectedCity);
+          addHexbinData(selectedCity, selectedModeTypes);
         }, 800);
       }
     }
-  }, [selectedCity, currentCity, clearLayers, addHexbinData]);
+  }, [selectedCity, currentCity, clearLayers, addHexbinData, selectedModeTypes]);
 
   useEffect(() => {
     if (viewLevel === "city" && currentCity && mapRef.current) {
       clearLayers();
-      addHexbinData(currentCity);
+      addHexbinData(currentCity, selectedModeTypes);
     }
-  }, [selectedKpi, filterRange, viewLevel, currentCity, clearLayers, addHexbinData, trafficData, bicycleData, cyclingInfrastructureData]);
+  }, [selectedKpi, filterRange, viewLevel, currentCity, clearLayers, addHexbinData, trafficData, bicycleData, cyclingInfrastructureData, selectedModeTypes]);
 
   useEffect(() => {
     if (!mapContainer.current || mapRef.current) return;

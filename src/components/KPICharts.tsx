@@ -10,8 +10,19 @@ interface KPIChartProps {
 // Stacked bar chart for Mode Share (KPI 1.2)
 export const ModeShareChart = ({ data, cityName }: { data: KPIValue; cityName: string }) => {
   const breakdown = data.breakdown || {};
-  const categories = Object.keys(breakdown);
-  const values = Object.values(breakdown);
+  // Always show all 5 modes in order: Pedestrian, Cycle, Public Transport, Private Car, PTW
+  const allModes = ["Pedestrian", "Cycle", "Public Transport", "Private Car", "PTW"];
+  const categories = allModes;
+  const values = allModes.map(mode => breakdown[mode] || 0);
+  
+  // Color mapping for each mode
+  const modeColors: Record<string, string> = {
+    "Pedestrian": "#B0EDBA",      // Light green
+    "Cycle": "#96C2EF",            // Light blue
+    "Public Transport": "#657DF5", // Blue
+    "Private Car": "#8578C3",      // Purple
+    "PTW": "#2F1B6D",              // Dark purple
+  };
 
   const option = {
     tooltip: {
@@ -39,7 +50,7 @@ export const ModeShareChart = ({ data, cityName }: { data: KPIValue; cityName: s
         data: values.map((v, i) => ({
           value: v,
           itemStyle: {
-            color: ["#B0EDBA", "#96C2EF", "#657DF5", "#8578C3", "#2F1B6D"][i % 5],
+            color: modeColors[categories[i]] || "#96C2EF",
             borderRadius: [0, 4, 4, 0],
           },
         })),
@@ -47,7 +58,7 @@ export const ModeShareChart = ({ data, cityName }: { data: KPIValue; cityName: s
         label: {
           show: true,
           position: "right",
-          formatter: "{c}%",
+          formatter: (params: any) => params.value > 0 ? `${params.value}%` : "",
           fontSize: 10,
           color: "#2F1B6D",
         },
@@ -142,18 +153,28 @@ export const InfrastructureBarChart = ({ data }: { data: KPIValue }) => {
   return <ReactECharts option={option} style={{ height: "200px", width: "100%" }} />;
 };
 
-// Line chart for Emissions (KPI 3.2)
+// Area chart with gradient for Emissions (KPI 3.2) - More suitable for CO2 visualization
 export const EmissionsLineChart = ({ data }: { data: KPIValue }) => {
   const timeSeries = data.timeSeries || [];
   const years = timeSeries.map((t) => t.year.toString());
   const values = timeSeries.map((t) => t.value);
 
+  // Calculate reduction percentage (inverse of value since lower is better)
+  const reductionValues = values.map(v => 100 - v);
+
   const option = {
     tooltip: {
       trigger: "axis",
-      formatter: (params: any) => `${params[0].name}: ${params[0].value}% of baseline`,
+      formatter: (params: any) => {
+        const value = params[0].value;
+        const reduction = 100 - value;
+        return `${params[0].name}: ${value}% of baseline<br/>Reduction: ${reduction.toFixed(1)}%`;
+      },
+      backgroundColor: "rgba(47, 27, 109, 0.9)",
+      borderColor: "#657DF5",
+      textStyle: { color: "#fff" },
     },
-    grid: { left: "3%", right: "4%", bottom: "3%", top: "15%", containLabel: true },
+    grid: { left: "3%", right: "4%", bottom: "3%", top: "10%", containLabel: true },
     xAxis: {
       type: "category",
       data: years,
@@ -173,23 +194,54 @@ export const EmissionsLineChart = ({ data }: { data: KPIValue }) => {
         data: values,
         smooth: true,
         symbol: "circle",
-        symbolSize: 8,
-        lineStyle: { color: "#2F1B6D", width: 3 },
-        itemStyle: { color: "#2F1B6D", borderColor: "#fff", borderWidth: 2 },
+        symbolSize: 10,
+        lineStyle: { 
+          color: "#10B981", 
+          width: 3,
+          shadowBlur: 4,
+          shadowColor: "rgba(16, 185, 129, 0.3)",
+        },
+        itemStyle: { 
+          color: "#10B981", 
+          borderColor: "#fff", 
+          borderWidth: 2,
+          shadowBlur: 4,
+          shadowColor: "rgba(16, 185, 129, 0.5)",
+        },
         areaStyle: {
           color: {
             type: "linear",
             x: 0, y: 0, x2: 0, y2: 1,
             colorStops: [
-              { offset: 0, color: "#657DF540" },
-              { offset: 1, color: "#657DF505" },
+              { offset: 0, color: "rgba(16, 185, 129, 0.4)" }, // Green at top
+              { offset: 0.5, color: "rgba(101, 125, 245, 0.3)" }, // Purple in middle
+              { offset: 1, color: "rgba(16, 185, 129, 0.1)" }, // Light green at bottom
             ],
           },
         },
         markLine: {
           data: [{ yAxis: 100, name: "Baseline" }],
-          lineStyle: { color: "#8578C3", type: "dashed" },
-          label: { formatter: "Baseline", fontSize: 9 },
+          lineStyle: { color: "#E02020", type: "dashed", width: 2 },
+          label: { 
+            formatter: "Baseline", 
+            fontSize: 9,
+            color: "#E02020",
+            backgroundColor: "rgba(224, 32, 32, 0.1)",
+            padding: [2, 4],
+          },
+        },
+        markArea: {
+          itemStyle: {
+            color: {
+              type: "linear",
+              x: 0, y: 0, x2: 0, y2: 1,
+              colorStops: [
+                { offset: 0, color: "rgba(16, 185, 129, 0.15)" },
+                { offset: 1, color: "rgba(16, 185, 129, 0.05)" },
+              ],
+            },
+          },
+          data: [[{ yAxis: 100 }, { yAxis: Math.min(...values) }]],
         },
       },
     ],

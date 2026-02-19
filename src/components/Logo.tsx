@@ -1,5 +1,3 @@
-import elaboratorLogo from "@/assets/elaborator-logo-new.png";
-
 interface LogoProps {
   className?: string;
 }
@@ -7,7 +5,7 @@ interface LogoProps {
 const Logo = ({ className = "h-10" }: LogoProps) => {
   return (
     <img 
-      src={elaboratorLogo} 
+      src="/Elaborator Logo RGB - Colour 1 - Inverted.png" 
       alt="ELABORATOR" 
       className={`${className} w-auto`}
     />

@@ -20,7 +20,7 @@ export interface KPIVisualizationConfig {
  */
 export const KPI_VISUALIZATION_MAP: Record<string, VisualizationType> = {
   // Segments (Lines) - Network-based mobility data
-  "kpi3.2": "segments", // CO₂ & Emissions - traffic flows on road network
+  // "kpi3.2": "segments", // CO₂ & Emissions - now using areas for heat map visualization
   
   // Points (Aggregated) - Location-based counts/intensity
   "kpi1.2": "points", // Mode Share - bicycle/traffic counts at sensors
@@ -28,6 +28,7 @@ export const KPI_VISUALIZATION_MAP: Record<string, VisualizationType> = {
   "kpi4.1": "points", // Satisfaction - survey points
   
   // Areas (Polygons/Grids) - Spatial coverage
+  "kpi3.2": "areas", // CO₂ & Emissions - emission zones/heat maps
   "kpi4.2": "areas", // Accessibility - catchment areas/isochrones
   "kpi2.1": "areas", // Safety Stars - area-based safety ratings
 };

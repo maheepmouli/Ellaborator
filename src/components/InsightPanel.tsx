@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ChevronDown, TrendingUp, TrendingDown } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -17,8 +18,7 @@ interface InsightPanelProps {
   onCityChange: (city: string) => void;
   onKpiChange: (kpi: string) => void;
   onRangeChange: (range: [number, number]) => void;
-  onScenarioSelect: (scenario: "baseline" | "intervention" | "comparison") => void;
-  activeScenario: "baseline" | "intervention" | "comparison" | null;
+  onModeTypesChange?: (modeTypes: string[]) => void;
 }
 
 const InsightPanel = ({
@@ -27,10 +27,16 @@ const InsightPanel = ({
   onCityChange,
   onKpiChange,
   onRangeChange,
-  onScenarioSelect,
-  activeScenario,
+  onModeTypesChange,
 }: InsightPanelProps) => {
   const [range, setRange] = useState<[number, number]>([0, 100]);
+  const [selectedModeTypes, setSelectedModeTypes] = useState<string[]>([
+    "Pedestrian",
+    "Cycle",
+    "Public Transport",
+    "Private Car",
+    "PTW",
+  ]);
 
   const cityData = CITY_DATA.find((c) => c.city === selectedCity);
   const kpiDef = ELABORATOR_KPIS.find((k) => k.id === selectedKpi);
@@ -41,6 +47,19 @@ const InsightPanel = ({
     setRange(newRange);
     onRangeChange(newRange);
   };
+
+  const handleModeTypeToggle = (modeType: string) => {
+    const newSelected = selectedModeTypes.includes(modeType)
+      ? selectedModeTypes.filter((m) => m !== modeType)
+      : [...selectedModeTypes, modeType];
+    setSelectedModeTypes(newSelected);
+    onModeTypesChange?.(newSelected);
+  };
+
+  const isModeShare = selectedKpi === "kpi1.2";
+  const modeTypes = isModeShare && kpiValue?.breakdown
+    ? Object.keys(kpiValue.breakdown)
+    : [];
 
   if (!kpiDef || !kpiValue) return null;
 
@@ -83,28 +102,6 @@ const InsightPanel = ({
         </Select>
       </div>
 
-      {/* Scenario Toggle */}
-      <div className="px-4 py-3 bg-card/40 border-b border-border-color/30">
-        <div className="flex bg-muted-bg/60 rounded-lg p-0.5">
-          {[
-            { id: "baseline", label: "Baseline" },
-            { id: "intervention", label: "Intervention" },
-            { id: "comparison", label: "Comparison" },
-          ].map((s) => (
-            <button
-              key={s.id}
-              onClick={() => onScenarioSelect(s.id as "baseline" | "intervention" | "comparison")}
-              className={`flex-1 px-2 py-1.5 text-[10px] font-semibold rounded-md transition-all duration-200 ${
-                activeScenario === s.id
-                  ? "bg-violet text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {s.label}
-            </button>
-          ))}
-        </div>
-      </div>
 
       {/* Main Stat */}
       <div className="px-5 py-4 bg-card/60">
@@ -127,8 +124,45 @@ const InsightPanel = ({
         <KPIChart kpiId={selectedKpi} data={kpiValue} cityName={selectedCity} />
       </div>
 
-      {/* Distribution Filter (for applicable KPIs) */}
-      {kpiValue.distribution && (
+      {/* Mode Type Filter (for Mode Share KPI) */}
+      {isModeShare && (
+        <div className="px-4 py-3 bg-card/60">
+          <span className="text-xs font-semibold text-foreground mb-3 block">Filter by mode type</span>
+          
+          <div className="space-y-2">
+            {[
+              "Pedestrian",
+              "Cycle",
+              "Public Transport",
+              "Private Car",
+              "PTW"
+            ].map((modeType) => {
+              const isSelected = selectedModeTypes.includes(modeType);
+              const value = kpiValue?.breakdown?.[modeType] || 0;
+              return (
+                <div
+                  key={modeType}
+                  className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted-bg/60 transition-colors cursor-pointer"
+                  onClick={() => handleModeTypeToggle(modeType)}
+                >
+                  <Checkbox
+                    checked={isSelected}
+                    onCheckedChange={() => handleModeTypeToggle(modeType)}
+                    className="data-[state=checked]:bg-violet data-[state=checked]:border-violet"
+                  />
+                  <div className="flex-1 flex items-center justify-between">
+                    <span className="text-xs text-foreground font-medium">{modeType}</span>
+                    <span className="text-xs text-muted-foreground">{value}%</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Distribution Filter (for other KPIs) */}
+      {!isModeShare && kpiValue.distribution && (
         <div className="px-4 py-3 bg-card/60">
           <span className="text-xs font-semibold text-foreground mb-2 block">Filter by range</span>
 

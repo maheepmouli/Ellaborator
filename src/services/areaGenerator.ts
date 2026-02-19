@@ -108,6 +108,55 @@ export function generateGridAreas(
 }
 
 /**
+ * Generate emission zones/heat map areas for CO2 visualization
+ * Creates gradient zones showing emission intensity
+ */
+export function generateEmissionZones(
+  centerLat: number,
+  centerLon: number,
+  baseValue: number,
+  numZones: number = 5
+): MapArea[] {
+  const zones: MapArea[] = [];
+  const zoneRadii = [0.05, 0.08, 0.12, 0.16, 0.20]; // km radii for concentric zones
+  
+  for (let i = 0; i < numZones && i < zoneRadii.length; i++) {
+    const radius = zoneRadii[i];
+    const points: [number, number][] = [];
+    const numPoints = 64; // Smooth circle
+    
+    for (let j = 0; j < numPoints; j++) {
+      const angle = (j / numPoints) * 2 * Math.PI;
+      // Convert km to degrees (approximate: 1km ≈ 0.009 degrees)
+      const latOffset = (radius * Math.cos(angle)) * 0.009;
+      const lonOffset = (radius * Math.sin(angle)) * 0.009 / Math.cos(centerLat * Math.PI / 180);
+      
+      points.push([centerLat + latOffset, centerLon + lonOffset]);
+    }
+    
+    // Close the polygon
+    points.push(points[0]);
+    
+    // Higher emission values closer to center (traffic-heavy areas)
+    // Outer zones have lower emissions
+    const emissionIntensity = baseValue * (1 - i * 0.15);
+    
+    zones.push({
+      id: `emission-zone-${i}`,
+      coordinates: points,
+      value: Math.max(20, emissionIntensity), // Minimum 20% for visibility
+      properties: {
+        type: "emission",
+        radius,
+        coverage: (1 - i * 0.15) * 100,
+      },
+    });
+  }
+  
+  return zones;
+}
+
+/**
  * Generate catchment areas from segments
  * Creates buffer zones around road segments
  */
