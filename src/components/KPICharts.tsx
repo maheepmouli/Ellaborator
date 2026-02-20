@@ -58,7 +58,7 @@ export const ModeShareChart = ({ data, cityName }: { data: KPIValue; cityName: s
         label: {
           show: true,
           position: "right",
-          formatter: (params: any) => params.value > 0 ? `${params.value}%` : "",
+          formatter: (params: any) => params.value > 0 ? `${Number(params.value).toFixed(1)}%` : "",
           fontSize: 10,
           color: "#2F1B6D",
         },
