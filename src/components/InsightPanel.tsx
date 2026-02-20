@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { ELABORATOR_KPIS, CITY_DATA, KPIValue } from "@/data/kpiDefinitions";
 import KPIChart from "./KPICharts";
 
@@ -37,6 +38,7 @@ const InsightPanel = ({
     "Private Car",
     "PTW",
   ]);
+  const [scenario, setScenario] = useState<"baseline" | "intervention">("intervention");
 
   const cityData = CITY_DATA.find((c) => c.city === selectedCity);
   const kpiDef = ELABORATOR_KPIS.find((k) => k.id === selectedKpi);
@@ -62,6 +64,66 @@ const InsightPanel = ({
     : [];
 
   if (!kpiDef || !kpiValue) return null;
+
+  // Calculate baseline values
+  const getBaselineValue = (interventionValue: number, change: number): number => {
+    return Math.max(0, interventionValue - change);
+  };
+
+  const getBaselineBreakdown = (breakdown: Record<string, number> | undefined, change: number): Record<string, number> | undefined => {
+    if (!breakdown) return undefined;
+    const baselineBreakdown: Record<string, number> = {};
+    
+    // For mode share, sustainable modes are Pedestrian, Cycle, Public Transport
+    const sustainableModes = ["Pedestrian", "Cycle", "Public Transport"];
+    const nonSustainableModes = ["Private Car", "PTW"];
+    
+    // Calculate baseline: reduce sustainable modes, increase non-sustainable modes
+    Object.keys(breakdown).forEach((mode) => {
+      const interventionValue = breakdown[mode];
+      if (sustainableModes.includes(mode)) {
+        // Reduce sustainable modes proportionally
+        const totalSustainable = sustainableModes.reduce((sum, m) => sum + (breakdown[m] || 0), 0);
+        if (totalSustainable > 0) {
+          const proportion = interventionValue / totalSustainable;
+          const baselineSustainableTotal = Math.max(0, totalSustainable - change);
+          baselineBreakdown[mode] = Math.max(0, baselineSustainableTotal * proportion);
+        } else {
+          baselineBreakdown[mode] = 0;
+        }
+      } else if (nonSustainableModes.includes(mode)) {
+        // Increase non-sustainable modes proportionally to maintain 100% total
+        const totalNonSustainable = nonSustainableModes.reduce((sum, m) => sum + (breakdown[m] || 0), 0);
+        if (totalNonSustainable > 0) {
+          const proportion = interventionValue / totalNonSustainable;
+          const baselineNonSustainableTotal = totalNonSustainable + change;
+          baselineBreakdown[mode] = Math.max(0, baselineNonSustainableTotal * proportion);
+        } else {
+          baselineBreakdown[mode] = interventionValue;
+        }
+      } else {
+        baselineBreakdown[mode] = interventionValue;
+      }
+    });
+    
+    return baselineBreakdown;
+  };
+
+  // Get current scenario values
+  const currentMainValue = scenario === "baseline" 
+    ? getBaselineValue(Number(kpiValue.mainValue), kpiValue.change)
+    : Number(kpiValue.mainValue);
+  
+  const currentBreakdown = scenario === "baseline"
+    ? getBaselineBreakdown(kpiValue.breakdown, kpiValue.change)
+    : kpiValue.breakdown;
+
+  // Create a modified KPI value for the chart
+  const currentKpiValue: KPIValue = {
+    ...kpiValue,
+    mainValue: currentMainValue,
+    breakdown: currentBreakdown,
+  };
 
   const isPositiveChange = kpiValue.change > 0;
   const changeColor = isPositiveChange ? "text-green" : "text-red-500";
@@ -103,12 +165,41 @@ const InsightPanel = ({
       </div>
 
 
+      {/* Scenario Toggle */}
+      <div className="px-5 pt-4 pb-2">
+        <ToggleGroup
+          type="single"
+          value={scenario}
+          onValueChange={(value) => {
+            if (value === "baseline" || value === "intervention") {
+              setScenario(value);
+            }
+          }}
+          className="w-full"
+        >
+          <ToggleGroupItem
+            value="baseline"
+            aria-label="Baseline"
+            className="flex-1 data-[state=on]:bg-violet/20 data-[state=on]:text-violet data-[state=on]:border-violet border border-border-color/30"
+          >
+            Baseline
+          </ToggleGroupItem>
+          <ToggleGroupItem
+            value="intervention"
+            aria-label="Intervention"
+            className="flex-1 data-[state=on]:bg-violet/20 data-[state=on]:text-violet data-[state=on]:border-violet border border-border-color/30"
+          >
+            Intervention
+          </ToggleGroupItem>
+        </ToggleGroup>
+      </div>
+
       {/* Main Stat */}
       <div className="px-5 py-4 bg-card/60">
         <div className="flex items-start justify-between gap-3">
           <div className="flex flex-col">
             <div className="flex items-baseline gap-2 mb-1">
-              <span className="text-4xl font-bold text-foreground tracking-tight">{kpiValue.mainValue}</span>
+              <span className="text-4xl font-bold text-foreground tracking-tight">{currentMainValue}</span>
               <span className="text-lg font-bold text-foreground">{kpiValue.unit}</span>
             </div>
             {isModeShare && (
@@ -117,26 +208,28 @@ const InsightPanel = ({
               </span>
             )}
           </div>
-          <div className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg ${isPositiveChange ? 'bg-green/20' : 'bg-red-500/20'} ${changeColor} flex-shrink-0`}>
-            <TrendIcon className="h-3 w-3" />
-            <span className="text-xs font-bold">
-              {isPositiveChange ? "+" : ""}
-              {kpiValue.change}
-              {kpiDef.unit === "%" ? "pp" : ""}
-            </span>
-          </div>
+          {scenario === "intervention" && (
+            <div className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg ${isPositiveChange ? 'bg-green/20' : 'bg-red-500/20'} ${changeColor} flex-shrink-0`}>
+              <TrendIcon className="h-3 w-3" />
+              <span className="text-xs font-bold">
+                {isPositiveChange ? "+" : ""}
+                {kpiValue.change}
+                {kpiDef.unit === "%" ? "pp" : ""}
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Chart */}
       <div className="px-4 py-3 bg-muted-bg/40 border-y border-border-color/30">
-        <KPIChart kpiId={selectedKpi} data={kpiValue} cityName={selectedCity} />
+        <KPIChart kpiId={selectedKpi} data={currentKpiValue} cityName={selectedCity} />
       </div>
 
       {/* Mode Type Filter (for Mode Share KPI) */}
       {isModeShare && (
         <div className="px-4 py-3 bg-card/60">
-          <span className="text-xs font-semibold text-foreground mb-3 block">Filter by mode type</span>
+          <span className="text-xs font-semibold text-foreground mb-3 block">Filter Monitored Data</span>
           
           <div className="space-y-2">
             {[
@@ -147,7 +240,9 @@ const InsightPanel = ({
               "PTW"
             ].map((modeType) => {
               const isSelected = selectedModeTypes.includes(modeType);
-              const value = kpiValue?.breakdown?.[modeType] || 0;
+              const value = currentBreakdown?.[modeType] || 0;
+              // Show raw number instead of percentage for monitored data
+              const displayValue = Math.round(value);
               return (
                 <div
                   key={modeType}
@@ -161,12 +256,15 @@ const InsightPanel = ({
                   />
                   <div className="flex-1 flex items-center justify-between">
                     <span className="text-xs text-foreground font-medium">{modeType}</span>
-                    <span className="text-xs text-muted-foreground">{value}%</span>
+                    <span className="text-xs text-muted-foreground">{displayValue}</span>
                   </div>
                 </div>
               );
             })}
           </div>
+          <p className="text-[10px] text-muted-foreground mt-3 pt-3 border-t border-border-color/30">
+            {kpiDef.ref} - {kpiDef.name}
+          </p>
         </div>
       )}
 

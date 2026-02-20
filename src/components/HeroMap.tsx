@@ -53,9 +53,9 @@ const HeroMap = ({
   const [currentCity, setCurrentCity] = useState<string | null>(null);
 
   // Fetch real traffic data for Issy-les-Moulineaux
-  const { data: trafficData, isLoading: isLoadingTraffic } = useLatestTrafficData(
+  const { data: trafficData, isLoading: isLoadingTraffic, error: trafficError } = useLatestTrafficData(
     currentCity || "",
-    200
+    500 // Increased limit to get more segments
   );
 
   // Fetch real bicycle counting data for Issy-les-Moulineaux (especially for Mode Share KPI)
@@ -171,12 +171,27 @@ const HeroMap = ({
       const isIssy = cityName.toLowerCase().includes("issy");
 
       // Always show road segments with traffic data (50% opacity, gradient) when available
+      // Traffic data should ALWAYS be rendered as LineString segments, not points
       if (isIssy && trafficData?.results && trafficData.results.length > 0) {
+        console.log(`[HeroMap] Rendering ${trafficData.results.length} traffic segments for ${cityName}`);
         const roadSegments = trafficSegmentsToSegments(trafficData.results, selectedKpi);
+        console.log(`[HeroMap] Converted to ${roadSegments.length} map segments`);
+        
+        let renderedCount = 0;
         roadSegments.forEach((segment) => {
+          // Filter by range if applicable (but show all segments for traffic visualization)
+          // For traffic data, we want to show all segments regardless of filter range
+          // The filter range applies to the KPI value, not traffic visibility
+          
           const color = getValueColor(segment.value, true); // Use gradient colors
-          const opacity = 0.5; // 50% opacity as requested
-          const weight = 3;
+          const opacity = 0.6; // Increased from 0.5 for better visibility
+          const weight = 5; // Increased for better visibility
+
+          // Use LineString geometry from geo_shape (the real road segment)
+          if (!segment.coordinates || segment.coordinates.length < 2) {
+            console.warn(`[HeroMap] Invalid segment coordinates for segment ${segment.id}`);
+            return;
+          }
 
           const polyline = L.polyline(segment.coordinates, {
             color: color,
@@ -190,15 +205,27 @@ const HeroMap = ({
           const popupContent = `
             <div style="font-family: 'DM Sans', sans-serif; padding: 8px; min-width: 150px;">
               <p style="font-size: 11px; color: #8578C3; margin: 0 0 4px 0; text-transform: uppercase;">Road Segment</p>
+              <p style="font-size: 10px; color: #96C2EF; margin: 0 0 4px 0; font-weight: 600;">ID: ${segment.id}</p>
               <p style="font-size: 18px; font-weight: bold; color: #2F1B6D; margin: 0 0 6px 0;">${segment.value.toFixed(1)}%</p>
               ${props.vitesse_km_h ? `<p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Speed: ${props.vitesse_km_h.toFixed(1)} km/h</p>` : ''}
               ${props.indice_de_congestion ? `<p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Congestion: ${(props.indice_de_congestion * 100).toFixed(1)}%</p>` : ''}
+              ${props.distance_metres ? `<p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Distance: ${(props.distance_metres / 1000).toFixed(2)} km</p>` : ''}
               <p style="font-size: 9px; color: #96C2EF; margin-top: 6px;">Live traffic data</p>
             </div>
           `;
           
           polyline.bindPopup(popupContent);
           polylinesRef.current.push(polyline);
+          renderedCount++;
+        });
+        console.log(`[HeroMap] Rendered ${renderedCount} traffic segments on map`);
+      } else if (isIssy) {
+        console.log(`[HeroMap] No traffic data available:`, {
+          isLoading: isLoadingTraffic,
+          hasData: !!trafficData,
+          resultsCount: trafficData?.results?.length || 0,
+          error: trafficError,
+          cityName: cityName
         });
       }
 
@@ -256,15 +283,9 @@ const HeroMap = ({
           } else if (selectedKpi === "kpi3.1" && cyclingInfrastructureData?.results && cyclingInfrastructureData.results.length > 0) {
             // Use cycling infrastructure data for Green Infrastructure
             points = cyclingInfrastructureToHexbin(cyclingInfrastructureData.results, selectedKpi);
-          } else if (trafficData?.results && trafficData.results.length > 0) {
-            // Use traffic point data
-            points = trafficData.results.map((seg) => ({
-              lat: seg.geo_point_2d.lat,
-              lon: seg.geo_point_2d.lon,
-              value: seg.indice_de_congestion * 100,
-              id: seg.id,
-            }));
           }
+          // NOTE: Traffic data should NOT be used here - it should always be rendered as LineString segments above
+          // Traffic data lives on roads and must be visualized as polylines, not points
         }
         
         if (!points) {
