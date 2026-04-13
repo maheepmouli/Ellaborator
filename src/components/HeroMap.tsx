@@ -11,6 +11,7 @@ import { useLatestCyclingInfrastructure } from "@/hooks/use-cycling-infrastructu
 import { cyclingInfrastructureToSegments, cyclingInfrastructureToHexbin } from "@/services/cyclingInfrastructureApi";
 import { getVisualizationType, isSegmentVisualization, isPointVisualization, isAreaVisualization } from "@/lib/visualization-types";
 import { generateIsochrones, generateGridAreas, generateEmissionZones, type MapArea } from "@/services/areaGenerator";
+import { getKpiDefinition } from "@/config/kpiDefinitions";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -25,22 +26,28 @@ interface HeroMapProps {
   onMapReady?: (map: L.Map) => void;
   onCitySelect?: (cityName: string) => void;
   onViewLevelChange?: (level: ViewLevel) => void;
+  onResetToEuropeReady?: (resetFn: () => void) => void;
   selectedCity?: string;
   selectedKpi?: string;
   scenario?: "baseline" | "intervention" | "comparison";
   filterRange?: [number, number];
   selectedModeTypes?: string[];
+  onSegmentFocus?: (segment: { segmentName: string; speed: number | null; congestion: number | null } | null) => void;
+  showInterventionLayer?: boolean;
 }
 
 const HeroMap = ({
   onMapReady,
   onCitySelect,
   onViewLevelChange,
+  onResetToEuropeReady,
   selectedCity,
   selectedKpi = "kpi1.2",
   scenario = "baseline",
   filterRange = [0, 100],
   selectedModeTypes = ["Pedestrian", "Cycle", "Public Transport", "Private Car", "PTW"],
+  onSegmentFocus,
+  showInterventionLayer = false,
 }: HeroMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -48,6 +55,7 @@ const HeroMap = ({
   const circlesRef = useRef<L.CircleMarker[]>([]);
   const polylinesRef = useRef<L.Polyline[]>([]);
   const polygonsRef = useRef<L.Polygon[]>([]);
+  const interventionLayerRef = useRef<L.LayerGroup | null>(null);
   const cityBoundaryRef = useRef<L.Polygon | null>(null);
   const [viewLevel, setViewLevel] = useState<ViewLevel>("europe");
   const [currentCity, setCurrentCity] = useState<string | null>(null);
@@ -88,6 +96,33 @@ const HeroMap = ({
       cityBoundaryRef.current.remove();
       cityBoundaryRef.current = null;
     }
+    if (interventionLayerRef.current) {
+      interventionLayerRef.current.remove();
+      interventionLayerRef.current = null;
+    }
+  }, []);
+
+  const addInterventionLayer = useCallback((cityData: { lat: number; lon: number }, enabled: boolean) => {
+    if (!mapRef.current || !enabled) return;
+    const layer = L.layerGroup();
+    const interventionRadius = L.circle([cityData.lat, cityData.lon], {
+      radius: 1200,
+      color: "#a78bfa",
+      weight: 2,
+      fillColor: "#a78bfa",
+      fillOpacity: 0.12,
+    });
+    const interventionCore = L.circle([cityData.lat, cityData.lon], {
+      radius: 600,
+      color: "#8b5cf6",
+      weight: 1,
+      fillColor: "#8b5cf6",
+      fillOpacity: 0.2,
+    });
+    layer.addLayer(interventionRadius);
+    layer.addLayer(interventionCore);
+    layer.addTo(mapRef.current);
+    interventionLayerRef.current = layer;
   }, []);
 
   // Add city boundary polygon
@@ -169,6 +204,7 @@ const HeroMap = ({
 
       const visualizationType = getVisualizationType(selectedKpi);
       const isIssy = cityName.toLowerCase().includes("issy");
+      const kpiDefinition = getKpiDefinition(selectedKpi);
 
       // Always show road segments with traffic data (50% opacity, gradient) when available
       // Traffic data should ALWAYS be rendered as LineString segments, not points
@@ -205,16 +241,38 @@ const HeroMap = ({
           const popupContent = `
             <div style="font-family: 'DM Sans', sans-serif; padding: 8px; min-width: 150px;">
               <p style="font-size: 11px; color: #8578C3; margin: 0 0 4px 0; text-transform: uppercase;">Road Segment</p>
-              <p style="font-size: 10px; color: #96C2EF; margin: 0 0 4px 0; font-weight: 600;">ID: ${segment.id}</p>
+              <p style="font-size: 10px; color: #96C2EF; margin: 0 0 4px 0; font-weight: 600;">Segment: ${segment.id}</p>
               <p style="font-size: 18px; font-weight: bold; color: #2F1B6D; margin: 0 0 6px 0;">${segment.value.toFixed(1)}%</p>
               ${props.vitesse_km_h ? `<p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Speed: ${props.vitesse_km_h.toFixed(1)} km/h</p>` : ''}
-              ${props.indice_de_congestion ? `<p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Congestion: ${(props.indice_de_congestion * 100).toFixed(1)}%</p>` : ''}
-              ${props.distance_metres ? `<p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Distance: ${(props.distance_metres / 1000).toFixed(2)} km</p>` : ''}
-              <p style="font-size: 9px; color: #96C2EF; margin-top: 6px;">Live traffic data</p>
+              ${props.indice_de_congestion ? `<p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Congestion index: ${props.indice_de_congestion.toFixed(2)}</p>` : ''}
+              ${props.distance_metres ? `<p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Observed length: ${(props.distance_metres / 1000).toFixed(2)} km</p>` : ''}
+              <p style="font-size: 9px; color: #96C2EF; margin-top: 6px;">${kpiDefinition?.dataLabel || "Observed"} data</p>
             </div>
           `;
           
           polyline.bindPopup(popupContent);
+          polyline.on("mouseover", () => {
+            polyline.setStyle({ weight: 7, opacity: 0.95 });
+            onSegmentFocus?.({
+              segmentName: `Road ${segment.id}`,
+              speed: props.vitesse_km_h ?? null,
+              congestion: props.indice_de_congestion ?? null,
+            });
+            polyline.bindTooltip(
+              `Segment: ${segment.id}<br/>Speed: ${(props.vitesse_km_h ?? 0).toFixed(1)} km/h<br/>Congestion index: ${(props.indice_de_congestion ?? 0).toFixed(2)}`,
+              { sticky: true, direction: "top", opacity: 0.9 }
+            ).openTooltip();
+          });
+          polyline.on("mouseout", () => {
+            polyline.setStyle({ weight, opacity });
+          });
+          polyline.on("click", () => {
+            onSegmentFocus?.({
+              segmentName: `Road ${segment.id}`,
+              speed: props.vitesse_km_h ?? null,
+              congestion: props.indice_de_congestion ?? null,
+            });
+          });
           polylinesRef.current.push(polyline);
           renderedCount++;
         });
@@ -366,6 +424,35 @@ const HeroMap = ({
       }
       // AREAS VISUALIZATION (Polygons) - for accessibility/catchment/coverage/emissions
       else if (isAreaVisualization(selectedKpi)) {
+        if (selectedKpi === "kpi3.2") {
+          const points = generateHexbinData(cityData, selectedKpi, 70);
+          points.forEach((point) => {
+            if (point.value < filterRange[0] || point.value > filterRange[1]) return;
+            const intensity = Math.max(0, Math.min(100, point.value));
+            const color = intensity >= 70 ? "#ef4444" : intensity >= 50 ? "#f97316" : intensity >= 30 ? "#eab308" : "#22c55e";
+            const radius = 0.0032;
+            const hex: [number, number][] = Array.from({ length: 6 }).map((_, i) => {
+              const angle = (Math.PI / 3) * i;
+              return [point.lat + radius * Math.sin(angle), point.lon + radius * Math.cos(angle)];
+            });
+            const polygon = L.polygon(hex, {
+              fillColor: color,
+              fillOpacity: 0.22,
+              color,
+              weight: 1.4,
+              opacity: 0.85,
+            }).addTo(mapRef.current!);
+            polygon.bindPopup(
+              `<div style="font-family: 'DM Sans', sans-serif; padding: 8px; min-width: 150px;">
+                <p style="font-size: 11px; color: #8578C3; margin: 0 0 4px 0; text-transform: uppercase;">Emission Hexagon</p>
+                <p style="font-size: 16px; font-weight: bold; color: #2F1B6D; margin: 0;">Estimated intensity: ${intensity.toFixed(1)}%</p>
+              </div>`
+            );
+            polygonsRef.current.push(polygon);
+          });
+          addInterventionLayer(cityData, showInterventionLayer);
+          return;
+        }
         let areas: MapArea[] = [];
         const kpiValue = cityData.kpiData[selectedKpi]?.mainValue || 50;
         
@@ -424,7 +511,7 @@ const HeroMap = ({
                   : `${area.value.toFixed(1)}${selectedKpi === "kpi4.2" ? " score" : " ⭐"}`
               }</p>
               ${props.radius ? `<p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Radius: ${props.radius.toFixed(2)} km</p>` : ''}
-              ${props.coverage ? `<p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Coverage: ${props.coverage.toFixed(1)}%</p>` : ''}
+              ${props.coverage ? `<p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Derived zone extent: ${props.coverage.toFixed(1)}%</p>` : ''}
               ${selectedKpi === "kpi3.2" ? `<p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Reduction: ${(100 - area.value).toFixed(1)}%</p>` : ''}
             </div>
           `;
@@ -433,8 +520,9 @@ const HeroMap = ({
           polygonsRef.current.push(polygon);
         });
       }
+      addInterventionLayer(cityData, showInterventionLayer);
     },
-    [selectedKpi, filterRange, trafficData, bicycleData, selectedModeTypes, addCityBoundary]
+    [selectedKpi, filterRange, trafficData, bicycleData, selectedModeTypes, addCityBoundary, onSegmentFocus, addInterventionLayer, showInterventionLayer]
   );
 
   const addCityMarkers = useCallback(() => {
@@ -480,7 +568,7 @@ const HeroMap = ({
         return `
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid rgba(101, 125, 245, 0.1);">
             <span style="font-size: 10px; color: #657DF5; font-weight: 500; text-transform: uppercase;">${kpi.shortName}</span>
-            <span style="font-size: 11px; color: #2F1B6D; font-weight: 600;">${value}${unit === '%' ? '%' : ''}</span>
+            <span style="font-size: 11px; color: #FFFFFF; font-weight: 700; text-shadow: 0 0 8px rgba(255,255,255,0.25);">${value}${unit === '%' ? '%' : ''}</span>
           </div>
         `;
       }).join('');
@@ -488,11 +576,11 @@ const HeroMap = ({
       // Popup with more transparency
       marker.bindPopup(`
         <div style="font-family: 'DM Sans', sans-serif; min-width: 200px; max-width: 240px; padding: 12px;">
-          <p style="font-weight: 600; color: #2F1B6D; margin: 0 0 10px 0; font-size: 14px; text-align: center; border-bottom: 1px solid rgba(101, 125, 245, 0.2); padding-bottom: 8px;">${city.city}</p>
-          <div style="background: rgba(248, 249, 252, 0.7); border-radius: 8px; padding: 8px;">
+          <p style="font-weight: 700; color: #7C6CFF; margin: 0 0 10px 0; font-size: 14px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.22); padding-bottom: 8px; text-shadow: 0 0 10px rgba(124,108,255,0.45);">${city.city}</p>
+          <div style="background: linear-gradient(165deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.08) 45%, rgba(255,255,255,0.04) 100%); border-radius: 8px; padding: 8px; border: 1px solid rgba(255,255,255,0.22); box-shadow: inset 0 1px 0 rgba(255,255,255,0.25);">
             ${kpiListHtml}
           </div>
-          <p style="font-size: 9px; color: #8578C3; margin-top: 8px; text-align: center;">Click to explore</p>
+          <p style="font-size: 10px; color: rgba(220, 214, 255, 0.95); margin-top: 8px; text-align: center; text-shadow: 0 0 8px rgba(124,108,255,0.35);">Click to explore</p>
         </div>
       `, { 
         offset: [0, -10],
@@ -525,6 +613,11 @@ const HeroMap = ({
     mapRef.current.flyTo([50, 10], 4, { duration: 1 });
     setTimeout(() => addCityMarkers(), 500);
   }, [clearLayers, addCityMarkers, onCitySelect]);
+
+  // Expose reset action to parent (e.g., header logo click)
+  useEffect(() => {
+    onResetToEuropeReady?.(resetToEurope);
+  }, [onResetToEuropeReady, resetToEurope]);
 
   useEffect(() => {
     if (selectedCity && selectedCity !== currentCity && mapRef.current) {
@@ -573,17 +666,33 @@ const HeroMap = ({
     <div className="relative w-full h-full">
       <style>{`
         .city-popup .leaflet-popup-content-wrapper {
-          background: rgba(255, 255, 255, 0.85) !important;
-          backdrop-filter: blur(8px);
+          background: linear-gradient(165deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.08) 45%, rgba(255,255,255,0.04) 100%) !important;
+          backdrop-filter: blur(22px);
+          -webkit-backdrop-filter: blur(22px);
           border-radius: 12px !important;
-          box-shadow: 0 8px 32px rgba(47, 27, 109, 0.2) !important;
+          border: 1px solid rgba(255,255,255,0.30) !important;
+          box-shadow: 0 10px 34px rgba(12, 10, 40, 0.32), inset 0 1px 0 rgba(255,255,255,0.22) !important;
         }
         .city-popup .leaflet-popup-tip {
-          background: rgba(255, 255, 255, 0.85) !important;
+          background: rgba(255, 255, 255, 0.16) !important;
+          backdrop-filter: blur(22px);
+          -webkit-backdrop-filter: blur(22px);
+          border: 1px solid rgba(255,255,255,0.22) !important;
         }
       `}</style>
       <div className="absolute inset-0 pointer-events-none z-10 bg-gradient-to-b from-background/30 via-transparent to-background/20" />
       <div ref={mapContainer} className="h-full w-full" />
+      {scenario === "comparison" && (
+        <div className="pointer-events-none absolute inset-0 z-20">
+          <div className="absolute inset-y-0 left-1/2 w-[2px] bg-white/70 shadow-[0_0_12px_rgba(255,255,255,0.45)]" />
+          <div className="absolute top-6 left-[calc(50%-160px)] text-[11px] px-2 py-1 rounded bg-card/80 border border-border-color/40">
+            Baseline
+          </div>
+          <div className="absolute top-6 left-[calc(50%+16px)] text-[11px] px-2 py-1 rounded bg-violet/80 text-primary-foreground">
+            Intervention
+          </div>
+        </div>
+      )}
 
       {viewLevel !== "europe" && (
         <div className="absolute top-20 left-[380px] z-20 flex items-center gap-2">

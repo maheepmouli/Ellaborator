@@ -7,6 +7,10 @@ interface KPIChartProps {
   cityName: string;
 }
 
+const CHART_TEXT = "#E9E2FF";
+const CHART_TEXT_STRONG = "#F4F1FF";
+const CHART_GRID = "rgba(184, 166, 255, 0.18)";
+
 // Stacked bar chart for Mode Share (KPI 1.2)
 export const ModeShareChart = ({ data, cityName }: { data: KPIValue; cityName: string }) => {
   const breakdown = data.breakdown || {};
@@ -33,13 +37,13 @@ export const ModeShareChart = ({ data, cityName }: { data: KPIValue; cityName: s
     xAxis: {
       type: "value",
       max: 100,
-      axisLabel: { formatter: "{value}%", color: "#8578C3", fontSize: 10 },
-      splitLine: { lineStyle: { color: "#2F1B6D20" } },
+      axisLabel: { formatter: "{value}%", color: CHART_TEXT, fontSize: 10 },
+      splitLine: { lineStyle: { color: CHART_GRID } },
     },
     yAxis: {
       type: "category",
       data: categories,
-      axisLabel: { color: "#8578C3", fontSize: 10 },
+      axisLabel: { color: CHART_TEXT, fontSize: 11, fontWeight: 600 },
       axisLine: { show: false },
       axisTick: { show: false },
     },
@@ -60,7 +64,9 @@ export const ModeShareChart = ({ data, cityName }: { data: KPIValue; cityName: s
           position: "right",
           formatter: (params: any) => params.value > 0 ? `${Number(params.value).toFixed(1)}%` : "",
           fontSize: 10,
-          color: "#2F1B6D",
+          color: CHART_TEXT_STRONG,
+          textShadowColor: "rgba(47, 27, 109, 0.45)",
+          textShadowBlur: 6,
         },
       },
     ],
@@ -84,10 +90,10 @@ export const SafetyRadarChart = ({ data }: { data: KPIValue }) => {
       indicator: indicators,
       shape: "polygon",
       splitNumber: 5,
-      axisName: { color: "#8578C3", fontSize: 10 },
-      splitLine: { lineStyle: { color: "#657DF520" } },
+      axisName: { color: CHART_TEXT, fontSize: 10, fontWeight: 600 },
+      splitLine: { lineStyle: { color: CHART_GRID } },
       splitArea: { areaStyle: { color: ["#D3E3FF20", "#96C2EF10"] } },
-      axisLine: { lineStyle: { color: "#657DF530" } },
+      axisLine: { lineStyle: { color: CHART_GRID } },
     },
     series: [
       {
@@ -120,13 +126,13 @@ export const InfrastructureBarChart = ({ data }: { data: KPIValue }) => {
     xAxis: {
       type: "category",
       data: categories,
-      axisLabel: { color: "#8578C3", fontSize: 9, rotate: 30 },
-      axisLine: { lineStyle: { color: "#657DF530" } },
+      axisLabel: { color: CHART_TEXT, fontSize: 9, rotate: 30, fontWeight: 600 },
+      axisLine: { lineStyle: { color: CHART_GRID } },
     },
     yAxis: {
       type: "value",
-      axisLabel: { color: "#8578C3", fontSize: 10 },
-      splitLine: { lineStyle: { color: "#2F1B6D10" } },
+      axisLabel: { color: CHART_TEXT, fontSize: 10 },
+      splitLine: { lineStyle: { color: CHART_GRID } },
     },
     series: [
       {
@@ -170,23 +176,23 @@ export const EmissionsLineChart = ({ data }: { data: KPIValue }) => {
         const reduction = 100 - value;
         return `${params[0].name}: ${value}% of baseline<br/>Reduction: ${reduction.toFixed(1)}%`;
       },
-      backgroundColor: "rgba(47, 27, 109, 0.9)",
+      backgroundColor: "rgba(21, 17, 48, 0.92)",
       borderColor: "#657DF5",
-      textStyle: { color: "#fff" },
+      textStyle: { color: CHART_TEXT_STRONG },
     },
     grid: { left: "3%", right: "4%", bottom: "3%", top: "10%", containLabel: true },
     xAxis: {
       type: "category",
       data: years,
-      axisLabel: { color: "#8578C3", fontSize: 10 },
-      axisLine: { lineStyle: { color: "#657DF530" } },
+      axisLabel: { color: CHART_TEXT, fontSize: 10, fontWeight: 600 },
+      axisLine: { lineStyle: { color: CHART_GRID } },
     },
     yAxis: {
       type: "value",
       min: 60,
       max: 105,
-      axisLabel: { formatter: "{value}%", color: "#8578C3", fontSize: 10 },
-      splitLine: { lineStyle: { color: "#2F1B6D10" } },
+      axisLabel: { formatter: "{value}%", color: CHART_TEXT, fontSize: 10 },
+      splitLine: { lineStyle: { color: CHART_GRID } },
     },
     series: [
       {
@@ -225,7 +231,7 @@ export const EmissionsLineChart = ({ data }: { data: KPIValue }) => {
           label: { 
             formatter: "Baseline", 
             fontSize: 9,
-            color: "#E02020",
+            color: CHART_TEXT_STRONG,
             backgroundColor: "rgba(224, 32, 32, 0.1)",
             padding: [2, 4],
           },
@@ -286,7 +292,9 @@ export const SatisfactionGaugeChart = ({ data }: { data: KPIValue }) => {
           formatter: "{value}%",
           fontSize: 24,
           fontWeight: "bold",
-          color: "#2F1B6D",
+          color: CHART_TEXT_STRONG,
+          textShadowColor: "rgba(47, 27, 109, 0.5)",
+          textShadowBlur: 8,
           offsetCenter: [0, "20%"],
         },
         data: [{ value: data.mainValue }],
@@ -308,13 +316,13 @@ export const AccessibilityBarChart = ({ data }: { data: KPIValue }) => {
     grid: { left: "30%", right: "10%", bottom: "3%", top: "3%", containLabel: false },
     xAxis: {
       type: "value",
-      axisLabel: { color: "#8578C3", fontSize: 10 },
-      splitLine: { lineStyle: { color: "#2F1B6D10" } },
+      axisLabel: { color: CHART_TEXT, fontSize: 10 },
+      splitLine: { lineStyle: { color: CHART_GRID } },
     },
     yAxis: {
       type: "category",
       data: categories,
-      axisLabel: { color: "#8578C3", fontSize: 10 },
+      axisLabel: { color: CHART_TEXT, fontSize: 10, fontWeight: 600 },
       axisLine: { show: false },
       axisTick: { show: false },
     },
@@ -333,7 +341,9 @@ export const AccessibilityBarChart = ({ data }: { data: KPIValue }) => {
           show: true,
           position: "right",
           fontSize: 10,
-          color: "#2F1B6D",
+          color: CHART_TEXT_STRONG,
+          textShadowColor: "rgba(47, 27, 109, 0.45)",
+          textShadowBlur: 6,
         },
       },
     ],

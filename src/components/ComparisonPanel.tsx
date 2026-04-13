@@ -1,13 +1,16 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, HelpCircle, X } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ELABORATOR_KPIS, CITY_DATA } from "@/data/kpiDefinitions";
+import { getKpiFrameworkConfig } from "@/config/kpiFramework";
+import { useState } from "react";
 
 interface ComparisonPanelProps {
   selectedCity: string;
   selectedKpi: string;
   isOpen: boolean;
   onToggle: () => void;
+  triggerClassName?: string;
 }
 
 const ComparisonPanel = ({
@@ -15,8 +18,10 @@ const ComparisonPanel = ({
   selectedKpi,
   isOpen,
   onToggle,
+  triggerClassName,
 }: ComparisonPanelProps) => {
   const cityData = CITY_DATA.find((c) => c.city === selectedCity);
+  const [splitPosition, setSplitPosition] = useState(50);
   
   // Get the 4 KPIs shown in the image
   const comparisonKPIs = ["kpi1.2", "kpi2.1", "kpi3.1", "kpi3.2"];
@@ -44,7 +49,7 @@ const ComparisonPanel = ({
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: 20 }}
-          className="fixed right-0 top-1/2 -translate-y-1/2 z-40"
+          className={triggerClassName || "fixed right-0 top-1/2 -translate-y-1/2 z-40"}
         >
           <Button
             onClick={onToggle}
@@ -89,21 +94,46 @@ const ComparisonPanel = ({
               </Button>
             </div>
 
-            {/* Description and Intervention Coverage */}
+            {/* Description */}
             <div className="px-6 py-4 border-b border-border-color/30">
               <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-                Compare metrics between baseline and intervention scenarios side by side.
+                Compare Baseline and Intervention with split-view mode. Use the slider to choose swipe position.
               </p>
-              <div className="flex items-center gap-4">
-                <p className="text-xs text-muted-foreground">Intervention coverage</p>
-                <div className="flex-1 h-2 bg-muted-bg rounded-full overflow-hidden">
-                  <div className="h-full w-3/4 bg-gradient-to-r from-violet to-green rounded-full" />
+              <div className="mb-4">
+                <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-1">
+                  <span>Baseline</span>
+                  <span>Split view: {splitPosition}%</span>
+                  <span>Intervention</span>
                 </div>
+                <input
+                  type="range"
+                  min={20}
+                  max={80}
+                  value={splitPosition}
+                  onChange={(e) => setSplitPosition(Number(e.target.value))}
+                  className="w-full accent-violet"
+                />
               </div>
+              {getKpiFrameworkConfig(selectedKpi)?.isMock && (
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-muted-bg text-muted-foreground">
+                    Mock/demo value
+                  </span>
+                  {getKpiFrameworkConfig(selectedKpi)?.isModelled && (
+                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-muted-bg text-muted-foreground">
+                      Modelled estimate
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* KPI Comparison Cards */}
-            <div className="flex-1 overflow-y-auto px-6 py-5">
+            <div
+              className="flex-1 overflow-y-auto px-6 py-5"
+              style={{ scrollbarWidth: "thin" }}
+            >
+              <p className="text-[10px] text-muted-foreground mb-3">Scroll down to view all KPI comparisons</p>
               <h3 className="text-sm font-bold text-foreground mb-4">KPI Comparison: Baseline vs Intervention</h3>
               <div className="space-y-4">
                 {comparisonKPIs.map((kpiId) => {

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { ChevronDown, TrendingUp, TrendingDown } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Info, TrendingUp, TrendingDown } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -10,8 +10,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Switch } from "@/components/ui/switch";
 import { ELABORATOR_KPIS, CITY_DATA, KPIValue } from "@/data/kpiDefinitions";
 import KPIChart from "./KPICharts";
+import { getKpiFrameworkConfig } from "@/config/kpiFramework";
+import { getKpiDefinition } from "@/config/kpiDefinitions";
 
 interface InsightPanelProps {
   selectedCity: string;
@@ -20,6 +23,16 @@ interface InsightPanelProps {
   onKpiChange: (kpi: string) => void;
   onRangeChange: (range: [number, number]) => void;
   onModeTypesChange?: (modeTypes: string[]) => void;
+  scenario: "baseline" | "intervention" | "comparison";
+  onScenarioChange: (scenario: "baseline" | "intervention" | "comparison") => void;
+  onOpenDataSummary: () => void;
+  mapContext?: {
+    segmentName: string;
+    speed: number | null;
+    congestion: number | null;
+  } | null;
+  showInterventionLayer: boolean;
+  onInterventionLayerChange: (value: boolean) => void;
 }
 
 const InsightPanel = ({
@@ -29,6 +42,12 @@ const InsightPanel = ({
   onKpiChange,
   onRangeChange,
   onModeTypesChange,
+  scenario,
+  onScenarioChange,
+  onOpenDataSummary,
+  mapContext,
+  showInterventionLayer,
+  onInterventionLayerChange,
 }: InsightPanelProps) => {
   const [range, setRange] = useState<[number, number]>([0, 100]);
   const [selectedModeTypes, setSelectedModeTypes] = useState<string[]>([
@@ -38,11 +57,13 @@ const InsightPanel = ({
     "Private Car",
     "PTW",
   ]);
-  const [scenario, setScenario] = useState<"baseline" | "intervention">("intervention");
 
   const cityData = CITY_DATA.find((c) => c.city === selectedCity);
   const kpiDef = ELABORATOR_KPIS.find((k) => k.id === selectedKpi);
   const kpiValue: KPIValue | undefined = cityData?.kpiData[selectedKpi];
+  const kpiFramework = useMemo(() => getKpiFrameworkConfig(selectedKpi), [selectedKpi]);
+  const kpiDefinition = useMemo(() => getKpiDefinition(selectedKpi), [selectedKpi]);
+  const [showDataExplanation, setShowDataExplanation] = useState(false);
 
   const handleRangeChange = (values: number[]) => {
     const newRange: [number, number] = [values[0], values[1]];
@@ -110,9 +131,10 @@ const InsightPanel = ({
   };
 
   // Get current scenario values
-  const currentMainValue = scenario === "baseline" 
-    ? getBaselineValue(Number(kpiValue.mainValue), kpiValue.change)
-    : Number(kpiValue.mainValue);
+  const baselineMainValue = getBaselineValue(Number(kpiValue.mainValue), kpiValue.change);
+  const interventionMainValue = Number(kpiValue.mainValue);
+  const currentMainValue =
+    scenario === "baseline" ? baselineMainValue : interventionMainValue;
   
   const currentBreakdown = scenario === "baseline"
     ? getBaselineBreakdown(kpiValue.breakdown, kpiValue.change)
@@ -130,9 +152,11 @@ const InsightPanel = ({
   const TrendIcon = isPositiveChange ? TrendingUp : TrendingDown;
 
   return (
-    <div className="absolute top-20 left-4 z-30 w-[320px] bg-card/95 backdrop-blur-2xl rounded-2xl shadow-2xl shadow-purple/20 text-foreground overflow-hidden border border-border-color/40">
+    <div className="absolute top-20 left-4 z-30 w-[320px] max-h-[calc(100vh-6.5rem)] overflow-y-auto bg-[linear-gradient(165deg,rgba(255,255,255,0.18)_0%,rgba(255,255,255,0.07)_45%,rgba(255,255,255,0.04)_100%)] backdrop-blur-[30px] rounded-2xl shadow-[0_10px_40px_rgba(10,10,45,0.35)] text-white border border-white/35">
+      <div className="pointer-events-none absolute inset-0 rounded-2xl bg-[radial-gradient(120%_60%_at_15%_0%,rgba(255,255,255,0.32)_0%,rgba(255,255,255,0.08)_45%,rgba(255,255,255,0)_80%)]" />
+      <div className="pointer-events-none absolute inset-[1px] rounded-2xl border border-white/20" />
       {/* Header with City & KPI Selector */}
-      <div className="px-5 pt-5 pb-4 bg-gradient-to-br from-violet to-violet/90 rounded-t-2xl">
+      <div className="relative px-5 pt-5 pb-4 bg-gradient-to-br from-violet/90 to-violet/70 rounded-t-2xl">
         {/* City Selector */}
         <Select value={selectedCity} onValueChange={onCityChange}>
           <SelectTrigger className="w-fit h-auto p-0 border-0 bg-transparent text-xl font-bold text-primary-foreground hover:text-blue-light transition-colors">
@@ -147,17 +171,19 @@ const InsightPanel = ({
           </SelectContent>
         </Select>
         
-        <p className="text-xs text-primary-foreground/80 mt-2 leading-relaxed">{kpiDef.question}</p>
+        <p className="text-xs text-primary-foreground/80 mt-2 leading-relaxed">
+          {kpiFramework?.question || kpiDef.question}
+        </p>
 
         {/* KPI Selector */}
         <Select value={selectedKpi} onValueChange={onKpiChange}>
           <SelectTrigger className="w-full h-auto px-3 py-2 mt-3 border border-primary-foreground/30 bg-primary-foreground/15 backdrop-blur-sm rounded-xl text-xs font-semibold text-primary-foreground hover:bg-primary-foreground/25 transition-all duration-200 shadow-md">
-            <span>{kpiDef.ref} - {kpiDef.shortName.toUpperCase()}</span>
+            <span>{kpiDef.ref} - {(kpiFramework?.displayName || kpiDef.shortName).toUpperCase()}</span>
           </SelectTrigger>
           <SelectContent className="bg-card/95 backdrop-blur-xl border-border-color/50 z-50 shadow-2xl">
             {ELABORATOR_KPIS.map((kpi) => (
               <SelectItem key={kpi.id} value={kpi.id} className="text-sm py-2.5 hover:bg-violet/10 focus:bg-violet/10">
-                {kpi.ref} - {kpi.shortName}
+                {kpi.ref} - {getKpiFrameworkConfig(kpi.id)?.displayName || kpi.shortName}
               </SelectItem>
             ))}
           </SelectContent>
@@ -171,8 +197,8 @@ const InsightPanel = ({
           type="single"
           value={scenario}
           onValueChange={(value) => {
-            if (value === "baseline" || value === "intervention") {
-              setScenario(value);
+            if (value === "baseline" || value === "intervention" || value === "comparison") {
+              onScenarioChange(value);
             }
           }}
           className="w-full"
@@ -191,23 +217,107 @@ const InsightPanel = ({
           >
             Intervention
           </ToggleGroupItem>
+          <ToggleGroupItem
+            value="comparison"
+            aria-label="Comparison"
+            className="flex-1 data-[state=on]:bg-violet/20 data-[state=on]:text-violet data-[state=on]:border-violet border border-border-color/30"
+          >
+            Comparison
+          </ToggleGroupItem>
         </ToggleGroup>
       </div>
 
       {/* Main Stat */}
-      <div className="px-5 py-4 bg-card/60">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex flex-col">
-            <div className="flex items-baseline gap-2 mb-1">
-              <span className="text-4xl font-bold text-foreground tracking-tight">{currentMainValue}</span>
-              <span className="text-lg font-bold text-foreground">{kpiValue.unit}</span>
-            </div>
-            {isModeShare && (
-              <span className="text-[10px] text-muted-foreground/70 mt-0.5 leading-relaxed">
-                Share of sustainable transport modes
-              </span>
-            )}
+      <div className="relative px-5 py-4 bg-white/[0.03]">
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-xs font-semibold text-violet drop-shadow-[0_0_10px_rgba(139,92,246,0.7)]">KPI Card</p>
+          <button
+            className="h-6 w-6 rounded-full border border-border-color/40 flex items-center justify-center hover:bg-muted-bg"
+            onClick={() => setShowDataExplanation((prev) => !prev)}
+            aria-label="Open KPI data layer explanation"
+          >
+            <Info className="h-3.5 w-3.5 text-violet" />
+          </button>
+        </div>
+        {showDataExplanation && kpiDefinition && (
+          <div className="mb-3 text-[11px] rounded-lg border border-border-color/40 bg-muted-bg/60 p-3 space-y-1.5">
+            <p className="font-semibold text-violet drop-shadow-[0_0_10px_rgba(139,92,246,0.7)]">{kpiDefinition.name}</p>
+            <p className="text-white/80">{kpiDefinition.summary}</p>
+            <p><span className="font-semibold text-foreground">Data source:</span> {kpiDefinition.dataSource}</p>
+            <p><span className="font-semibold text-foreground">Method:</span> {kpiDefinition.method}</p>
+            <p><span className="font-semibold text-foreground">Status:</span> {kpiDefinition.status}</p>
           </div>
+        )}
+
+        {kpiDefinition && (
+          <div className="mb-3 rounded-lg border border-white/25 p-3 bg-white/[0.06] backdrop-blur-2xl text-xs shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]">
+            <p className="font-semibold text-violet drop-shadow-[0_0_10px_rgba(139,92,246,0.7)]">KPI: {kpiDefinition.name}</p>
+            <div className="my-2 border-t border-border-color/30" />
+            <p className="text-white/80">Indicator: {kpiDefinition.indicator}</p>
+            <p className="text-white/80">Value: {currentMainValue}{kpiValue.unit}</p>
+            <p className="text-white/80">
+              Change: {kpiValue.change > 0 ? "+" : ""}{kpiValue.change}{kpiDef.unit === "%" ? "pp" : ""}
+            </p>
+            <div className="my-2 border-t border-border-color/30" />
+            <p className="text-violet mb-1 drop-shadow-[0_0_10px_rgba(139,92,246,0.7)]">Based on:</p>
+            {kpiDefinition.supportingData.map((source) => (
+              <p className="text-white/75" key={source}>- {source}</p>
+            ))}
+          </div>
+        )}
+
+        {mapContext && (
+          <div className="mb-3 rounded-lg border border-violet/45 bg-violet/25 backdrop-blur-2xl p-3 text-[11px] shadow-[inset_0_1px_0_rgba(255,255,255,0.22)]">
+            <p className="font-semibold text-violet mb-1">You are viewing data for this segment</p>
+            <p className="text-foreground">Segment: {mapContext.segmentName}</p>
+            <p className="text-white/80">
+              Speed: {mapContext.speed !== null ? `${mapContext.speed.toFixed(1)} km/h` : "n/a"}
+            </p>
+            <p className="text-white/80">
+              Congestion index: {mapContext.congestion !== null ? mapContext.congestion.toFixed(2) : "n/a"}
+            </p>
+          </div>
+        )}
+
+        <div className="mb-3 rounded-lg border border-white/25 p-3 bg-white/[0.06] backdrop-blur-2xl text-xs shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-semibold text-violet drop-shadow-[0_0_10px_rgba(139,92,246,0.7)]">Show intervention area</p>
+              <p className="text-white/80">Intervention scale: Neighbourhood level</p>
+            </div>
+            <Switch checked={showInterventionLayer} onCheckedChange={onInterventionLayerChange} />
+          </div>
+          <p className="text-white/80 mt-2">Description: Pilot streets around the selected intervention zone.</p>
+        </div>
+
+        <div className="flex items-start justify-between gap-3">
+          {scenario !== "comparison" ? (
+            <div className="flex flex-col">
+              <div className="flex items-baseline gap-2 mb-1">
+                <span className="text-4xl font-bold text-violet tracking-tight drop-shadow-[0_0_14px_rgba(139,92,246,0.75)]">{currentMainValue}</span>
+                <span className="text-lg font-bold text-violet drop-shadow-[0_0_10px_rgba(139,92,246,0.7)]">{kpiValue.unit}</span>
+              </div>
+              {isModeShare && (
+                <span className="text-[10px] text-white/70 mt-0.5 leading-relaxed">
+                  Share of sustainable modes
+                </span>
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              <div className="flex items-baseline gap-2">
+                <span className="text-xs text-white/75 w-20">Baseline</span>
+                <span className="text-lg font-bold text-foreground">{baselineMainValue}</span>
+                <span className="text-xs text-white/75">{kpiValue.unit}</span>
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-xs text-white/75 w-20">Intervention</span>
+                <span className="text-lg font-bold text-foreground">{interventionMainValue}</span>
+                <span className="text-xs text-white/75">{kpiValue.unit}</span>
+              </div>
+            </div>
+          )}
+
           {scenario === "intervention" && (
             <div className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg ${isPositiveChange ? 'bg-green/20' : 'bg-red-500/20'} ${changeColor} flex-shrink-0`}>
               <TrendIcon className="h-3 w-3" />
@@ -219,11 +329,38 @@ const InsightPanel = ({
             </div>
           )}
         </div>
+        <div className="mt-3 flex items-center justify-between">
+          <button
+            onClick={onOpenDataSummary}
+            className="text-[11px] font-semibold text-violet hover:underline"
+          >
+            Data Summary
+          </button>
+          {kpiDefinition && (
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted-bg text-muted-foreground">
+              {kpiDefinition.dataLabel}
+            </span>
+          )}
+          {kpiFramework?.isModelled && (
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted-bg text-muted-foreground">
+              Modelled estimate
+            </span>
+          )}
+          {kpiFramework?.isMock && (
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted-bg text-muted-foreground">
+              Mock/demo value
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Chart */}
       <div className="px-4 py-3 bg-muted-bg/40 border-y border-border-color/30">
-        <KPIChart kpiId={selectedKpi} data={currentKpiValue} cityName={selectedCity} />
+        <KPIChart
+          kpiId={selectedKpi}
+          data={currentKpiValue}
+          cityName={selectedCity}
+        />
       </div>
 
       {/* Mode Type Filter (for Mode Share KPI) */}
@@ -271,7 +408,7 @@ const InsightPanel = ({
       {/* Distribution Filter (for other KPIs) */}
       {!isModeShare && kpiValue.distribution && (
         <div className="px-4 py-3 bg-card/60">
-          <span className="text-xs font-semibold text-foreground mb-2 block">Filter by range</span>
+          <span className="text-xs font-semibold text-foreground mb-2 block">Filter by KPI value</span>
 
           {/* Mini Histogram */}
           <div className="h-10 flex items-end gap-0.5 mb-2 p-1.5 bg-muted-bg/60 rounded-lg border border-border-color/30">
@@ -314,7 +451,7 @@ const InsightPanel = ({
       {/* Footer - KPI Info */}
       <div className="px-4 py-2 bg-violet/10 border-t border-border-color/30">
         <p className="text-[10px] text-muted-foreground">
-          <span className="font-semibold text-foreground">{kpiDef.ref}</span> · {kpiDef.name}
+          <span className="font-semibold text-foreground">{kpiDef.ref}</span> · {kpiFramework?.displayName || kpiDef.name}
         </p>
       </div>
     </div>

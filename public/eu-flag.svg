@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="160" viewBox="0 0 240 160" role="img" aria-label="European Union flag">
+  <rect width="240" height="160" fill="#003399"/>
+  <!-- 12 stars -->
+  <g fill="#FFCC00" transform="translate(120 80)">
+    <!-- star path (5-point) -->
+    <defs>
+      <path id="star" d="M0,-10 L2.938,-3.09 L9.511,-3.09 L4.286,1.18 L6.123,8.09 L0,4.5 L-6.123,8.09 L-4.286,1.18 L-9.511,-3.09 L-2.938,-3.09 Z"/>
+    </defs>
+    <g>
+      <use href="#star" transform="translate(0,-52)"/>
+      <use href="#star" transform="rotate(30) translate(0,-52)"/>
+      <use href="#star" transform="rotate(60) translate(0,-52)"/>
+      <use href="#star" transform="rotate(90) translate(0,-52)"/>
+      <use href="#star" transform="rotate(120) translate(0,-52)"/>
+      <use href="#star" transform="rotate(150) translate(0,-52)"/>
+      <use href="#star" transform="rotate(180) translate(0,-52)"/>
+      <use href="#star" transform="rotate(210) translate(0,-52)"/>
+      <use href="#star" transform="rotate(240) translate(0,-52)"/>
+      <use href="#star" transform="rotate(270) translate(0,-52)"/>
+      <use href="#star" transform="rotate(300) translate(0,-52)"/>
+      <use href="#star" transform="rotate(330) translate(0,-52)"/>
+    </g>
+  </g>
+</svg>
+

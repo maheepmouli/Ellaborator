@@ -1,13 +1,18 @@
-import { useState, useCallback, useEffect } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import Header from "@/components/Header";
 import HeroMap from "@/components/HeroMap";
 import InsightPanel from "@/components/InsightPanel";
 import MapControls from "@/components/MapControls";
 import MapTour from "@/components/MapTour";
-import ComparisonPanel from "@/components/ComparisonPanel";
+import DataSummaryPanel from "@/components/ScenarioPanel";
 
 type ViewLevel = "europe" | "city" | "detail";
+type SegmentContext = {
+  segmentName: string;
+  speed: number | null;
+  congestion: number | null;
+};
 
 const Map = () => {
   // Start with the tour open when the map first loads
@@ -24,7 +29,11 @@ const Map = () => {
   ]);
   const [mapRef, setMapRef] = useState<any>(null);
   const [viewLevel, setViewLevel] = useState<ViewLevel>("europe");
-  const [isComparisonOpen, setIsComparisonOpen] = useState(false);
+  const [scenario, setScenario] = useState<"baseline" | "intervention" | "comparison">("intervention");
+  const [isDataSummaryOpen, setIsDataSummaryOpen] = useState(false);
+  const [mapContext, setMapContext] = useState<SegmentContext | null>(null);
+  const [showInterventionLayer, setShowInterventionLayer] = useState(false);
+  const resetToEuropeRef = useRef<null | (() => void)>(null);
 
   const handleTourClose = () => {
     setShowTour(false);
@@ -61,7 +70,13 @@ const Map = () => {
       />
 
       {/* Simple Header with Logo only */}
-      <Header />
+      <Header
+        onLogoClick={() => {
+          // Close overlays and reset to “All Cities” view
+          setIsDataSummaryOpen(false);
+          resetToEuropeRef.current?.();
+        }}
+      />
 
       {/* Full-Screen Map */}
       <motion.div
@@ -74,10 +89,16 @@ const Map = () => {
           onMapReady={setMapRef}
           onCitySelect={handleCitySelect}
           onViewLevelChange={handleViewLevelChange}
+          onResetToEuropeReady={(fn) => {
+            resetToEuropeRef.current = fn;
+          }}
           selectedCity={selectedCity}
           selectedKpi={selectedKpi}
+          scenario={scenario}
           filterRange={filterRange}
           selectedModeTypes={selectedModeTypes}
+          onSegmentFocus={setMapContext}
+          showInterventionLayer={showInterventionLayer}
         />
       </motion.div>
 
@@ -95,6 +116,12 @@ const Map = () => {
             onKpiChange={setSelectedKpi}
             onRangeChange={setFilterRange}
             onModeTypesChange={setSelectedModeTypes}
+            scenario={scenario}
+            onScenarioChange={setScenario}
+            onOpenDataSummary={() => setIsDataSummaryOpen(true)}
+            mapContext={mapContext}
+            showInterventionLayer={showInterventionLayer}
+            onInterventionLayerChange={setShowInterventionLayer}
           />
         </motion.div>
       )}
@@ -114,13 +141,13 @@ const Map = () => {
         </motion.div>
       )}
 
-      {/* Comparison Panel - Sidebar */}
-      {!showTour && showPanel && (
-        <ComparisonPanel
+      {/* Data Summary - Bottom expandable panel */}
+      {!showTour && showPanel && isDataSummaryOpen && (
+        <DataSummaryPanel
+          scenario={scenario}
           selectedCity={selectedCity}
           selectedKpi={selectedKpi}
-          isOpen={isComparisonOpen}
-          onToggle={() => setIsComparisonOpen(!isComparisonOpen)}
+          onClose={() => setIsDataSummaryOpen(false)}
         />
       )}
 
@@ -135,7 +162,7 @@ const Map = () => {
 
       {/* How to Use Button */}
       {!showTour && (
-        <div className={`absolute bottom-4 z-20 transition-all ${isComparisonOpen ? "right-[440px]" : "right-4"}`}>
+        <div className="absolute bottom-4 right-4 z-20 transition-all">
           <button
             onClick={() => setShowTour(true)}
             className="text-xs font-medium text-primary-foreground bg-violet/80 backdrop-blur-xl px-4 py-2 rounded-lg border border-violet/30 hover:bg-violet transition-all shadow-lg"
