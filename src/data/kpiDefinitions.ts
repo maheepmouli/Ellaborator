@@ -16,8 +16,8 @@ export const ELABORATOR_KPIS: KPIDefinition[] = [
   {
     id: "kpi1.2",
     ref: "KPI1.2",
-    name: "Increased share of sustainable mobility modes",
-    shortName: "Mode Share",
+    name: "Mobility Mode Share",
+    shortName: "Mobility Mode Share",
     unit: "%",
     icon: "🚴",
     chartType: "stacked",
@@ -28,8 +28,8 @@ export const ELABORATOR_KPIS: KPIDefinition[] = [
   {
     id: "kpi2.1",
     ref: "KPI2.1",
-    name: "Increase safety of all road users",
-    shortName: "Safety Stars",
+    name: "Road User Safety",
+    shortName: "Road User Safety",
     unit: "⭐",
     icon: "⭐",
     chartType: "radar",
@@ -40,8 +40,8 @@ export const ELABORATOR_KPIS: KPIDefinition[] = [
   {
     id: "kpi3.1",
     ref: "KPI3.1",
-    name: "Zero emission infrastructure deployment",
-    shortName: "Green Infrastructure",
+    name: "Zero-Emission Facilities and Services",
+    shortName: "Zero-Emission Facilities",
     unit: "units",
     icon: "🔋",
     chartType: "bar",
@@ -52,8 +52,8 @@ export const ELABORATOR_KPIS: KPIDefinition[] = [
   {
     id: "kpi3.2",
     ref: "KPI3.2",
-    name: "Climate and environmental targets",
-    shortName: "CO₂ & Emissions",
+    name: "Climate and Environmental Impact",
+    shortName: "Climate & Environmental",
     unit: "kg/day",
     icon: "🌱",
     chartType: "line",
@@ -64,7 +64,7 @@ export const ELABORATOR_KPIS: KPIDefinition[] = [
   {
     id: "kpi4.1",
     ref: "KPI4.1",
-    name: "User satisfaction for interventions",
+    name: "User Satisfaction",
     shortName: "Satisfaction",
     unit: "%",
     icon: "😊",
@@ -76,8 +76,8 @@ export const ELABORATOR_KPIS: KPIDefinition[] = [
   {
     id: "kpi4.2",
     ref: "KPI4.2",
-    name: "Accessibility and security increase",
-    shortName: "Accessibility",
+    name: "Accessibility and Security",
+    shortName: "Accessibility & Security",
     unit: "score",
     icon: "♿",
     chartType: "bar",

@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import { Info, TrendingUp, TrendingDown } from "lucide-react";
-import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
@@ -12,20 +11,25 @@ import {
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Switch } from "@/components/ui/switch";
 import { ELABORATOR_KPIS, CITY_DATA, KPIValue } from "@/data/kpiDefinitions";
+import { getPilotsByCity } from "@/data/pilotDefinitions";
 import KPIChart from "./KPICharts";
 import { getKpiFrameworkConfig } from "@/config/kpiFramework";
 import { getKpiDefinition } from "@/config/kpiDefinitions";
 
 interface InsightPanelProps {
   selectedCity: string;
+  selectedPilotName?: string;
+  selectedPilotId?: string | null;
   selectedKpi: string;
   onCityChange: (city: string) => void;
+  onPilotChange?: (pilotId: string) => void;
   onKpiChange: (kpi: string) => void;
   onRangeChange: (range: [number, number]) => void;
   onModeTypesChange?: (modeTypes: string[]) => void;
   scenario: "baseline" | "intervention" | "comparison";
   onScenarioChange: (scenario: "baseline" | "intervention" | "comparison") => void;
   onOpenDataSummary: () => void;
+  contextTitle?: string;
   mapContext?: {
     segmentName: string;
     speed: number | null;
@@ -37,19 +41,22 @@ interface InsightPanelProps {
 
 const InsightPanel = ({
   selectedCity,
+  selectedPilotName,
+  selectedPilotId,
   selectedKpi,
   onCityChange,
+  onPilotChange,
   onKpiChange,
   onRangeChange,
   onModeTypesChange,
   scenario,
   onScenarioChange,
   onOpenDataSummary,
+  contextTitle,
   mapContext,
   showInterventionLayer,
   onInterventionLayerChange,
 }: InsightPanelProps) => {
-  const [range, setRange] = useState<[number, number]>([0, 100]);
   const [selectedModeTypes, setSelectedModeTypes] = useState<string[]>([
     "Pedestrian",
     "Cycle",
@@ -63,13 +70,8 @@ const InsightPanel = ({
   const kpiValue: KPIValue | undefined = cityData?.kpiData[selectedKpi];
   const kpiFramework = useMemo(() => getKpiFrameworkConfig(selectedKpi), [selectedKpi]);
   const kpiDefinition = useMemo(() => getKpiDefinition(selectedKpi), [selectedKpi]);
+  const pilotsForCity = useMemo(() => getPilotsByCity(selectedCity), [selectedCity]);
   const [showDataExplanation, setShowDataExplanation] = useState(false);
-
-  const handleRangeChange = (values: number[]) => {
-    const newRange: [number, number] = [values[0], values[1]];
-    setRange(newRange);
-    onRangeChange(newRange);
-  };
 
   const handleModeTypeToggle = (modeType: string) => {
     const newSelected = selectedModeTypes.includes(modeType)
@@ -157,23 +159,42 @@ const InsightPanel = ({
       <div className="pointer-events-none absolute inset-[1px] rounded-2xl border border-white/20" />
       {/* Header with City & KPI Selector */}
       <div className="relative px-5 pt-5 pb-4 bg-gradient-to-br from-violet/90 to-violet/70 rounded-t-2xl">
-        {/* City Selector */}
-        <Select value={selectedCity} onValueChange={onCityChange}>
-          <SelectTrigger className="w-fit h-auto p-0 border-0 bg-transparent text-xl font-bold text-primary-foreground hover:text-blue-light transition-colors">
-            <SelectValue placeholder={selectedCity} />
-          </SelectTrigger>
-          <SelectContent className="bg-card/95 backdrop-blur-xl border-border-color/50 z-50 shadow-2xl">
-            {CITY_DATA.map((city) => (
-              <SelectItem key={city.city} value={city.city} className="text-sm py-2.5 hover:bg-violet/10 focus:bg-violet/10">
-                {city.city}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <Select value={selectedCity} onValueChange={onCityChange}>
+            <SelectTrigger className="w-fit h-auto p-0 border-0 bg-transparent text-xl font-bold text-primary-foreground hover:text-blue-light transition-colors">
+              <span>{selectedCity}</span>
+            </SelectTrigger>
+            <SelectContent className="bg-card/95 backdrop-blur-xl border-border-color/50 z-50 shadow-2xl">
+              {CITY_DATA.map((city) => (
+                <SelectItem key={city.city} value={city.city} className="text-sm py-2.5 hover:bg-violet/10 focus:bg-violet/10">
+                  {city.city}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={selectedPilotId || pilotsForCity[0]?.id} onValueChange={(value) => onPilotChange?.(value)}>
+            <SelectTrigger className="h-8 px-2.5 border border-primary-foreground/40 bg-primary-foreground/10 rounded-lg text-sm font-semibold text-primary-foreground flex items-center gap-1.5">
+              <span>{selectedPilotName || pilotsForCity[0]?.name || "Pilot 1"}</span>
+            </SelectTrigger>
+            <SelectContent className="bg-card/95 backdrop-blur-xl border-border-color/50 z-50 shadow-2xl">
+              {pilotsForCity.map((pilot) => (
+                <SelectItem key={pilot.id} value={pilot.id} className="text-sm py-2.5 hover:bg-violet/10 focus:bg-violet/10">
+                  {pilot.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         
         <p className="text-xs text-primary-foreground/80 mt-2 leading-relaxed">
           {kpiFramework?.question || kpiDef.question}
         </p>
+        {contextTitle && (
+          <p className="text-[11px] mt-1 text-primary-foreground/90 font-semibold">
+            {contextTitle}
+          </p>
+        )}
 
         {/* KPI Selector */}
         <Select value={selectedKpi} onValueChange={onKpiChange}>
@@ -352,6 +373,11 @@ const InsightPanel = ({
             </span>
           )}
         </div>
+        <div className="mt-2 text-[10px] text-white/80 space-y-0.5">
+          <p><span className="font-semibold text-white">Source:</span> {kpiDefinition?.dataSource || "City dataset (mock)"}</p>
+          <p><span className="font-semibold text-white">Method:</span> {kpiDefinition?.method || "Derived"}</p>
+          <p><span className="font-semibold text-white">Type:</span> {kpiFramework?.isMock ? "Mock" : "Estimated"}</p>
+        </div>
       </div>
 
       {/* Chart */}
@@ -402,49 +428,6 @@ const InsightPanel = ({
           <p className="text-[10px] text-muted-foreground mt-3 pt-3 border-t border-border-color/30">
             {kpiDef.ref} - {kpiDef.name}
           </p>
-        </div>
-      )}
-
-      {/* Distribution Filter (for other KPIs) */}
-      {!isModeShare && kpiValue.distribution && (
-        <div className="px-4 py-3 bg-card/60">
-          <span className="text-xs font-semibold text-foreground mb-2 block">Filter by KPI value</span>
-
-          {/* Mini Histogram */}
-          <div className="h-10 flex items-end gap-0.5 mb-2 p-1.5 bg-muted-bg/60 rounded-lg border border-border-color/30">
-            {kpiValue.distribution.map((value, idx) => {
-              const maxVal = Math.max(...kpiValue.distribution!);
-              const height = (value / maxVal) * 100;
-              const totalBars = kpiValue.distribution!.length;
-              const inRange =
-                idx >= (range[0] / 100) * totalBars && idx < (range[1] / 100) * totalBars;
-              return (
-                <div
-                  key={idx}
-                  className="flex-1 rounded-t-sm transition-all duration-300"
-                  style={{
-                    height: `${height}%`,
-                    backgroundColor: inRange ? "hsl(var(--violet))" : "hsl(var(--border-color))",
-                  }}
-                />
-              );
-            })}
-          </div>
-
-          {/* Range Slider */}
-          <Slider
-            defaultValue={[0, 100]}
-            max={100}
-            min={0}
-            step={1}
-            value={range}
-            onValueChange={handleRangeChange}
-            className="w-full"
-          />
-          <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
-            <span>{range[0]}%</span>
-            <span>{range[1]}%</span>
-          </div>
         </div>
       )}
 

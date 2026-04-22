@@ -1,13 +1,14 @@
 import { useRef, useState, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
+import { ArrowLeft } from "lucide-react";
 import Header from "@/components/Header";
 import HeroMap from "@/components/HeroMap";
 import InsightPanel from "@/components/InsightPanel";
 import MapControls from "@/components/MapControls";
 import MapTour from "@/components/MapTour";
 import DataSummaryPanel from "@/components/ScenarioPanel";
+import { getPilotsByCity, SelectedPilot, ViewState } from "@/data/pilotDefinitions";
 
-type ViewLevel = "europe" | "city" | "detail";
 type SegmentContext = {
   segmentName: string;
   speed: number | null;
@@ -17,7 +18,8 @@ type SegmentContext = {
 const Map = () => {
   // Start with the tour open when the map first loads
   const [showTour, setShowTour] = useState(true);
-  const [selectedCity, setSelectedCity] = useState("Milan");
+  const [selectedCity, setSelectedCity] = useState("");
+  const [selectedPilot, setSelectedPilot] = useState<SelectedPilot | null>(null);
   const [selectedKpi, setSelectedKpi] = useState("kpi1.2");
   const [filterRange, setFilterRange] = useState<[number, number]>([0, 100]);
   const [selectedModeTypes, setSelectedModeTypes] = useState<string[]>([
@@ -28,7 +30,7 @@ const Map = () => {
     "PTW",
   ]);
   const [mapRef, setMapRef] = useState<any>(null);
-  const [viewLevel, setViewLevel] = useState<ViewLevel>("europe");
+  const [viewLevel, setViewLevel] = useState<ViewState>("EUROPE");
   const [scenario, setScenario] = useState<"baseline" | "intervention" | "comparison">("intervention");
   const [isDataSummaryOpen, setIsDataSummaryOpen] = useState(false);
   const [mapContext, setMapContext] = useState<SegmentContext | null>(null);
@@ -47,10 +49,11 @@ const Map = () => {
     mapRef?.zoomOut();
   }, [mapRef]);
 
-  const handleViewLevelChange = (level: ViewLevel) => {
+  const handleViewLevelChange = (level: ViewState) => {
     setViewLevel(level);
-    if (level === "europe") {
+    if (level === "EUROPE") {
       setSelectedCity("");
+      setSelectedPilot(null);
     }
   };
 
@@ -58,8 +61,13 @@ const Map = () => {
     setSelectedCity(city);
   };
 
-  // Determine if panel should be visible (only at city level)
-  const showPanel = viewLevel === "city" && selectedCity;
+  const handlePilotChange = (pilotId: string) => {
+    const pilot = getPilotsByCity(selectedCity).find((p) => p.id === pilotId) || null;
+    setSelectedPilot(pilot);
+  };
+
+  // KPI panel appears only when a pilot is selected
+  const showPanel = viewLevel === "PILOT_DATA" && selectedCity;
 
   return (
     <div className="h-screen w-screen overflow-hidden bg-background relative">
@@ -99,6 +107,8 @@ const Map = () => {
           selectedModeTypes={selectedModeTypes}
           onSegmentFocus={setMapContext}
           showInterventionLayer={showInterventionLayer}
+          selectedPilotId={selectedPilot?.id}
+          onPilotSelect={setSelectedPilot}
         />
       </motion.div>
 
@@ -111,8 +121,11 @@ const Map = () => {
         >
           <InsightPanel
             selectedCity={selectedCity}
+            selectedPilotName={selectedPilot?.name}
+            selectedPilotId={selectedPilot?.id}
             selectedKpi={selectedKpi}
             onCityChange={setSelectedCity}
+            onPilotChange={handlePilotChange}
             onKpiChange={setSelectedKpi}
             onRangeChange={setFilterRange}
             onModeTypesChange={setSelectedModeTypes}
@@ -122,8 +135,35 @@ const Map = () => {
             mapContext={mapContext}
             showInterventionLayer={showInterventionLayer}
             onInterventionLayerChange={setShowInterventionLayer}
+            contextTitle={selectedPilot ? `${selectedCity}, ${selectedPilot.name}` : selectedCity}
           />
         </motion.div>
+      )}
+
+      {!showTour && viewLevel !== "EUROPE" && (
+        <div className="fixed top-3 left-1/2 -translate-x-1/2 z-[60] flex items-center gap-2 rounded-xl border border-white/30 bg-[linear-gradient(165deg,rgba(255,255,255,0.18)_0%,rgba(255,255,255,0.08)_45%,rgba(255,255,255,0.04)_100%)] backdrop-blur-xl shadow-[0_10px_30px_rgba(10,10,45,0.35)] px-2 py-1.5">
+          <button
+            onClick={() => {
+              if (viewLevel === "PILOT_DATA") {
+                setSelectedPilot(null);
+                return;
+              }
+              resetToEuropeRef.current?.();
+            }}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/70 text-foreground border border-white/30 shadow-sm hover:bg-white/80 transition-colors whitespace-nowrap"
+          >
+            <ArrowLeft className="h-3.5 w-3.5 text-violet" />
+            <span className="text-xs font-medium text-foreground">
+              {viewLevel === "PILOT_DATA" ? "All Pilots" : "All Cities"}
+            </span>
+          </button>
+
+          <div className="px-2.5 py-1.5 rounded-lg bg-violet/85 border border-violet/30 backdrop-blur-md shadow-sm whitespace-nowrap">
+            <p className="text-xs font-medium text-primary-foreground">
+              {selectedPilot ? `${selectedCity}, ${selectedPilot.name}` : selectedCity}
+            </p>
+          </div>
+        </div>
       )}
 
       {/* Right-Side Map Controls - Minimal zoom only */}
@@ -147,6 +187,7 @@ const Map = () => {
           scenario={scenario}
           selectedCity={selectedCity}
           selectedKpi={selectedKpi}
+          selectedPilotName={selectedPilot?.name}
           onClose={() => setIsDataSummaryOpen(false)}
         />
       )}

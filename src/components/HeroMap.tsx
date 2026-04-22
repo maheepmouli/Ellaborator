@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { ArrowLeft } from "lucide-react";
 import { CITY_DATA, ELABORATOR_KPIS, generateHexbinData } from "@/data/kpiDefinitions";
 import { useLatestTrafficData } from "@/hooks/use-traffic-data";
 import { trafficSegmentsToSegments, type MapSegment } from "@/services/trafficApi";
@@ -12,6 +11,7 @@ import { cyclingInfrastructureToSegments, cyclingInfrastructureToHexbin } from "
 import { getVisualizationType, isSegmentVisualization, isPointVisualization, isAreaVisualization } from "@/lib/visualization-types";
 import { generateIsochrones, generateGridAreas, generateEmissionZones, type MapArea } from "@/services/areaGenerator";
 import { getKpiDefinition } from "@/config/kpiDefinitions";
+import { getPilotsByCity, SelectedPilot, ViewState } from "@/data/pilotDefinitions";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -20,20 +20,20 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
-type ViewLevel = "europe" | "city" | "detail";
-
 interface HeroMapProps {
   onMapReady?: (map: L.Map) => void;
   onCitySelect?: (cityName: string) => void;
-  onViewLevelChange?: (level: ViewLevel) => void;
+  onViewLevelChange?: (level: ViewState) => void;
   onResetToEuropeReady?: (resetFn: () => void) => void;
   selectedCity?: string;
+  selectedPilotId?: string | null;
   selectedKpi?: string;
   scenario?: "baseline" | "intervention" | "comparison";
   filterRange?: [number, number];
   selectedModeTypes?: string[];
   onSegmentFocus?: (segment: { segmentName: string; speed: number | null; congestion: number | null } | null) => void;
   showInterventionLayer?: boolean;
+  onPilotSelect?: (pilot: SelectedPilot | null) => void;
 }
 
 const HeroMap = ({
@@ -42,12 +42,14 @@ const HeroMap = ({
   onViewLevelChange,
   onResetToEuropeReady,
   selectedCity,
+  selectedPilotId,
   selectedKpi = "kpi1.2",
   scenario = "baseline",
   filterRange = [0, 100],
   selectedModeTypes = ["Pedestrian", "Cycle", "Public Transport", "Private Car", "PTW"],
   onSegmentFocus,
   showInterventionLayer = false,
+  onPilotSelect,
 }: HeroMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -57,8 +59,9 @@ const HeroMap = ({
   const polygonsRef = useRef<L.Polygon[]>([]);
   const interventionLayerRef = useRef<L.LayerGroup | null>(null);
   const cityBoundaryRef = useRef<L.Polygon | null>(null);
-  const [viewLevel, setViewLevel] = useState<ViewLevel>("europe");
+  const [viewLevel, setViewLevel] = useState<ViewState>("EUROPE");
   const [currentCity, setCurrentCity] = useState<string | null>(null);
+  const [currentPilot, setCurrentPilot] = useState<SelectedPilot | null>(null);
 
   // Fetch real traffic data for Issy-les-Moulineaux
   const { data: trafficData, isLoading: isLoadingTraffic, error: trafficError } = useLatestTrafficData(
@@ -191,6 +194,35 @@ const HeroMap = ({
       return "#D3E3FF"; // Very low - very light blue
     }
   };
+
+  const getPilotCardHtml = (cityLabel: string, pilot: SelectedPilot) => `
+    <div style="
+      width: 320px;
+      padding: 10px 14px 9px 14px;
+      border-radius: 8px;
+      color: white;
+      font-family: 'DM Sans', sans-serif;
+      border: 1px solid rgba(172, 183, 255, 0.45);
+      box-shadow: 0 10px 24px rgba(10, 8, 36, 0.45), inset 0 1px 0 rgba(255,255,255,0.16);
+      backdrop-filter: blur(18px);
+      background: linear-gradient(165deg, rgba(60, 37, 142, 0.92) 0%, rgba(48, 28, 116, 0.95) 100%);
+      cursor: pointer;">
+      <div style="display: flex; align-items: flex-start; gap: 8px;">
+        <svg width="16" height="18" viewBox="0 0 24 24" fill="none" style="opacity: 0.95; flex-shrink: 0; margin-top: 2px;">
+          <path d="M12 22s7-6.2 7-13a7 7 0 1 0-14 0c0 6.8 7 13 7 13z" fill="#A78BFA"/>
+          <circle cx="12" cy="9" r="2.6" fill="#EDE9FE"/>
+        </svg>
+        <div style="flex: 1;">
+          <p style="font-size: 16px; font-weight: 800; margin: 0; line-height: 1.05; letter-spacing: 0.6px;">${cityLabel.toUpperCase()}</p>
+          <p style="font-size: 30px; font-weight: 800; margin: -1px 0 0 0; line-height: 0.95;">${pilot.name}</p>
+          <p style="font-size: 11px; font-weight: 700; margin: 4px 0 0 0; opacity: 0.98;">${pilot.title}</p>
+        </div>
+      </div>
+      <div style="margin-top: 8px; border: 2px solid rgba(173, 236, 255, 0.92); border-radius: 999px; padding: 5px 10px;">
+        <p style="font-size: 10px; opacity: 0.95; margin: 0; line-height: 1.25; white-space: normal;">${pilot.description}</p>
+      </div>
+    </div>
+  `;
 
   const addHexbinData = useCallback(
     (cityName: string, modeTypes?: string[]) => {
@@ -349,6 +381,50 @@ const HeroMap = ({
         if (!points) {
           // Generate synthetic points
           points = generateHexbinData(cityData, selectedKpi, 200);
+        }
+
+        if (selectedKpi === "kpi1.2") {
+          const buckets = new Map<string, { lat: number; lon: number; total: number; count: number }>();
+          points.forEach((point) => {
+            if (point.value < filterRange[0] || point.value > filterRange[1]) return;
+            if (selectedModeTypes && selectedModeTypes.length > 0 && !selectedModeTypes.includes("Cycle")) return;
+            const key = `${Math.round(point.lat * 250)}_${Math.round(point.lon * 250)}`;
+            const existing = buckets.get(key);
+            if (existing) {
+              existing.lat += point.lat;
+              existing.lon += point.lon;
+              existing.total += point.value;
+              existing.count += 1;
+            } else {
+              buckets.set(key, { lat: point.lat, lon: point.lon, total: point.value, count: 1 });
+            }
+          });
+
+          Array.from(buckets.values()).forEach((cluster) => {
+            const centerLat = cluster.lat / cluster.count;
+            const centerLon = cluster.lon / cluster.count;
+            const avgValue = cluster.total / cluster.count;
+            const size = Math.max(8, Math.min(20, 8 + cluster.count * 1.1));
+            const color = getValueColor(avgValue, false);
+            const circle = L.circleMarker([centerLat, centerLon], {
+              radius: size,
+              fillColor: color,
+              fillOpacity: 0.72,
+              color: "#DDE6FF",
+              weight: 1.2,
+              opacity: 0.95,
+            }).addTo(mapRef.current!);
+            circle.bindPopup(`
+              <div style="font-family: 'DM Sans', sans-serif; padding: 6px; min-width: 150px;">
+                <p style="font-size: 11px; color: #8578C3; margin: 0 0 4px 0; text-transform: uppercase;">Mode Share Cluster</p>
+                <p style="font-size: 16px; font-weight: bold; color: #2F1B6D; margin: 0;">${cluster.count} points</p>
+                <p style="font-size: 10px; color: #96C2EF; margin: 4px 0 0 0;">Avg value: ${avgValue.toFixed(1)}%</p>
+              </div>
+            `);
+            circlesRef.current.push(circle);
+          });
+          addInterventionLayer(cityData, showInterventionLayer);
+          return;
         }
 
         // Calculate size range based on values
@@ -593,26 +669,56 @@ const HeroMap = ({
 
       marker.on("click", () => {
         setCurrentCity(city.city);
-        setViewLevel("city");
+        setCurrentPilot(null);
+        onPilotSelect?.(null);
+        setViewLevel("CITY_INTERVENTIONS");
         onCitySelect?.(city.city);
-        mapRef.current!.flyTo([city.lat, city.lon], 12, { duration: 1.2 });
+        mapRef.current!.flyTo([city.lat, city.lon], 13, { duration: 1.2 });
         setTimeout(() => {
           clearLayers();
-          addHexbinData(city.city, selectedModeTypes);
+          const pilots = getPilotsByCity(city.city).map((p, idx) => ({
+            ...p,
+            lat: p.lat || city.lat + (idx - 1) * 0.012,
+            lng: p.lng || city.lon + (idx - 1) * 0.015,
+          }));
+          pilots.forEach((pilot) => {
+            const icon = L.divIcon({
+              className: "pilot-card-marker",
+              html: getPilotCardHtml(city.city, pilot),
+              iconSize: [320, 146],
+              iconAnchor: [160, 73],
+            });
+
+            const pilotMarker = L.marker([pilot.lat, pilot.lng], { icon }).addTo(mapRef.current!);
+            markersRef.current.push(pilotMarker);
+            pilotMarker.on("click", () => {
+              setCurrentPilot(pilot);
+              onPilotSelect?.(pilot);
+              setViewLevel("PILOT_DATA");
+              onCitySelect?.(city.city);
+              mapRef.current!.flyTo([city.lat, city.lon], 12, { duration: 0.9 });
+              setTimeout(() => {
+                clearLayers();
+                addHexbinData(city.city, selectedModeTypes);
+              }, 500);
+            });
+          });
         }, 800);
       });
     });
-  }, [clearLayers, onCitySelect, selectedKpi, addHexbinData, selectedModeTypes]);
+  }, [clearLayers, onCitySelect, addHexbinData, selectedModeTypes, onPilotSelect]);
 
   const resetToEurope = useCallback(() => {
     if (!mapRef.current) return;
     clearLayers();
-    setViewLevel("europe");
+    setViewLevel("EUROPE");
     setCurrentCity(null);
+    setCurrentPilot(null);
+    onPilotSelect?.(null);
     onCitySelect?.("");
     mapRef.current.flyTo([50, 10], 4, { duration: 1 });
     setTimeout(() => addCityMarkers(), 500);
-  }, [clearLayers, addCityMarkers, onCitySelect]);
+  }, [clearLayers, addCityMarkers, onCitySelect, onPilotSelect]);
 
   // Expose reset action to parent (e.g., header logo click)
   useEffect(() => {
@@ -620,22 +726,64 @@ const HeroMap = ({
   }, [onResetToEuropeReady, resetToEurope]);
 
   useEffect(() => {
-    if (selectedCity && selectedCity !== currentCity && mapRef.current) {
+    if (selectedCity && mapRef.current) {
       const cityData = CITY_DATA.find((c) => c.city === selectedCity);
       if (cityData) {
-        setCurrentCity(selectedCity);
-        setViewLevel("city");
-        mapRef.current.flyTo([cityData.lat, cityData.lon], 12, { duration: 1.2 });
-        setTimeout(() => {
-          clearLayers();
-          addHexbinData(selectedCity, selectedModeTypes);
-        }, 800);
+        if (selectedCity !== currentCity) {
+          setCurrentCity(selectedCity);
+        }
+        const cityPilots = getPilotsByCity(selectedCity);
+        const selectedPilot = cityPilots.find((pilot) => pilot.id === selectedPilotId);
+
+        if (selectedPilot) {
+          setCurrentPilot(selectedPilot);
+          setViewLevel("PILOT_DATA");
+          mapRef.current.flyTo([cityData.lat, cityData.lon], 12, { duration: 1.2 });
+          setTimeout(() => {
+            clearLayers();
+            addHexbinData(selectedCity, selectedModeTypes);
+          }, 800);
+        } else {
+          setCurrentPilot(null);
+          setViewLevel("CITY_INTERVENTIONS");
+          mapRef.current.flyTo([cityData.lat, cityData.lon], 13, { duration: 1.2 });
+          setTimeout(() => {
+            clearLayers();
+            addCityMarkers();
+            clearLayers();
+            const pilots = getPilotsByCity(selectedCity).map((p, idx) => ({
+              ...p,
+              lat: p.lat || cityData.lat + (idx - 1) * 0.012,
+              lng: p.lng || cityData.lon + (idx - 1) * 0.015,
+            }));
+            pilots.forEach((pilot) => {
+              const icon = L.divIcon({
+                className: "pilot-card-marker",
+                html: getPilotCardHtml(selectedCity, pilot),
+                iconSize: [320, 146],
+                iconAnchor: [160, 73],
+              });
+              const pilotMarker = L.marker([pilot.lat, pilot.lng], { icon }).addTo(mapRef.current!);
+              markersRef.current.push(pilotMarker);
+              pilotMarker.on("click", () => {
+                setCurrentPilot(pilot);
+                onPilotSelect?.(pilot);
+                setViewLevel("PILOT_DATA");
+                mapRef.current!.flyTo([cityData.lat, cityData.lon], 12, { duration: 0.9 });
+                setTimeout(() => {
+                  clearLayers();
+                  addHexbinData(selectedCity, selectedModeTypes);
+                }, 500);
+              });
+            });
+          }, 800);
+        }
       }
     }
-  }, [selectedCity, currentCity, clearLayers, addHexbinData, selectedModeTypes]);
+  }, [selectedCity, selectedPilotId, currentCity, clearLayers, addHexbinData, selectedModeTypes, onPilotSelect, addCityMarkers]);
 
   useEffect(() => {
-    if (viewLevel === "city" && currentCity && mapRef.current) {
+    if (viewLevel === "PILOT_DATA" && currentCity && mapRef.current) {
       clearLayers();
       addHexbinData(currentCity, selectedModeTypes);
     }
@@ -682,7 +830,7 @@ const HeroMap = ({
       `}</style>
       <div className="absolute inset-0 pointer-events-none z-10 bg-gradient-to-b from-background/30 via-transparent to-background/20" />
       <div ref={mapContainer} className="h-full w-full" />
-      {scenario === "comparison" && (
+      {scenario === "comparison" && viewLevel === "PILOT_DATA" && (
         <div className="pointer-events-none absolute inset-0 z-20">
           <div className="absolute inset-y-0 left-1/2 w-[2px] bg-white/70 shadow-[0_0_12px_rgba(255,255,255,0.45)]" />
           <div className="absolute top-6 left-[calc(50%-160px)] text-[11px] px-2 py-1 rounded bg-card/80 border border-border-color/40">
@@ -694,23 +842,6 @@ const HeroMap = ({
         </div>
       )}
 
-      {viewLevel !== "europe" && (
-        <div className="absolute top-20 left-[380px] z-20 flex items-center gap-2">
-          <button
-            onClick={resetToEurope}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-card/95 backdrop-blur-md border border-border-color shadow-lg hover:bg-card transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4 text-violet" />
-            <span className="text-sm font-medium text-foreground">All Cities</span>
-          </button>
-
-          <div className="px-3 py-2 rounded-lg bg-violet/90 backdrop-blur-md shadow-lg">
-            <p className="text-sm font-medium text-primary-foreground">
-              {currentCity}
-            </p>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

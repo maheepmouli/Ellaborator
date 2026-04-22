@@ -8,6 +8,7 @@ interface ScenarioPanelProps {
   scenario: "baseline" | "intervention" | "comparison";
   selectedCity: string;
   selectedKpi: string;
+  selectedPilotName?: string;
   onClose: () => void;
 }
 
@@ -15,6 +16,7 @@ const ScenarioPanel = ({
   scenario,
   selectedCity,
   selectedKpi,
+  selectedPilotName,
   onClose,
 }: ScenarioPanelProps) => {
   const cityData = CITY_DATA.find((c) => c.city === selectedCity);
@@ -28,27 +30,9 @@ const ScenarioPanel = ({
   const baselineMainValue = Math.max(0, Number(kpiValue.mainValue) - (kpiValue.change || 0));
   const interventionMainValue = Number(kpiValue.mainValue);
 
-  const statusLabel =
-    scenario === "baseline"
-      ? "before"
-      : scenario === "intervention"
-        ? "after"
-        : "before / after";
-
-  const getMetadataValue = (id: string) => {
-    switch (id) {
-      case "dataSource":
-        return "City-provided dataset (demo)";
-      case "collectionPeriod":
-        return "Not specified (demo)";
-      case "method":
-        return kpiFramework?.isModelled ? "Modelled estimate (demo)" : "Observed / reported (demo)";
-      case "status":
-        return statusLabel;
-      default:
-        return "—";
-    }
-  };
+  const changeLabel = `${kpiValue.change > 0 ? "+" : ""}${kpiValue.change}${kpiDef.unit === "%" ? "pp" : ""}`;
+  const methodLabel = kpiDefinition?.method || (kpiFramework?.isModelled ? "Modelled estimate" : "Observed / reported");
+  const typeLabel = kpiFramework?.isMock ? "Mock" : "Estimated";
 
   return (
     <AnimatePresence>
@@ -65,10 +49,10 @@ const ScenarioPanel = ({
         <div className="relative flex items-center justify-between px-6 py-4 border-b border-white/15">
           <div className="flex items-center gap-4">
             <h2 className="text-lg font-bold text-white">
-              Data Summary — {kpiDefinition?.name || (kpiFramework?.displayName || kpiDef.shortName)}
+              KPI Data Summary — {kpiDefinition?.name || (kpiFramework?.displayName || kpiDef.shortName)}
             </h2>
             <span className="px-3 py-1 text-xs font-medium bg-violet/20 text-violet rounded-full">
-              {selectedCity}
+              {selectedPilotName ? `${selectedCity}, ${selectedPilotName}` : selectedCity}
             </span>
             {kpiDef && (
               <span className="px-3 py-1 text-xs font-medium bg-muted-bg/70 text-white rounded-full">
@@ -90,14 +74,12 @@ const ScenarioPanel = ({
         {/* Content */}
         <div className="relative px-6 py-5 max-h-[50vh] overflow-y-auto space-y-4">
           <div className="bg-white/[0.06] backdrop-blur-2xl rounded-xl border border-white/25 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.22)]">
-            <p className="text-xs text-white/80 mb-1">KPI Value</p>
-            <p className="text-3xl font-bold text-white">
-              {scenario === "baseline" ? baselineMainValue : interventionMainValue}
-              <span className="text-base ml-1">{kpiValue.unit}</span>
-            </p>
-            <p className="text-sm text-white/80 mt-1">
-              Change from baseline: {kpiValue.change > 0 ? "+" : ""}{kpiValue.change}{kpiDef.unit === "%" ? "pp" : ""}
-            </p>
+            <p className="text-xs text-white/80 mb-1">KPI Data Summary</p>
+            <div className="grid grid-cols-3 gap-3 text-white">
+              <p className="text-sm"><span className="block text-[10px] text-white/70">Baseline</span><span className="font-bold">{baselineMainValue}{kpiValue.unit}</span></p>
+              <p className="text-sm"><span className="block text-[10px] text-white/70">Intervention</span><span className="font-bold">{interventionMainValue}{kpiValue.unit}</span></p>
+              <p className="text-sm"><span className="block text-[10px] text-white/70">Change</span><span className="font-bold">{changeLabel}</span></p>
+            </div>
           </div>
 
           <div className="bg-white/[0.06] backdrop-blur-2xl rounded-xl border border-white/25 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.22)]">
@@ -109,20 +91,12 @@ const ScenarioPanel = ({
             </div>
           </div>
 
-          <div className="bg-white/[0.06] backdrop-blur-2xl rounded-xl border border-white/25 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.22)]">
-            <p className="text-xs text-white/80 mb-1">Interpretation</p>
-            <p className="text-sm text-white leading-relaxed">
-              {kpiDefinition?.interpretation || "Indicator interpretation is based on aggregated trend changes in the selected scenario."}
-            </p>
-          </div>
-
           <div className="bg-white/[0.05] backdrop-blur-2xl rounded-xl border border-white/25 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.22)]">
-            <p className="text-xs font-bold text-white mb-3">Metadata</p>
-            <div className="grid grid-cols-2 gap-3 text-[11px] text-white/80">
-              <p><span className="text-white font-semibold">Data source:</span> {kpiDefinition?.dataSource || getMetadataValue("dataSource")}</p>
-              <p><span className="text-white font-semibold">Method:</span> {kpiDefinition?.method || getMetadataValue("method")}</p>
-              <p><span className="text-white font-semibold">Time:</span> 2024</p>
-              <p><span className="text-white font-semibold">Status:</span> {kpiDefinition?.status || statusLabel}</p>
+            <p className="text-xs font-bold text-white mb-3">Data Transparency</p>
+            <div className="grid grid-cols-3 gap-3 text-[11px] text-white/80">
+              <p><span className="text-white font-semibold">Source:</span> {kpiDefinition?.dataSource || "City-provided dataset"}</p>
+              <p><span className="text-white font-semibold">Method:</span> {methodLabel}</p>
+              <p><span className="text-white font-semibold">Type:</span> {typeLabel}</p>
             </div>
           </div>
         </div>
