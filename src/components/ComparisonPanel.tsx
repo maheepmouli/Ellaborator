@@ -57,7 +57,7 @@ const ComparisonPanel = ({
           >
             <ChevronLeft className="h-4 w-4 rotate-90" />
             <span className="font-medium writing-vertical-rl text-center" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>
-              Comparison
+              Comparison (available period)
             </span>
           </Button>
         </motion.div>
@@ -76,7 +76,7 @@ const ComparisonPanel = ({
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-border-color/30">
               <div className="flex items-center gap-3">
-                <h2 className="text-lg font-bold text-foreground">Comparison</h2>
+                <h2 className="text-lg font-bold text-foreground">Comparison (within available period)</h2>
                 <span className="px-3 py-1 text-xs font-medium bg-violet/20 text-violet rounded-full">
                   {selectedCity}
                 </span>

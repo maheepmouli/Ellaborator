@@ -121,3 +121,44 @@
     height: 3px;
   }
 }
+
+@media print {
+  .report-print-root {
+    break-inside: avoid;
+  }
+
+  /* Map panel “View summary” dialog: only print narrative + before/after + charts */
+  html.printing-insight-summary body * {
+    visibility: hidden;
+  }
+  html.printing-insight-summary #insight-summary-print-target,
+  html.printing-insight-summary #insight-summary-print-target * {
+    visibility: visible;
+  }
+  html.printing-insight-summary .insight-summary-dialog {
+    visibility: visible !important;
+    position: static !important;
+    inset: auto !important;
+    left: auto !important;
+    top: auto !important;
+    transform: none !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+    padding: 0.75rem !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: #fff !important;
+    color: #111 !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  html.printing-insight-summary .insight-summary-chart-wrap {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+    break-inside: avoid;
+  }
+}

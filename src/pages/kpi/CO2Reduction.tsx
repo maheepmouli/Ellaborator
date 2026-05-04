@@ -1,80 +1,40 @@
 import { motion } from "framer-motion";
 import { ArrowLeft, Download } from "lucide-react";
 import { Link } from "react-router-dom";
-import ReactECharts from "echarts-for-react";
-import * as echarts from "echarts";
+import {
+  ResponsiveContainer,
+  ComposedChart,
+  Line,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 
+const emissionsTrend = [
+  { month: "Jan", total: 85, target: 85 },
+  { month: "Feb", total: 83, target: 82.5 },
+  { month: "Mar", total: 80, target: 80 },
+  { month: "Apr", total: 78, target: 77.5 },
+  { month: "May", total: 77, target: 75 },
+  { month: "Jun", total: 76.3, target: 72.5 },
+];
+
+const emissionsByMode = [
+  { name: "Private Cars", value: 45.3, color: "#E02020" },
+  { name: "Freight", value: 18.5, color: "#6B7280" },
+  { name: "Public Transit", value: 8.2, color: "#38BDF8" },
+  { name: "Motorcycles", value: 4.3, color: "#C31414" },
+];
+
 const CO2Reduction = () => {
-  const chartOption = {
-    title: {
-      text: "Transport CO₂ Emissions Time Series",
-      textStyle: { color: "#111111", fontSize: 18, fontWeight: "bold" },
-    },
-    tooltip: { trigger: "axis" },
-    legend: { data: ["Total Emissions", "Target Path"], bottom: 0 },
-    grid: { left: "3%", right: "4%", bottom: "15%", top: "15%", containLabel: true },
-    xAxis: {
-      type: "category",
-      data: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
-      axisLabel: { color: "#111111" },
-    },
-    yAxis: {
-      type: "value",
-      name: "kt CO₂/month",
-      axisLabel: { color: "#111111" },
-    },
-    series: [
-      {
-        name: "Total Emissions",
-        type: "line",
-        data: [85, 83, 80, 78, 77, 76.3],
-        itemStyle: { color: "#E02020" },
-        smooth: true,
-        areaStyle: {
-          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-            { offset: 0, color: "rgba(224, 32, 32, 0.3)" },
-            { offset: 1, color: "rgba(224, 32, 32, 0.05)" },
-          ]),
-        },
-      },
-      {
-        name: "Target Path",
-        type: "line",
-        data: [85, 82.5, 80, 77.5, 75, 72.5],
-        itemStyle: { color: "#10B981" },
-        lineStyle: { type: "dashed" },
-      },
-    ],
-  };
-
-  const sourceOption = {
-    title: {
-      text: "Emissions by Transport Mode",
-      textStyle: { color: "#111111", fontSize: 16 },
-    },
-    tooltip: { trigger: "item" },
-    legend: { orient: "vertical", right: "10%", top: "15%" },
-    series: [
-      {
-        name: "Emissions",
-        type: "pie",
-        radius: ["40%", "70%"],
-        avoidLabelOverlap: false,
-        itemStyle: { borderRadius: 10, borderColor: "#fff", borderWidth: 2 },
-        label: { show: true, formatter: "{b}: {d}%" },
-        emphasis: { label: { show: true, fontSize: 16, fontWeight: "bold" } },
-        data: [
-          { value: 45.3, name: "Private Cars", itemStyle: { color: "#E02020" } },
-          { value: 18.5, name: "Freight", itemStyle: { color: "#6B7280" } },
-          { value: 8.2, name: "Public Transit", itemStyle: { color: "#38BDF8" } },
-          { value: 4.3, name: "Motorcycles", itemStyle: { color: "#C31414" } },
-        ],
-      },
-    ],
-  };
-
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -103,13 +63,47 @@ const CO2Reduction = () => {
           <div className="space-y-6">
             <div className="rounded-2xl border border-border-color bg-card p-6 shadow-md">
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-red">Emissions Trend</h2>
+                <h2 className="text-xl font-bold text-red">Transport CO₂ Emissions Time Series</h2>
                 <Button variant="outline" size="sm" className="gap-2">
                   <Download className="h-4 w-4" />
                   Export Data
                 </Button>
               </div>
-              <ReactECharts option={chartOption} style={{ height: "400px" }} />
+              <div className="h-[400px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart data={emissionsTrend} margin={{ top: 12, right: 16, bottom: 8, left: 8 }}>
+                    <defs>
+                      <linearGradient id="co2-area" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="rgba(224, 32, 32, 0.35)" />
+                        <stop offset="100%" stopColor="rgba(224, 32, 32, 0.05)" />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                    <XAxis dataKey="month" tick={{ fill: "#111" }} />
+                    <YAxis tick={{ fill: "#111" }} name="kt CO₂/month" />
+                    <Tooltip contentStyle={{ background: "#fff", border: "1px solid #e5e7eb" }} />
+                    <Legend wrapperStyle={{ paddingTop: 16 }} />
+                    <Area
+                      type="monotone"
+                      dataKey="total"
+                      name="Total Emissions"
+                      stroke="#E02020"
+                      fill="url(#co2-area)"
+                      strokeWidth={2}
+                      dot={{ r: 4 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="target"
+                      name="Target Path"
+                      stroke="#10B981"
+                      strokeWidth={2}
+                      strokeDasharray="6 4"
+                      dot={false}
+                    />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </div>
               <p className="text-xs text-muted mt-4">
                 Source: ELABORATOR emission model (COPERT 5.5) + traffic counts | Scope: Direct tailpipe emissions only
               </p>
@@ -117,13 +111,34 @@ const CO2Reduction = () => {
 
             <div className="rounded-2xl border border-border-color bg-card p-6 shadow-md">
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-red">Breakdown by Mode (June 2025)</h2>
+                <h2 className="text-xl font-bold text-red">Emissions by Transport Mode (June 2025)</h2>
                 <Button variant="outline" size="sm" className="gap-2">
                   <Download className="h-4 w-4" />
                   Export
                 </Button>
               </div>
-              <ReactECharts option={sourceOption} style={{ height: "400px" }} />
+              <div className="h-[400px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart margin={{ top: 8, right: 16, bottom: 8, left: 16 }}>
+                    <Pie
+                      data={emissionsByMode}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="45%"
+                      cy="50%"
+                      innerRadius={80}
+                      outerRadius={140}
+                      paddingAngle={2}
+                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    >
+                      {emissionsByMode.map((e) => (
+                        <Cell key={e.name} fill={e.color} stroke="#fff" strokeWidth={2} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value: number) => [`${value} kt/month`, ""]} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
 

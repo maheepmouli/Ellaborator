@@ -3,12 +3,14 @@ import { X } from "lucide-react";
 import { CITY_DATA, ELABORATOR_KPIS } from "@/data/kpiDefinitions";
 import { getKpiFrameworkConfig } from "@/config/kpiFramework";
 import { getKpiDefinition } from "@/config/kpiDefinitions";
+import { getPilotById } from "@/data/pilotDefinitions";
 
 interface ScenarioPanelProps {
   scenario: "baseline" | "intervention" | "comparison";
   selectedCity: string;
   selectedKpi: string;
   selectedPilotName?: string;
+  selectedPilotId?: string | null;
   onClose: () => void;
 }
 
@@ -17,6 +19,7 @@ const ScenarioPanel = ({
   selectedCity,
   selectedKpi,
   selectedPilotName,
+  selectedPilotId,
   onClose,
 }: ScenarioPanelProps) => {
   const cityData = CITY_DATA.find((c) => c.city === selectedCity);
@@ -24,6 +27,7 @@ const ScenarioPanel = ({
   const kpiValue = cityData?.kpiData[selectedKpi];
   const kpiFramework = getKpiFrameworkConfig(selectedKpi);
   const kpiDefinition = getKpiDefinition(selectedKpi);
+  const selectedPilot = getPilotById(selectedCity, selectedPilotId);
 
   if (!kpiDef || !kpiValue) return null;
 
@@ -32,7 +36,17 @@ const ScenarioPanel = ({
 
   const changeLabel = `${kpiValue.change > 0 ? "+" : ""}${kpiValue.change}${kpiDef.unit === "%" ? "pp" : ""}`;
   const methodLabel = kpiDefinition?.method || (kpiFramework?.isModelled ? "Modelled estimate" : "Observed / reported");
-  const typeLabel = kpiFramework?.isMock ? "Mock" : "Estimated";
+  const typeLabel =
+    kpiFramework?.isMock
+      ? "mock"
+      : (kpiDefinition?.dataLabel?.toLowerCase() as "observed" | "derived" | "modelled" | undefined) ||
+        (kpiFramework?.isModelled ? "modelled" : "observed");
+  const isHelsinkiObservedBeforeAfter = selectedCity === "Helsinki" && (selectedKpi === "kpi1.2" || selectedKpi === "kpi2.1");
+  const dataTypeLabel = isHelsinkiObservedBeforeAfter
+    ? (selectedKpi === "kpi2.1" ? "derived" : "observed")
+    : typeLabel;
+  const temporalLabel = isHelsinkiObservedBeforeAfter ? "before-after" : "single-period";
+  const spatialLabel = selectedCity === "Milan" ? "matched" : selectedCity === "Helsinki" ? "inferred" : "exact";
 
   return (
     <AnimatePresence>
@@ -60,7 +74,7 @@ const ScenarioPanel = ({
               </span>
             )}
             <span className="px-3 py-1 text-xs font-medium bg-muted-bg/70 text-white/80 rounded-full">
-              {scenario === "baseline" ? "Baseline" : scenario === "intervention" ? "Intervention" : "Comparison"}
+              {scenario === "baseline" ? "Baseline" : scenario === "intervention" ? "Intervention" : "comparission"}
             </span>
           </div>
           <button
@@ -69,6 +83,12 @@ const ScenarioPanel = ({
           >
             <X className="h-5 w-5 text-white/80" />
           </button>
+        </div>
+        <div className="relative px-6 pb-3 flex flex-wrap gap-1.5 text-[10px] text-white/90 border-b border-white/10">
+          <span className="px-2 py-0.5 rounded-full bg-white/10 border border-white/20">Spatial: {selectedCity === "Milan" ? "matched" : selectedCity === "Helsinki" ? "inferred" : "exact"}</span>
+          <span className="px-2 py-0.5 rounded-full bg-white/10 border border-white/20">Method: {isHelsinkiObservedBeforeAfter ? "derived proxy" : dataTypeLabel}</span>
+          <span className="px-2 py-0.5 rounded-full bg-white/10 border border-white/20">Temporal: {temporalLabel}</span>
+          <span className="px-2 py-0.5 rounded-full bg-white/10 border border-white/20">Source: {isHelsinkiObservedBeforeAfter ? "Local" : "API/Local"}</span>
         </div>
 
         {/* Content */}
@@ -91,12 +111,29 @@ const ScenarioPanel = ({
             </div>
           </div>
 
+          {selectedPilot && (
+            <div className="bg-white/[0.06] backdrop-blur-2xl rounded-xl border border-white/25 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.22)]">
+              <p className="text-xs font-bold text-white mb-2">Pilot Context</p>
+              <div className="text-[11px] text-white/85 space-y-1">
+                <p><span className="text-white font-semibold">Intervention:</span> {selectedPilot.interventionType}</p>
+                <p><span className="text-white font-semibold">Scale:</span> {selectedPilot.scale}</p>
+                <p><span className="text-white font-semibold">Why:</span> {selectedPilot.goal}</p>
+                <p><span className="text-white font-semibold">Datasets:</span> {selectedPilot.datasets.join(", ")}</p>
+                <p><span className="text-white font-semibold">KPI coverage:</span> {selectedPilot.supportedKpis.join(", ")}</p>
+                <p><span className="text-white font-semibold">Data completeness:</span> {selectedPilot.dataCompleteness || "partial"}</p>
+              </div>
+            </div>
+          )}
+
           <div className="bg-white/[0.05] backdrop-blur-2xl rounded-xl border border-white/25 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.22)]">
             <p className="text-xs font-bold text-white mb-3">Data Transparency</p>
-            <div className="grid grid-cols-3 gap-3 text-[11px] text-white/80">
-              <p><span className="text-white font-semibold">Source:</span> {kpiDefinition?.dataSource || "City-provided dataset"}</p>
-              <p><span className="text-white font-semibold">Method:</span> {methodLabel}</p>
-              <p><span className="text-white font-semibold">Type:</span> {typeLabel}</p>
+            <div className="grid grid-cols-2 gap-3 text-[11px] text-white/80">
+              <p><span className="text-white font-semibold">Data Type:</span> {dataTypeLabel}</p>
+              <p><span className="text-white font-semibold">Source:</span> {isHelsinkiObservedBeforeAfter ? "Telraam" : (kpiDefinition?.dataSource || "City-provided dataset")}</p>
+              <p><span className="text-white font-semibold">Spatial:</span> {spatialLabel}</p>
+              <p><span className="text-white font-semibold">Temporal:</span> {temporalLabel}</p>
+              <p><span className="text-white font-semibold">Method:</span> {isHelsinkiObservedBeforeAfter ? "Derived from Telraam flows" : methodLabel}</p>
+              {spatialLabel === "inferred" && <p><span className="text-white font-semibold">Note:</span> Location inferred from network segment</p>}
             </div>
           </div>
         </div>

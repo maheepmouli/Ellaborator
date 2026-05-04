@@ -1,75 +1,38 @@
 import { motion } from "framer-motion";
 import { ArrowLeft, Download } from "lucide-react";
 import { Link } from "react-router-dom";
-import ReactECharts from "echarts-for-react";
-import * as echarts from "echarts";
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 
+const features = [
+  { feature: "Tactile Paving", count: 12 },
+  { feature: "Curb Ramps", count: 8 },
+  { feature: "Audio Signals", count: 6 },
+  { feature: "Wide Sidewalks", count: 5 },
+  { feature: "Resting Benches", count: 7 },
+  { feature: "Accessible Parking", count: 4 },
+];
+
+const districts = [
+  { name: "Centro Storico", value: 14, color: "#E02020" },
+  { name: "Porta Venezia", value: 11, color: "#C31414" },
+  { name: "Brera", value: 9, color: "#38BDF8" },
+  { name: "Ticinese", value: 8, color: "#6B7280" },
+];
+
 const Accessibility = () => {
-  const chartOption = {
-    title: {
-      text: "Accessibility Features by Type",
-      textStyle: { color: "#111111", fontSize: 18, fontWeight: "bold" },
-    },
-    tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
-    grid: { left: "3%", right: "4%", bottom: "10%", top: "15%", containLabel: true },
-    xAxis: {
-      type: "value",
-      axisLabel: { color: "#111111" },
-    },
-    yAxis: {
-      type: "category",
-      data: [
-        "Tactile Paving",
-        "Curb Ramps",
-        "Audio Signals",
-        "Wide Sidewalks",
-        "Resting Benches",
-        "Accessible Parking",
-      ],
-      axisLabel: { color: "#111111" },
-    },
-    series: [
-      {
-        name: "Count",
-        type: "bar",
-        data: [12, 8, 6, 5, 7, 4],
-        itemStyle: {
-          color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-            { offset: 0, color: "#E02020" },
-            { offset: 1, color: "#C31414" },
-          ]),
-        },
-        label: { show: true, position: "right", color: "#111111" },
-      },
-    ],
-  };
-
-  const coverageOption = {
-    title: {
-      text: "Coverage by District",
-      textStyle: { color: "#111111", fontSize: 16 },
-    },
-    tooltip: { trigger: "item" },
-    series: [
-      {
-        name: "Features",
-        type: "pie",
-        radius: "65%",
-        center: ["50%", "50%"],
-        data: [
-          { value: 14, name: "Centro Storico", itemStyle: { color: "#E02020" } },
-          { value: 11, name: "Porta Venezia", itemStyle: { color: "#C31414" } },
-          { value: 9, name: "Brera", itemStyle: { color: "#38BDF8" } },
-          { value: 8, name: "Ticinese", itemStyle: { color: "#6B7280" } },
-        ],
-        emphasis: { itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: "rgba(0, 0, 0, 0.5)" } },
-        label: { formatter: "{b}: {c} ({d}%)" },
-      },
-    ],
-  };
-
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -90,21 +53,35 @@ const Accessibility = () => {
           <div className="mb-8">
             <h1 className="text-4xl font-bold text-red mb-2">Accessibility Features</h1>
             <p className="text-xl text-black">42 features mapped</p>
-            <p className="text-sm text-muted mt-2">
-              Universal design inventory for Milan intervention zones
-            </p>
+            <p className="text-sm text-muted mt-2">Universal design inventory for Milan intervention zones</p>
           </div>
 
           <div className="space-y-6">
             <div className="rounded-2xl border border-border-color bg-card p-6 shadow-md">
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-red">Features by Type</h2>
+                <h2 className="text-xl font-bold text-red">Accessibility Features by Type</h2>
                 <Button variant="outline" size="sm" className="gap-2">
                   <Download className="h-4 w-4" />
                   Export Data
                 </Button>
               </div>
-              <ReactECharts option={chartOption} style={{ height: "400px" }} />
+              <div className="h-[400px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart layout="vertical" data={features} margin={{ top: 8, right: 48, bottom: 8, left: 112 }}>
+                    <defs>
+                      <linearGradient id="acc-bar" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stopColor="#E02020" />
+                        <stop offset="100%" stopColor="#C31414" />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-border" horizontal={false} />
+                    <XAxis type="number" tick={{ fill: "#111" }} />
+                    <YAxis type="category" dataKey="feature" width={108} tick={{ fill: "#111", fontSize: 12 }} />
+                    <Tooltip contentStyle={{ background: "#fff", border: "1px solid #e5e7eb" }} />
+                    <Bar dataKey="count" name="Count" fill="url(#acc-bar)" radius={[0, 4, 4, 0]} label={{ fill: "#111", position: "right" }} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
               <p className="text-xs text-muted mt-4">
                 Source: ELABORATOR field audit (May 2025) | Standards: EN 17210, WCAG 2.1 Level AA
               </p>
@@ -112,13 +89,34 @@ const Accessibility = () => {
 
             <div className="rounded-2xl border border-border-color bg-card p-6 shadow-md">
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-red">Distribution by Area</h2>
+                <h2 className="text-xl font-bold text-red">Coverage by District</h2>
                 <Button variant="outline" size="sm" className="gap-2">
                   <Download className="h-4 w-4" />
                   Export
                 </Button>
               </div>
-              <ReactECharts option={coverageOption} style={{ height: "400px" }} />
+              <div className="h-[400px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
+                    <Pie
+                      data={districts}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={130}
+                      label={({ name, value, percent }) =>
+                        `${name}: ${value} (${(percent * 100).toFixed(0)}%)`
+                      }
+                    >
+                      {districts.map((d) => (
+                        <Cell key={d.name} fill={d.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
 

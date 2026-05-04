@@ -1,95 +1,42 @@
 import { motion } from "framer-motion";
 import { ArrowLeft, Download } from "lucide-react";
 import { Link } from "react-router-dom";
-import ReactECharts from "echarts-for-react";
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ComposedChart,
+  Line,
+  Area,
+  ReferenceLine,
+} from "recharts";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 
+const byGroup = [
+  { segment: "Age 18-35", very: 35, satisfied: 42, neutral: 15, dis: 8 },
+  { segment: "Age 36-55", very: 28, satisfied: 48, neutral: 18, dis: 6 },
+  { segment: "Age 56+", very: 25, satisfied: 45, neutral: 20, dis: 10 },
+  { segment: "Male", very: 30, satisfied: 45, neutral: 18, dis: 7 },
+  { segment: "Female", very: 32, satisfied: 44, neutral: 17, dis: 7 },
+  { segment: "Disabled", very: 40, satisfied: 38, neutral: 12, dis: 10 },
+];
+
+const monthly = [
+  { m: "Jan", sat: 68 },
+  { m: "Feb", sat: 71 },
+  { m: "Mar", sat: 74 },
+  { m: "Apr", sat: 76 },
+  { m: "May", sat: 77 },
+  { m: "Jun", sat: 78 },
+];
+
 const Satisfaction = () => {
-  const chartOption = {
-    title: {
-      text: "User Satisfaction by Demographic",
-      textStyle: { color: "#111111", fontSize: 18, fontWeight: "bold" },
-    },
-    tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
-    legend: { data: ["Very Satisfied", "Satisfied", "Neutral", "Dissatisfied"], bottom: 0 },
-    grid: { left: "3%", right: "4%", bottom: "15%", top: "15%", containLabel: true },
-    xAxis: {
-      type: "category",
-      data: ["Age 18-35", "Age 36-55", "Age 56+", "Male", "Female", "Disabled"],
-      axisLabel: { color: "#111111", rotate: 20 },
-    },
-    yAxis: {
-      type: "value",
-      name: "Percentage (%)",
-      axisLabel: { color: "#111111" },
-    },
-    series: [
-      {
-        name: "Very Satisfied",
-        type: "bar",
-        stack: "total",
-        data: [35, 28, 25, 30, 32, 40],
-        itemStyle: { color: "#10B981" },
-      },
-      {
-        name: "Satisfied",
-        type: "bar",
-        stack: "total",
-        data: [42, 48, 45, 45, 44, 38],
-        itemStyle: { color: "#38BDF8" },
-      },
-      {
-        name: "Neutral",
-        type: "bar",
-        stack: "total",
-        data: [15, 18, 20, 18, 17, 12],
-        itemStyle: { color: "#6B7280" },
-      },
-      {
-        name: "Dissatisfied",
-        type: "bar",
-        stack: "total",
-        data: [8, 6, 10, 7, 7, 10],
-        itemStyle: { color: "#E02020" },
-      },
-    ],
-  };
-
-  const trendOption = {
-    title: {
-      text: "Overall Satisfaction Trend",
-      textStyle: { color: "#111111", fontSize: 16 },
-    },
-    tooltip: { trigger: "axis" },
-    xAxis: {
-      type: "category",
-      data: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
-      axisLabel: { color: "#111111" },
-    },
-    yAxis: {
-      type: "value",
-      name: "Satisfaction (%)",
-      min: 60,
-      max: 85,
-      axisLabel: { color: "#111111" },
-    },
-    series: [
-      {
-        name: "Satisfaction",
-        type: "line",
-        data: [68, 71, 74, 76, 77, 78],
-        smooth: true,
-        itemStyle: { color: "#10B981" },
-        areaStyle: { color: "rgba(16, 185, 129, 0.15)" },
-        markLine: {
-          data: [{ type: "average", name: "Avg" }],
-          label: { formatter: "Target: 75%" },
-        },
-      },
-    ],
-  };
-
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -110,21 +57,33 @@ const Satisfaction = () => {
           <div className="mb-8">
             <h1 className="text-4xl font-bold text-red mb-2">User Satisfaction</h1>
             <p className="text-xl text-black">78% overall satisfaction</p>
-            <p className="text-sm text-muted mt-2">
-              Perception survey results for Milan mobility interventions (N=1,200)
-            </p>
+            <p className="text-sm text-muted mt-2">Perception survey results for Milan mobility interventions (N=1,200)</p>
           </div>
 
           <div className="space-y-6">
             <div className="rounded-2xl border border-border-color bg-card p-6 shadow-md">
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-red">Satisfaction by Group</h2>
+                <h2 className="text-xl font-bold text-red">User Satisfaction by Demographic</h2>
                 <Button variant="outline" size="sm" className="gap-2">
                   <Download className="h-4 w-4" />
                   Export Data
                 </Button>
               </div>
-              <ReactECharts option={chartOption} style={{ height: "400px" }} />
+              <div className="h-[400px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={byGroup} margin={{ top: 12, right: 16, bottom: 32, left: 8 }}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                    <XAxis dataKey="segment" tick={{ fill: "#111" }} angle={-18} dy={12} interval={0} height={72} />
+                    <YAxis tick={{ fill: "#111" }} domain={[0, 100]} name="Percentage (%)" />
+                    <Tooltip contentStyle={{ background: "#fff", border: "1px solid #e5e7eb" }} />
+                    <Legend wrapperStyle={{ paddingTop: 12 }} />
+                    <Bar dataKey="very" name="Very Satisfied" stackId="a" fill="#10B981" />
+                    <Bar dataKey="satisfied" name="Satisfied" stackId="a" fill="#38BDF8" />
+                    <Bar dataKey="neutral" name="Neutral" stackId="a" fill="#6B7280" />
+                    <Bar dataKey="dis" name="Dissatisfied" stackId="a" fill="#E02020" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
               <p className="text-xs text-muted mt-4">
                 Source: ELABORATOR intercept survey (June 2025) | Sample: Stratified random (margin of error ±2.8%)
               </p>
@@ -132,13 +91,26 @@ const Satisfaction = () => {
 
             <div className="rounded-2xl border border-border-color bg-card p-6 shadow-md">
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-red">6-Month Trend</h2>
+                <h2 className="text-xl font-bold text-red">Overall Satisfaction Trend</h2>
                 <Button variant="outline" size="sm" className="gap-2">
                   <Download className="h-4 w-4" />
                   Export
                 </Button>
               </div>
-              <ReactECharts option={trendOption} style={{ height: "350px" }} />
+              <div className="h-[350px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart data={monthly} margin={{ top: 12, right: 16, bottom: 8, left: 8 }}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                    <XAxis dataKey="m" tick={{ fill: "#111" }} />
+                    <YAxis tick={{ fill: "#111" }} domain={[60, 85]} name="Satisfaction (%)" />
+                    <Tooltip contentStyle={{ background: "#fff", border: "1px solid #e5e7eb" }} />
+                    <Legend />
+                    <ReferenceLine y={75} stroke="#6B7280" strokeDasharray="4 4" label={{ value: "Target 75%", fill: "#6B7280", position: "right" }} />
+                    <Area type="monotone" dataKey="sat" stroke="none" fill="rgba(16, 185, 129, 0.15)" />
+                    <Line type="monotone" dataKey="sat" name="Satisfaction" stroke="#10B981" strokeWidth={2} dot />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
 
@@ -151,7 +123,7 @@ const Satisfaction = () => {
             <h3 className="text-lg font-bold text-red mb-3">Survey Insights</h3>
             <ul className="space-y-2 text-black">
               <li>• Overall satisfaction at 78%, exceeding 75% target threshold</li>
-              <li>• Persons with disabilities report highest "Very Satisfied" rate (40%)</li>
+              <li>• Persons with disabilities report highest &quot;Very Satisfied&quot; rate (40%)</li>
               <li>• Satisfaction increased 10pp from Jan (68%) to Jun (78%), indicating positive trend</li>
               <li>• Younger cohort (18-35) shows 77% combined positive satisfaction</li>
               <li>• Top improvement requests: more shaded seating, better wayfinding signage</li>

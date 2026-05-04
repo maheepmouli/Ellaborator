@@ -24,9 +24,9 @@ const Header = ({ onLogoClick }: HeaderProps) => {
         </button>
 
         <img
-          src="/eu-flag.svg"
-          alt="European Union"
-          className="h-10 w-auto opacity-95"
+          src="/eu-funded-by-eu.png"
+          alt="Funded by the European Union"
+          className="h-10 sm:h-11 w-auto max-w-[min(55vw,280px)] object-contain opacity-[0.98] [mix-blend-mode:screen] pointer-events-none"
         />
       </div>
     </header>

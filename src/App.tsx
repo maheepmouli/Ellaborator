@@ -16,6 +16,9 @@ import CO2Reduction from "./pages/kpi/CO2Reduction";
 import Accessibility from "./pages/kpi/Accessibility";
 import Satisfaction from "./pages/kpi/Satisfaction";
 import SafetyStars from "./pages/kpi/SafetyStars";
+import StakeholderReport from "./pages/StakeholderReport";
+import PlotSpike from "./pages/PlotSpike";
+import StoryPilotPage from "./pages/StoryPilotPage";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +36,9 @@ const App = () => (
           <Route path="/data-catalogue" element={<DataCatalogue />} />
           <Route path="/compare" element={<Compare />} />
           <Route path="/city/:cityId" element={<CityDetail />} />
+          <Route path="/report" element={<StakeholderReport />} />
+          <Route path="/sandbox/plot" element={<PlotSpike />} />
+          <Route path="/story/:pilotId" element={<StoryPilotPage />} />
           <Route path="/kpi/mode-share" element={<ModeShare />} />
           <Route path="/kpi/fsi-reduction" element={<FSIReduction />} />
           <Route path="/kpi/co2-reduction" element={<CO2Reduction />} />

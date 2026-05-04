@@ -1,43 +1,44 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, MousePointer2, Filter, ZoomIn, ChevronRight, ChevronLeft } from "lucide-react";
+import {
+  X,
+  ChevronRight,
+  ChevronLeft,
+  AlertCircle,
+  MapPinned,
+  GitCompare,
+  ClipboardCheck,
+} from "lucide-react";
 import { Button } from "./ui/button";
+import { MAP_TOUR_POLICYMAKER, MAP_TOUR_STANDARD, type MapTourArcStep } from "@/data/storyConfig";
 
-interface TourStep {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  position: "center" | "left" | "right" | "bottom";
+function stepIcon(icon: MapTourArcStep["icon"]) {
+  const cls = "h-8 w-8";
+  switch (icon) {
+    case "problem":
+      return <AlertCircle className={cls} />;
+    case "explore":
+      return <MapPinned className={cls} />;
+    case "compare":
+      return <GitCompare className={cls} />;
+    case "quality":
+      return <ClipboardCheck className={cls} />;
+    default:
+      return <MapPinned className={cls} />;
+  }
 }
-
-const tourSteps: TourStep[] = [
-  {
-    icon: <MousePointer2 className="h-8 w-8" />,
-    title: "Click City Markers",
-    description: "Click on any city bubble to zoom in and see detailed intervention data. Each bubble shows the KPI value for that city.",
-    position: "center",
-  },
-  {
-    icon: <Filter className="h-8 w-8" />,
-    title: "Select KPIs & Cities",
-    description: "Use the left panel to select different KPIs from the dropdown and choose cities to analyze.",
-    position: "left",
-  },
-  {
-    icon: <ZoomIn className="h-8 w-8" />,
-    title: "Analyze Scenarios",
-    description: "Click Baseline, Intervention, or Comparison buttons to open detailed analysis panels with interactive charts and KPI comparisons.",
-    position: "center",
-  },
-];
 
 interface MapTourProps {
   isOpen: boolean;
   onClose: () => void;
+  /** Optional city label for contextual one-line hints from story config */
+  optionalCityName?: string;
 }
 
-const MapTour = ({ isOpen, onClose }: MapTourProps) => {
+const MapTour = ({ isOpen, onClose, optionalCityName }: MapTourProps) => {
   const [currentStep, setCurrentStep] = useState(0);
+  const [policymakerVariant, setPolicymakerVariant] = useState(false);
+  const tourSteps = policymakerVariant ? MAP_TOUR_POLICYMAKER : MAP_TOUR_STANDARD;
   const step = tourSteps[currentStep];
 
   useEffect(() => {
@@ -45,6 +46,10 @@ const MapTour = ({ isOpen, onClose }: MapTourProps) => {
       setCurrentStep(0);
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    setCurrentStep(0);
+  }, [policymakerVariant]);
 
   const handleNext = () => {
     if (currentStep < tourSteps.length - 1) {
@@ -60,7 +65,7 @@ const MapTour = ({ isOpen, onClose }: MapTourProps) => {
     }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || !step) return null;
 
   return (
     <AnimatePresence>
@@ -70,24 +75,22 @@ const MapTour = ({ isOpen, onClose }: MapTourProps) => {
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-[60] pointer-events-none"
       >
-        {/* Backdrop with cutout effect */}
         <div className="absolute inset-0 bg-purple/40 backdrop-blur-sm pointer-events-auto" onClick={onClose} />
 
-        {/* Tour Card */}
         <motion.div
           initial={{ opacity: 0, y: 20, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 20, scale: 0.95 }}
           transition={{ duration: 0.3 }}
           className={`absolute pointer-events-auto ${
-            step.position === "center" ? "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" :
-            step.position === "left" ? "top-1/2 left-[420px] -translate-y-1/2" :
-            step.position === "right" ? "top-32 right-24" :
-            "bottom-32 left-1/2 -translate-x-1/2"
+            step.position === "center"
+              ? "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+              : step.position === "left"
+                ? "top-1/2 left-[420px] -translate-y-1/2 max-lg:left-[min(380px,calc(100vw-340px))]"
+                : "top-28 right-[min(96px,calc(100vw-300px))]"
           }`}
         >
           <div className="w-80 bg-card/95 backdrop-blur-2xl rounded-2xl shadow-2xl border border-violet/30 overflow-hidden">
-            {/* Header */}
             <div className="bg-gradient-to-r from-violet to-blue p-4 relative">
               <button
                 onClick={onClose}
@@ -95,44 +98,64 @@ const MapTour = ({ isOpen, onClose }: MapTourProps) => {
               >
                 <X className="h-4 w-4 text-primary-foreground" />
               </button>
-              
+
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-primary-foreground/20 rounded-xl text-primary-foreground">
-                  {step.icon}
+                  {stepIcon(step.icon)}
                 </div>
-                <div>
+                <div className="pr-10">
                   <p className="text-xs font-medium text-primary-foreground/70 uppercase tracking-wider">
                     Step {currentStep + 1} of {tourSteps.length}
                   </p>
                   <h3 className="text-lg font-bold text-primary-foreground">{step.title}</h3>
                 </div>
               </div>
+
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setPolicymakerVariant(false)}
+                  className={`text-[10px] px-2 py-1 rounded-full border transition-colors ${
+                    !policymakerVariant
+                      ? "bg-primary-foreground/25 border-primary-foreground/50 text-primary-foreground"
+                      : "border-primary-foreground/25 text-primary-foreground/80 hover:bg-primary-foreground/15"
+                  }`}
+                >
+                  Standard narrative
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPolicymakerVariant(true)}
+                  className={`text-[10px] px-2 py-1 rounded-full border transition-colors ${
+                    policymakerVariant
+                      ? "bg-primary-foreground/25 border-primary-foreground/50 text-primary-foreground"
+                      : "border-primary-foreground/25 text-primary-foreground/80 hover:bg-primary-foreground/15"
+                  }`}
+                >
+                  For policymakers (short)
+                </button>
+              </div>
             </div>
 
-            {/* Content */}
             <div className="p-4">
-              <p className="text-sm text-foreground leading-relaxed mb-4">
-                {step.description}
+              <p className="text-sm text-foreground leading-relaxed mb-4">{step.description}</p>
+              <p className="text-[11px] text-muted-foreground leading-snug mb-4">
+                Narrative arc: Problem → Explore → Compare → Data quality.
               </p>
 
-              {/* Progress dots */}
               <div className="flex justify-center gap-2 mb-4">
                 {tourSteps.map((_, idx) => (
                   <button
                     key={idx}
+                    type="button"
                     onClick={() => setCurrentStep(idx)}
                     className={`w-2 h-2 rounded-full transition-all ${
-                      idx === currentStep
-                        ? "bg-violet w-6"
-                        : idx < currentStep
-                        ? "bg-green"
-                        : "bg-border-color"
+                      idx === currentStep ? "bg-violet w-6" : idx < currentStep ? "bg-green" : "bg-border-color"
                     }`}
                   />
                 ))}
               </div>
 
-              {/* Navigation */}
               <div className="flex gap-2">
                 <Button
                   variant="outline"
@@ -155,9 +178,18 @@ const MapTour = ({ isOpen, onClose }: MapTourProps) => {
               </div>
             </div>
 
-            {/* Skip link */}
+            {optionalCityName && optionalCityName.length > 0 && (
+              <div className="px-4 pb-2">
+                <p className="text-[10px] text-muted-foreground leading-snug">
+                  Tip: narrative layers and pins follow the pilot you choose for {optionalCityName}; always confirm mocks vs
+                  observed in Data Summary before external use.
+                </p>
+              </div>
+            )}
+
             <div className="px-4 pb-3 text-center">
               <button
+                type="button"
                 onClick={onClose}
                 className="text-xs text-muted-foreground hover:text-violet transition-colors"
               >

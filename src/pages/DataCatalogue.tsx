@@ -11,8 +11,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { SHAREPOINT_CITY_DATASETS } from "@/data/sharepointDatasets";
+import { useWorkflowHealth } from "@/hooks/use-workflow-health";
+import { DATASET_RENDERING_RULES } from "@/data/datasetRenderingRules";
 
 const DataCatalogue = () => {
+  const { data: workflowHealth, isLoading: isWorkflowHealthLoading } = useWorkflowHealth();
+
   const catalogueData = [
     {
       category: "Mobility",
@@ -146,6 +151,136 @@ const DataCatalogue = () => {
                 </div>
               </div>
             </div>
+          </div>
+
+          <div className="mb-8 rounded-2xl border border-border-color/50 bg-card/80 backdrop-blur-xl p-6 shadow-lg">
+            <h2 className="text-xl font-bold text-purple mb-4">Imported City Datasets</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              The four SharePoint city datasets are available in this project under
+              <code className="ml-1">public/sharepoint-data</code>.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {SHAREPOINT_CITY_DATASETS.map((dataset) => (
+                <div
+                  key={dataset.city}
+                  className="rounded-xl border border-border-color/50 bg-background/60 p-4"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-semibold text-foreground">{dataset.city}</h3>
+                    <Badge variant="outline">{dataset.fileCount} files</Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-3 break-all">
+                    {dataset.sourceFolder}
+                  </p>
+                  <a
+                    href={encodeURI(dataset.sampleFile)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex"
+                  >
+                    <Button size="sm" variant="outline" className="gap-2">
+                      <Eye className="h-3 w-3" />
+                      Open sample file
+                    </Button>
+                  </a>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="mb-8 rounded-2xl border border-border-color/50 bg-card/80 backdrop-blur-xl p-6 shadow-lg">
+            <h2 className="text-xl font-bold text-purple mb-4">Workflow Runtime Status</h2>
+            {isWorkflowHealthLoading && (
+              <p className="text-sm text-muted-foreground">Checking APIs and dataset availability...</p>
+            )}
+            {!isWorkflowHealthLoading && workflowHealth && (
+              <>
+                <div className="flex items-center gap-3 mb-4">
+                  <Badge className="bg-green/30 text-purple border-green/40">
+                    Working: {workflowHealth.totals.working}
+                  </Badge>
+                  <Badge className="bg-red/20 text-purple border-red/30">
+                    Not Working: {workflowHealth.totals.notWorking}
+                  </Badge>
+                </div>
+                <div className="space-y-3">
+                  {workflowHealth.checks.map((check) => (
+                    <div
+                      key={check.name}
+                      className="rounded-lg border border-border-color/40 bg-background/60 p-3"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="font-medium text-foreground">{check.name}</p>
+                        <Badge
+                          className={
+                            check.status === "working"
+                              ? "bg-green/30 text-purple border-green/40"
+                              : "bg-red/20 text-purple border-red/30"
+                          }
+                        >
+                          {check.status}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">{check.detail}</p>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
+          <div className="mb-8 rounded-2xl border border-border-color/50 bg-card/80 backdrop-blur-xl p-6 shadow-lg overflow-hidden">
+            <h2 className="text-xl font-bold text-purple mb-4">Data Type to Rendering Rules</h2>
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-gradient-to-r from-violet/5 to-blue/5">
+                  <TableHead className="font-bold text-purple">Dataset</TableHead>
+                  <TableHead className="font-bold text-purple">City</TableHead>
+                  <TableHead className="font-bold text-purple">Likely KPI</TableHead>
+                  <TableHead className="font-bold text-purple">Geometry</TableHead>
+                  <TableHead className="font-bold text-purple">Rendering Style</TableHead>
+                  <TableHead className="font-bold text-purple">Parser</TableHead>
+                  <TableHead className="font-bold text-purple">Real Data</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {DATASET_RENDERING_RULES.map((rule) => (
+                  <TableRow key={`${rule.datasetName}-${rule.city}`} className="hover:bg-violet/5 transition-colors">
+                    <TableCell className="text-sm text-foreground">{rule.datasetName}</TableCell>
+                    <TableCell className="text-sm text-foreground">{rule.city}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{rule.likelyKpi}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{rule.geometryType}</Badge>
+                    </TableCell>
+                    <TableCell className="text-xs text-foreground">{rule.renderingStyle}</TableCell>
+                    <TableCell>
+                      <Badge
+                        className={
+                          rule.parserStatus === "ready"
+                            ? "bg-green/30 text-purple border-green/40"
+                            : rule.parserStatus === "partial"
+                              ? "bg-blue/30 text-purple border-blue/40"
+                              : "bg-red/20 text-purple border-red/30"
+                        }
+                      >
+                        {rule.parserStatus}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        className={
+                          rule.realDataStatus === "active"
+                            ? "bg-green/30 text-purple border-green/40"
+                            : "bg-red/20 text-purple border-red/30"
+                        }
+                      >
+                        {rule.realDataStatus}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
 
           {/* Catalogue Table */}

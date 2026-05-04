@@ -1,90 +1,42 @@
 import { motion } from "framer-motion";
 import { ArrowLeft, Download } from "lucide-react";
 import { Link } from "react-router-dom";
-import ReactECharts from "echarts-for-react";
+import {
+  ResponsiveContainer,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar,
+  Legend,
+  Tooltip,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Cell,
+  ReferenceLine,
+  LabelList,
+} from "recharts";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 
+const radarRows = [
+  { mode: "Pedestrian", current: 3.5, target: 4 },
+  { mode: "Cyclist", current: 3.2, target: 4 },
+  { mode: "Motorcyclist", current: 2.8, target: 4 },
+  { mode: "Vehicle Occupant", current: 4.1, target: 4 },
+];
+
+const speedRows = [
+  { type: "Residential", km: 28, limit: 30 },
+  { type: "Collector", km: 42, limit: 50 },
+  { type: "Arterial", km: 58, limit: 60 },
+  { type: "School Zone", km: 24, limit: 30 },
+];
+
 const SafetyStars = () => {
-  const radarOption = {
-    title: {
-      text: "Safety Star Ratings by Mode",
-      textStyle: { color: "#111111", fontSize: 18, fontWeight: "bold" },
-    },
-    tooltip: {},
-    legend: { data: ["Current", "Target (4-Star)"], bottom: 0 },
-    radar: {
-      indicator: [
-        { name: "Pedestrian", max: 5 },
-        { name: "Cyclist", max: 5 },
-        { name: "Motorcyclist", max: 5 },
-        { name: "Vehicle Occupant", max: 5 },
-      ],
-      splitNumber: 5,
-      axisLabel: { show: true, color: "#111111" },
-    },
-    series: [
-      {
-        name: "Safety Rating",
-        type: "radar",
-        data: [
-          {
-            value: [3.5, 3.2, 2.8, 4.1],
-            name: "Current",
-            itemStyle: { color: "#E02020" },
-            areaStyle: { color: "rgba(224, 32, 32, 0.2)" },
-          },
-          {
-            value: [4.0, 4.0, 4.0, 4.0],
-            name: "Target (4-Star)",
-            itemStyle: { color: "#10B981" },
-            lineStyle: { type: "dashed" },
-          },
-        ],
-      },
-    ],
-  };
-
-  const speedOption = {
-    title: {
-      text: "85th Percentile Speed by Street Type",
-      textStyle: { color: "#111111", fontSize: 16 },
-    },
-    tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
-    grid: { left: "3%", right: "4%", bottom: "10%", top: "15%", containLabel: true },
-    xAxis: {
-      type: "category",
-      data: ["Residential", "Collector", "Arterial", "School Zone"],
-      axisLabel: { color: "#111111" },
-    },
-    yAxis: {
-      type: "value",
-      name: "Speed (km/h)",
-      axisLabel: { color: "#111111" },
-    },
-    series: [
-      {
-        name: "85th %ile Speed",
-        type: "bar",
-        data: [28, 42, 58, 24],
-        itemStyle: {
-          color: (params: any) => {
-            const speeds = [28, 42, 58, 24];
-            const limits = [30, 50, 60, 30];
-            return speeds[params.dataIndex] <= limits[params.dataIndex] ? "#10B981" : "#E02020";
-          },
-        },
-        label: { show: true, position: "top", formatter: "{c} km/h" },
-        markLine: {
-          data: [
-            { yAxis: 30, name: "Res Limit", lineStyle: { color: "#6B7280", type: "dashed" } },
-            { yAxis: 50, name: "Col Limit", lineStyle: { color: "#6B7280", type: "dashed" } },
-          ],
-        },
-      },
-    ],
-  };
-
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -105,21 +57,39 @@ const SafetyStars = () => {
           <div className="mb-8">
             <h1 className="text-4xl font-bold text-red mb-2">Pedestrian Safety Stars</h1>
             <p className="text-xl text-black">3.5 ⭐ safety rating</p>
-            <p className="text-sm text-muted mt-2">
-              iRAP-based road safety assessment for Milan intervention corridors
-            </p>
+            <p className="text-sm text-muted mt-2">iRAP-based road safety assessment for Milan intervention corridors</p>
           </div>
 
           <div className="space-y-6">
             <div className="rounded-2xl border border-border-color bg-card p-6 shadow-md">
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-red">Star Ratings by User Type</h2>
+                <h2 className="text-xl font-bold text-red">Safety Star Ratings by Mode</h2>
                 <Button variant="outline" size="sm" className="gap-2">
                   <Download className="h-4 w-4" />
                   Export Data
                 </Button>
               </div>
-              <ReactECharts option={radarOption} style={{ height: "450px" }} />
+              <div className="h-[450px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RadarChart cx="50%" cy="52%" outerRadius="72%" data={radarRows}>
+                    <PolarGrid stroke="#cbd5e1" />
+                    <PolarAngleAxis dataKey="mode" tick={{ fill: "#111", fontSize: 12 }} />
+                    <PolarRadiusAxis angle={30} domain={[0, 5]} tickCount={6} tick={{ fill: "#64748b" }} />
+                    <Radar name="Current" dataKey="current" stroke="#E02020" fill="rgba(224, 32, 32, 0.22)" strokeWidth={2} />
+                    <Radar
+                      name="Target (4-Star)"
+                      dataKey="target"
+                      stroke="#10B981"
+                      fill="transparent"
+                      strokeDasharray="5 5"
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                    <Legend />
+                    <Tooltip />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </div>
               <p className="text-xs text-muted mt-4">
                 Source: iRAP ViDA v4.2 | Assessment: 12 km of intervention routes | Date: May 2025
               </p>
@@ -127,13 +97,30 @@ const SafetyStars = () => {
 
             <div className="rounded-2xl border border-border-color bg-card p-6 shadow-md">
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-red">Speed Compliance</h2>
+                <h2 className="text-xl font-bold text-red">85th Percentile Speed by Street Type</h2>
                 <Button variant="outline" size="sm" className="gap-2">
                   <Download className="h-4 w-4" />
                   Export
                 </Button>
               </div>
-              <ReactECharts option={speedOption} style={{ height: "350px" }} />
+              <div className="h-[350px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={speedRows} margin={{ top: 12, right: 16, bottom: 8, left: 8 }}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                    <XAxis dataKey="type" tick={{ fill: "#111" }} />
+                    <YAxis tick={{ fill: "#111" }} name="Speed (km/h)" domain={[0, 70]} />
+                    <Tooltip contentStyle={{ background: "#fff", border: "1px solid #e5e7eb" }} />
+                    <ReferenceLine y={30} stroke="#6B7280" strokeDasharray="4 4" label={{ value: "30", position: "right", fill: "#6B7280" }} />
+                    <ReferenceLine y={50} stroke="#6B7280" strokeDasharray="4 4" label={{ value: "50", position: "right", fill: "#6B7280" }} />
+                    <Bar dataKey="km" name="85th %ile Speed" radius={[4, 4, 0, 0]}>
+                      <LabelList dataKey="km" position="top" formatter={(v: number) => `${v} km/h`} />
+                      {speedRows.map((e, i) => (
+                        <Cell key={`c-${i}`} fill={e.km <= e.limit ? "#10B981" : "#E02020"} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
               <p className="text-xs text-muted mt-4">
                 Green bars indicate compliance with posted limits. Red indicates exceeding limit.
               </p>

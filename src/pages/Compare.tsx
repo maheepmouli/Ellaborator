@@ -1,7 +1,20 @@
 import { motion } from "framer-motion";
 import { Download, Calendar, MapPin, TrendingDown, TrendingUp, Move } from "lucide-react";
 import { useState } from "react";
-import ReactECharts from "echarts-for-react";
+import {
+  ResponsiveContainer,
+  ComposedChart,
+  Line,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  BarChart,
+  Bar,
+  Cell,
+} from "recharts";
 import GridLayout, { Layout } from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import Header from "@/components/Header";
@@ -15,169 +28,65 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
+import { CITY_DATA, ELABORATOR_KPIS } from "@/data/kpiDefinitions";
 
 const Compare = () => {
-  const [selectedCity, setSelectedCity] = useState("milan");
-  const [selectedKPI, setSelectedKPI] = useState("mode-share");
+  const [selectedCity, setSelectedCity] = useState(CITY_DATA[0]?.city || "Milan");
+  const [selectedKPI, setSelectedKPI] = useState(ELABORATOR_KPIS[0]?.id || "kpi1.2");
 
-  const cities = [
-    {
-      id: "milan",
-      name: "Milan",
-      country: "Italy",
-      interventions: [
-        { year: 2018, name: "Area B (LEZ)", impact: -3, baseline: 48 },
-        { year: 2019, name: "Bike Lane Expansion", impact: -2, baseline: 45 },
-        { year: 2020, name: "COVID Measures", impact: -8, baseline: 43 },
-        { year: 2021, name: "Area B Extension", impact: -4, baseline: 35 },
-        { year: 2022, name: "Superblock Pilot", impact: -3, baseline: 31 },
-      ],
-    },
-    {
-      id: "barcelona",
-      name: "Barcelona",
-      country: "Spain",
-      interventions: [
-        { year: 2017, name: "Superblock Program", impact: -5, baseline: 58 },
-        { year: 2019, name: "Green Corridor", impact: -3, baseline: 53 },
-        { year: 2020, name: "COVID Measures", impact: -7, baseline: 50 },
-        { year: 2021, name: "LEZ Implementation", impact: -4, baseline: 43 },
-        { year: 2023, name: "Transit Expansion", impact: -2, baseline: 39 },
-      ],
-    },
-    {
-      id: "zaragoza",
-      name: "Zaragoza",
-      country: "Spain",
-      interventions: [
-        { year: 2018, name: "Traffic Calming", impact: -2, baseline: 52 },
-        { year: 2019, name: "Bike Infrastructure", impact: -3, baseline: 50 },
-        { year: 2021, name: "BRT Implementation", impact: -4, baseline: 47 },
-        { year: 2022, name: "LEZ Planning", impact: -1, baseline: 43 },
-        { year: 2023, name: "Parking Reduction", impact: -2, baseline: 42 },
-      ],
-    },
-  ];
+  const cities = CITY_DATA.map((city) => ({
+    id: city.city,
+    name: city.city,
+    country: "ELABORATOR",
+  }));
 
-  const kpis = [
-    { id: "mode-share", name: "Car Mode Share", unit: "%" },
-    { id: "co2", name: "CO₂ Emissions", unit: "%" },
-    { id: "safety", name: "Safety Score", unit: "⭐" },
-    { id: "accessibility", name: "PT Accessibility", unit: "%" },
-  ];
+  const kpis = ELABORATOR_KPIS.map((kpi) => ({
+    id: kpi.id,
+    name: `${kpi.ref} ${kpi.shortName}`,
+    unit: kpi.unit,
+  }));
 
-  const selectedCityData = cities.find((c) => c.id === selectedCity);
-  
-  // Calculate cumulative values for timeline
-  const timelineData = selectedCityData?.interventions.reduce((acc, intervention, index) => {
-    const prevValue = index === 0 ? intervention.baseline : acc[index - 1].value;
-    const newValue = prevValue + intervention.impact;
-    return [
-      ...acc,
-      {
-        year: intervention.year,
-        name: intervention.name,
-        value: newValue,
-        impact: intervention.impact,
-        baseline: intervention.baseline,
-      },
-    ];
-  }, [] as any[]) || [];
+  const selectedCityData = CITY_DATA.find((c) => c.city === selectedCity);
+  const selectedKpiMeta = ELABORATOR_KPIS.find((k) => k.id === selectedKPI);
 
-  // Timeline chart
-  const timelineOption = {
-    title: {
-      text: `${selectedCityData?.name} - Intervention Timeline`,
-      textStyle: { color: "hsl(259, 60%, 27%)", fontSize: 20, fontWeight: "bold" },
-    },
-    tooltip: {
-      trigger: "axis",
-      formatter: (params: any) => {
-        const data = params[0];
-        const intervention = timelineData[data.dataIndex];
-        return `
-          <div style="padding: 8px;">
-            <strong>${intervention.name}</strong><br/>
-            Year: ${intervention.year}<br/>
-            Mode Share: ${data.value}%<br/>
-            Impact: ${intervention.impact}pp
-          </div>
-        `;
-      },
-    },
-    grid: { left: "3%", right: "4%", bottom: "10%", top: "15%", containLabel: true },
-    xAxis: {
-      type: "category",
-      data: timelineData.map((d) => d.year),
-      axisLabel: { color: "hsl(259, 40%, 20%)" },
-    },
-    yAxis: {
-      type: "value",
-      name: "Car Mode Share (%)",
-      axisLabel: { color: "hsl(259, 40%, 20%)" },
-    },
-    series: [
-      {
-        type: "line",
-        data: timelineData.map((d) => d.value),
-        smooth: true,
-        itemStyle: { color: "hsl(231, 89%, 68%)" },
-        areaStyle: {
-          color: {
-            type: "linear",
-            x: 0,
-            y: 0,
-            x2: 0,
-            y2: 1,
-            colorStops: [
-              { offset: 0, color: "rgba(101, 125, 245, 0.3)" },
-              { offset: 1, color: "rgba(101, 125, 245, 0.05)" },
-            ],
+  const timelineData =
+    selectedCityData && selectedCityData.kpiData[selectedKPI]
+      ? [
+          {
+            year: 2024,
+            name: "Baseline",
+            value:
+              Number(selectedCityData.kpiData[selectedKPI].mainValue) -
+              Number(selectedCityData.kpiData[selectedKPI].change || 0),
+            impact: 0,
+            baseline:
+              Number(selectedCityData.kpiData[selectedKPI].mainValue) -
+              Number(selectedCityData.kpiData[selectedKPI].change || 0),
           },
-        },
-        markPoint: {
-          data: timelineData.map((d, index) => ({
-            coord: [index, d.value],
-            value: d.impact,
-            itemStyle: {
-              color: d.impact < 0 ? "hsl(132, 66%, 81%)" : "hsl(0, 76%, 51%)",
-            },
-          })),
-        },
-      },
-    ],
-  };
-
-  // Impact breakdown chart
-  const impactOption = {
-    title: {
-      text: "Intervention Impact Comparison",
-      textStyle: { color: "hsl(259, 60%, 27%)", fontSize: 18, fontWeight: "bold" },
-    },
-    tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
-    grid: { left: "3%", right: "4%", bottom: "10%", top: "15%", containLabel: true },
-    xAxis: {
-      type: "value",
-      name: "Impact (pp)",
-      axisLabel: { color: "hsl(259, 40%, 20%)" },
-    },
-    yAxis: {
-      type: "category",
-      data: timelineData.map((d) => d.name),
-      axisLabel: { color: "hsl(259, 40%, 20%)" },
-    },
-    series: [
-      {
-        type: "bar",
-        data: timelineData.map((d) => ({
-          value: Math.abs(d.impact),
-          itemStyle: {
-            color: d.impact < -3 ? "hsl(132, 66%, 70%)" : "hsl(231, 89%, 68%)",
+          {
+            year: 2025,
+            name: "Intervention",
+            value: Number(selectedCityData.kpiData[selectedKPI].mainValue),
+            impact: Number(selectedCityData.kpiData[selectedKPI].change || 0),
+            baseline:
+              Number(selectedCityData.kpiData[selectedKPI].mainValue) -
+              Number(selectedCityData.kpiData[selectedKPI].change || 0),
           },
-        })),
-      },
-    ],
-  };
+        ]
+      : [];
+
+  const cityComparisonRows = CITY_DATA.map((city) => {
+    const kpi = city.kpiData[selectedKPI];
+    const intervention = Number(kpi?.mainValue || 0);
+    const change = Number(kpi?.change || 0);
+    const baseline = intervention - change;
+    return {
+      city: city.city,
+      baseline,
+      intervention,
+      change,
+    };
+  });
 
   // Grid layout configuration
   const [layout, setLayout] = useState<Layout[]>([
@@ -188,9 +97,9 @@ const Compare = () => {
     { i: "insights", x: 6, y: 4, w: 6, h: 3 },
   ]);
 
-  const totalImpact = timelineData.reduce((sum, d) => sum + d.impact, 0);
-  const avgImpact = totalImpact / (timelineData.length || 1);
-  const mostEffective = timelineData.sort((a, b) => a.impact - b.impact)[0];
+  const totalImpact = cityComparisonRows.reduce((sum, d) => sum + d.change, 0);
+  const avgImpact = totalImpact / (cityComparisonRows.length || 1);
+  const mostEffective = [...cityComparisonRows].sort((a, b) => b.change - a.change)[0];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-blue-light/10 to-green/10">
@@ -272,7 +181,7 @@ const Compare = () => {
                   </Select>
 
                   <Badge variant="outline" className="ml-auto border-violet/30 text-violet bg-violet/10">
-                    {timelineData.length} interventions tracked
+                    {cityComparisonRows.length} cities compared
                   </Badge>
                 </div>
               </Card>
@@ -281,7 +190,74 @@ const Compare = () => {
             {/* Timeline Chart Card */}
             <div key="timeline">
               <Card className="p-4 h-full bg-card/80 backdrop-blur-xl border-border-color/50 shadow-lg cursor-move drag-handle">
-                <ReactECharts option={timelineOption} style={{ height: "100%" }} />
+                <h3 className="text-lg font-semibold text-purple mb-3 px-1">
+                  {selectedCityData?.city || selectedCity} — KPI Timeline
+                </h3>
+                <div className="h-[calc(100%-2.75rem)] min-h-[200px] w-full">
+                  {timelineData.length === 0 ? (
+                    <p className="text-sm text-muted-foreground p-4">No timeline data for this KPI.</p>
+                  ) : (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <ComposedChart data={timelineData} margin={{ top: 8, right: 12, bottom: 8, left: 8 }}>
+                        <defs>
+                          <linearGradient id="compare-line-area" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="rgba(101, 125, 245, 0.35)" />
+                            <stop offset="100%" stopColor="rgba(101, 125, 245, 0.05)" />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border) / 0.5)" />
+                        <XAxis
+                          dataKey="year"
+                          tick={{ fill: "hsl(259, 40%, 20%)" }}
+                          tickFormatter={(y) => String(y)}
+                        />
+                        <YAxis
+                          tick={{ fill: "hsl(259, 40%, 20%)" }}
+                          name={selectedKpiMeta?.unit || ""}
+                          width={56}
+                        />
+                        <Tooltip
+                          contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }}
+                          formatter={(value: number, _n, item: { payload?: { impact?: number } }) => {
+                            const row = item?.payload;
+                            const sfx = selectedKpiMeta?.unit === "%" ? "pp" : "";
+                            const ch =
+                              row && typeof row.impact === "number"
+                                ? `Δ ${row.impact > 0 ? "+" : ""}${row.impact}${sfx}`
+                                : "";
+                            return [`${value}${selectedKpiMeta?.unit || ""}`, ch || ""];
+                          }}
+                          labelFormatter={(_l, payload) => {
+                            const row = payload?.[0]?.payload as { name?: string; year?: number } | undefined;
+                            return row?.name != null && row.year != null ? `${row.name} (${row.year})` : "";
+                          }}
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="value"
+                          name="KPI value"
+                          stroke="none"
+                          fill="url(#compare-line-area)"
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="value"
+                          stroke="hsl(231, 89%, 68%)"
+                          strokeWidth={2}
+                          dot={(props: { cx?: number; cy?: number; index?: number }) => {
+                            const { cx, cy, index } = props;
+                            const row = typeof index === "number" ? timelineData[index] : undefined;
+                            if (cx == null || cy == null || !row) return null;
+                            const fill =
+                              row.impact < 0 ? "hsl(132, 66%, 81%)" : "hsl(0, 76%, 51%)";
+                            return <circle cx={cx} cy={cy} r={7} fill={fill} stroke="#fff" strokeWidth={2} />;
+                          }}
+                          activeDot={{ r: 9 }}
+                        />
+                      </ComposedChart>
+                    </ResponsiveContainer>
+                  )}
+                </div>
               </Card>
             </div>
 
@@ -313,10 +289,12 @@ const Compare = () => {
                   <div className="p-3 rounded-lg bg-gradient-to-r from-green/10 to-green/20 border border-green/30">
                     <p className="text-xs text-muted-foreground mb-1">Most Effective</p>
                     <p className="text-sm font-semibold text-foreground">
-                      {mostEffective?.name}
+                      {mostEffective?.city}
                     </p>
                     <p className="text-xs text-green font-numbers">
-                      {mostEffective?.impact}pp reduction
+                      {mostEffective?.change > 0 ? "+" : ""}
+                      {mostEffective?.change}
+                      {selectedKpiMeta?.unit === "%" ? "pp" : ""}
                     </p>
                   </div>
 
@@ -333,7 +311,39 @@ const Compare = () => {
             {/* Impact Breakdown Card */}
             <div key="impact">
               <Card className="p-4 h-full bg-card/80 backdrop-blur-xl border-border-color/50 shadow-lg cursor-move drag-handle">
-                <ReactECharts option={impactOption} style={{ height: "100%" }} />
+                <h3 className="text-lg font-semibold text-purple mb-3 px-1">Cross-City KPI Comparison</h3>
+                <div className="h-[calc(100%-2.75rem)] min-h-[200px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      layout="vertical"
+                      data={cityComparisonRows}
+                      margin={{ top: 8, right: 24, bottom: 8, left: 8 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border) / 0.5)" horizontal={false} />
+                      <XAxis type="number" tick={{ fill: "hsl(259, 40%, 20%)" }} />
+                      <YAxis type="category" dataKey="city" width={100} tick={{ fill: "hsl(259, 40%, 20%)", fontSize: 11 }} />
+                      <Tooltip
+                        contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }}
+                        formatter={(v: number, _name, props) => [
+                          `${v}${selectedKpiMeta?.unit || ""}`,
+                          props?.payload?.change != null
+                            ? `Δ ${props.payload.change > 0 ? "+" : ""}${props.payload.change}`
+                            : "",
+                        ]}
+                      />
+                      <Bar dataKey="intervention" name="Intervention value" radius={[0, 4, 4, 0]}>
+                        {cityComparisonRows.map((d, i) => (
+                          <Cell
+                            key={d.city}
+                            fill={
+                              d.change > 0 ? "hsl(132, 66%, 70%)" : "hsl(231, 89%, 68%)"
+                            }
+                          />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
               </Card>
             </div>
 
@@ -347,8 +357,7 @@ const Compare = () => {
                       Consistent Progress
                     </h4>
                     <p className="text-xs text-foreground">
-                      {selectedCityData?.name} achieved steady mode share reduction through
-                      sequential interventions
+                      {selectedCityData?.city} shows a measurable KPI shift from baseline to intervention.
                     </p>
                   </div>
 
@@ -357,17 +366,18 @@ const Compare = () => {
                       Cumulative Effect
                     </h4>
                     <p className="text-xs text-foreground">
-                      Combined interventions delivered {Math.abs(totalImpact).toFixed(0)}pp total
-                      reduction over {timelineData.length} measures
+                      Combined city results show {totalImpact > 0 ? "+" : ""}
+                      {totalImpact.toFixed(1)}
+                      {selectedKpiMeta?.unit === "%" ? "pp" : ` ${selectedKpiMeta?.unit || ""}`} total change.
                     </p>
                   </div>
 
                   <div className="p-3 rounded-lg bg-gradient-to-r from-blue/10 to-lavender/10 border border-blue/30">
                     <h4 className="text-sm font-semibold text-blue mb-1">Implementation Timeline</h4>
                     <p className="text-xs text-foreground">
-                      Interventions spaced across{" "}
+                      Baseline and intervention are spaced across{" "}
                       {(timelineData[timelineData.length - 1]?.year || 0) - (timelineData[0]?.year || 0)}{" "}
-                      years allowed for gradual adaptation
+                      year(s) in this comparison view.
                     </p>
                   </div>
 

@@ -1,102 +1,30 @@
-import ReactECharts from "echarts-for-react";
 import { motion } from "framer-motion";
+import {
+  ResponsiveContainer,
+  ComposedChart,
+  Line,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+} from "recharts";
 
 const ModalShareTrend = () => {
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  
   const carData = [45, 44, 43, 42, 41, 40, 39, 38, 37, 36, 35, 33];
   const publicTransitData = [30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 42];
   const cyclingData = [15, 15, 16, 16, 17, 17, 18, 18, 19, 19, 20, 20];
   const walkingData = [10, 10, 9, 9, 8, 8, 7, 7, 6, 6, 5, 5];
 
-  const option = {
-    grid: { left: 60, right: 40, top: 40, bottom: 80 },
-    xAxis: {
-      type: "category",
-      data: months,
-      axisLine: { lineStyle: { color: "#E5E7EB" } },
-      axisLabel: { color: "#111111", fontFamily: "Inter" },
-    },
-    yAxis: {
-      type: "value",
-      axisLine: { show: false },
-      splitLine: { lineStyle: { color: "#E5E7EB" } },
-      axisLabel: { 
-        color: "#6B7280", 
-        fontFamily: "Inter",
-        formatter: "{value}%"
-      },
-    },
-    series: [
-      {
-        name: "Car",
-        type: "line" as const,
-        data: carData,
-        smooth: true,
-        lineStyle: { color: "#E02020", width: 3 },
-        itemStyle: { color: "#E02020" },
-        areaStyle: {
-          color: {
-            type: "linear",
-            x: 0,
-            y: 0,
-            x2: 0,
-            y2: 1,
-            colorStops: [
-              { offset: 0, color: "rgba(224, 32, 32, 0.3)" },
-              { offset: 1, color: "rgba(224, 32, 32, 0.05)" },
-            ],
-          },
-        },
-      },
-      {
-        name: "Public Transit",
-        type: "line" as const,
-        data: publicTransitData,
-        smooth: true,
-        lineStyle: { color: "#10B981", width: 3 },
-        itemStyle: { color: "#10B981" },
-      },
-      {
-        name: "Cycling",
-        type: "line" as const,
-        data: cyclingData,
-        smooth: true,
-        lineStyle: { color: "#38BDF8", width: 3 },
-        itemStyle: { color: "#38BDF8" },
-      },
-      {
-        name: "Walking",
-        type: "line" as const,
-        data: walkingData,
-        smooth: true,
-        lineStyle: { color: "#6B7280", width: 2 },
-        itemStyle: { color: "#6B7280" },
-      },
-    ],
-    legend: {
-      bottom: 10,
-      data: ["Car", "Public Transit", "Cycling", "Walking"],
-      textStyle: { color: "#111111", fontFamily: "Inter" },
-    },
-    tooltip: {
-      trigger: "axis",
-      backgroundColor: "rgba(255, 255, 255, 0.95)",
-      borderColor: "#E5E7EB",
-      textStyle: { color: "#111111" },
-      formatter: (params: any) => {
-        let result = `<div style="font-weight: 600; margin-bottom: 4px;">${params[0].axisValue}</div>`;
-        params.forEach((param: any) => {
-          const color = typeof param.color === "string" ? param.color : (param.color?.colorStops?.[0]?.color ?? "#000");
-          result += `<div style="display: flex; align-items: center; gap: 8px;">
-            <span style="display: inline-block; width: 10px; height: 10px; background: ${color}; border-radius: 50%;"></span>
-            <span>${param.seriesName}: <strong>${param.value}%</strong></span>
-          </div>`;
-        });
-        return result;
-      },
-    },
-  };
+  const data = months.map((month, i) => ({
+    month,
+    car: carData[i],
+    transit: publicTransitData[i],
+    cycling: cyclingData[i],
+    walk: walkingData[i],
+  }));
 
   return (
     <motion.div
@@ -105,13 +33,11 @@ const ModalShareTrend = () => {
       transition={{ delay: 0.5, duration: 0.6 }}
       className="rounded-2xl border-2 border-border-color bg-card p-8 shadow-lg"
     >
-      {/* Header */}
       <div className="mb-6">
         <h3 className="text-2xl font-bold text-red mb-2">Modal Share Evolution 2024</h3>
         <p className="text-black">Monthly trends showing shift from car to sustainable modes</p>
       </div>
 
-      {/* Stats Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div className="space-y-1">
           <p className="text-xs text-muted">Car Share</p>
@@ -135,8 +61,31 @@ const ModalShareTrend = () => {
         </div>
       </div>
 
-      {/* Chart */}
-      <ReactECharts option={option} style={{ height: "320px" }} />
+      <div className="h-[320px] w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <ComposedChart data={data} margin={{ left: 8, right: 16, top: 8, bottom: 8 }}>
+            <defs>
+              <linearGradient id="car-area-modal" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="rgba(224, 32, 32, 0.35)" />
+                <stop offset="100%" stopColor="rgba(224, 32, 32, 0.05)" />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+            <XAxis dataKey="month" tick={{ fill: "#111" }} />
+            <YAxis tick={{ fill: "#6B7280" }} tickFormatter={(v) => `${v}%`} />
+            <Tooltip
+              contentStyle={{ background: "rgba(255,255,255,0.95)", borderColor: "#E5E7EB", color: "#111" }}
+              formatter={(value: number) => [`${value}%`, ""]}
+            />
+            <Legend wrapperStyle={{ paddingTop: 8 }} />
+            <Area type="monotone" dataKey="car" stroke="none" fill="url(#car-area-modal)" legendType="none" />
+            <Line type="monotone" dataKey="car" name="Car" stroke="#E02020" strokeWidth={3} dot={{ r: 3 }} />
+            <Line type="monotone" dataKey="transit" name="Public Transit" stroke="#10B981" strokeWidth={3} dot={{ r: 3 }} />
+            <Line type="monotone" dataKey="cycling" name="Cycling" stroke="#38BDF8" strokeWidth={3} dot={{ r: 3 }} />
+            <Line type="monotone" dataKey="walk" name="Walking" stroke="#6B7280" strokeWidth={2} dot={{ r: 2 }} />
+          </ComposedChart>
+        </ResponsiveContainer>
+      </div>
     </motion.div>
   );
 };

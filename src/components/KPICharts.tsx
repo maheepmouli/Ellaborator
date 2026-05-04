@@ -1,5 +1,24 @@
-import ReactECharts from "echarts-for-react";
-import { KPIValue } from "@/data/kpiDefinitions";
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Cell,
+  Tooltip,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar,
+  LineChart,
+  Line,
+  Area,
+  ReferenceLine,
+  PieChart,
+  Pie,
+} from "recharts";
+import type { KPIValue } from "@/data/kpiDefinitions";
 
 interface KPIChartProps {
   kpiId: string;
@@ -7,352 +26,205 @@ interface KPIChartProps {
   cityName: string;
 }
 
-const CHART_TEXT = "#E9E2FF";
-const CHART_TEXT_STRONG = "#F4F1FF";
-const CHART_GRID = "rgba(184, 166, 255, 0.18)";
+const TICK = "#E9E2FF";
+const TICK_STRONG = "#F4F1FF";
+const GRID = "rgba(184, 166, 255, 0.18)";
 
-// Stacked bar chart for Mode Share (KPI 1.2)
-export const ModeShareChart = ({ data, cityName }: { data: KPIValue; cityName: string }) => {
-  const breakdown = data.breakdown || {};
-  // Always show all 5 modes in order: Pedestrian, Cycle, Public Transport, Private Car, PTW
-  const allModes = ["Pedestrian", "Cycle", "Public Transport", "Private Car", "PTW"];
-  const categories = allModes;
-  const values = allModes.map(mode => breakdown[mode] || 0);
-  
-  // Color mapping for each mode
-  const modeColors: Record<string, string> = {
-    "Pedestrian": "#B0EDBA",      // Light green
-    "Cycle": "#96C2EF",            // Light blue
-    "Public Transport": "#657DF5", // Blue
-    "Private Car": "#8578C3",      // Purple
-    "PTW": "#2F1B6D",              // Dark purple
-  };
-
-  const option = {
-    tooltip: {
-      trigger: "axis",
-      axisPointer: { type: "shadow" },
-    },
-    grid: { left: "3%", right: "4%", bottom: "3%", top: "10%", containLabel: true },
-    xAxis: {
-      type: "value",
-      max: 100,
-      axisLabel: { formatter: "{value}%", color: CHART_TEXT, fontSize: 10 },
-      splitLine: { lineStyle: { color: CHART_GRID } },
-    },
-    yAxis: {
-      type: "category",
-      data: categories,
-      axisLabel: { color: CHART_TEXT, fontSize: 11, fontWeight: 600 },
-      axisLine: { show: false },
-      axisTick: { show: false },
-    },
-    series: [
-      {
-        name: "Mode Share",
-        type: "bar",
-        data: values.map((v, i) => ({
-          value: v,
-          itemStyle: {
-            color: modeColors[categories[i]] || "#96C2EF",
-            borderRadius: [0, 4, 4, 0],
-          },
-        })),
-        barWidth: "60%",
-        label: {
-          show: true,
-          position: "right",
-          formatter: (params: any) => params.value > 0 ? `${Number(params.value).toFixed(1)}%` : "",
-          fontSize: 10,
-          color: CHART_TEXT_STRONG,
-          textShadowColor: "rgba(47, 27, 109, 0.45)",
-          textShadowBlur: 6,
-        },
-      },
-    ],
-  };
-
-  return <ReactECharts option={option} style={{ height: "200px", width: "100%" }} />;
+const TOOLTIP_STYLE = {
+  backgroundColor: "rgba(21, 17, 48, 0.92)",
+  border: "1px solid #657DF5",
+  borderRadius: 8,
+  color: TICK_STRONG,
+  fontSize: 12,
 };
 
-// Radar chart for Safety Stars (KPI 2.1)
+/** Default tooltip rows ignore `contentStyle.color` — set these so values stay readable on dark panels. */
+const TOOLTIP_LABEL_STYLE = { color: TICK, fontWeight: 600 as const };
+const TOOLTIP_ITEM_STYLE = { color: TICK_STRONG };
+
+const modeColors: Record<string, string> = {
+  Pedestrian: "#B0EDBA",
+  Cycle: "#96C2EF",
+  "Public Transport": "#657DF5",
+  "Private Car": "#8578C3",
+  PTW: "#2F1B6D",
+};
+
+export const ModeShareChart = ({ data }: { data: KPIValue; cityName: string }) => {
+  const breakdown = data.breakdown || {};
+  const allModes = ["Pedestrian", "Cycle", "Public Transport", "Private Car", "PTW"];
+  const chartData = allModes.map((mode) => ({
+    mode,
+    value: breakdown[mode] || 0,
+    fill: modeColors[mode] || "#96C2EF",
+  }));
+
+  return (
+    <ResponsiveContainer width="100%" height={200}>
+      <BarChart data={chartData} layout="vertical" margin={{ top: 8, right: 24, bottom: 8, left: 8 }}>
+        <XAxis type="number" domain={[0, 100]} tick={{ fill: TICK, fontSize: 10 }} tickFormatter={(v) => `${v}%`} stroke={GRID} />
+        <YAxis type="category" dataKey="mode" tick={{ fill: TICK, fontSize: 11, fontWeight: 600 }} width={118} stroke="transparent" />
+        <Tooltip
+          formatter={(v: number) => [`${v.toFixed(1)}%`, "Share"]}
+          contentStyle={TOOLTIP_STYLE}
+          labelStyle={TOOLTIP_LABEL_STYLE}
+          itemStyle={TOOLTIP_ITEM_STYLE}
+        />
+        <Bar dataKey="value" radius={[0, 4, 4, 0]} label={{ fill: TICK_STRONG, fontSize: 10, position: "right", formatter: (v: unknown) => (Number(v) > 0 ? `${Number(v).toFixed(1)}%` : "") }}>
+          {chartData.map((_, i) => (
+            <Cell key={i} fill={chartData[i].fill} />
+          ))}
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+  );
+};
+
 export const SafetyRadarChart = ({ data }: { data: KPIValue }) => {
   const breakdown = data.breakdown || {};
-  const indicators = Object.keys(breakdown).map((key) => ({
-    name: key,
-    max: 5,
+  const keys = Object.keys(breakdown);
+  const chartData = keys.map((k) => ({
+    subject: k.length > 14 ? `${k.slice(0, 12)}…` : k,
+    fullSubject: k,
+    value: Number(breakdown[k]) || 0,
   }));
-  const values = Object.values(breakdown);
 
-  const option = {
-    tooltip: {},
-    radar: {
-      indicator: indicators,
-      shape: "polygon",
-      splitNumber: 5,
-      axisName: { color: CHART_TEXT, fontSize: 10, fontWeight: 600 },
-      splitLine: { lineStyle: { color: CHART_GRID } },
-      splitArea: { areaStyle: { color: ["#D3E3FF20", "#96C2EF10"] } },
-      axisLine: { lineStyle: { color: CHART_GRID } },
-    },
-    series: [
-      {
-        type: "radar",
-        data: [
-          {
-            value: values,
-            name: "Safety Rating",
-            areaStyle: { color: "#657DF530" },
-            lineStyle: { color: "#657DF5", width: 2 },
-            itemStyle: { color: "#657DF5" },
-          },
-        ],
-      },
-    ],
-  };
-
-  return <ReactECharts option={option} style={{ height: "200px", width: "100%" }} />;
+  return (
+    <ResponsiveContainer width="100%" height={200}>
+      <RadarChart cx="50%" cy="52%" outerRadius="72%" data={chartData}>
+        <PolarGrid stroke={GRID} />
+        <PolarAngleAxis dataKey="subject" tick={{ fill: TICK, fontSize: 9, fontWeight: 600 }} />
+        <PolarRadiusAxis angle={90} domain={[0, 5]} tick={{ fill: TICK, fontSize: 9 }} />
+        <Radar name="Safety" dataKey="value" stroke="#657DF5" fill="#657DF5" fillOpacity={0.35} strokeWidth={2} />
+        <Tooltip
+          formatter={(v: number) => [`${Number(v).toFixed(2)}`, "Rating"]}
+          labelFormatter={(_, payload) =>
+            payload && payload[0]?.payload?.fullSubject ? String((payload[0].payload as { fullSubject?: string }).fullSubject) : ""
+          }
+          contentStyle={TOOLTIP_STYLE}
+          labelStyle={TOOLTIP_LABEL_STYLE}
+          itemStyle={TOOLTIP_ITEM_STYLE}
+        />
+      </RadarChart>
+    </ResponsiveContainer>
+  );
 };
 
-// Bar chart for Infrastructure (KPI 3.1)
 export const InfrastructureBarChart = ({ data }: { data: KPIValue }) => {
   const breakdown = data.breakdown || {};
-  const categories = Object.keys(breakdown);
-  const values = Object.values(breakdown);
+  const chartData = Object.entries(breakdown).map(([name, value], i) => ({
+    name: name.length > 16 ? `${name.slice(0, 14)}…` : name,
+    fullName: name,
+    value: Number(value),
+    fill: ["#657DF5", "#8578C3", "#96C2EF", "#B0EDBA"][i % 4],
+  }));
 
-  const option = {
-    tooltip: { trigger: "axis" },
-    grid: { left: "3%", right: "4%", bottom: "15%", top: "10%", containLabel: true },
-    xAxis: {
-      type: "category",
-      data: categories,
-      axisLabel: { color: CHART_TEXT, fontSize: 9, rotate: 30, fontWeight: 600 },
-      axisLine: { lineStyle: { color: CHART_GRID } },
-    },
-    yAxis: {
-      type: "value",
-      axisLabel: { color: CHART_TEXT, fontSize: 10 },
-      splitLine: { lineStyle: { color: CHART_GRID } },
-    },
-    series: [
-      {
-        type: "bar",
-        data: values.map((v, i) => ({
-          value: v,
-          itemStyle: {
-            color: {
-              type: "linear",
-              x: 0, y: 0, x2: 0, y2: 1,
-              colorStops: [
-                { offset: 0, color: "#B0EDBA" },
-                { offset: 1, color: "#657DF5" },
-              ],
-            },
-            borderRadius: [4, 4, 0, 0],
-          },
-        })),
-        barWidth: "50%",
-      },
-    ],
-  };
-
-  return <ReactECharts option={option} style={{ height: "200px", width: "100%" }} />;
+  return (
+    <ResponsiveContainer width="100%" height={200}>
+      <BarChart data={chartData} margin={{ top: 10, right: 8, left: 0, bottom: 36 }}>
+        <XAxis dataKey="name" tick={{ fill: TICK, fontSize: 9, fontWeight: 600 }} stroke={GRID} angle={-25} textAnchor="end" height={50} interval={0} />
+        <YAxis tick={{ fill: TICK, fontSize: 10 }} stroke={GRID} />
+        <Tooltip
+          formatter={(v: number) => [Number(v).toLocaleString(), "Count"]}
+          labelFormatter={(l, p) => (p?.[0]?.payload?.fullName as string) || String(l)}
+          contentStyle={TOOLTIP_STYLE}
+          labelStyle={TOOLTIP_LABEL_STYLE}
+          itemStyle={TOOLTIP_ITEM_STYLE}
+        />
+        <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+          {chartData.map((e, i) => (
+            <Cell key={`i-${i}`} fill={e.fill} />
+          ))}
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+  );
 };
 
-// Area chart with gradient for Emissions (KPI 3.2) - More suitable for CO2 visualization
 export const EmissionsLineChart = ({ data }: { data: KPIValue }) => {
   const timeSeries = data.timeSeries || [];
-  const years = timeSeries.map((t) => t.year.toString());
-  const values = timeSeries.map((t) => t.value);
+  const chartData = timeSeries.map((t) => ({ year: String(t.year), intensity: Number(t.value) }));
 
-  // Calculate reduction percentage (inverse of value since lower is better)
-  const reductionValues = values.map(v => 100 - v);
+  const minY = chartData.length ? Math.min(...chartData.map((d) => d.intensity)) * 0.95 : 60;
+  const maxY = chartData.length ? Math.max(...chartData.map((d) => d.intensity)) * 1.05 : 105;
 
-  const option = {
-    tooltip: {
-      trigger: "axis",
-      formatter: (params: any) => {
-        const value = params[0].value;
-        const reduction = 100 - value;
-        return `${params[0].name}: ${value}% of baseline<br/>Reduction: ${reduction.toFixed(1)}%`;
-      },
-      backgroundColor: "rgba(21, 17, 48, 0.92)",
-      borderColor: "#657DF5",
-      textStyle: { color: CHART_TEXT_STRONG },
-    },
-    grid: { left: "3%", right: "4%", bottom: "3%", top: "10%", containLabel: true },
-    xAxis: {
-      type: "category",
-      data: years,
-      axisLabel: { color: CHART_TEXT, fontSize: 10, fontWeight: 600 },
-      axisLine: { lineStyle: { color: CHART_GRID } },
-    },
-    yAxis: {
-      type: "value",
-      min: 60,
-      max: 105,
-      axisLabel: { formatter: "{value}%", color: CHART_TEXT, fontSize: 10 },
-      splitLine: { lineStyle: { color: CHART_GRID } },
-    },
-    series: [
-      {
-        type: "line",
-        data: values,
-        smooth: true,
-        symbol: "circle",
-        symbolSize: 10,
-        lineStyle: { 
-          color: "#10B981", 
-          width: 3,
-          shadowBlur: 4,
-          shadowColor: "rgba(16, 185, 129, 0.3)",
-        },
-        itemStyle: { 
-          color: "#10B981", 
-          borderColor: "#fff", 
-          borderWidth: 2,
-          shadowBlur: 4,
-          shadowColor: "rgba(16, 185, 129, 0.5)",
-        },
-        areaStyle: {
-          color: {
-            type: "linear",
-            x: 0, y: 0, x2: 0, y2: 1,
-            colorStops: [
-              { offset: 0, color: "rgba(16, 185, 129, 0.4)" }, // Green at top
-              { offset: 0.5, color: "rgba(101, 125, 245, 0.3)" }, // Purple in middle
-              { offset: 1, color: "rgba(16, 185, 129, 0.1)" }, // Light green at bottom
-            ],
-          },
-        },
-        markLine: {
-          data: [{ yAxis: 100, name: "Baseline" }],
-          lineStyle: { color: "#E02020", type: "dashed", width: 2 },
-          label: { 
-            formatter: "Baseline", 
-            fontSize: 9,
-            color: CHART_TEXT_STRONG,
-            backgroundColor: "rgba(224, 32, 32, 0.1)",
-            padding: [2, 4],
-          },
-        },
-        markArea: {
-          itemStyle: {
-            color: {
-              type: "linear",
-              x: 0, y: 0, x2: 0, y2: 1,
-              colorStops: [
-                { offset: 0, color: "rgba(16, 185, 129, 0.15)" },
-                { offset: 1, color: "rgba(16, 185, 129, 0.05)" },
-              ],
-            },
-          },
-          data: [[{ yAxis: 100 }, { yAxis: Math.min(...values) }]],
-        },
-      },
-    ],
-  };
-
-  return <ReactECharts option={option} style={{ height: "200px", width: "100%" }} />;
+  return (
+    <ResponsiveContainer width="100%" height={200}>
+      <LineChart data={chartData} margin={{ top: 10, right: 8, left: 0, bottom: 4 }}>
+        <XAxis dataKey="year" tick={{ fill: TICK, fontSize: 10, fontWeight: 600 }} stroke={GRID} />
+        <YAxis domain={[Math.floor(minY), Math.ceil(maxY)]} tick={{ fill: TICK, fontSize: 10 }} tickFormatter={(v) => `${v}%`} stroke={GRID} />
+        <Tooltip
+          formatter={(v: number) => [`${v.toFixed(1)}% intensity`, `Reduction ~${(100 - v).toFixed(1)}%`]}
+          contentStyle={TOOLTIP_STYLE}
+          labelStyle={TOOLTIP_LABEL_STYLE}
+          itemStyle={TOOLTIP_ITEM_STYLE}
+        />
+        <ReferenceLine y={100} stroke="#E02020" strokeDasharray="4 4" label={{ value: "Baseline", fill: TICK_STRONG, fontSize: 10 }} />
+        <Area type="monotone" dataKey="intensity" stroke="#10B981" fillOpacity={0.35} fill="#10B981" />
+        <Line type="monotone" dataKey="intensity" stroke="#10B981" strokeWidth={2} dot={{ fill: "#10B981", strokeWidth: 2 }} />
+      </LineChart>
+    </ResponsiveContainer>
+  );
 };
 
-// Gauge chart for Satisfaction (KPI 4.1)
 export const SatisfactionGaugeChart = ({ data }: { data: KPIValue }) => {
-  const option = {
-    series: [
-      {
-        type: "gauge",
-        startAngle: 180,
-        endAngle: 0,
-        min: 0,
-        max: 100,
-        splitNumber: 10,
-        radius: "100%",
-        center: ["50%", "70%"],
-        axisLine: {
-          lineStyle: {
-            width: 20,
-            color: [
-              [0.3, "#8578C3"],
-              [0.6, "#657DF5"],
-              [0.8, "#96C2EF"],
-              [1, "#B0EDBA"],
-            ],
-          },
-        },
-        pointer: {
-          itemStyle: { color: "#2F1B6D" },
-          length: "60%",
-          width: 6,
-        },
-        axisTick: { show: false },
-        splitLine: { show: false },
-        axisLabel: { show: false },
-        detail: {
-          formatter: "{value}%",
-          fontSize: 24,
-          fontWeight: "bold",
-          color: CHART_TEXT_STRONG,
-          textShadowColor: "rgba(47, 27, 109, 0.5)",
-          textShadowBlur: 8,
-          offsetCenter: [0, "20%"],
-        },
-        data: [{ value: data.mainValue }],
-      },
-    ],
-  };
+  const pct = Math.max(0, Math.min(100, Number(data.mainValue)));
+  const rest = Math.max(0, 100 - pct);
+  const pieData = [
+    { name: "score", value: pct, fill: "#657DF5" },
+    { name: "rest", value: rest, fill: "rgba(101,125,245,0.15)" },
+  ];
 
-  return <ReactECharts option={option} style={{ height: "180px", width: "100%" }} />;
+  return (
+    <ResponsiveContainer width="100%" height={180}>
+      <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+        <Pie data={pieData} cx="50%" cy="50%" innerRadius={52} outerRadius={68} paddingAngle={0} dataKey="value" stroke="none">
+          {pieData.map((e, i) => (
+            <Cell key={`c-${i}`} fill={e.fill} stroke="transparent" />
+          ))}
+        </Pie>
+        <text x="50%" y="46%" dominantBaseline="middle" textAnchor="middle" fill={TICK_STRONG} fontSize={22} fontWeight={700}>
+          {pct.toFixed(0)}%
+        </text>
+        <text x="50%" y="61%" dominantBaseline="middle" textAnchor="middle" fill={TICK} fontSize={11}>
+          Satisfaction index
+        </text>
+      </PieChart>
+    </ResponsiveContainer>
+  );
 };
 
-// Horizontal bar for Accessibility (KPI 4.2)
 export const AccessibilityBarChart = ({ data }: { data: KPIValue }) => {
   const breakdown = data.breakdown || {};
-  const categories = Object.keys(breakdown);
-  const values = Object.values(breakdown);
+  const chartData = Object.entries(breakdown).map(([category, raw], i) => ({
+    category: category.length > 18 ? `${category.slice(0, 16)}…` : category,
+    fullLabel: category,
+    value: Number(raw),
+    fill: ["#657DF5", "#8578C3", "#96C2EF", "#B0EDBA"][i % 4],
+  }));
 
-  const option = {
-    tooltip: { trigger: "axis" },
-    grid: { left: "30%", right: "10%", bottom: "3%", top: "3%", containLabel: false },
-    xAxis: {
-      type: "value",
-      axisLabel: { color: CHART_TEXT, fontSize: 10 },
-      splitLine: { lineStyle: { color: CHART_GRID } },
-    },
-    yAxis: {
-      type: "category",
-      data: categories,
-      axisLabel: { color: CHART_TEXT, fontSize: 10, fontWeight: 600 },
-      axisLine: { show: false },
-      axisTick: { show: false },
-    },
-    series: [
-      {
-        type: "bar",
-        data: values.map((v, i) => ({
-          value: v,
-          itemStyle: {
-            color: ["#657DF5", "#8578C3", "#96C2EF", "#B0EDBA"][i % 4],
-            borderRadius: [0, 4, 4, 0],
-          },
-        })),
-        barWidth: "50%",
-        label: {
-          show: true,
-          position: "right",
-          fontSize: 10,
-          color: CHART_TEXT_STRONG,
-          textShadowColor: "rgba(47, 27, 109, 0.45)",
-          textShadowBlur: 6,
-        },
-      },
-    ],
-  };
-
-  return <ReactECharts option={option} style={{ height: "180px", width: "100%" }} />;
+  return (
+    <ResponsiveContainer width="100%" height={180}>
+      <BarChart data={chartData} layout="vertical" margin={{ top: 4, right: 16, bottom: 4, left: 8 }}>
+        <XAxis type="number" hide />
+        <YAxis type="category" dataKey="category" width={100} tick={{ fill: TICK, fontSize: 10, fontWeight: 600 }} stroke="transparent" />
+        <Tooltip
+          formatter={(v: number) => [v, "Count"]}
+          labelFormatter={(l, p) => (p?.[0]?.payload?.fullLabel as string) || String(l)}
+          contentStyle={TOOLTIP_STYLE}
+          labelStyle={TOOLTIP_LABEL_STYLE}
+          itemStyle={TOOLTIP_ITEM_STYLE}
+        />
+        <Bar dataKey="value" radius={[0, 4, 4, 0]} label={{ position: "right", fill: TICK_STRONG, fontSize: 10 }}>
+          {chartData.map((e, i) => (
+            <Cell key={`a-${i}`} fill={e.fill} />
+          ))}
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+  );
 };
 
-// Main component that renders the appropriate chart
 const KPIChart = ({ kpiId, data, cityName }: KPIChartProps) => {
   switch (kpiId) {
     case "kpi1.2":

@@ -6,8 +6,9 @@
 // API Base URL configuration
 // Configure VITE_API_BASE_URL in .env if the API is on a different domain
 // Example: VITE_API_BASE_URL=https://data.gouv.fr/api/explore/v2.1/catalog/datasets
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
-  "/api/explore/v2.1/catalog/datasets"; // Relative path - adjust if needed
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  "https://data.issy.com/api/explore/v2.1/catalog/datasets";
 
 // Traffic API configuration
 export const TRAFFIC_API_CONFIG = {

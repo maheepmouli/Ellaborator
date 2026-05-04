@@ -1,5 +1,14 @@
-import ReactECharts from "echarts-for-react";
 import { motion } from "framer-motion";
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+} from "recharts";
 
 const CongestionLevelPlot = () => {
   const monthlyData = [
@@ -17,53 +26,6 @@ const CongestionLevelPlot = () => {
     { month: "Dec", y2024: 30, y2023: 27 },
   ];
 
-  const option = {
-    grid: { left: 60, right: 40, top: 40, bottom: 60 },
-    xAxis: {
-      type: "category",
-      data: monthlyData.map((d) => d.month),
-      axisLine: { lineStyle: { color: "#E5E7EB" } },
-      axisLabel: { color: "#111111", fontFamily: "Inter" },
-    },
-    yAxis: {
-      type: "value",
-      max: 35,
-      axisLine: { show: false },
-      splitLine: { lineStyle: { color: "#E5E7EB" } },
-      axisLabel: { color: "#6B7280", fontFamily: "Inter" },
-    },
-    series: [
-      {
-        name: "2024",
-        type: "bar",
-        data: monthlyData.map((d) => d.y2024),
-        itemStyle: { color: "#E02020", borderRadius: [4, 4, 0, 0] },
-        barWidth: 12,
-      },
-      {
-        name: "2023",
-        type: "bar",
-        data: monthlyData.map((d) => d.y2023),
-        itemStyle: { color: "#D1D5DB", borderRadius: [4, 4, 0, 0] },
-        barWidth: 12,
-      },
-    ],
-    legend: {
-      bottom: 10,
-      data: ["2024", "2023"],
-      textStyle: { color: "#111111", fontFamily: "Inter" },
-      itemWidth: 20,
-      itemHeight: 8,
-    },
-    tooltip: {
-      trigger: "axis",
-      axisPointer: { type: "shadow" },
-      backgroundColor: "rgba(255, 255, 255, 0.95)",
-      borderColor: "#E5E7EB",
-      textStyle: { color: "#111111" },
-    },
-  };
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -71,9 +33,7 @@ const CongestionLevelPlot = () => {
       transition={{ delay: 0.4, duration: 0.6 }}
       className="rounded-2xl border-2 border-border-color bg-card p-8 shadow-lg"
     >
-      {/* Header Section */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        {/* World Rank Card */}
         <div className="space-y-3">
           <p className="text-sm text-muted font-medium">World rank 2024</p>
           <h3 className="text-2xl font-bold text-ink">Congestion level</h3>
@@ -82,7 +42,6 @@ const CongestionLevelPlot = () => {
           </div>
         </div>
 
-        {/* Average Level Card */}
         <div className="space-y-3">
           <p className="text-sm text-muted font-medium">Average congestion level</p>
           <div className="flex items-baseline gap-2">
@@ -95,7 +54,6 @@ const CongestionLevelPlot = () => {
           </p>
         </div>
 
-        {/* Placeholder for future metric */}
         <div className="space-y-3">
           <p className="text-sm text-muted font-medium">Peak hours impact</p>
           <div className="flex items-baseline gap-2">
@@ -106,10 +64,21 @@ const CongestionLevelPlot = () => {
         </div>
       </div>
 
-      {/* Chart Section */}
       <div>
         <h4 className="text-lg font-bold text-ink mb-4">Monthly congestion level</h4>
-        <ReactECharts option={option} style={{ height: "300px" }} />
+        <div className="h-[300px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={monthlyData} margin={{ left: 8, right: 16, top: 8, bottom: 8 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+              <XAxis dataKey="month" tick={{ fill: "#111" }} />
+              <YAxis domain={[0, 35]} tick={{ fill: "#6B7280" }} />
+              <Tooltip contentStyle={{ background: "rgba(255,255,255,0.95)", borderColor: "#E5E7EB" }} cursor={{ fill: "#f9fafb" }} />
+              <Legend wrapperStyle={{ paddingTop: 8 }} iconType="square" />
+              <Bar dataKey="y2024" name="2024" fill="#E02020" radius={[4, 4, 0, 0]} maxBarSize={14} />
+              <Bar dataKey="y2023" name="2023" fill="#D1D5DB" radius={[4, 4, 0, 0]} maxBarSize={14} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </div>
     </motion.div>
   );

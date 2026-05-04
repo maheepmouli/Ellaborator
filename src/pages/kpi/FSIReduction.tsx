@@ -1,89 +1,45 @@
 import { motion } from "framer-motion";
 import { ArrowLeft, Download } from "lucide-react";
 import { Link } from "react-router-dom";
-import ReactECharts from "echarts-for-react";
-import * as echarts from "echarts";
+import {
+  ResponsiveContainer,
+  ComposedChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  BarChart,
+  Bar,
+} from "recharts";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 
+const projection = [
+  { year: "2025", baseline: 120, intervention: 120, ci: 120 },
+  { year: "2027", baseline: 118, intervention: 112, ci: 115 },
+  { year: "2029", baseline: 116, intervention: 105, ci: 110 },
+  { year: "2031", baseline: 115, intervention: 98, ci: 105 },
+  { year: "2033", baseline: 113, intervention: 92, ci: 100 },
+  { year: "2035", baseline: 112, intervention: 87, ci: 95 },
+  { year: "2037", baseline: 110, intervention: 83, ci: 91 },
+  { year: "2039", baseline: 109, intervention: 80, ci: 88 },
+  { year: "2041", baseline: 108, intervention: 77, ci: 85 },
+  { year: "2043", baseline: 107, intervention: 75, ci: 83 },
+  { year: "2045", baseline: 105, intervention: 73, ci: 81 },
+];
+
+const monthly = [
+  { m: "Jan", red: 2.5 },
+  { m: "Feb", red: 5.1 },
+  { m: "Mar", red: 8.3 },
+  { m: "Apr", red: 10.2 },
+  { m: "May", red: 11.8 },
+  { m: "Jun", red: 12.5 },
+];
+
 const FSIReduction = () => {
-  const chartOption = {
-    title: {
-      text: "Fatal & Serious Injury Reduction (20-Year Projection)",
-      textStyle: { color: "#111111", fontSize: 18, fontWeight: "bold" },
-    },
-    tooltip: { trigger: "axis" },
-    legend: { data: ["Baseline", "With Intervention", "Confidence Band"], bottom: 0 },
-    grid: { left: "3%", right: "4%", bottom: "15%", top: "15%", containLabel: true },
-    xAxis: {
-      type: "category",
-      data: ["2025", "2027", "2029", "2031", "2033", "2035", "2037", "2039", "2041", "2043", "2045"],
-      axisLabel: { color: "#111111" },
-    },
-    yAxis: {
-      type: "value",
-      name: "Annual FSI Count",
-      axisLabel: { color: "#111111" },
-    },
-    series: [
-      {
-        name: "Baseline",
-        type: "line",
-        data: [120, 118, 116, 115, 113, 112, 110, 109, 108, 107, 105],
-        itemStyle: { color: "#6B7280" },
-        lineStyle: { type: "dashed" },
-      },
-      {
-        name: "With Intervention",
-        type: "line",
-        data: [120, 112, 105, 98, 92, 87, 83, 80, 77, 75, 73],
-        itemStyle: { color: "#E02020" },
-        smooth: true,
-      },
-      {
-        name: "Confidence Band",
-        type: "line",
-        data: [120, 115, 110, 105, 100, 95, 91, 88, 85, 83, 81],
-        itemStyle: { color: "rgba(224, 32, 32, 0.3)" },
-        lineStyle: { opacity: 0 },
-        areaStyle: { color: "rgba(224, 32, 32, 0.1)" },
-        stack: "confidence",
-        symbol: "none",
-      },
-    ],
-  };
-
-  const reductionOption = {
-    title: {
-      text: "Monthly FSI Reduction Progress",
-      textStyle: { color: "#111111", fontSize: 16 },
-    },
-    tooltip: { trigger: "axis" },
-    xAxis: {
-      type: "category",
-      data: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
-      axisLabel: { color: "#111111" },
-    },
-    yAxis: {
-      type: "value",
-      name: "Reduction (%)",
-      axisLabel: { color: "#111111" },
-    },
-    series: [
-      {
-        name: "FSI Reduction",
-        type: "bar",
-        data: [2.5, 5.1, 8.3, 10.2, 11.8, 12.5],
-        itemStyle: {
-          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-            { offset: 0, color: "#E02020" },
-            { offset: 1, color: "#C31414" },
-          ]),
-        },
-      },
-    ],
-  };
-
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -112,27 +68,73 @@ const FSIReduction = () => {
           <div className="space-y-6">
             <div className="rounded-2xl border border-border-color bg-card p-6 shadow-md">
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-red">20-Year Projection</h2>
+                <h2 className="text-xl font-bold text-red">Fatal &amp; Serious Injury Reduction (20-Year Projection)</h2>
                 <Button variant="outline" size="sm" className="gap-2">
                   <Download className="h-4 w-4" />
                   Export Data
                 </Button>
               </div>
-              <ReactECharts option={chartOption} style={{ height: "400px" }} />
+              <div className="h-[400px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart data={projection} margin={{ top: 12, right: 16, bottom: 8, left: 8 }}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                    <XAxis dataKey="year" tick={{ fill: "#111" }} />
+                    <YAxis tick={{ fill: "#111" }} name="Annual FSI Count" />
+                    <Tooltip contentStyle={{ background: "#fff", border: "1px solid #e5e7eb" }} />
+                    <Legend wrapperStyle={{ paddingTop: 12 }} />
+                    <Line
+                      type="monotone"
+                      dataKey="baseline"
+                      name="Baseline"
+                      stroke="#6B7280"
+                      strokeWidth={2}
+                      strokeDasharray="5 5"
+                      dot={false}
+                    />
+                    <Line type="monotone" dataKey="intervention" name="With Intervention" stroke="#E02020" strokeWidth={2} dot />
+                    <Line
+                      type="monotone"
+                      dataKey="ci"
+                      name="Confidence band (upper)"
+                      stroke="rgba(224, 32, 32, 0.45)"
+                      strokeWidth={1}
+                      dot={false}
+                      strokeDasharray="2 2"
+                    />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </div>
               <p className="text-xs text-muted mt-4">
-                Source: iRAP Star Rating + ELABORATOR collision data | Model: Exponential decay with 95% CI
+                Source: iRAP Star Rating + ELABORATOR collision data | Model: Exponential decay with 95% CI (upper trace
+                shown)
               </p>
             </div>
 
             <div className="rounded-2xl border border-border-color bg-card p-6 shadow-md">
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-red">Recent Progress (2025)</h2>
+                <h2 className="text-xl font-bold text-red">Monthly FSI Reduction Progress</h2>
                 <Button variant="outline" size="sm" className="gap-2">
                   <Download className="h-4 w-4" />
                   Export
                 </Button>
               </div>
-              <ReactECharts option={reductionOption} style={{ height: "350px" }} />
+              <div className="h-[350px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={monthly} margin={{ top: 12, right: 16, bottom: 8, left: 8 }}>
+                    <defs>
+                      <linearGradient id="fsi-bar" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#E02020" />
+                        <stop offset="100%" stopColor="#C31414" />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                    <XAxis dataKey="m" tick={{ fill: "#111" }} />
+                    <YAxis tick={{ fill: "#111" }} name="Reduction (%)" />
+                    <Tooltip contentStyle={{ background: "#fff", border: "1px solid #e5e7eb" }} />
+                    <Bar dataKey="red" name="FSI Reduction" fill="url(#fsi-bar)" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
 
