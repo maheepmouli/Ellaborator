@@ -1,0 +1,7 @@
+node_modules
+dist
+.git
+public/sharepoint-data
+*.zip
+.cursor
+**/.DS_Store
