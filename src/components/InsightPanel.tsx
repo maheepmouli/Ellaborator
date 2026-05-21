@@ -48,6 +48,7 @@ interface InsightPanelProps {
   scenario: "baseline" | "intervention" | "comparison";
   onScenarioChange: (scenario: "baseline" | "intervention" | "comparison") => void;
   onOpenDataSummary: () => void;
+  onOpenObservatory?: () => void;
   mapContext?: {
     segmentName: string;
     speed: number | null;
@@ -78,6 +79,7 @@ const InsightPanel = ({
   scenario,
   onScenarioChange,
   onOpenDataSummary,
+  onOpenObservatory,
   mapContext,
   dataQualitySummary,
   milanEnvironmentWindow = "08-09",
@@ -368,6 +370,33 @@ const InsightPanel = ({
             </Dialog>
           </>
         )}
+
+        {/* Segment Intelligence — Issy Pilot 2 only */}
+        {selectedCity.toLowerCase().includes("issy") &&
+          selectedPilotId === "issy-p2" &&
+          onOpenObservatory && (
+            <div className="mt-3 rounded-lg border border-cyan-400/30 bg-cyan-400/10 p-2.5">
+              <button
+                type="button"
+                onClick={onOpenObservatory}
+                className="w-full flex items-center justify-between gap-2 text-xs font-semibold text-cyan-300 hover:text-cyan-200 transition-colors"
+              >
+                <span className="flex items-center gap-1.5">
+                  <span className="text-base">🔭</span>
+                  Segment Observatory
+                </span>
+                <span className="text-[10px] font-normal text-cyan-400/70 flex items-center gap-1">
+                  Ernest Renan Junction
+                  <svg viewBox="0 0 16 16" className="h-3 w-3" fill="currentColor">
+                    <path d="M6.22 3.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L9.94 8 6.22 4.28a.75.75 0 0 1 0-1.06Z" />
+                  </svg>
+                </span>
+              </button>
+              <p className="mt-1 text-[10px] text-cyan-400/55 leading-snug">
+                Before/after analytics · sensor schematic · modal shift story
+              </p>
+            </div>
+          )}
       </div>
 
       {/* Scenario Toggle */}
