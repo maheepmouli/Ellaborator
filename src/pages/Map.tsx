@@ -7,6 +7,7 @@ import InsightPanel from "@/components/InsightPanel";
 import MapControls from "@/components/MapControls";
 import MapTour from "@/components/MapTour";
 import DataSummaryPanel from "@/components/ScenarioPanel";
+import SegmentIntelligencePanel from "@/components/SegmentIntelligencePanel";
 import { getPilotsByCity, SelectedPilot, ViewState } from "@/data/pilotDefinitions";
 import { ELABORATOR_KPIS } from "@/data/kpiDefinitions";
 import { resolveMapLegend, type MapLegendMarker } from "@/lib/mapLayerLegend";
@@ -81,6 +82,7 @@ const Map = () => {
   const [viewLevel, setViewLevel] = useState<ViewState>("EUROPE");
   const [scenario, setScenario] = useState<"baseline" | "intervention" | "comparison">("intervention");
   const [isDataSummaryOpen, setIsDataSummaryOpen] = useState(false);
+  const [isObservatoryOpen, setIsObservatoryOpen] = useState(false);
   const [isLegendOpen, setIsLegendOpen] = useState(true);
   const [mapContext, setMapContext] = useState<SegmentContext | null>(null);
   /** Pilot map highlights intervention streets by default — no toggle in the sidebar. */
@@ -189,6 +191,7 @@ const Map = () => {
             scenario={scenario}
             onScenarioChange={setScenario}
             onOpenDataSummary={() => setIsDataSummaryOpen(true)}
+            onOpenObservatory={() => setIsObservatoryOpen(true)}
             mapContext={mapContext}
             dataQualitySummary={dataQualitySummary}
             milanEnvironmentWindow={milanEnvWindow}
@@ -352,6 +355,12 @@ const Map = () => {
           onClose={() => setIsDataSummaryOpen(false)}
         />
       )}
+
+      {/* Segment Intelligence Panel — Issy Pilot 2 */}
+      <SegmentIntelligencePanel
+        isOpen={isObservatoryOpen}
+        onClose={() => setIsObservatoryOpen(false)}
+      />
 
       {/* Bottom Attribution */}
       <div
