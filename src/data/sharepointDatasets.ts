@@ -21,10 +21,10 @@ export const SHAREPOINT_CITY_DATASETS: SharepointDataset[] = [
   },
   {
     city: "Issy",
-    sourceFolder: "/sharepoint-data/Issy-20260427T130625Z-3-001/Issy",
-    fileCount: 14,
-    sampleFile:
-      "/sharepoint-data/Issy-20260427T130625Z-3-001/Issy/2. POST IMPLEMENTATION DATA from Issy/ISSY1 - detailed traffic_data/ISSY1_post_intervention_traffic_data_november_2025.csv",
+    sourceFolder:
+      "/public/data/issy (bundled); full mirror at /sharepoint-data/Issy-20260427T130625Z-3-001/Issy",
+    fileCount: 4,
+    sampleFile: "/data/issy/ISSY1_post_intervention_traffic_data_november_2025.csv",
   },
   {
     city: "Milan",

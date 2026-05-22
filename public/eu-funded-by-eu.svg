@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 56" role="img" aria-label="Funded by the European Union">
+  <defs>
+    <path
+      id="eust"
+      d="M0,-10 L2.938,-3.09 L9.511,-3.09 L4.286,1.18 L6.123,8.09 L0,4.5 L-6.123,8.09 L-4.286,1.18 L-9.511,-3.09 L-2.938,-3.09 Z"
+    />
+    <filter id="txtShade" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="1" stdDeviation="1.25" flood-color="#000" flood-opacity="0.35" />
+    </filter>
+  </defs>
+
+  <!-- EU emblem: flag ratio in official colours, no matte / no black backing -->
+  <g transform="translate(2, 3) scale(0.258333)">
+    <rect width="240" height="160" rx="8" fill="#003399" />
+    <g fill="#FFCC00" transform="translate(120 80)">
+      <use href="#eust" transform="translate(0,-52)" />
+      <use href="#eust" transform="rotate(30) translate(0,-52)" />
+      <use href="#eust" transform="rotate(60) translate(0,-52)" />
+      <use href="#eust" transform="rotate(90) translate(0,-52)" />
+      <use href="#eust" transform="rotate(120) translate(0,-52)" />
+      <use href="#eust" transform="rotate(150) translate(0,-52)" />
+      <use href="#eust" transform="rotate(180) translate(0,-52)" />
+      <use href="#eust" transform="rotate(210) translate(0,-52)" />
+      <use href="#eust" transform="rotate(240) translate(0,-52)" />
+      <use href="#eust" transform="rotate(270) translate(0,-52)" />
+      <use href="#eust" transform="rotate(300) translate(0,-52)" />
+      <use href="#eust" transform="rotate(330) translate(0,-52)" />
+    </g>
+  </g>
+
+  <g filter="url(#txtShade)" fill="#fff" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif">
+    <text x="68" y="22" font-size="11" font-weight="600">Funded by the</text>
+    <text x="68" y="40" font-size="14" font-weight="700">European Union</text>
+  </g>
+</svg>

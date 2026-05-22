@@ -3,6 +3,10 @@ import type {
   CyclingInfrastructureAPIParams,
 } from "@/types/cycling-infrastructure";
 import { getCyclingInfrastructureApiUrl } from "@/lib/api-config";
+import {
+  clampOpendataLimit,
+  fetchOpendataPaginated,
+} from "@/lib/issy-opendata";
 import type { MapSegment } from "./trafficApi";
 
 /**
@@ -12,7 +16,7 @@ export async function fetchCyclingInfrastructureData(
   params: CyclingInfrastructureAPIParams = {}
 ): Promise<CyclingInfrastructureAPIResponse> {
   const {
-    limit = 500,
+    limit: requestedLimit = 100,
     offset = 0,
     where,
     select,
@@ -22,6 +26,8 @@ export async function fetchCyclingInfrastructureData(
     lang,
     timezone = "Europe/Berlin",
   } = params;
+
+  const limit = clampOpendataLimit(requestedLimit);
 
   const searchParams = new URLSearchParams({
     limit: limit.toString(),
@@ -68,8 +74,19 @@ export async function fetchCyclingInfrastructureData(
     return data;
   } catch (error) {
     console.error("Error fetching cycling infrastructure data:", error);
-    throw error;
+    return { total_count: 0, results: [] };
   }
+}
+
+export async function fetchCyclingInfrastructureDataPaginated(
+  params: CyclingInfrastructureAPIParams = {},
+  desiredLimit: number = 100
+): Promise<CyclingInfrastructureAPIResponse> {
+  const { limit: _ignored, offset: _offsetIgnored, ...rest } = params;
+  return fetchOpendataPaginated(
+    (limit, offset) => fetchCyclingInfrastructureData({ ...rest, limit, offset }),
+    desiredLimit
+  );
 }
 
 /**

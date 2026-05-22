@@ -1,5 +1,9 @@
 import type { BicycleCountingAPIResponse, BicycleCountingAPIParams } from "@/types/bicycle-counting";
 import { getBicycleCountingApiUrl } from "@/lib/api-config";
+import {
+  clampOpendataLimit,
+  fetchOpendataPaginated,
+} from "@/lib/issy-opendata";
 import type { MapSegment } from "./trafficApi";
 
 /**
@@ -9,7 +13,7 @@ export async function fetchBicycleCountingData(
   params: BicycleCountingAPIParams = {}
 ): Promise<BicycleCountingAPIResponse> {
   const {
-    limit = 100,
+    limit: requestedLimit = 100,
     offset = 0,
     where,
     select,
@@ -19,6 +23,8 @@ export async function fetchBicycleCountingData(
     lang,
     timezone = "Europe/Berlin",
   } = params;
+
+  const limit = clampOpendataLimit(requestedLimit);
 
   const searchParams = new URLSearchParams({
     limit: limit.toString(),
@@ -66,6 +72,17 @@ export async function fetchBicycleCountingData(
     // Return empty response instead of throwing to allow fallback to synthetic data
     return { total_count: 0, results: [] };
   }
+}
+
+export async function fetchBicycleCountingDataPaginated(
+  params: BicycleCountingAPIParams = {},
+  desiredLimit: number = 100
+): Promise<BicycleCountingAPIResponse> {
+  const { limit: _ignored, offset: _offsetIgnored, ...rest } = params;
+  return fetchOpendataPaginated(
+    (limit, offset) => fetchBicycleCountingData({ ...rest, limit, offset }),
+    desiredLimit
+  );
 }
 
 /**

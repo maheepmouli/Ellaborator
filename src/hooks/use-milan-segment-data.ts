@@ -20,11 +20,12 @@ export function useMilanSpeedSegments(
 
 export function useMilanEnvironmentSegments(
   window: "08-09" | "18-19",
-  enabled: boolean
+  enabled: boolean,
+  pilotId?: "mil-p1" | "mil-p2" | "mil-p3" | null
 ) {
   return useQuery<MilanSegmentDataset>({
-    queryKey: ["milan-environment-segments", window],
-    queryFn: () => loadMilanEnvironmentSegments(window),
+    queryKey: ["milan-environment-segments", window, pilotId || "city"],
+    queryFn: () => loadMilanEnvironmentSegments(window, pilotId),
     enabled,
     staleTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,

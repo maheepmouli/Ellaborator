@@ -37,11 +37,21 @@ export const DATASET_RENDERING_RULES: DatasetRenderingRule[] = [
     realDataStatus: "active",
   },
   {
-    datasetName: "ISSY1 baseline/post traffic CSV",
+    datasetName: "ISSY1 baseline/post zone-flow CSV",
     city: "Issy-les-Moulineaux",
     likelyKpi: "Mobility Mode Share",
     geometryType: "segment",
-    renderingStyle: "Zone-to-zone flow lines with baseline/intervention/comparison",
+    renderingStyle: "Zone-to-zone OD arcs (city view); weekday/weekend filter in sidebar",
+    parserStatus: "ready",
+    realDataStatus: "active",
+  },
+  {
+    datasetName: "Issy junction study layers",
+    city: "Issy-les-Moulineaux",
+    likelyKpi: "Mobility, Safety, Climate, Infrastructure",
+    geometryType: "hex",
+    renderingStyle:
+      "Junction arms + climate hex field + soft influence buffer (280 m); segment observatory on arm click",
     parserStatus: "ready",
     realDataStatus: "active",
   },

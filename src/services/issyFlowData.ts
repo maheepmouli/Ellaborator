@@ -29,27 +29,52 @@ export interface IssyZoneCentroid {
   zone: number;
   lat: number;
   lon: number;
+  /** Short UI label */
   label: string;
-  placeholder: true;
+  /**
+   * Pins are spaced for readable OD arcs around Issy’s core (~48.825, 2.270), not official zoning polygons.
+   * Replace with GIS exports when available.
+   */
+  layoutApproximation: boolean;
 }
 
-const BASELINE_CSV_PATH =
-  "/sharepoint-data/Issy-20260427T130625Z-3-001/Issy/1. BASELINE DATA from Issy/ISSY1 - detailed traffic data/ISSY1_baseline_traffic_data_november_2024.csv";
-const POST_CSV_PATH =
-  "/sharepoint-data/Issy-20260427T130625Z-3-001/Issy/2. POST IMPLEMENTATION DATA from Issy/ISSY1 - detailed traffic_data/ISSY1_post_intervention_traffic_data_november_2025.csv";
+/** Bundled for Vercel/demo (~220 KB total). Legacy path kept as fallback when developing with full SharePoint mirror. */
+const ISSY_BASELINE_URLS = [
+  "/data/issy/ISSY1_baseline_traffic_data_november_2024.csv",
+  "/sharepoint-data/Issy-20260427T130625Z-3-001/Issy/1. BASELINE DATA from Issy/ISSY1 - detailed traffic data/ISSY1_baseline_traffic_data_november_2024.csv",
+];
+
+const ISSY_POST_URLS = [
+  "/data/issy/ISSY1_post_intervention_traffic_data_november_2025.csv",
+  "/sharepoint-data/Issy-20260427T130625Z-3-001/Issy/2. POST IMPLEMENTATION DATA from Issy/ISSY1 - detailed traffic_data/ISSY1_post_intervention_traffic_data_november_2025.csv",
+];
 
 const recordCache = new Map<string, IssyTrafficRecord[]>();
 const flowCache = new Map<string, IssyFlowFeature[]>();
 
-// Placeholder zone centroids around Issy-les-Moulineaux
+/**
+ * Readable map layout for OD zones 1–6 (matches CSV zone ids). Replace with zoning GIS when delivered.
+ */
 const ISSY_ZONE_CENTROIDS: Record<number, IssyZoneCentroid> = {
-  1: { zone: 1, lat: 48.8335, lon: 2.2555, label: "NW Issy", placeholder: true },
-  2: { zone: 2, lat: 48.8332, lon: 2.277, label: "NE Issy", placeholder: true },
-  3: { zone: 3, lat: 48.8247, lon: 2.27, label: "Central Issy", placeholder: true },
-  4: { zone: 4, lat: 48.8165, lon: 2.269, label: "South Issy", placeholder: true },
-  5: { zone: 5, lat: 48.8215, lon: 2.255, label: "SW Issy", placeholder: true },
-  6: { zone: 6, lat: 48.8285, lon: 2.286, label: "SE Issy", placeholder: true },
+  1: { zone: 1, lat: 48.8319, lon: 2.2578, label: "Zone 1 · NW", layoutApproximation: true },
+  2: { zone: 2, lat: 48.8314, lon: 2.2822, label: "Zone 2 · NE", layoutApproximation: true },
+  3: { zone: 3, lat: 48.8259, lon: 2.2708, label: "Zone 3 · Core", layoutApproximation: true },
+  4: { zone: 4, lat: 48.8172, lon: 2.2712, label: "Zone 4 · South", layoutApproximation: true },
+  5: { zone: 5, lat: 48.8202, lon: 2.2566, label: "Zone 5 · SW", layoutApproximation: true },
+  6: { zone: 6, lat: 48.8219, lon: 2.2868, label: "Zone 6 · SE", layoutApproximation: true },
 };
+
+async function fetchFirstOk(urls: readonly string[]): Promise<Response | null> {
+  for (const url of urls) {
+    try {
+      const response = await fetch(encodeURI(url));
+      if (response.ok) return response;
+    } catch {
+      /* try next */
+    }
+  }
+  return null;
+}
 
 function parseCsv(text: string): Record<string, string>[] {
   const lines = text.split(/\r?\n/).filter((line) => line.trim().length > 0);
@@ -59,7 +84,8 @@ function parseCsv(text: string): Record<string, string>[] {
     const values = line.split(",");
     const row: Record<string, string> = {};
     headers.forEach((header, index) => {
-      row[header || `column_${index}`] = (values[index] || "").trim();
+      const key = header || `column_${index}`;
+      row[key] = (values[index] ?? "").trim();
     });
     return row;
   });
@@ -76,9 +102,18 @@ async function loadRecords(period: IssyPeriod): Promise<IssyTrafficRecord[]> {
   const cached = recordCache.get(key);
   if (cached) return cached;
 
-  const sourceFile = period === "baseline" ? BASELINE_CSV_PATH : POST_CSV_PATH;
-  const response = await fetch(encodeURI(sourceFile));
-  if (!response.ok) return [];
+  const urls = period === "baseline" ? ISSY_BASELINE_URLS : ISSY_POST_URLS;
+  const response = await fetchFirstOk(urls);
+  if (!response) return [];
+
+  let sourceFile = urls[0];
+  try {
+    const url = response.url || "";
+    if (url) sourceFile = new URL(url, "http://local").pathname || sourceFile;
+  } catch {
+    /* keep default */
+  }
+
   const rows = parseCsv(await response.text());
 
   const records = rows
@@ -109,11 +144,17 @@ function aggregateFlows(records: IssyTrafficRecord[], dayCategory: "all" | IssyD
   const map = new Map<string, number>();
   records.forEach((record) => {
     if (dayCategory !== "all" && record.dayCategory !== dayCategory) return;
-    const key = `${record.zoneIn}-${record.zoneOut}-${record.vehicleCategory}`;
+    const key = `${record.zoneIn}|${record.zoneOut}|${record.vehicleCategory}`;
     const current = map.get(key) || 0;
     map.set(key, current + record.avgTraffic);
   });
   return map;
+}
+
+/** Clear memoized flows after hot reload dev changes (optional exports for tests). */
+export function clearIssyFlowCaches(): void {
+  recordCache.clear();
+  flowCache.clear();
 }
 
 export async function getIssyFlowFeatures(dayCategory: "all" | IssyDayCategory = "all"): Promise<IssyFlowFeature[]> {
@@ -129,7 +170,10 @@ export async function getIssyFlowFeatures(dayCategory: "all" | IssyDayCategory =
   const features: IssyFlowFeature[] = [];
 
   keys.forEach((key) => {
-    const [fromRaw, toRaw, vehicleCategory] = key.split("-");
+    const parts = key.split("|");
+    const fromRaw = parts[0];
+    const toRaw = parts[1];
+    const vehicleCategory = parts.slice(2).join("|");
     const baselineValue = baselineAgg.get(key) || 0;
     const interventionValue = postAgg.get(key) || 0;
     const change = interventionValue - baselineValue;
@@ -150,7 +194,7 @@ export async function getIssyFlowFeatures(dayCategory: "all" | IssyDayCategory =
 }
 
 export function getIssyZoneCentroids(): IssyZoneCentroid[] {
-  return Object.values(ISSY_ZONE_CENTROIDS);
+  return Object.values(ISSY_ZONE_CENTROIDS).sort((a, b) => a.zone - b.zone);
 }
 
 export function getIssyZoneCentroid(zone: number): IssyZoneCentroid | null {

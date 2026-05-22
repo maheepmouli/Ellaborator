@@ -3,6 +3,10 @@
  * Centralized configuration for external APIs
  */
 
+import { ISSY_OPENDATA_MAX_LIMIT } from "@/lib/issy-opendata";
+
+export { ISSY_OPENDATA_MAX_LIMIT };
+
 // API Base URL configuration
 // Configure VITE_API_BASE_URL in .env if the API is on a different domain
 // Example: VITE_API_BASE_URL=https://data.gouv.fr/api/explore/v2.1/catalog/datasets
@@ -14,7 +18,7 @@ const API_BASE_URL =
 export const TRAFFIC_API_CONFIG = {
   baseUrl: API_BASE_URL,
   dataset: "traficissy",
-  defaultLimit: 100,
+  defaultLimit: ISSY_OPENDATA_MAX_LIMIT,
   defaultTimezone: "Europe/Berlin",
 } as const;
 
@@ -22,7 +26,7 @@ export const TRAFFIC_API_CONFIG = {
 export const BICYCLE_COUNTING_API_CONFIG = {
   baseUrl: API_BASE_URL,
   dataset: "comptage-velo-donnees-compteurs-issy",
-  defaultLimit: 200,
+  defaultLimit: ISSY_OPENDATA_MAX_LIMIT,
   defaultTimezone: "Europe/Berlin",
 } as const;
 
@@ -30,7 +34,7 @@ export const BICYCLE_COUNTING_API_CONFIG = {
 export const CYCLING_INFRASTRUCTURE_API_CONFIG = {
   baseUrl: API_BASE_URL,
   dataset: "amenagements-cyclables-gpso",
-  defaultLimit: 500,
+  defaultLimit: ISSY_OPENDATA_MAX_LIMIT,
   defaultTimezone: "Europe/Berlin",
 } as const;
 

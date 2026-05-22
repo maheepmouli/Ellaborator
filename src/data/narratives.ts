@@ -109,6 +109,8 @@ export function buildImpactAtGlance(args: {
   kpiRef: string;
   changeVerb: string;
   disclaimerLine: string;
+  /** Live map layer trust line (records, linkage, period). */
+  liveContextLine?: string;
 }): { lead: string; bullets: string[] } {
   const scen =
     args.scenario === "baseline"
@@ -126,10 +128,11 @@ export function buildImpactAtGlance(args: {
     args.scenario === "comparison" || args.scenario === "intervention"
       ? `Directional shift in card metrics: ${changeStr}${args.kpiValue.unit === "%" ? " pp" : ""}.`
       : `Baseline-relative shift (card): ${changeStr}${args.kpiValue.unit === "%" ? " pp" : ""}.`;
-  const bullet3 = args.disclaimerLine;
+  const bullet3 = args.liveContextLine || args.disclaimerLine;
+  const bullet4 = args.liveContextLine ? args.disclaimerLine : undefined;
   return {
     lead: `${args.selectedCity} — ${args.pilotName}: quick readout for stakeholder conversations. Figures come from ELABORATOR layers for the selected KPI; treat mock/demo values as illustrative only.`,
-    bullets: [bullet1, bullet2, bullet3],
+    bullets: bullet4 ? [bullet1, bullet2, bullet3, bullet4] : [bullet1, bullet2, bullet3],
   };
 }
 

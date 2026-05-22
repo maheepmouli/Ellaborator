@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, useEffect } from "react";
+import { useRef, useState, useCallback, useEffect, useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, Eye, X } from "lucide-react";
 import Header from "@/components/Header";
@@ -7,9 +7,21 @@ import InsightPanel from "@/components/InsightPanel";
 import MapControls from "@/components/MapControls";
 import MapTour from "@/components/MapTour";
 import DataSummaryPanel from "@/components/ScenarioPanel";
+import SegmentIntelligencePanel from "@/components/SegmentIntelligencePanel";
 import { getPilotsByCity, SelectedPilot, ViewState } from "@/data/pilotDefinitions";
-import { ELABORATOR_KPIS } from "@/data/kpiDefinitions";
+import { CITY_DATA, ELABORATOR_KPIS } from "@/data/kpiDefinitions";
 import { resolveMapLegend, type MapLegendMarker } from "@/lib/mapLayerLegend";
+import { ISSY_P2_JUNCTION, isIssyStudyPilot } from "@/lib/issyPilot2Junction";
+import { getKpi32TimeSeriesIntensity } from "@/lib/kpi32YearIntensity";
+import { useLatestTrafficData } from "@/hooks/use-traffic-data";
+import { pickDefaultSegment } from "@/lib/issyJunctionAnalytics";
+import { getIssyPilotProfile } from "@/data/issyPilotProfiles";
+import { canOpenObservatory } from "@/lib/observatoryAccess";
+import type { MapSelectionState } from "@/types/mapSelection";
+import { useMilanSpeedSegments } from "@/hooks/use-milan-segment-data";
+import type { MapSegment } from "@/services/trafficApi";
+import { TimeWindowChip } from "@/components/TimeWindowChip";
+import { MapIntelligenceProvider, useMapIntelligence } from "@/context/MapIntelligenceContext";
 
 /** Glyphs aligned with geometry: discs for points, short bars for polylines, squares for polygons, strips for ramps. */
 function LegendSwatch({ marker, color }: { marker: Exclude<MapLegendMarker, "polygonRamp">; color: string }) {
@@ -61,38 +73,201 @@ type DataQualitySummary = {
   dataType: string;
   temporalCoverage: string;
   confidence: "High" | "Medium" | "Low";
+  provenanceType?: string;
+  geometryLinkage?: string;
+  spatialSystemHint?: string;
 };
 
-const Map = () => {
+const MapContent = () => {
+  const intel = useMapIntelligence();
   // Start with the tour open when the map first loads
   const [showTour, setShowTour] = useState(true);
   const [selectedCity, setSelectedCity] = useState("");
   const [selectedPilot, setSelectedPilot] = useState<SelectedPilot | null>(null);
+  const issyJunctionStudy = isIssyStudyPilot(selectedPilot?.id);
   const [selectedKpi, setSelectedKpi] = useState("kpi1.2");
-  const [filterRange, setFilterRange] = useState<[number, number]>([0, 100]);
-  const [selectedModeTypes, setSelectedModeTypes] = useState<string[]>([
-    "Pedestrian",
-    "Cycle",
-    "Public Transport",
-    "Private Car",
-    "PTW",
-  ]);
   const [mapRef, setMapRef] = useState<any>(null);
   const [viewLevel, setViewLevel] = useState<ViewState>("EUROPE");
-  const [scenario, setScenario] = useState<"baseline" | "intervention" | "comparison">("intervention");
   const [isDataSummaryOpen, setIsDataSummaryOpen] = useState(false);
+  const [isObservatoryOpen, setIsObservatoryOpen] = useState(false);
+  const {
+    scenario,
+    setScenario,
+    filterRange,
+    setFilterRange,
+    modeTypes: selectedModeTypes,
+    setModeTypes: setSelectedModeTypes,
+    segmentId: selectedJunctionSegmentId,
+    setSegmentId: setSelectedJunctionSegmentId,
+    focusMode,
+    setFocusMode,
+    patchSelection,
+    setCity: setIntelCity,
+    setPilotId: setIntelPilotId,
+    setKpiId: setIntelKpiId,
+    setTimeWindow,
+  } = intel;
+  const { data: issyJunctionTraffic } = useLatestTrafficData(
+    selectedCity.toLowerCase().includes("issy") ? selectedCity : "",
+    8
+  );
   const [isLegendOpen, setIsLegendOpen] = useState(true);
   const [mapContext, setMapContext] = useState<SegmentContext | null>(null);
   /** Pilot map highlights intervention streets by default — no toggle in the sidebar. */
   const showInterventionLayer = true;
   const [dataQualitySummary, setDataQualitySummary] = useState<DataQualitySummary | null>(null);
+  const [mapSelection, setMapSelection] = useState<MapSelectionState>({});
   /** Milan KPI 3.2 RETE hour band (discrete); independent of baseline/intervention scenario toggle. */
   const [milanEnvWindow, setMilanEnvWindow] = useState<"08-09" | "18-19">("08-09");
+  /** Issy KPI 1.2 zone-flow CSV weekday vs weekend (React Query key shared with map). */
+  const [issyFlowDayCategory, setIssyFlowDayCategory] = useState<"all" | "weekday" | "weekend">("all");
+  /** Sidebar chart drills → animate map viewport to pilot anchors. */
+  const pilotFlyNonceRef = useRef(0);
+  const [pilotFlyToSignal, setPilotFlyToSignal] = useState<{
+    nonce: number;
+    lat: number;
+    lng: number;
+    zoom?: number;
+  } | null>(null);
+  /** KPI 3.1 chart selection → tighten infrastructure points on the map. */
+  const [infrastructureMapFocus, setInfrastructureMapFocus] = useState<string | null>(null);
+  /** KPI 3.2 trend chart — selected year drives map emission / climate intensity. */
+  const [emissionsIntensityYear, setEmissionsIntensityYear] = useState<string | null>(null);
   const resetToEuropeRef = useRef<null | (() => void)>(null);
+
+  const requestPilotMapFocus = useCallback((lat: number, lng: number, zoom?: number) => {
+    pilotFlyNonceRef.current += 1;
+    setPilotFlyToSignal({ nonce: pilotFlyNonceRef.current, lat, lng, zoom });
+  }, []);
+
+  useEffect(() => {
+    setIntelCity(selectedCity);
+  }, [selectedCity, setIntelCity]);
+
+  useEffect(() => {
+    setIntelKpiId(selectedKpi);
+  }, [selectedKpi, setIntelKpiId]);
+
+  useEffect(() => {
+    setIntelPilotId(selectedPilot?.id ?? null);
+  }, [selectedPilot?.id, setIntelPilotId]);
+
+  useEffect(() => {
+    setTimeWindow("scenario", scenario);
+  }, [scenario, setTimeWindow]);
+
+  useEffect(() => {
+    if (selectedCity.toLowerCase().includes("issy") && selectedKpi === "kpi1.2") {
+      setTimeWindow("issyDay", issyFlowDayCategory);
+    }
+  }, [issyFlowDayCategory, selectedCity, selectedKpi, setTimeWindow]);
+
+  useEffect(() => {
+    if (selectedCity === "Milan" && selectedKpi === "kpi3.2") {
+      setTimeWindow("milanEnv", milanEnvWindow);
+    }
+  }, [milanEnvWindow, selectedCity, selectedKpi, setTimeWindow]);
+
+  useEffect(() => {
+    if (
+      focusMode &&
+      selectedJunctionSegmentId &&
+      canOpenObservatory(selectedCity, selectedPilot?.id, selectedKpi)
+    ) {
+      setIsObservatoryOpen(true);
+    }
+  }, [focusMode, selectedJunctionSegmentId, selectedCity, selectedPilot?.id, selectedKpi]);
+
+  useEffect(() => {
+    setInfrastructureMapFocus(null);
+    setEmissionsIntensityYear(null);
+  }, [selectedKpi]);
+
+  useEffect(() => {
+    setInfrastructureMapFocus(null);
+    setEmissionsIntensityYear(null);
+    setIsObservatoryOpen(false);
+    setSelectedJunctionSegmentId(null);
+    setFocusMode(false);
+  }, [selectedPilot?.id, setSelectedJunctionSegmentId, setFocusMode]);
+
+  useEffect(() => {
+    if (!selectedPilot?.id?.startsWith("issy-p")) return;
+    const profile = getIssyPilotProfile(selectedPilot.id);
+    if (profile && selectedPilot.supportedKpis.includes(profile.defaultKpi)) {
+      setSelectedKpi(profile.defaultKpi);
+    }
+    requestPilotMapFocus(ISSY_P2_JUNCTION.lat, ISSY_P2_JUNCTION.lon, 17);
+    const defaultSeg = pickDefaultSegment(issyJunctionTraffic?.results ?? []);
+    if (defaultSeg) {
+      patchSelection({ segmentId: defaultSeg.id });
+    }
+    setMapSelection({
+      city: selectedCity,
+      pilotId: selectedPilot.id,
+      kpi: profile?.defaultKpi ?? selectedKpi,
+      segmentId: defaultSeg?.id ?? null,
+    });
+  }, [selectedPilot?.id, requestPilotMapFocus, issyJunctionTraffic?.results, selectedCity, selectedPilot?.supportedKpis, patchSelection]);
+
+  const milanPilotId =
+    selectedPilot?.id === "mil-p1" || selectedPilot?.id === "mil-p2" || selectedPilot?.id === "mil-p3"
+      ? selectedPilot.id
+      : "mil-p2";
+  const { data: milanSpeedForObservatory } = useMilanSpeedSegments(
+    milanPilotId,
+    selectedCity === "Milan" && selectedKpi === "kpi2.1"
+  );
+
+  const observatorySegments: MapSegment[] = useMemo(() => {
+    if (selectedCity.toLowerCase().includes("issy") && issyJunctionTraffic?.results?.length) {
+      return issyJunctionTraffic.results;
+    }
+    if (selectedCity === "Milan" && milanSpeedForObservatory?.records?.length) {
+      return milanSpeedForObservatory.records.map((record) => ({
+        id: record.id,
+        coordinates: record.coordinates,
+        value: record.value,
+        properties: {
+          segment: String(record.properties?.streetName || record.id),
+          vitesse_km_h: Number(record.properties?.avgSpeed || 0),
+          indice_de_congestion: Math.min(1, record.value / 100),
+        },
+      }));
+    }
+    return [];
+  }, [selectedCity, issyJunctionTraffic?.results, milanSpeedForObservatory?.records]);
+
+  const activeTimeWindowLabel = useMemo(() => {
+    if (selectedCity.toLowerCase().includes("issy") && selectedKpi === "kpi1.2" && !issyJunctionStudy) {
+      const day =
+        issyFlowDayCategory === "weekday"
+          ? "Weekday"
+          : issyFlowDayCategory === "weekend"
+            ? "Weekend"
+            : "All days";
+      return `${day} · ${scenario}`;
+    }
+    if (selectedCity === "Milan" && selectedKpi === "kpi3.2") {
+      return milanEnvWindow === "08-09" ? "Morning 08–09" : "Evening 18–19";
+    }
+    if (scenario === "baseline") return "Baseline period";
+    if (scenario === "comparison") return "Comparison";
+    return "Intervention / observed";
+  }, [selectedCity, selectedKpi, issyJunctionStudy, issyFlowDayCategory, scenario, milanEnvWindow]);
   // KPI panel appears only when a pilot is selected
   const showPanel = viewLevel === "PILOT_DATA" && selectedCity;
   const selectedKpiMeta = ELABORATOR_KPIS.find((kpi) => kpi.id === selectedKpi);
-  const mapLegendSpec = resolveMapLegend(selectedCity || "", selectedKpi, scenario);
+  const issyKpi32Intensity =
+    selectedCity.toLowerCase().includes("issy") && selectedKpi === "kpi3.2"
+      ? getKpi32TimeSeriesIntensity(
+          CITY_DATA[selectedCity]?.kpiData["kpi3.2"],
+          emissionsIntensityYear
+        )
+      : null;
+  const mapLegendSpec = resolveMapLegend(selectedCity || "", selectedKpi, scenario, {
+    issyJunctionStudy,
+  });
   const pilotSupportsKpi = selectedPilot ? selectedPilot.supportedKpis.includes(selectedKpi) : true;
   const shouldShowLegend = !showTour && showPanel && pilotSupportsKpi;
 
@@ -118,11 +293,31 @@ const Map = () => {
 
   const handleCitySelect = (city: string) => {
     setSelectedCity(city);
+    setIntelCity(city);
   };
+
+  const handleSegmentHover = useCallback(
+    (detail: { segmentId: string; segmentName: string }) => {
+      patchSelection({ segmentId: detail.segmentId });
+      setMapSelection((prev) => ({
+        ...prev,
+        segmentId: detail.segmentId,
+        city: selectedCity,
+        pilotId: selectedPilot?.id,
+        kpi: selectedKpi,
+      }));
+    },
+    [patchSelection, selectedCity, selectedPilot?.id, selectedKpi]
+  );
 
   const handlePilotChange = (pilotId: string) => {
     const pilot = getPilotsByCity(selectedCity).find((p) => p.id === pilotId) || null;
     setSelectedPilot(pilot);
+    const profile = getIssyPilotProfile(pilotId);
+    if (profile && pilot?.supportedKpis.includes(profile.defaultKpi)) {
+      setSelectedKpi(profile.defaultKpi);
+    }
+    setMapSelection((prev) => ({ ...prev, pilotId, kpi: profile?.defaultKpi ?? prev.kpi }));
   };
 
   return (
@@ -158,7 +353,29 @@ const Map = () => {
           scenario={scenario}
           filterRange={filterRange}
           selectedModeTypes={selectedModeTypes}
-          onSegmentFocus={setMapContext}
+          onSegmentFocus={(ctx) => {
+            setMapContext(ctx);
+            setMapSelection((prev) => ({
+              ...prev,
+              city: selectedCity,
+              pilotId: selectedPilot?.id,
+              kpi: selectedKpi,
+            }));
+          }}
+          focusMode={focusMode}
+          onSegmentHover={handleSegmentHover}
+          onJunctionSegmentClick={(detail) => {
+            patchSelection({ segmentId: detail.segmentId });
+            setMapSelection({
+              segmentId: detail.segmentId,
+              city: selectedCity,
+              pilotId: selectedPilot?.id,
+              kpi: selectedKpi,
+            });
+            if (canOpenObservatory(selectedCity, selectedPilot?.id, selectedKpi)) {
+              setIsObservatoryOpen(true);
+            }
+          }}
           showInterventionLayer={showInterventionLayer}
           selectedPilotId={selectedPilot?.id}
           onPilotSelect={setSelectedPilot}
@@ -166,8 +383,26 @@ const Map = () => {
           milanEnvironmentWindow={
             selectedCity === "Milan" && selectedKpi === "kpi3.2" ? milanEnvWindow : undefined
           }
+          issyFlowDayCategory={
+            selectedCity.toLowerCase().includes("issy") && selectedKpi === "kpi1.2"
+              ? issyFlowDayCategory
+              : undefined
+          }
+          pilotFlyToSignal={pilotFlyToSignal}
+          infrastructureCategoryFocus={infrastructureMapFocus}
+          kpi32SelectedYear={emissionsIntensityYear}
+          selectedJunctionSegmentId={selectedJunctionSegmentId}
         />
       </motion.div>
+
+      {!showTour && showPanel && (
+        <div className="fixed left-1/2 -translate-x-1/2 top-[4.25rem] z-[58] pointer-events-none">
+          <TimeWindowChip
+            label={activeTimeWindowLabel}
+            detail={dataQualitySummary?.temporalCoverage}
+          />
+        </div>
+      )}
 
       {/* Left Insight Panel - Only visible at city zoom level */}
       {!showTour && showPanel && (
@@ -183,7 +418,16 @@ const Map = () => {
             selectedKpi={selectedKpi}
             onCityChange={setSelectedCity}
             onPilotChange={handlePilotChange}
-            onKpiChange={setSelectedKpi}
+            onKpiChange={(kpi) => {
+              setSelectedKpi(kpi);
+              setIntelKpiId(kpi);
+            }}
+            selectedModeTypes={selectedModeTypes}
+            onOpenObservatory={() => {
+              if (canOpenObservatory(selectedCity, selectedPilot?.id, selectedKpi)) {
+                setIsObservatoryOpen(true);
+              }
+            }}
             onRangeChange={setFilterRange}
             onModeTypesChange={setSelectedModeTypes}
             scenario={scenario}
@@ -191,8 +435,16 @@ const Map = () => {
             onOpenDataSummary={() => setIsDataSummaryOpen(true)}
             mapContext={mapContext}
             dataQualitySummary={dataQualitySummary}
+            mapSelection={mapSelection}
             milanEnvironmentWindow={milanEnvWindow}
             onMilanEnvironmentWindowChange={setMilanEnvWindow}
+            issyFlowDayCategory={issyFlowDayCategory}
+            onIssyFlowDayCategoryChange={setIssyFlowDayCategory}
+            infrastructureMapFocus={infrastructureMapFocus}
+            onInfrastructureMapFocus={setInfrastructureMapFocus}
+            onRequestPilotMapFocus={requestPilotMapFocus}
+            emissionsIntensityYear={emissionsIntensityYear}
+            onEmissionsIntensityYearChange={setEmissionsIntensityYear}
           />
         </motion.div>
       )}
@@ -281,7 +533,7 @@ const Map = () => {
                               )
                             )}
                           </div>
-                          <div className="mt-1 flex justify-between gap-2 text-[10px] text-white/78">
+                          <div className="mt-1 flex justify-between gap-2 text-intel-meta text-white/78">
                             <span className="truncate text-left">{items[0]?.label || "Lower"}</span>
                             <span className="truncate text-right">{items[items.length - 1]?.label || "Higher"}</span>
                           </div>
@@ -298,14 +550,14 @@ const Map = () => {
                       <div key={`legend-row-${i}-${item.color}`} className="flex items-center gap-2 min-w-0">
                         <LegendSwatch marker={rowMarker} color={item.color} />
                         {item.label ? (
-                          <span className="text-[10px] text-white/85 leading-tight flex-1 min-w-0">{item.label}</span>
+                          <span className="text-intel-meta text-white/85 leading-tight flex-1 min-w-0">{item.label}</span>
                         ) : null}
                       </div>
                     ));
                   })()}
                 </div>
 
-                <div className="mt-3 flex items-start gap-2 text-[11px] text-white/82 leading-tight">
+                <div className="mt-3 flex items-start gap-2 text-intel-meta text-white/82 leading-tight">
                   <Eye className="mt-0.5 h-3.5 w-3.5 text-white/60 flex-shrink-0" />
                   <p>{mapLegendSpec.hint}</p>
                 </div>
@@ -353,6 +605,26 @@ const Map = () => {
         />
       )}
 
+      <SegmentIntelligencePanel
+        isOpen={isObservatoryOpen}
+        onClose={() => setIsObservatoryOpen(false)}
+        pilotLabel={
+          selectedPilot
+            ? `${selectedCity} — ${selectedPilot.name}`
+            : undefined
+        }
+        segments={observatorySegments}
+        selectedSegmentId={selectedJunctionSegmentId}
+        onSelectSegmentId={(id) => patchSelection({ segmentId: id })}
+        selectedKpi={selectedKpi}
+        scenario={scenario}
+        city={selectedCity}
+        pilotId={selectedPilot?.id}
+        kpi32IntensityScale={
+          issyKpi32Intensity != null ? issyKpi32Intensity / 100 : 1
+        }
+      />
+
       {/* Bottom Attribution */}
       <div
         className={`absolute left-4 bottom-4 z-20 text-[10px] text-primary-foreground/80 bg-purple/70 backdrop-blur-xl px-3 py-1.5 rounded-lg border border-primary-foreground/10 transition-opacity ${
@@ -376,5 +648,11 @@ const Map = () => {
     </div>
   );
 };
+
+const Map = () => (
+  <MapIntelligenceProvider>
+    <MapContent />
+  </MapIntelligenceProvider>
+);
 
 export default Map;

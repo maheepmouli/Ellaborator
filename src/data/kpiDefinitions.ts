@@ -648,6 +648,7 @@ export function generateHexbinData(
   
   // Otherwise, generate synthetic data
   const baseValue = kpi.mainValue;
+  const breakdownKeys = kpi.breakdown ? Object.keys(kpi.breakdown) : [];
   const points = [];
   
   for (let i = 0; i < count; i++) {
@@ -659,8 +660,18 @@ export function generateHexbinData(
     // Generate value with variance around the city's KPI value
     const variance = (Math.random() - 0.5) * 40;
     const value = Math.max(0, Math.min(100, baseValue + variance));
-    
-    points.push({ lat, lon, value, id: `${city.city}-${kpiId}-${i}` });
+    const infraCategory =
+      kpiId === "kpi3.1" && breakdownKeys.length > 0
+        ? breakdownKeys[i % breakdownKeys.length]
+        : undefined;
+
+    points.push({
+      lat,
+      lon,
+      value,
+      id: `${city.city}-${kpiId}-${i}`,
+      ...(infraCategory ? { properties: { infraCategory } } : {}),
+    });
   }
   
   return points;

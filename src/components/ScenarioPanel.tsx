@@ -74,7 +74,7 @@ const ScenarioPanel = ({
               </span>
             )}
             <span className="px-3 py-1 text-xs font-medium bg-muted-bg/70 text-white/80 rounded-full">
-              {scenario === "baseline" ? "Baseline" : scenario === "intervention" ? "Intervention" : "comparission"}
+              {scenario === "baseline" ? "Baseline" : scenario === "intervention" ? "Intervention" : "Comparison"}
             </span>
           </div>
           <button

@@ -315,6 +315,64 @@ export const PILOT_SCROLL_STORIES: Record<string, PilotScrollStoryStep[]> = {
       spotlight: "Regenerate stakeholder PDF after adjusting scenario tabs.",
     },
   ],
+  "issy-p2": [
+    {
+      id: "i2-cycle",
+      eyebrow: "Cycle lane continuity",
+      title: "Corridor counts vs KPI card",
+      narrative:
+        "Pilot 2 focuses on uninterrupted cycling along commuter streets. Bicycle counting APIs and infra layers may load where joins succeed; KPI 1.2 can still blend demo scaffolding with plotted evidence.",
+      bullets: [
+        "Cross-check KPI 3.1 (infrastructure continuity) narratives with mapped cycle assets when exposed.",
+        "Use Data Summary before claiming observed-only percentages from the headline card.",
+      ],
+      kpiHints: ["kpi1.2", "kpi3.1"],
+      spotlight: "Layer-backed cycling evidence may differ from the city bubble.",
+    },
+    {
+      id: "i2-map",
+      title: "Reading the explorer",
+      narrative:
+        "From `/map`, select Issy Pilot 2, switch KPI dropdowns, and keep scenario tabs aligned with what you narrate externally.",
+      kpiHints: ["kpi1.2"],
+      spotlight: "Pilot scope first — KPI headline second.",
+    },
+    {
+      id: "i2-export",
+      title: "Reporting",
+      narrative:
+        "Generate the printable stakeholder summary after locking pilot, KPI, and scenario. Pair screenshots with the same filters as your deck.",
+      spotlight: "Export only after breadcrumbs match the spoken story.",
+    },
+  ],
+  "issy-p3": [
+    {
+      id: "i3-ops",
+      eyebrow: "Operations tuning",
+      title: "Congestion-sensitive tuning",
+      narrative:
+        "Pilot 3 ties signal timing and street operations to congestion-style indicators. Layers may derive from blended APIs — reserve precise deltas for symmetric windows.",
+      bullets: [
+        "KPI 2.1 / 3.2 storylines complement KPI 1.2 when corridors show stress hotspots.",
+      ],
+      kpiHints: ["kpi1.2", "kpi2.1", "kpi3.2"],
+      spotlight: "Temporal parity matters before asserting trend direction.",
+    },
+    {
+      id: "i3-quality",
+      title: "Confidence and mocks",
+      narrative:
+        "Badges distinguish observed joins from inferred fills. Never mix comparison mode with asymmetric sampling without calling it out.",
+      spotlight: "Data quality badges are part of the claim, not fine print.",
+    },
+    {
+      id: "i3-close",
+      title: "Back to explorer",
+      narrative:
+        "Return to `/map` with Pilot 3 selected to regenerate summaries after any scenario toggle change.",
+      spotlight: "Refresh exports when scenario tabs move.",
+    },
+  ],
 };
 
 export const TOUR_CITY_EXAMPLES: Partial<Record<string, string>> = {

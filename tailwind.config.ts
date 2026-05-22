@@ -64,6 +64,18 @@ export default {
         sans: ['DM Sans', 'system-ui', '-apple-system', 'sans-serif'],
         numbers: ['DM Sans', 'system-ui', 'sans-serif'],
       },
+      fontSize: {
+        "intel-meta": ["0.8125rem", { lineHeight: "1.5", letterSpacing: "0.01em", fontWeight: "500" }],
+        "intel-label": ["0.875rem", { lineHeight: "1.5", letterSpacing: "0.01em", fontWeight: "600" }],
+        "intel-kpi": ["1rem", { lineHeight: "1.5", letterSpacing: "0.01em", fontWeight: "600" }],
+        "intel-chart": ["0.75rem", { lineHeight: "1.4", fontWeight: "500" }],
+      },
+      lineHeight: {
+        intel: "1.5",
+      },
+      letterSpacing: {
+        intel: "0.01em",
+      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",

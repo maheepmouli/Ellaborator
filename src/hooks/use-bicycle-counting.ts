@@ -1,9 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { 
-  fetchBicycleCountingData, 
-  fetchBicycleCountingByDateRange, 
-  fetchBicycleCountingByCounter 
+import {
+  fetchBicycleCountingData,
+  fetchBicycleCountingDataPaginated,
+  fetchBicycleCountingByDateRange,
+  fetchBicycleCountingByCounter,
 } from "@/services/bicycleCountingApi";
+import { ISSY_OPENDATA_MAX_LIMIT } from "@/lib/issy-opendata";
 import type { BicycleCountingAPIParams } from "@/types/bicycle-counting";
 
 /**
@@ -60,11 +62,20 @@ export function useLatestBicycleCounting(cityName: string, limit: number = 200) 
   
   return useQuery({
     queryKey: ["bicycle-counting", "latest", cityName, limit],
-    queryFn: () => {
+    queryFn: async () => {
       if (isIssy) {
-        // Get data from last 7 days
         const endDate = new Date();
         const startDate = new Date(endDate.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const startISO = startDate.toISOString().split("T")[0];
+        const endISO = endDate.toISOString().split("T")[0];
+        const where = `date >= date'${startISO}' AND date <= date'${endISO}'`;
+
+        if (limit > ISSY_OPENDATA_MAX_LIMIT) {
+          return fetchBicycleCountingDataPaginated(
+            { where, order_by: "date" },
+            limit
+          );
+        }
         return fetchBicycleCountingByDateRange(startDate, endDate, { limit });
       }
       // For other cities, return empty (could be extended with other APIs)

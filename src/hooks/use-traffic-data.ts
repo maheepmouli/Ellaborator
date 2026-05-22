@@ -1,6 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchTrafficData, fetchTrafficByDateRange, fetchTrafficBySegment } from "@/services/trafficApi";
+import {
+  fetchIssyJunctionTraffic,
+  fetchTrafficData,
+  fetchTrafficByDateRange,
+  fetchTrafficBySegment,
+} from "@/services/trafficApi";
+import { filterTrafficToJunction } from "@/lib/issyPilot2Junction";
 import type { TrafficAPIParams, TrafficSegment } from "@/types/traffic";
+
+function filterIssyTrafficResponse(data: { total_count: number; results: TrafficSegment[] }) {
+  const results = filterTrafficToJunction(data.results ?? []);
+  return { total_count: results.length, results };
+}
 
 /**
  * Hook to fetch traffic data with React Query
@@ -58,36 +69,13 @@ export function useLatestTrafficData(cityName: string, limit: number = 500) {
     queryKey: ["traffic-data", "latest", cityName, limit],
     queryFn: async () => {
       if (isIssy) {
-        // First try to fetch latest data without date filtering to ensure we get results
-        // The API should return the most recent records by default
         try {
-          const data = await fetchTrafficData({ 
-            limit
-            // Don't specify order_by - let API return default order (usually latest first)
-          });
-          
-          // If we got results, return them
-          if (data.results && data.results.length > 0) {
-            console.log(`[useLatestTrafficData] Fetched ${data.results.length} traffic segments`);
-            return data;
+          const junction = await fetchIssyJunctionTraffic();
+          if (junction.results.length > 0) {
+            return junction;
           }
-          
-          // If no results, try with date range (last 30 days)
-          console.log(`[useLatestTrafficData] No results without date filter, trying date range...`);
-          const endDate = new Date();
-          const startDate = new Date(endDate.getTime() - 30 * 24 * 60 * 60 * 1000); // Last 30 days
-          const dateRangeData = await fetchTrafficByDateRange(startDate, endDate, { limit });
-          
-          if (dateRangeData.results && dateRangeData.results.length > 0) {
-            console.log(`[useLatestTrafficData] Fetched ${dateRangeData.results.length} traffic segments from date range`);
-            return dateRangeData;
-          }
-          
-          // If still no results, return empty
-          console.warn(`[useLatestTrafficData] No traffic data found for ${cityName}`);
           return { total_count: 0, results: [] };
-        } catch (error) {
-          console.error(`[useLatestTrafficData] Error fetching traffic data:`, error);
+        } catch {
           return { total_count: 0, results: [] };
         }
       }

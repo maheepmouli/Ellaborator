@@ -158,8 +158,9 @@ async function parseCopenhagenRecords(kpiId: string): Promise<NormalizedCityReco
       dataType = "modelled";
     }
 
+    const siteId = siteName.toLowerCase().replace(/\s+/g, "-");
     records.push({
-      id: `copenhagen-${kpiId}-${siteName.toLowerCase().replace(/\s+/g, "-")}`,
+      id: `copenhagen-${kpiId}-${siteId}`,
       city: "Copenhagen",
       cityId: "copenhagen",
       interventionId: inferCopenhagenPilot(siteName),
@@ -178,9 +179,14 @@ async function parseCopenhagenRecords(kpiId: string): Promise<NormalizedCityReco
       method: "Aggregated from post-period camera counts",
       type: dataType,
       spatialQuality: "exact",
+      geometryLinkage: "exact",
       temporalCoverage: "before-after",
       locationMethod: "coordinates",
+      segmentId: siteId,
       streetName: siteName,
+      spatialNote: overviewRows.some((row) => String(row?.[0] || "").toLowerCase().includes("street"))
+        ? String(overviewRows.find((row) => String(row?.[0] || "").toLowerCase().includes("street"))?.[1] || siteName)
+        : siteName,
       parserStatus: "ready",
     });
   }
@@ -196,7 +202,17 @@ async function parseHelsinkiRecords(kpiId: string): Promise<NormalizedCityRecord
 
   const bySensor = new Map<
     string,
-    { street: string; total: number; bike: number; ped: number; car: number; speed: number; speedCount: number }
+    {
+      street: string;
+      total: number;
+      bike: number;
+      ped: number;
+      car: number;
+      speed: number;
+      speedCount: number;
+      lat?: number;
+      lon?: number;
+    }
   >();
 
   for (const filePath of HELSINKI_TELRAAM_FILES) {
@@ -209,9 +225,17 @@ async function parseHelsinkiRecords(kpiId: string): Promise<NormalizedCityRecord
     );
 
     rows.forEach((row) => {
-      const sensorId = String(row["Segment ID"] || "");
+      const sensorId = String(row["Segment ID"] || row["segment_id"] || "");
       if (!sensorId) return;
-      const street = String(row.Street || "Helsinki street");
+      const street = String(row.Street || row.street || "Helsinki street");
+      const latRaw = row.Lat ?? row.lat ?? row.Latitude ?? row.latitude;
+      const lonRaw = row.Lon ?? row.lon ?? row.Longitude ?? row.longitude;
+      const explicitCoord =
+        latRaw != null && lonRaw != null
+          ? { lat: parseNumber(latRaw), lon: parseNumber(lonRaw) }
+          : null;
+      const hasExplicitCoord =
+        explicitCoord && Number.isFinite(explicitCoord.lat) && Number.isFinite(explicitCoord.lon);
       const bike = parseNumber(row["Bike Total"]);
       const ped = parseNumber(row["Pedestrian Total"]);
       const car = parseNumber(row["Car Total"]);
@@ -225,7 +249,13 @@ async function parseHelsinkiRecords(kpiId: string): Promise<NormalizedCityRecord
         car: 0,
         speed: 0,
         speedCount: 0,
+        lat: hasExplicitCoord ? explicitCoord!.lat : undefined as number | undefined,
+        lon: hasExplicitCoord ? explicitCoord!.lon : undefined as number | undefined,
       };
+      if (hasExplicitCoord) {
+        current.lat = explicitCoord!.lat;
+        current.lon = explicitCoord!.lon;
+      }
       current.total += total;
       current.bike += bike;
       current.ped += ped;
@@ -264,6 +294,19 @@ async function parseHelsinkiRecords(kpiId: string): Promise<NormalizedCityRecord
     const hash = hashString(`${sensorId}-${agg.street}`);
     const angle = ((hash + index * 47) % 360) * (Math.PI / 180);
     const radius = 0.01 + (index % 10) * 0.0016;
+    const useCoords =
+      typeof agg.lat === "number" && typeof agg.lon === "number"
+        ? { lat: agg.lat, lon: agg.lon }
+        : {
+            lat: centerLat + Math.cos(angle) * radius,
+            lon: centerLon + Math.sin(angle) * radius * 1.35,
+          };
+    const locationMethod =
+      typeof agg.lat === "number" && typeof agg.lon === "number"
+        ? ("coordinates" as const)
+        : ("approximate_cluster" as const);
+    const geometryLinkage =
+      typeof agg.lat === "number" && typeof agg.lon === "number" ? ("matched" as const) : ("inferred" as const);
     return {
       id: `helsinki-${kpiId}-${sensorId}`,
       city: "Helsinki",
@@ -272,9 +315,9 @@ async function parseHelsinkiRecords(kpiId: string): Promise<NormalizedCityRecord
       kpiId,
       sourceFile: "Helsinki/Telraam/*.xlsx",
       geometryType: "point" as const,
-      lat: centerLat + Math.cos(angle) * radius,
-      lng: centerLon + Math.sin(angle) * radius * 1.35,
-      geometry: [[centerLat + Math.cos(angle) * radius, centerLon + Math.sin(angle) * radius * 1.35]],
+      lat: useCoords.lat,
+      lng: useCoords.lon,
+      geometry: [[useCoords.lat, useCoords.lon]],
       value,
       baselineValue,
       interventionValue: value,
@@ -285,12 +328,16 @@ async function parseHelsinkiRecords(kpiId: string): Promise<NormalizedCityRecord
           ? "Observed before/after counts from Telraam flows"
           : "Derived proxy from Telraam before/after flow and speed observations",
       type: dataType,
-      spatialQuality: "inferred",
+      spatialQuality: geometryLinkage === "matched" ? "matched" : "inferred",
+      geometryLinkage,
       temporalCoverage: "before-after",
-      locationMethod: "approximate_cluster",
+      locationMethod,
       segmentId: sensorId,
       streetName: agg.street,
-      spatialNote: "Approximate location",
+      spatialNote:
+        geometryLinkage === "matched"
+          ? "Coordinates from Telraam export"
+          : "Approximate ring layout (segment ID only)",
       parserStatus: "ready" as const,
     };
   });
@@ -397,20 +444,24 @@ export async function loadLocalCityPoints(
           kpi: record.kpiId,
           source: record.source,
           method: record.method,
-          sourceFile: record.sourceFile,
-          dataOrigin: "local-city-dataset",
-          geometryType: record.geometryType,
           type: record.type,
+          geometryLinkage: record.geometryLinkage,
+          spatialQuality: record.spatialQuality || "inferred",
+          comparisonDelta: record.comparisonValue,
+          siteId: record.segmentId,
+          pilotId: record.interventionId,
+          streetName: record.streetName,
+          dataOrigin: record.type === "mock" ? "mock" : "local-city-dataset",
+          sourceFile: record.sourceFile,
+          geometryType: record.geometryType,
           baselineValue: record.baselineValue,
           interventionValue: record.interventionValue ?? record.value,
           comparisonValue: record.comparisonValue,
           scenario,
           interventionId: record.interventionId,
-          spatialQuality: record.spatialQuality || "inferred",
           temporalCoverage: record.temporalCoverage || "single-period",
           locationMethod: record.locationMethod || "pilot_area_inference",
           segmentId: record.segmentId,
-          streetName: record.streetName,
           spatialNote: record.spatialNote,
           parserStatus: record.parserStatus || "partial",
         },

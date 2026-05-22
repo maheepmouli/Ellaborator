@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import {
   fetchCyclingInfrastructureData,
+  fetchCyclingInfrastructureDataPaginated,
   type CyclingInfrastructureAPIParams,
 } from "@/services/cyclingInfrastructureApi";
-import { CYCLING_INFRASTRUCTURE_API_CONFIG } from "@/lib/api-config";
+import { ISSY_OPENDATA_MAX_LIMIT } from "@/lib/issy-opendata";
 
 /**
  * Hook to fetch cycling infrastructure data
@@ -35,12 +36,25 @@ export function useCyclingInfrastructureData(
  */
 export function useLatestCyclingInfrastructure(
   cityName: string,
-  limit: number = CYCLING_INFRASTRUCTURE_API_CONFIG.defaultLimit
+  limit: number = 515
 ) {
-  return useCyclingInfrastructureData(cityName, {
-    limit,
-    offset: 0,
-    order_by: "longueur_m desc", // Order by length descending
+  const isIssy = cityName.toLowerCase().includes("issy");
+
+  return useQuery({
+    queryKey: ["cycling-infrastructure", "latest", cityName, limit],
+    queryFn: () => {
+      const params = {
+        limit: Math.min(limit, ISSY_OPENDATA_MAX_LIMIT),
+        offset: 0,
+        order_by: "longueur_m desc",
+      };
+      return limit > ISSY_OPENDATA_MAX_LIMIT
+        ? fetchCyclingInfrastructureDataPaginated(params, limit)
+        : fetchCyclingInfrastructureData(params);
+    },
+    enabled: isIssy,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 

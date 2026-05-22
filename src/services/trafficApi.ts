@@ -1,5 +1,11 @@
-import type { TrafficAPIResponse, TrafficAPIParams } from "@/types/traffic";
+import type { TrafficAPIResponse, TrafficAPIParams, TrafficSegment } from "@/types/traffic";
 import { getTrafficApiUrl } from "@/lib/api-config";
+import {
+  clampOpendataLimit,
+  fetchOpendataPaginated,
+} from "@/lib/issy-opendata";
+import { dedupeTrafficBySegmentId, ISSY_JUNCTION_SEGMENT_IDS } from "@/lib/issyPilot2Junction";
+import { ISSY_OPENDATA_MAX_LIMIT } from "@/lib/issy-opendata";
 
 /**
  * Fetches traffic data from the Issy-les-Moulineaux traffic API
@@ -8,7 +14,7 @@ export async function fetchTrafficData(
   params: TrafficAPIParams = {}
 ): Promise<TrafficAPIResponse> {
   const {
-    limit = 100,
+    limit: requestedLimit = 100,
     offset = 0,
     where,
     select,
@@ -18,6 +24,8 @@ export async function fetchTrafficData(
     lang,
     timezone = "Europe/Berlin",
   } = params;
+
+  const limit = clampOpendataLimit(requestedLimit);
 
   const searchParams = new URLSearchParams({
     limit: limit.toString(),
@@ -67,6 +75,18 @@ export async function fetchTrafficData(
   }
 }
 
+/** Fetches up to `desiredLimit` rows using 100-row API pages. */
+export async function fetchTrafficDataPaginated(
+  params: TrafficAPIParams = {},
+  desiredLimit: number = 100
+): Promise<TrafficAPIResponse> {
+  const { limit: _ignored, offset: _offsetIgnored, ...rest } = params;
+  return fetchOpendataPaginated(
+    (limit, offset) => fetchTrafficData({ ...rest, limit, offset }),
+    desiredLimit
+  );
+}
+
 /**
  * Fetches traffic data for a specific date range
  */
@@ -100,6 +120,20 @@ export async function fetchTrafficBySegment(
   });
 }
 
+/** Latest observation per arm at the Issy Pilot 2 junction (two segment IDs only). */
+export async function fetchIssyJunctionTraffic(): Promise<TrafficAPIResponse> {
+  const collected: TrafficSegment[] = [];
+  for (const segmentId of ISSY_JUNCTION_SEGMENT_IDS) {
+    const page = await fetchTrafficBySegment(segmentId, {
+      limit: ISSY_OPENDATA_MAX_LIMIT,
+      order_by: "date_et_heure_de_comptage_utc desc",
+    });
+    if (page.results?.length) collected.push(...page.results);
+  }
+  const results = dedupeTrafficBySegmentId(collected);
+  return { total_count: results.length, results };
+}
+
 /**
  * Converts traffic segments to map segments (polylines)
  */
@@ -116,27 +150,26 @@ export interface MapSegment {
   };
 }
 
+/** Map one traficissy row to 0–100 KPI intensity (same rules as map polylines). */
+export function getTrafficKpiValue(segment: TrafficSegment, kpiId: string): number {
+  switch (kpiId) {
+    case "kpi1.2":
+      return segment.indice_de_congestion * 100;
+    case "kpi2.1":
+      return Math.max(0, 100 - (segment.vitesse_km_h / 60) * 100);
+    case "kpi3.2":
+      return segment.indice_de_congestion * 100;
+    default:
+      return segment.indice_de_congestion * 100;
+  }
+}
+
 export function trafficSegmentsToSegments(
   segments: TrafficSegment[],
   kpiId: string
 ): MapSegment[] {
   return segments.map((segment) => {
-    // Map traffic metrics to KPI values
-    let value = 0;
-    
-    switch (kpiId) {
-      case "kpi1.2": // Mode Share - use congestion as proxy
-        value = segment.indice_de_congestion * 100;
-        break;
-      case "kpi2.1": // Safety - use speed (lower speed = safer)
-        value = Math.max(0, 100 - (segment.vitesse_km_h / 60) * 100);
-        break;
-      case "kpi3.2": // Emissions - use congestion index
-        value = segment.indice_de_congestion * 100;
-        break;
-      default:
-        value = segment.indice_de_congestion * 100;
-    }
+    const value = getTrafficKpiValue(segment, kpiId);
 
     // Convert LineString coordinates from [lon, lat] to [lat, lon] for Leaflet
     const coordinates: [number, number][] = segment.geo_shape.geometry.coordinates.map(

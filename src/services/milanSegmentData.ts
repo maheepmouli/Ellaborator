@@ -12,6 +12,9 @@ export interface MilanSegmentStats {
   invalidGeometries: number;
   missingMetricJoins: number;
   avgMetricValue: number;
+  /** Share of segments with a camera join (segment_id or nearest). */
+  cameraJoinRatePct?: number;
+  pilotScoped?: boolean;
 }
 
 export interface MilanSegmentDataset {
@@ -138,6 +141,45 @@ function distanceSquared(a: [number, number], b: [number, number]): number {
   const dLat = a[0] - b[0];
   const dLon = a[1] - b[1];
   return dLat * dLat + dLon * dLon;
+}
+
+const MILAN_PILOT_BUFFERS: Record<
+  "mil-p1" | "mil-p2" | "mil-p3",
+  { lat: number; lon: number; radiusDeg: number }
+> = {
+  "mil-p1": { lat: 45.476, lon: 9.195, radiusDeg: 0.018 },
+  "mil-p2": { lat: 45.458, lon: 9.175, radiusDeg: 0.022 },
+  "mil-p3": { lat: 45.44, lon: 9.19, radiusDeg: 0.02 },
+};
+
+function segmentMidpointLatLng(coords: [number, number][]): [number, number] | null {
+  if (coords.length === 0) return null;
+  const mid = coords[Math.floor(coords.length / 2)];
+  return [mid[0], mid[1]];
+}
+
+export function filterMilanSegmentsNearPilot(
+  records: MilanSegmentRecord[],
+  pilotId: "mil-p1" | "mil-p2" | "mil-p3"
+): MilanSegmentRecord[] {
+  const anchor = MILAN_PILOT_BUFFERS[pilotId];
+  const r2 = anchor.radiusDeg * anchor.radiusDeg;
+  return records.filter((record) => {
+    const mid = segmentMidpointLatLng(record.coordinates);
+    if (!mid) return false;
+    const dLat = mid[0] - anchor.lat;
+    const dLon = mid[1] - anchor.lon;
+    return dLat * dLat + dLon * dLon <= r2;
+  });
+}
+
+function withCameraJoinStats(dataset: MilanSegmentDataset): MilanSegmentDataset {
+  const joined = dataset.records.filter((r) => (r.properties?.cameraCount as number) > 0).length;
+  const rate = dataset.records.length > 0 ? Math.round((joined / dataset.records.length) * 100) : 0;
+  return {
+    ...dataset,
+    stats: { ...dataset.stats, cameraJoinRatePct: rate },
+  };
 }
 
 export async function parseMilanSegmentShapefile(params: {
@@ -338,14 +380,15 @@ export async function loadMilanSpeedSegments(
     timeWindow: "08:00-09:00",
     metricRows,
   });
-  speedCache.set(cacheKey, dataset);
-  return dataset;
+  speedCache.set(cacheKey, withCameraJoinStats(dataset));
+  return speedCache.get(cacheKey)!;
 }
 
 export async function loadMilanEnvironmentSegments(
-  window: "08-09" | "18-19" = "08-09"
+  window: "08-09" | "18-19" = "08-09",
+  pilotId?: "mil-p1" | "mil-p2" | "mil-p3" | null
 ): Promise<MilanSegmentDataset> {
-  const cacheKey = `environment-${window}`;
+  const cacheKey = `environment-${window}-${pilotId || "city"}`;
   const cached = environmentCache.get(cacheKey);
   if (cached) return cached;
 
@@ -365,10 +408,26 @@ export async function loadMilanEnvironmentSegments(
     sourceLabel: source.label,
     timeWindow: window,
   });
-  dataset.dataConfidence = "proxy";
-  dataset.renderMode = "segment";
-  dataset.statusMessage =
-    "Derived environmental pressure proxy from traffic composition fields, linked with camera network by segment ID or nearest geometry.";
-  environmentCache.set(cacheKey, dataset);
-  return dataset;
+  let scoped = dataset;
+  if (pilotId) {
+    const filtered = filterMilanSegmentsNearPilot(dataset.records, pilotId);
+    scoped = {
+      ...dataset,
+      records: filtered,
+      stats: {
+        ...dataset.stats,
+        parsedSegments: filtered.length,
+        pilotScoped: true,
+      },
+      statusMessage: `RETE segments clipped to ${pilotId} buffer (~${filtered.length} links). Environmental proxy from traffic composition; camera joins where available.`,
+    };
+  } else {
+    scoped.statusMessage =
+      "Derived environmental pressure proxy from traffic composition fields, linked with camera network by segment ID or nearest geometry.";
+  }
+  scoped.dataConfidence = "proxy";
+  scoped.renderMode = "segment";
+  const finalDataset = withCameraJoinStats(scoped);
+  environmentCache.set(cacheKey, finalDataset);
+  return finalDataset;
 }

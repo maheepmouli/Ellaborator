@@ -10,6 +10,7 @@ import { useLatestBicycleCounting } from "@/hooks/use-bicycle-counting";
 import { bicycleCountingToSegments, bicycleCountingToHexbin } from "@/services/bicycleCountingApi";
 import { useLatestCyclingInfrastructure } from "@/hooks/use-cycling-infrastructure";
 import { cyclingInfrastructureToSegments, cyclingInfrastructureToHexbin } from "@/services/cyclingInfrastructureApi";
+import { getQuantile, getSegmentHighlight } from "@/lib/segmentHighlight";
 import { getVisualizationType, isSegmentVisualization, isPointVisualization, isAreaVisualization } from "@/lib/visualization-types";
 import { generateIsochrones, generateGridAreas, generateEmissionZones, type MapArea } from "@/services/areaGenerator";
 import { getKpiDefinition } from "@/config/kpiDefinitions";
@@ -20,8 +21,45 @@ import { getIssyZoneCentroid, getIssyZoneCentroids } from "@/services/issyFlowDa
 import { useMilanEnvironmentSegments, useMilanSpeedSegments } from "@/hooks/use-milan-segment-data";
 import { getStoryPointsForPilot } from "@/data/storyConfig";
 import { SEGMENT_PRESSURE_ITEMS } from "@/lib/mapLayerLegend";
+import {
+  bindJunctionObservatoryLayer,
+  renderIssyJunctionArms,
+  resolveJunctionModeAccent,
+} from "@/lib/renderIssyJunctionArms";
+import {
+  ISSY_SEGMENT_KPIS,
+  isIssyCity,
+  shouldRenderIssyTrafficSegments,
+} from "@/lib/issyMapRouting";
+import {
+  resolveRenderIntent,
+  resolveSpatialRenderPlan,
+} from "@/lib/spatialLayerRegistry";
+import { provenanceBadgesHtml } from "@/lib/dataProvenance";
+import { renderInfluenceField } from "@/lib/renderInfluenceField";
+import {
+  renderIssyAccessibilityField,
+  renderIssyClimateHexField,
+  renderIssyFacilityPoints,
+  renderIssySentimentField,
+} from "@/lib/issyMapLayers";
+import type { IssyDayCategory } from "@/services/issyFlowData";
 import { DeckLeafletOverlay } from "@/components/map/DeckLeafletOverlay";
 import type { LocalCityPoint } from "@/services/localCityData";
+import { infrastructureChartLabelMatchesFeature } from "@/lib/infrastructureChartMapLink";
+import {
+  areAllTravelModesSelected,
+  travelModeMatchesIssyVehicleCategory,
+} from "@/lib/travelModeMapLink";
+import { getKpi32TimeSeriesIntensity, resolveKpi32PolygonBaseIntensity } from "@/lib/kpi32YearIntensity";
+import {
+  dedupeTrafficBySegmentId,
+  filterMapSegmentsNearJunction,
+  isIssyStudyPilot,
+  isNearIssyJunction,
+  ISSY_P2_JUNCTION,
+  junctionMarkerLatLng,
+} from "@/lib/issyPilot2Junction";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -42,6 +80,13 @@ interface HeroMapProps {
   filterRange?: [number, number];
   selectedModeTypes?: string[];
   onSegmentFocus?: (segment: { segmentName: string; speed: number | null; congestion: number | null } | null) => void;
+  /** Issy Pilot 2 — open segment observatory when a junction arm is clicked. */
+  onJunctionSegmentClick?: (detail: {
+    segmentId: string;
+    segmentName: string;
+    speed: number | null;
+    congestion: number | null;
+  }) => void;
   showInterventionLayer?: boolean;
   onPilotSelect?: (pilot: SelectedPilot | null) => void;
   onDataQualitySummaryChange?: (summary: {
@@ -50,19 +95,25 @@ interface HeroMapProps {
     dataType: string;
     temporalCoverage: string;
     confidence: "High" | "Medium" | "Low";
+    provenanceType?: string;
+    geometryLinkage?: string;
+    spatialSystemHint?: string;
   } | null) => void;
   /** Milan KPI 3.2 RETE windows; when omitted, derived from baseline vs intervention/comparison scenario. */
   milanEnvironmentWindow?: "08-09" | "18-19";
-}
-
-function resolveRenderIntent(cityName: string, kpiId: string): "point" | "segment" | "polygon" | "hex" {
-  const cityKey = cityName.toLowerCase();
-  if (kpiId === "kpi3.2") return "hex";
-  if (cityKey.includes("issy") && (kpiId === "kpi2.1" || kpiId === "kpi3.2")) return "segment";
-  if (cityKey.includes("copenhagen") && (kpiId === "kpi1.2" || kpiId === "kpi2.1")) return "point";
-  if (kpiId === "kpi4.2") return "polygon";
-  if (kpiId === "kpi3.1" || kpiId === "kpi1.2") return "point";
-  return "point";
+  /** Issy KPI 1.2 zone-flow CSV: filter by day type (bundled baseline/post extracts). */
+  issyFlowDayCategory?: "all" | IssyDayCategory;
+  /** Sidebar chart drill: zoom map to pilot / city anchor. */
+  pilotFlyToSignal?: { nonce: number; lat: number; lng: number; zoom?: number } | null;
+  /** KPI 3.1: show only assets whose type/label fuzzy-matches the clicked chart bar. */
+  infrastructureCategoryFocus?: string | null;
+  /** KPI 3.2: chart year (e.g. "2022") — map climate hex + emission zones follow time series intensity. */
+  kpi32SelectedYear?: string | null;
+  /** Issy junction study — highlight colour for the selected arm marker. */
+  selectedJunctionSegmentId?: string | null;
+  /** Segment focus — dim non-selected layers. */
+  focusMode?: boolean;
+  onSegmentHover?: (detail: { segmentId: string; segmentName: string }) => void;
 }
 
 /**
@@ -135,10 +186,18 @@ const HeroMap = ({
   filterRange = [0, 100],
   selectedModeTypes = ["Pedestrian", "Cycle", "Public Transport", "Private Car", "PTW"],
   onSegmentFocus,
+  onJunctionSegmentClick,
   showInterventionLayer = false,
   onPilotSelect,
   onDataQualitySummaryChange,
   milanEnvironmentWindow,
+  issyFlowDayCategory = "all",
+  pilotFlyToSignal = null,
+  infrastructureCategoryFocus = null,
+  kpi32SelectedYear = null,
+  selectedJunctionSegmentId = null,
+  focusMode = false,
+  onSegmentHover,
 }: HeroMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapPaneWrapperRef = useRef<HTMLDivElement>(null);
@@ -170,9 +229,12 @@ const HeroMap = ({
     ? selectedPilotMeta.supportedKpis.includes(selectedKpi)
     : true;
   const lastExternalSelectionRef = useRef<string>("");
+  const onJunctionSegmentClickRef = useRef(onJunctionSegmentClick);
+  useEffect(() => {
+    onJunctionSegmentClickRef.current = onJunctionSegmentClick;
+  }, [onJunctionSegmentClick]);
 
-  const badge = (label: string) =>
-    `<span style="display:inline-block;padding:2px 6px;border-radius:999px;border:1px solid rgba(101,125,245,0.35);background:rgba(101,125,245,0.14);font-size:9px;color:#2F1B6D;margin:2px 3px 0 0;">${label}</span>`;
+  const badge = (label: string) => provenanceBadgesHtml([label]);
 
   // Fetch real traffic data for Issy-les-Moulineaux
   const { data: trafficData, isLoading: isLoadingTraffic, error: trafficError } = useLatestTrafficData(
@@ -191,6 +253,26 @@ const HeroMap = ({
     currentCity || "",
     500
   );
+  const issyJunctionStudy = isIssyStudyPilot(selectedPilotId);
+
+  const bicycleDataForMap = useMemo(() => {
+    if (!bicycleData?.results?.length || !issyJunctionStudy) return bicycleData;
+    const results = bicycleData.results.filter((row) =>
+      isNearIssyJunction(row.coordinates.lat, row.coordinates.lon, 200)
+    );
+    return { ...bicycleData, results, total_count: results.length };
+  }, [bicycleData, issyJunctionStudy]);
+
+  const cyclingInfrastructureForMap = useMemo(() => {
+    if (!cyclingInfrastructureData?.results?.length || !issyJunctionStudy) return cyclingInfrastructureData;
+    const results = cyclingInfrastructureData.results.filter((row) => {
+      const pt = row.geo_point_2d;
+      if (!pt) return false;
+      return isNearIssyJunction(pt.lat, pt.lon, 200);
+    });
+    return { ...cyclingInfrastructureData, results, total_count: results.length };
+  }, [cyclingInfrastructureData, issyJunctionStudy]);
+
   const { data: localCityPoints } = useLocalCityData(
     currentCity || "",
     selectedKpi,
@@ -199,8 +281,8 @@ const HeroMap = ({
     scenario
   );
   const { data: issyFlows } = useIssyFlowData(
-    "all",
-    !!currentCity && currentCity.toLowerCase().includes("issy") && selectedKpi === "kpi1.2"
+    issyFlowDayCategory,
+    !!currentCity && isIssyCity(currentCity) && selectedKpi === "kpi1.2"
   );
   const milanPilotId: "mil-p1" | "mil-p2" | "mil-p3" =
     selectedPilotId === "mil-p1" || selectedPilotId === "mil-p2" || selectedPilotId === "mil-p3"
@@ -215,36 +297,40 @@ const HeroMap = ({
 
   const { data: milanEnvironmentSegments } = useMilanEnvironmentSegments(
     resolvedMilanEnvWindow,
-    !!currentCity && currentCity.toLowerCase() === "milan" && selectedKpi === "kpi3.2"
+    !!currentCity && currentCity.toLowerCase() === "milan" && selectedKpi === "kpi3.2",
+    milanPilotId
   );
 
   const deckOverlayLayers = useMemo((): Layer[] => {
-    const enabled =
+    const milanModeShare =
       viewLevel === "PILOT_DATA" &&
       currentCity?.toLowerCase() === "milan" &&
       selectedKpi === "kpi1.2" &&
       !!(localCityPoints && localCityPoints.length);
-    if (!enabled || !localCityPoints?.length) return [];
-    const fillFor = (v: number): [number, number, number, number] => {
-      if (v >= 80) return [47, 27, 109, 210];
-      if (v >= 60) return [101, 125, 245, 200];
-      if (v >= 40) return [150, 194, 239, 190];
-      return [211, 227, 255, 180];
-    };
-    return [
-      new ScatterplotLayer<LocalCityPoint>({
-        id: "elab-deck-milan-mode-share",
-        data: localCityPoints.slice(0, 2500),
-        getPosition: (d) => [d.lon, d.lat],
-        getFillColor: (d) => fillFor(d.value),
-        getRadius: 6,
-        radiusUnits: "pixels",
-        stroked: true,
-        getLineWidth: 1,
-        lineWidthUnits: "pixels",
-        getLineColor: [255, 255, 255, 120],
-      }),
-    ];
+
+    if (milanModeShare && localCityPoints?.length) {
+      const fillFor = (v: number): [number, number, number, number] => {
+        if (v >= 80) return [47, 27, 109, 210];
+        if (v >= 60) return [101, 125, 245, 200];
+        if (v >= 40) return [150, 194, 239, 190];
+        return [211, 227, 255, 180];
+      };
+      return [
+        new ScatterplotLayer<LocalCityPoint>({
+          id: "elab-deck-milan-mode-share",
+          data: localCityPoints.slice(0, 2500),
+          getPosition: (d) => [d.lon, d.lat],
+          getFillColor: (d) => fillFor(d.value),
+          getRadius: 6,
+          radiusUnits: "pixels",
+          stroked: true,
+          getLineWidth: 1,
+          lineWidthUnits: "pixels",
+          getLineColor: [255, 255, 255, 120],
+        }),
+      ];
+    }
+    return [];
   }, [viewLevel, currentCity, selectedKpi, localCityPoints]);
 
   // Notify parent of view level changes
@@ -275,25 +361,20 @@ const HeroMap = ({
     }
   }, []);
 
-  const addInterventionLayer = useCallback((cityData: { lat: number; lon: number }, enabled: boolean) => {
-    if (!mapRef.current || !enabled) return;
+  const addInterventionLayer = useCallback(
+    (cityData: { lat: number; lon: number }, enabled: boolean, skipAtJunction?: boolean) => {
+    if (!mapRef.current || !enabled || skipAtJunction) return;
     const layer = L.layerGroup();
-    const interventionRadius = L.circle([cityData.lat, cityData.lon], {
-      radius: 1200,
+    // Single pilot boundary — avoid two stacked filled discs that read as duplicate layers.
+    const interventionBoundary = L.circle([cityData.lat, cityData.lon], {
+      radius: 900,
       color: "#a78bfa",
       weight: 2,
-      fillColor: "#a78bfa",
-      fillOpacity: 0.12,
-    });
-    const interventionCore = L.circle([cityData.lat, cityData.lon], {
-      radius: 600,
-      color: "#8b5cf6",
-      weight: 1,
+      dashArray: "6 8",
       fillColor: "#8b5cf6",
-      fillOpacity: 0.2,
+      fillOpacity: 0.06,
     });
-    layer.addLayer(interventionRadius);
-    layer.addLayer(interventionCore);
+    layer.addLayer(interventionBoundary);
     layer.addTo(mapRef.current);
     interventionLayerRef.current = layer;
   }, []);
@@ -363,28 +444,6 @@ const HeroMap = ({
       if (value >= 20) return "#8578C3"; // Low-medium - light purple
       return "#D3E3FF"; // Very low - very light blue
     }
-  };
-
-  const getQuantile = (values: number[], q: number) => {
-    if (values.length === 0) return 0;
-    const sorted = [...values].sort((a, b) => a - b);
-    const pos = (sorted.length - 1) * q;
-    const base = Math.floor(pos);
-    const rest = pos - base;
-    if (sorted[base + 1] !== undefined) {
-      return sorted[base] + rest * (sorted[base + 1] - sorted[base]);
-    }
-    return sorted[base];
-  };
-
-  const getSegmentHighlight = (value: number, lowThreshold: number, highThreshold: number) => {
-    if (value >= highThreshold) {
-      return { band: "High", color: "#F97316", weight: 6.4, opacity: 0.95 };
-    }
-    if (value <= lowThreshold) {
-      return { band: "Low", color: "#22C55E", weight: 5.8, opacity: 0.9 };
-    }
-    return { band: "Mid", color: "#7B8AB8", weight: 3.2, opacity: 0.35 };
   };
 
   const getPilotCardHtml = (cityLabel: string, pilot: SelectedPilot) => `
@@ -478,17 +537,47 @@ const HeroMap = ({
       addCityBoundary(cityData);
 
       const visualizationType = getVisualizationType(selectedKpi);
-      const isIssy = cityName.toLowerCase().includes("issy");
-      const ISSY_SEGMENT_KPIS = ["kpi2.1", "kpi3.2"];
-      const shouldRenderIssySegments = isIssy && ISSY_SEGMENT_KPIS.includes(selectedKpi);
+      const isIssy = isIssyCity(cityName);
+      const shouldRenderIssySegments = shouldRenderIssyTrafficSegments(cityName, selectedKpi);
+      const issyLayerRefs = {
+        circles: circlesRef.current,
+        markers: markersRef.current,
+        polylines: polylinesRef.current,
+        polygons: polygonsRef.current,
+      };
+      const addIssyInfluenceField = () => {
+        if (!mapRef.current) return;
+        renderInfluenceField(mapRef.current, circlesRef.current, {
+          center: [ISSY_P2_JUNCTION.lat, ISSY_P2_JUNCTION.lon],
+          radiusMeters: ISSY_P2_JUNCTION.radiusMeters,
+          flagship: selectedPilotId === "issy-p2" || selectedPilotId === "issy-p3",
+        });
+      };
       const kpiDefinition = getKpiDefinition(selectedKpi);
-      const renderIntent = resolveRenderIntent(cityName, selectedKpi);
+      const spatialPlan = resolveSpatialRenderPlan(cityName, selectedKpi, {
+        junctionStudy: issyJunctionStudy,
+        pilotId: selectedPilotId,
+        scenario,
+      });
+      const renderIntent = resolveRenderIntent(cityName, selectedKpi, {
+        junctionStudy: issyJunctionStudy,
+        pilotId: selectedPilotId,
+      });
       const ensureCityCoverage = (
         sourcePoints: Array<{ lat: number; lon: number; value: number; id: string; properties?: Record<string, any> }>,
         minCount: number = 60,
         fallbackCount: number = 220
       ) => {
-        if (sourcePoints.length >= minCount) return sourcePoints;
+        const cityKey = cityName.toLowerCase();
+        const observedCount = sourcePoints.filter(
+          (p) =>
+            p.properties?.dataOrigin !== "coverage-fallback" &&
+            p.properties?.type !== "mock" &&
+            p.properties?.dataOrigin !== "mock"
+        ).length;
+        const minRequired =
+          cityKey.includes("copenhagen") && observedCount >= 4 ? observedCount : minCount;
+        if (sourcePoints.length >= minRequired) return sourcePoints;
         const anchorValue =
           sourcePoints.length > 0
             ? sourcePoints.reduce((sum, point) => sum + point.value, 0) / sourcePoints.length
@@ -498,16 +587,181 @@ const HeroMap = ({
           value: Math.max(0, Math.min(100, anchorValue * 0.72 + point.value * 0.28)),
           properties: {
             dataOrigin: "coverage-fallback",
+            type: "mock",
           },
         }));
         return [...sourcePoints, ...synthetic];
       };
 
-      // Issy KPI1.2: zone-to-zone flow map from baseline/post CSV datasets
-      if (isIssy && selectedKpi === "kpi1.2" && issyFlows && issyFlows.length > 0) {
+      // Issy junction observatory — dispatch via spatialLayerRegistry render plan
+      if (issyJunctionStudy && spatialPlan.rendererId.startsWith("issy-")) {
         setMilanLayerQa(null);
-        const isSustainableMode = (mode: string) =>
-          mode.includes("bicycle") || mode.includes("pedestrian") || mode.includes("public");
+        const jLat = ISSY_P2_JUNCTION.lat;
+        const jLon = ISSY_P2_JUNCTION.lon;
+
+        const emitJunctionObservatory = (detail: {
+          segmentId: string;
+          segmentName: string;
+          speed: number | null;
+          congestion: number | null;
+        }) => {
+          onSegmentFocus?.({
+            segmentName: detail.segmentName,
+            speed: detail.speed,
+            congestion: detail.congestion,
+          });
+          onJunctionSegmentClickRef.current?.(detail);
+        };
+
+        const junctionTrafficRows =
+          trafficData?.results?.length
+            ? filterMapSegmentsNearJunction(dedupeTrafficBySegmentId(trafficData.results))
+            : [];
+
+        const wireJunctionFeatureClicks = () => {
+          if (!junctionTrafficRows.length || !mapRef.current) return;
+          const map = mapRef.current;
+          for (const layer of issyLayerRefs.circles) {
+            if (!layer.options.interactive) continue;
+            const ll = layer.getLatLng();
+            bindJunctionObservatoryLayer(
+              layer,
+              map,
+              junctionTrafficRows,
+              emitJunctionObservatory,
+              ll.lat,
+              ll.lng
+            );
+          }
+          for (const layer of issyLayerRefs.polygons) {
+            const center = layer.getBounds().getCenter();
+            bindJunctionObservatoryLayer(
+              layer,
+              map,
+              junctionTrafficRows,
+              emitJunctionObservatory,
+              center.lat,
+              center.lng
+            );
+          }
+        };
+
+        if (selectedKpi === "kpi3.2") {
+          renderIssyClimateHexField(mapRef.current!, jLat, jLon, issyLayerRefs, {
+            rings: 3,
+            cellSizeM: 44,
+            kpiRow: cityData.kpiData["kpi3.2"],
+            kpi32Year: kpi32SelectedYear,
+            filterRange,
+            scenario,
+          });
+          addIssyInfluenceField();
+          wireJunctionFeatureClicks();
+          addInterventionLayer(cityData, showInterventionLayer, true);
+          return;
+        }
+
+        if (selectedKpi === "kpi3.1" && cyclingInfrastructureForMap?.results?.length) {
+          renderIssyFacilityPoints(mapRef.current!, cyclingInfrastructureForMap.results, issyLayerRefs, {
+            filterRange,
+            categoryFocus: infrastructureCategoryFocus,
+          });
+          addIssyInfluenceField();
+          wireJunctionFeatureClicks();
+          addInterventionLayer(cityData, showInterventionLayer, true);
+          return;
+        }
+
+        if (selectedKpi === "kpi4.1") {
+          renderIssySentimentField(mapRef.current!, cityData, issyLayerRefs, {
+            localPoints: localCityPoints?.map((p) => ({ lat: p.lat, lon: p.lon, value: p.value })),
+            filterRange,
+          });
+          addIssyInfluenceField();
+          wireJunctionFeatureClicks();
+          addInterventionLayer(cityData, showInterventionLayer, true);
+          return;
+        }
+
+        if (selectedKpi === "kpi4.2") {
+          renderIssyAccessibilityField(
+            mapRef.current!,
+            jLat,
+            jLon,
+            issyLayerRefs,
+            cityData.kpiData["kpi4.2"]?.mainValue ?? 55,
+            { filterRange }
+          );
+          addIssyInfluenceField();
+          wireJunctionFeatureClicks();
+          addInterventionLayer(cityData, showInterventionLayer, true);
+          return;
+        }
+
+        if (selectedKpi === "kpi1.2" || selectedKpi === "kpi2.1") {
+          if (junctionTrafficRows.length > 0) {
+            const issyK32Intensity =
+              selectedKpi === "kpi3.2"
+                ? getKpi32TimeSeriesIntensity(cityData.kpiData["kpi3.2"], kpi32SelectedYear)
+                : null;
+            const issyEnvScale =
+              issyK32Intensity != null ? issyK32Intensity / 100 : 1;
+            const roadSegments = trafficSegmentsToSegments(junctionTrafficRows, selectedKpi).map(
+              (seg) => ({
+                ...seg,
+                value: Math.min(100, seg.value * issyEnvScale),
+              })
+            );
+
+            renderIssyJunctionArms(
+              mapRef.current!,
+              roadSegments,
+              selectedKpi,
+              issyLayerRefs,
+              {
+                onObservatoryClick: emitJunctionObservatory,
+                selectedSegmentId: selectedJunctionSegmentId,
+                scenario,
+                filterRange,
+                onSegmentHover,
+                modeAccent:
+                  selectedKpi === "kpi1.2"
+                    ? resolveJunctionModeAccent(selectedModeTypes)
+                    : undefined,
+              }
+            );
+
+            addIssyInfluenceField();
+          }
+          addInterventionLayer(cityData, showInterventionLayer, issyJunctionStudy);
+          return;
+        }
+
+        addInterventionLayer(cityData, showInterventionLayer, issyJunctionStudy);
+        return;
+      }
+
+      // Issy KPI1.2 city view: zone-to-zone flows (not used at junction study pilots)
+      if (
+        isIssy &&
+        selectedKpi === "kpi1.2" &&
+        issyFlows &&
+        issyFlows.length > 0 &&
+        !issyJunctionStudy
+      ) {
+        setMilanLayerQa(null);
+        const isSustainableMode = (mode: string) => {
+          const c = mode.toLowerCase();
+          return (
+            c.includes("bicycle") ||
+            c.includes("cycl") ||
+            c.includes("bike") ||
+            c.includes("person") ||
+            c.includes("pedestrian") ||
+            c.includes("bus") ||
+            c.includes("transit")
+          );
+        };
 
         const modeColor = (mode: string) => {
           const lower = mode.toLowerCase();
@@ -518,7 +772,6 @@ const HeroMap = ({
           return "#96C2EF";
         };
 
-        // draw placeholder zone centroids (clearly flagged as placeholder geometry)
         getIssyZoneCentroids().forEach((zone) => {
           const zoneMarker = L.circleMarker([zone.lat, zone.lon], {
             radius: 7,
@@ -528,19 +781,22 @@ const HeroMap = ({
             weight: 1.4,
             opacity: 0.9,
           }).addTo(mapRef.current!);
+          const geomNote = zone.layoutApproximation
+            ? `<p style="font-size: 9px; color: #96C2EF; margin: 4px 0 0 0;">Pins are spaced for readable OD arcs (~Issy centre). Swap in official zoning polygons when available.</p>`
+            : "";
           zoneMarker.bindPopup(`
             <div style="font-family: 'DM Sans', sans-serif; padding: 6px; min-width: 130px;">
               <p style="font-size: 10px; color: #2F1B6D; margin: 0 0 3px 0; font-weight: 700;">Data Quality</p>
-              <div style="margin-bottom: 4px;">${badge("Approximate")}${badge("Inferred")}${badge("Coverage-expanded")}${badge("Proxy")}</div>
-              <p style="font-size: 11px; color: #8578C3; margin: 0 0 4px 0; text-transform: uppercase;">Issy Zone ${zone.zone}</p>
+              <div style="margin-bottom: 4px;">${badge("Observed")}${badge("Zone OD")}${badge("CSV")}</div>
+              <p style="font-size: 11px; color: #8578C3; margin: 0 0 4px 0; text-transform: uppercase;">Issy zone ${zone.zone}</p>
               <p style="font-size: 10px; color: #96C2EF; margin: 0;">${zone.label}</p>
-              <p style="font-size: 9px; color: #96C2EF; margin: 4px 0 0 0;">Placeholder geometry</p>
+              ${geomNote}
             </div>
           `);
           circlesRef.current.push(zoneMarker);
         });
 
-        const rankedFlows = issyFlows
+        let rankedFlows = issyFlows
           .map((flow) => {
             const from = getIssyZoneCentroid(flow.fromZone);
             const to = getIssyZoneCentroid(flow.toZone);
@@ -557,6 +813,12 @@ const HeroMap = ({
           })
           .filter((flow): flow is NonNullable<typeof flow> => !!flow)
           .filter((flow) => flow.renderValue >= 0.5);
+
+        if (!areAllTravelModesSelected(selectedModeTypes)) {
+          rankedFlows = rankedFlows.filter((flow) =>
+            selectedModeTypes.some((mode) => travelModeMatchesIssyVehicleCategory(mode, flow.vehicleCategory))
+          );
+        }
 
         rankedFlows.sort((a, b) => b.renderValue - a.renderValue);
         /** Cap simultaneous ribbons + stagger shared corridors so arcs do not pile on top of each other. */
@@ -648,6 +910,54 @@ const HeroMap = ({
         return;
       }
 
+      if (isIssy && selectedKpi === "kpi3.2") {
+        setMilanLayerQa(null);
+        renderIssyClimateHexField(mapRef.current!, ISSY_P2_JUNCTION.lat, ISSY_P2_JUNCTION.lon, issyLayerRefs, {
+          rings: 4,
+          cellSizeM: 44,
+          kpiRow: cityData.kpiData["kpi3.2"],
+          kpi32Year: kpi32SelectedYear,
+          filterRange,
+          scenario,
+        });
+        addIssyInfluenceField();
+        return;
+      }
+
+      if (isIssy && selectedKpi === "kpi3.1" && cyclingInfrastructureForMap?.results?.length) {
+        setMilanLayerQa(null);
+        renderIssyFacilityPoints(mapRef.current!, cyclingInfrastructureForMap.results, issyLayerRefs, {
+          filterRange,
+          categoryFocus: infrastructureCategoryFocus,
+        });
+        addIssyInfluenceField();
+        return;
+      }
+
+      if (isIssy && selectedKpi === "kpi4.1") {
+        setMilanLayerQa(null);
+        renderIssySentimentField(mapRef.current!, cityData, issyLayerRefs, {
+          localPoints: localCityPoints?.map((p) => ({ lat: p.lat, lon: p.lon, value: p.value })),
+          filterRange,
+        });
+        addIssyInfluenceField();
+        return;
+      }
+
+      if (isIssy && selectedKpi === "kpi4.2") {
+        setMilanLayerQa(null);
+        renderIssyAccessibilityField(
+          mapRef.current!,
+          ISSY_P2_JUNCTION.lat,
+          ISSY_P2_JUNCTION.lon,
+          issyLayerRefs,
+          cityData.kpiData["kpi4.2"]?.mainValue ?? 55,
+          { filterRange }
+        );
+        addIssyInfluenceField();
+        return;
+      }
+
       // Milan KPI2.1: render speed/risk on actual road segments from shapefile.
       if (
         cityName.toLowerCase() === "milan" &&
@@ -665,6 +975,16 @@ const HeroMap = ({
             dataConfidence: milanSpeedSegments.dataConfidence,
             statusMessage: milanSpeedSegments.statusMessage,
           });
+          if (milanPilotId === "mil-p3" && mapRef.current) {
+            const gapIcon = L.divIcon({
+              className: "milan-gap-marker",
+              html: `<div style="font-family:'DM Sans',sans-serif;padding:10px 12px;border-radius:10px;background:rgba(20,20,35,0.92);color:#e2e8f0;border:1px solid rgba(148,163,184,0.5);max-width:220px;font-size:11px;line-height:1.35;"><strong>Pilot 3 — segment data unavailable</strong><br/>Speed shapefiles are not published for this pilot yet. KPI readiness matrix marks mil-p3 as limited — do not infer synthetic segments.</div>`,
+              iconSize: [220, 72],
+              iconAnchor: [110, 36],
+            });
+            const gapMarker = L.marker([45.44, 9.19], { icon: gapIcon, interactive: true }).addTo(mapRef.current);
+            markersRef.current.push(gapMarker);
+          }
           addInterventionLayer(cityData, showInterventionLayer);
           return;
         }
@@ -704,9 +1024,24 @@ const HeroMap = ({
               <p style="font-size: 9px; color: #96C2EF; margin-top: 2px;">Confidence: ${milanSpeedSegments.dataConfidence}</p>
             </div>
           `);
+          line.on("click", () => {
+            const avgSpeed = Number(props.avgSpeed || 0);
+            onSegmentFocus?.({
+              segmentName: String(props.streetName || segment.id),
+              speed: avgSpeed,
+              congestion: null,
+            });
+            onJunctionSegmentClickRef.current?.({
+              segmentId: segment.id,
+              segmentName: String(props.streetName || segment.id),
+              speed: avgSpeed,
+              congestion: null,
+            });
+          });
           polylinesRef.current.push(line);
           renderedCount += 1;
         });
+        const joinPct = milanSpeedSegments.stats.cameraJoinRatePct;
         setMilanLayerQa({
           layer: "safety",
           parsed: milanSpeedSegments.stats.parsedSegments,
@@ -715,7 +1050,10 @@ const HeroMap = ({
           invalidGeometry: milanSpeedSegments.stats.invalidGeometries,
           avgValue: milanSpeedSegments.stats.avgMetricValue,
           dataConfidence: milanSpeedSegments.dataConfidence,
-          statusMessage: milanSpeedSegments.statusMessage,
+          statusMessage:
+            joinPct != null
+              ? `${milanSpeedSegments.statusMessage || ""} Camera join rate: ${joinPct}%.`.trim()
+              : milanSpeedSegments.statusMessage,
         });
         addInterventionLayer(cityData, showInterventionLayer);
         return;
@@ -728,12 +1066,15 @@ const HeroMap = ({
         milanEnvironmentSegments &&
         milanEnvironmentSegments.records.length > 0
       ) {
-        const allValues = milanEnvironmentSegments.records.map((record) => record.value);
+        const milanK32Intensity = getKpi32TimeSeriesIntensity(cityData.kpiData["kpi3.2"], kpi32SelectedYear);
+        const milanYearScale = milanK32Intensity != null ? milanK32Intensity / 100 : 1;
+        const allValues = milanEnvironmentSegments.records.map((record) => record.value * milanYearScale);
         const lowThreshold = getQuantile(allValues, 0.15);
         const highThreshold = getQuantile(allValues, 0.85);
         let renderedCount = 0;
         milanEnvironmentSegments.records.forEach((segment) => {
-          const highlight = getSegmentHighlight(segment.value, lowThreshold, highThreshold);
+          const scaledValue = segment.value * milanYearScale;
+          const highlight = getSegmentHighlight(scaledValue, lowThreshold, highThreshold);
           const line = L.polyline(segment.coordinates, {
             color: highlight.color,
             weight: highlight.weight,
@@ -756,6 +1097,11 @@ const HeroMap = ({
               <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Medium/Heavy: ${Math.round(Number(props.vMedi || 0) + Number(props.vPesanti || 0))}</p>
               <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Band: ${highlight.band}</p>
               ${props.cameraCount ? `<p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Camera joins: ${props.cameraCount} (${String(props.cameraJoin || "nearest_geometry")})</p>` : ""}
+              ${
+                kpi32SelectedYear && milanK32Intensity != null
+                  ? `<p style="font-size: 9px; color: #A78BFA; margin-top: 4px; font-weight: 600;">KPI chart ${kpi32SelectedYear}: stress scaled ×${milanYearScale.toFixed(2)} (${milanK32Intensity.toFixed(1)}% series intensity).</p>`
+                  : ""
+              }
               <p style="font-size: 9px; color: #96C2EF; margin-top: 6px;">Source: Milan RETE_H08/H18 network shapefile</p>
               <p style="font-size: 9px; color: #96C2EF; margin-top: 2px;">Metric: Derived environmental pressure proxy</p>
               <p style="font-size: 9px; color: #96C2EF; margin-top: 2px;">Geometry: LineString segment</p>
@@ -783,20 +1129,27 @@ const HeroMap = ({
       // Always show road segments with traffic data (50% opacity, gradient) when available
       // Traffic data should ALWAYS be rendered as LineString segments, not points
       if (shouldRenderIssySegments && trafficData?.results && trafficData.results.length > 0) {
-        console.log(`[HeroMap] Rendering ${trafficData.results.length} traffic segments for ${cityName}`);
         const roadSegments = trafficSegmentsToSegments(trafficData.results, selectedKpi);
-        console.log(`[HeroMap] Converted to ${roadSegments.length} map segments`);
-        const values = roadSegments.map((segment) => segment.value);
+        const issyK32Intensity =
+          selectedKpi === "kpi3.2" ? getKpi32TimeSeriesIntensity(cityData.kpiData["kpi3.2"], kpi32SelectedYear) : null;
+        const issyEnvScale = issyK32Intensity != null ? issyK32Intensity / 100 : 1;
+        const values = roadSegments.map((segment) => segment.value * issyEnvScale);
         const lowThreshold = getQuantile(values, 0.15);
         const highThreshold = getQuantile(values, 0.85);
         
+        const segmentMetric = selectedKpi === "kpi3.2" ? "climate" : "safety";
         let renderedCount = 0;
         roadSegments.forEach((segment) => {
-          const highlight = getSegmentHighlight(segment.value, lowThreshold, highThreshold);
+          const scaledValue = segment.value * issyEnvScale;
+          const highlight = getSegmentHighlight(
+            scaledValue,
+            lowThreshold,
+            highThreshold,
+            segmentMetric
+          );
 
           // Use LineString geometry from geo_shape (the real road segment)
           if (!segment.coordinates || segment.coordinates.length < 2) {
-            console.warn(`[HeroMap] Invalid segment coordinates for segment ${segment.id}`);
             return;
           }
 
@@ -813,9 +1166,18 @@ const HeroMap = ({
             <div style="font-family: 'DM Sans', sans-serif; padding: 8px; min-width: 150px;">
               <p style="font-size: 10px; color: #2F1B6D; margin: 0 0 3px 0; font-weight: 700;">Data Quality</p>
               <div style="margin-bottom: 4px;">${badge("Observed")}${badge("Segment-level")}${badge("Available period")}${badge("API")}</div>
-              <p style="font-size: 11px; color: #8578C3; margin: 0 0 4px 0; text-transform: uppercase;">Road Segment</p>
+              <p style="font-size: 11px; color: #8578C3; margin: 0 0 4px 0; text-transform: uppercase;">${
+                selectedKpi === "kpi3.2"
+                  ? "Environmental pressure (segment)"
+                  : "Road safety (segment)"
+              }</p>
               <p style="font-size: 10px; color: #96C2EF; margin: 0 0 4px 0; font-weight: 600;">Segment: ${segment.id}</p>
-              <p style="font-size: 18px; font-weight: bold; color: #2F1B6D; margin: 0 0 6px 0;">${segment.value.toFixed(1)}%</p>
+              <p style="font-size: 18px; font-weight: bold; color: #2F1B6D; margin: 0 0 6px 0;">${scaledValue.toFixed(1)}%</p>
+              ${
+                selectedKpi === "kpi3.2" && kpi32SelectedYear && issyK32Intensity != null
+                  ? `<p style="font-size: 9px; color: #A78BFA; margin: 2px 0; font-weight: 600;">KPI chart ${kpi32SelectedYear}: ×${issyEnvScale.toFixed(2)} (${issyK32Intensity.toFixed(1)}% intensity); raw segment ${segment.value.toFixed(1)}%.</p>`
+                  : ""
+              }
               ${props.vitesse_km_h ? `<p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Speed: ${props.vitesse_km_h.toFixed(1)} km/h</p>` : ''}
               ${props.indice_de_congestion ? `<p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Congestion index: ${props.indice_de_congestion.toFixed(2)}</p>` : ''}
               ${props.distance_metres ? `<p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Observed length: ${(props.distance_metres / 1000).toFixed(2)} km</p>` : ''}
@@ -850,19 +1212,38 @@ const HeroMap = ({
           polylinesRef.current.push(polyline);
           renderedCount++;
         });
-        console.log(`[HeroMap] Rendered ${renderedCount} traffic segments on map`);
-      } else if (shouldRenderIssySegments) {
-        console.log(`[HeroMap] No traffic data available:`, {
-          isLoading: isLoadingTraffic,
-          hasData: !!trafficData,
-          resultsCount: trafficData?.results?.length || 0,
+        if (import.meta.env.DEV) {
+          console.debug(`[HeroMap] Rendered ${renderedCount} traffic segments on map`);
+        }
+        // Live segment geometry is authoritative — do not also draw hex/area scaffolding on top.
+        if (ISSY_SEGMENT_KPIS.includes(selectedKpi)) {
+          addInterventionLayer(cityData, showInterventionLayer);
+          return;
+        }
+      } else if (
+        import.meta.env.DEV &&
+        shouldRenderIssySegments &&
+        !isLoadingTraffic &&
+        (!trafficData?.results || trafficData.results.length === 0)
+      ) {
+        console.debug("[HeroMap] No traffic data available for Issy segment layer", {
           error: trafficError,
-          cityName: cityName
+          cityName,
         });
       }
 
+      const issySafetySegmentDataMissing =
+        isIssy &&
+        shouldRenderIssySegments &&
+        selectedKpi === "kpi2.1" &&
+        (!trafficData?.results || trafficData.results.length === 0);
+
       // Road safety is best represented as clustered hotspots with drill-in zoom.
-      if (selectedKpi === "kpi2.1" && renderIntent === "point") {
+      // Issy normally expects segment geometry from the traffic API; when it is empty, hotspots + scaled grid fallback read as real "data" rather than an empty map.
+      if (
+        selectedKpi === "kpi2.1" &&
+        (renderIntent === "point" || (issySafetySegmentDataMissing && !isIssy))
+      ) {
         let safetyPoints =
           (localCityPoints && localCityPoints.length > 0)
             ? localCityPoints.slice(0, 320)
@@ -914,6 +1295,11 @@ const HeroMap = ({
             <div style="font-family: 'DM Sans', sans-serif; padding: 8px; min-width: 170px;">
               <p style="font-size: 11px; color: #8578C3; margin: 0 0 4px 0; text-transform: uppercase;">Road Safety Hotspot</p>
               <p style="font-size: 16px; font-weight: bold; color: #2F1B6D; margin: 0;">Risk score: ${avgValue.toFixed(1)}</p>
+              ${
+                issySafetySegmentDataMissing
+                  ? `<p style="font-size: 9px; color: #A78BFA; margin-top: 6px;">Issy segment API returned no road features — showing demo risk surface (KPI + coverage points).</p>`
+                  : ""
+              }
               <p style="font-size: 10px; color: #96C2EF; margin-top: 4px;">${cluster.count} measurements grouped</p>
               <p style="font-size: 10px; color: #96C2EF; margin-top: 2px;">Click to zoom into data level</p>
             </div>
@@ -980,16 +1366,16 @@ const HeroMap = ({
         });
       }
       // POINTS VISUALIZATION (Aggregated) - for counts/intensity/sensors
-      else if (isPointVisualization(selectedKpi)) {
+      if (isPointVisualization(selectedKpi) && !(isIssy && (selectedKpi === "kpi3.1" || selectedKpi === "kpi4.1"))) {
         let points: Array<{ lat: number; lon: number; value: number; id: string; properties?: Record<string, any> }> | undefined;
         
         if (isIssy) {
-          if (selectedKpi === "kpi1.2" && bicycleData?.results && bicycleData.results.length > 0) {
+          if (selectedKpi === "kpi1.2" && bicycleDataForMap?.results && bicycleDataForMap.results.length > 0) {
             // Use bicycle counting data for Mode Share
-            points = bicycleCountingToHexbin(bicycleData.results, selectedKpi);
-          } else if (selectedKpi === "kpi3.1" && cyclingInfrastructureData?.results && cyclingInfrastructureData.results.length > 0) {
+            points = bicycleCountingToHexbin(bicycleDataForMap.results, selectedKpi);
+          } else if (selectedKpi === "kpi3.1" && cyclingInfrastructureForMap?.results && cyclingInfrastructureForMap.results.length > 0) {
             // Use cycling infrastructure data for Green Infrastructure
-            points = cyclingInfrastructureToHexbin(cyclingInfrastructureData.results, selectedKpi);
+            points = cyclingInfrastructureToHexbin(cyclingInfrastructureForMap.results, selectedKpi);
           }
           // NOTE: Traffic data should NOT be used here - it should always be rendered as LineString segments above
           // Traffic data lives on roads and must be visualized as polylines, not points
@@ -1074,10 +1460,17 @@ const HeroMap = ({
           }
 
           const props = point.properties || {};
+          if (
+            selectedKpi === "kpi3.1" &&
+            infrastructureCategoryFocus &&
+            !infrastructureChartLabelMatchesFeature(props, infrastructureCategoryFocus)
+          ) {
+            return;
+          }
           // Use infrastructure type for color if available (KPI3.1)
           const color = getValueColor(
-            point.value, 
-            false, 
+            point.value,
+            false,
             selectedKpi === "kpi3.1" ? props.type_amgt_cycl : undefined
           );
           
@@ -1147,7 +1540,11 @@ const HeroMap = ({
       }
       // AREAS VISUALIZATION (Polygons) - for accessibility/catchment/coverage/emissions
       else if (isAreaVisualization(selectedKpi)) {
-        if (selectedKpi === "kpi3.2" && renderIntent === "hex") {
+        if (isIssy && selectedKpi === "kpi3.2") {
+          /* Issy climate hex rendered above */
+        } else if (selectedKpi === "kpi3.2" && renderIntent === "hex") {
+          const k32 = cityData.kpiData["kpi3.2"];
+          const yearAnchor = getKpi32TimeSeriesIntensity(k32, kpi32SelectedYear);
           const sourcePoints =
             (localCityPoints && localCityPoints.length > 0)
               ? localCityPoints.slice(0, 350)
@@ -1181,7 +1578,11 @@ const HeroMap = ({
           Array.from(climateBuckets.values()).forEach((cluster) => {
             const centerLat = cluster.lat / cluster.count;
             const centerLon = cluster.lon / cluster.count;
-            const intensity = Math.max(0, Math.min(100, cluster.total / cluster.count));
+            const localIntensity = Math.max(0, Math.min(100, cluster.total / cluster.count));
+            const intensity =
+              yearAnchor !== null
+                ? Math.max(0, Math.min(100, localIntensity * 0.35 + yearAnchor * 0.65))
+                : localIntensity;
             const color =
               intensity >= 75
                 ? "#E02020"
@@ -1200,10 +1601,16 @@ const HeroMap = ({
               opacity: 0.75,
             }).addTo(mapRef.current!);
 
+            const yearLine =
+              kpi32SelectedYear && yearAnchor !== null
+                ? `<p style="font-size: 10px; color: #A78BFA; margin-top: 4px; font-weight: 600;">Chart year ${kpi32SelectedYear} · series intensity ${yearAnchor.toFixed(1)}%</p>`
+                : "";
+
             heatCircle.bindPopup(`
               <div style="font-family: 'DM Sans', sans-serif; padding: 8px; min-width: 150px;">
                 <p style="font-size: 11px; color: #8578C3; margin: 0 0 4px 0; text-transform: uppercase;">Climate Impact Zone</p>
                 <p style="font-size: 16px; font-weight: bold; color: #2F1B6D; margin: 0;">Estimated intensity: ${intensity.toFixed(1)}%</p>
+                ${yearLine}
                 <p style="font-size: 10px; color: #96C2EF; margin-top: 4px;">${cluster.count} records aggregated</p>
               </div>
             `);
@@ -1215,18 +1622,23 @@ const HeroMap = ({
           return;
         }
         let areas: MapArea[] = [];
-        const kpiValue = cityData.kpiData[selectedKpi]?.mainValue || 50;
+        const kpiRow = cityData.kpiData[selectedKpi];
+        const kpiValue = kpiRow?.mainValue || 50;
         
         if (selectedKpi === "kpi4.2") {
           // Accessibility - generate isochrones around city center
           areas = generateIsochrones(cityData.lat, cityData.lon, [2, 4, 6], kpiValue);
         } else if (selectedKpi === "kpi2.1") {
-          // Safety Stars - generate grid areas
-          areas = generateGridAreas(cityData.lat, cityData.lon, 8, 1, kpiValue);
+          // Safety: CITY_DATA stores a ~0–5 star band; grid math expects ~0–100 so opacity/filters behave like other pilots.
+          const starMain =
+            typeof kpiRow?.mainValue === "number" && Number.isFinite(kpiRow.mainValue)
+              ? kpiRow.mainValue
+              : 2.5;
+          const scaledBase = Math.min(100, Math.max(0, (starMain / 5) * 100));
+          areas = generateGridAreas(cityData.lat, cityData.lon, 8, 1, scaledBase);
         } else if (selectedKpi === "kpi3.2") {
-          // CO2 Emissions - generate emission zones/heat map
-          // Convert reduction percentage to emission intensity (inverse)
-          const emissionIntensity = 100 - (typeof kpiValue === 'number' ? kpiValue : parseFloat(String(kpiValue)));
+          // CO2 / environmental intensity — align polygon rings with chart year when selected
+          const emissionIntensity = resolveKpi32PolygonBaseIntensity(kpiRow, kpi32SelectedYear);
           areas = generateEmissionZones(cityData.lat, cityData.lon, emissionIntensity, 5);
         }
 
@@ -1273,7 +1685,8 @@ const HeroMap = ({
               }</p>
               ${props.radius ? `<p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Radius: ${props.radius.toFixed(2)} km</p>` : ''}
               ${props.coverage ? `<p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Derived zone extent: ${props.coverage.toFixed(1)}%</p>` : ''}
-              ${selectedKpi === "kpi3.2" ? `<p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Reduction: ${(100 - area.value).toFixed(1)}%</p>` : ''}
+              ${selectedKpi === "kpi3.2" && kpi32SelectedYear ? `<p style="font-size: 10px; color: #A78BFA; margin: 2px 0; font-weight: 600;">Chart year ${kpi32SelectedYear} (city time series)</p>` : ''}
+              ${selectedKpi === "kpi3.2" ? `<p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">~ Reduction vs baseline: ${Math.max(0, 100 - area.value).toFixed(1)}%</p>` : ''}
             </div>
           `;
           
@@ -1281,37 +1694,96 @@ const HeroMap = ({
           polygonsRef.current.push(polygon);
         });
       }
-      addInterventionLayer(cityData, showInterventionLayer);
+      addInterventionLayer(cityData, showInterventionLayer, issyJunctionStudy || isIssy);
       } finally {
         attachPilotStoryPins();
       }
     },
-    [selectedKpi, filterRange, trafficData, bicycleData, selectedModeTypes, addCityBoundary, onSegmentFocus, addInterventionLayer, showInterventionLayer, localCityPoints, issyFlows, milanSpeedSegments, milanEnvironmentSegments, scenario, selectedPilotId, selectedPilotMeta, isKpiSupportedByPilot]
+    [
+      selectedKpi,
+      filterRange,
+      trafficData,
+      bicycleData,
+      selectedModeTypes,
+      addCityBoundary,
+      onSegmentFocus,
+      onJunctionSegmentClick,
+      addInterventionLayer,
+      showInterventionLayer,
+      localCityPoints,
+      issyFlows,
+      issyFlowDayCategory,
+      infrastructureCategoryFocus,
+      kpi32SelectedYear,
+      milanSpeedSegments,
+      milanEnvironmentSegments,
+      scenario,
+      selectedPilotId,
+      selectedPilotMeta,
+      isKpiSupportedByPilot,
+      issyJunctionStudy,
+      selectedJunctionSegmentId,
+      onSegmentHover,
+    ]
   );
 
   useEffect(() => {
+    if (!pilotFlyToSignal || !mapRef.current || viewLevel !== "PILOT_DATA") return;
+    const zoom = pilotFlyToSignal.zoom ?? Math.max(mapRef.current.getZoom(), 13);
+    mapRef.current.flyTo([pilotFlyToSignal.lat, pilotFlyToSignal.lng], zoom, { duration: 0.85 });
+  }, [pilotFlyToSignal, viewLevel]);
+
+  useEffect(() => {
     if (!currentCity || !onDataQualitySummaryChange) return;
+    const spatialPlan = resolveSpatialRenderPlan(currentCity, selectedKpi, {
+      junctionStudy: issyJunctionStudy,
+      pilotId: selectedPilotId,
+      scenario,
+    });
     if (currentCity.toLowerCase() === "milan" && selectedKpi === "kpi2.1" && milanSpeedSegments) {
       const total = Math.max(1, milanSpeedSegments.stats.parsedSegments);
       const inferredPct = Math.min(100, Math.round((milanSpeedSegments.stats.missingMetricJoins / total) * 100));
       const matchedPct = Math.max(0, 100 - inferredPct);
+      const joinPct = milanSpeedSegments.stats.cameraJoinRatePct;
       onDataQualitySummaryChange({
         recordsLabel: `${milanSpeedSegments.stats.parsedSegments.toLocaleString()} segments`,
-        spatialQuality: `${matchedPct}% matched, ${inferredPct}% inferred`,
+        spatialQuality: `${matchedPct}% metric-matched${joinPct != null ? ` · ${joinPct}% camera-linked` : ""}`,
         dataType: "observed speed + derived risk index",
         temporalCoverage: "2024 snapshot",
-        confidence: "High",
+        confidence: milanSpeedSegments.dataConfidence === "unavailable" ? "Low" : "High",
+        provenanceType: "observed",
+        geometryLinkage: "matched",
+        spatialSystemHint: spatialPlan.legendHint,
       });
       return;
     }
     if (currentCity.toLowerCase().includes("helsinki")) {
       const total = localCityPoints?.length || 0;
+      const linkage =
+        localCityPoints?.some((p) => p.properties?.geometryLinkage === "matched") ? "matched" : "inferred";
       onDataQualitySummaryChange({
         recordsLabel: `${total.toLocaleString()} points`,
-        spatialQuality: "inferred from network segments",
-        dataType: selectedKpi === "kpi2.1" ? "derived proxy from Telraam flows" : "observed counts",
-        temporalCoverage: "available period",
-        confidence: "Medium",
+        spatialQuality: linkage === "matched" ? "Telraam coordinates when present" : "inferred ring layout",
+        dataType: selectedKpi === "kpi1.2" ? "observed Telraam counts" : "derived Telraam proxy",
+        temporalCoverage: "before-after",
+        confidence: linkage === "matched" ? "Medium" : "Low",
+        provenanceType: selectedKpi === "kpi1.2" ? "observed" : "derived",
+        geometryLinkage: linkage,
+        spatialSystemHint: spatialPlan.legendHint,
+      });
+      return;
+    }
+    if (currentCity.toLowerCase().includes("copenhagen")) {
+      const total = localCityPoints?.length || 0;
+      onDataQualitySummaryChange({
+        recordsLabel: `${total.toLocaleString()} camera sites`,
+        spatialQuality: "exact OpenTrafficCam coordinates",
+        dataType: "observed camera counts",
+        temporalCoverage: "before-after",
+        confidence: total >= 4 ? "High" : "Medium",
+        provenanceType: "observed",
+        geometryLinkage: "exact",
+        spatialSystemHint: spatialPlan.legendHint,
       });
       return;
     }
@@ -1322,6 +1794,9 @@ const HeroMap = ({
         dataType: "observed baseline/post flows",
         temporalCoverage: "before-after",
         confidence: "High",
+        provenanceType: "observed",
+        geometryLinkage: "matched",
+        spatialSystemHint: spatialPlan.legendHint,
       });
       return;
     }
@@ -1332,8 +1807,21 @@ const HeroMap = ({
       dataType: "inferred proxy",
       temporalCoverage: "available period",
       confidence: "Low",
+      provenanceType: "mock",
+      geometryLinkage: "inferred",
+      spatialSystemHint: spatialPlan.legendHint,
     });
-  }, [currentCity, selectedKpi, localCityPoints, milanSpeedSegments, issyFlows, onDataQualitySummaryChange]);
+  }, [
+    currentCity,
+    selectedKpi,
+    localCityPoints,
+    milanSpeedSegments,
+    issyFlows,
+    onDataQualitySummaryChange,
+    issyJunctionStudy,
+    selectedPilotId,
+    scenario,
+  ]);
 
   const addCityMarkers = useCallback(() => {
     if (!mapRef.current) return;
@@ -1409,6 +1897,7 @@ const HeroMap = ({
         onCitySelect?.(city.city);
         mapRef.current!.flyTo([city.lat, city.lon], 13, { duration: 1.2 });
         setTimeout(() => {
+          if (!mapRef.current) return;
           clearLayers();
           const pilots = getPilotsByCity(city.city);
           const fallbackCoords = pilots.map((p, idx) => pilotFallbackCoord(p, idx, city.lat, city.lon));
@@ -1421,7 +1910,7 @@ const HeroMap = ({
               iconAnchor: [160, 73],
             });
 
-            const pilotMarker = L.marker(spreadPts[pi], { icon }).addTo(mapRef.current!);
+            const pilotMarker = L.marker(spreadPts[pi], { icon }).addTo(mapRef.current);
             markersRef.current.push(pilotMarker);
             pilotMarker.on("click", () => {
               setCurrentPilot(pilot);
@@ -1479,6 +1968,7 @@ const HeroMap = ({
           setViewLevel("PILOT_DATA");
           mapRef.current.flyTo([cityData.lat, cityData.lon], 12, { duration: 1.2 });
           setTimeout(() => {
+            if (!mapRef.current) return;
             clearLayers();
             addHexbinData(selectedCity, selectedModeTypes);
           }, 800);
@@ -1487,6 +1977,7 @@ const HeroMap = ({
           setViewLevel("CITY_INTERVENTIONS");
           mapRef.current.flyTo([cityData.lat, cityData.lon], 13, { duration: 1.2 });
           setTimeout(() => {
+            if (!mapRef.current) return;
             clearLayers();
             addCityMarkers();
             clearLayers();
@@ -1500,7 +1991,7 @@ const HeroMap = ({
                 iconSize: [320, 146],
                 iconAnchor: [160, 73],
               });
-              const pilotMarker = L.marker(spreadPts[pi], { icon }).addTo(mapRef.current!);
+              const pilotMarker = L.marker(spreadPts[pi], { icon }).addTo(mapRef.current);
               markersRef.current.push(pilotMarker);
               pilotMarker.on("click", () => {
                 setCurrentPilot(pilot);
@@ -1524,7 +2015,20 @@ const HeroMap = ({
       clearLayers();
       addHexbinData(currentCity, selectedModeTypes);
     }
-  }, [selectedKpi, filterRange, viewLevel, currentCity, clearLayers, addHexbinData, trafficData, bicycleData, cyclingInfrastructureData, selectedModeTypes]);
+  }, [
+    selectedKpi,
+    filterRange,
+    viewLevel,
+    currentCity,
+    clearLayers,
+    addHexbinData,
+    trafficData,
+    bicycleData,
+    cyclingInfrastructureData,
+    selectedModeTypes,
+    kpi32SelectedYear,
+    infrastructureCategoryFocus,
+  ]);
 
   useEffect(() => {
     if (!mapContainer.current || mapRef.current) return;
@@ -1568,6 +2072,13 @@ const HeroMap = ({
         }
       `}</style>
       <div className="absolute inset-0 pointer-events-none z-10 bg-gradient-to-b from-background/30 via-transparent to-background/20" />
+      {focusMode && selectedJunctionSegmentId && (
+        <div
+          className="absolute inset-0 pointer-events-none z-[12] transition-opacity duration-200"
+          style={{ background: "rgba(8, 6, 24, 0.42)" }}
+          aria-hidden
+        />
+      )}
       <div ref={mapContainer} className="h-full w-full" />
       <DeckLeafletOverlay
         leafletMap={leafletMapUi}
@@ -1575,15 +2086,13 @@ const HeroMap = ({
         layers={deckOverlayLayers}
         enabled={deckOverlayLayers.length > 0}
       />
-      {scenario === "comparison" && viewLevel === "PILOT_DATA" && (
-        <div className="pointer-events-none absolute inset-0 z-20">
-          <div className="absolute inset-y-0 left-1/2 w-[2px] bg-white/70 shadow-[0_0_12px_rgba(255,255,255,0.45)]" />
-          <div className="absolute top-6 left-[calc(50%-160px)] text-[11px] px-2 py-1 rounded bg-card/80 border border-border-color/40">
-            Baseline
-          </div>
-          <div className="absolute top-6 left-[calc(50%+16px)] text-[11px] px-2 py-1 rounded bg-violet/80 text-primary-foreground">
-            Intervention
-          </div>
+      {scenario === "comparison" && viewLevel === "PILOT_DATA" && currentCity && (
+        <div className="pointer-events-none absolute top-20 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 rounded-lg border border-white/25 bg-black/45 backdrop-blur-md px-3 py-1.5 text-intel-meta font-medium text-white/90">
+          <span className="inline-block h-2 w-6 rounded-full" style={{ background: "#22C55E" }} />
+          <span>Favourable change</span>
+          <span className="inline-block h-2 w-6 rounded-full ml-1" style={{ background: "#8578C3" }} />
+          <span>Other direction</span>
+          <span className="text-white/50 hidden sm:inline">— thickness = magnitude of difference</span>
         </div>
       )}
 

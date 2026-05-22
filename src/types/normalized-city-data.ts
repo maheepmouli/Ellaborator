@@ -2,6 +2,8 @@ export type GeometryType = "point" | "segment" | "flow" | "polygon" | "hex";
 export type DataTypeLabel = "observed" | "derived" | "modelled" | "mock";
 export type ScenarioType = "baseline" | "intervention" | "comparison";
 export type SpatialQuality = "exact" | "matched" | "inferred";
+/** Geometry linkage quality for trust UI (exact sensor → segment join → inferred cluster). */
+export type GeometryLinkage = "exact" | "matched" | "inferred" | "unlinked";
 export type TemporalCoverage = "single-period" | "before-after" | "multi-year";
 export type LocationMethod =
   | "coordinates"
@@ -31,6 +33,7 @@ export interface NormalizedCityRecord {
   method: string;
   type: DataTypeLabel;
   spatialQuality?: SpatialQuality;
+  geometryLinkage?: GeometryLinkage;
   temporalCoverage?: TemporalCoverage;
   locationMethod?: LocationMethod;
   segmentId?: string;

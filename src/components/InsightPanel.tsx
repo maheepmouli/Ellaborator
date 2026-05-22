@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Printer, TrendingUp, TrendingDown } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -34,6 +35,19 @@ import {
   computeBaselineMainValue,
 } from "@/lib/kpiBaselineVersusIntervention";
 import { formatKpiFigure } from "@/lib/formatKpiFigure";
+import { useIssyFlowData } from "@/hooks/use-issy-flow-data";
+import { buildIssyModeShareKpiSlices } from "@/lib/issyFlowAggregates";
+import type { ChartDrillPayload } from "@/types/chartMapInteraction";
+import { getKpi32TimeSeriesIntensity } from "@/lib/kpi32YearIntensity";
+import { LayerTrustStrip, type LayerTrustSummary } from "@/components/LayerTrustStrip";
+import { DataProvenanceBadge } from "@/components/DataProvenanceBadge";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import type { MapSelectionState } from "@/types/mapSelection";
 
 interface InsightPanelProps {
   selectedCity: string;
@@ -44,7 +58,9 @@ interface InsightPanelProps {
   onPilotChange?: (pilotId: string) => void;
   onKpiChange: (kpi: string) => void;
   onRangeChange: (range: [number, number]) => void;
+  selectedModeTypes?: string[];
   onModeTypesChange?: (modeTypes: string[]) => void;
+  onOpenObservatory?: () => void;
   scenario: "baseline" | "intervention" | "comparison";
   onScenarioChange: (scenario: "baseline" | "intervention" | "comparison") => void;
   onOpenDataSummary: () => void;
@@ -53,16 +69,21 @@ interface InsightPanelProps {
     speed: number | null;
     congestion: number | null;
   } | null;
-  dataQualitySummary?: {
-    recordsLabel: string;
-    spatialQuality: string;
-    dataType: string;
-    temporalCoverage: string;
-    confidence: "High" | "Medium" | "Low";
-  } | null;
+  dataQualitySummary?: LayerTrustSummary | null;
+  mapSelection?: MapSelectionState;
   /** Milan KPI 3.2 RETE load window (paired with HeroMap parsers). */
   milanEnvironmentWindow?: "08-09" | "18-19";
   onMilanEnvironmentWindowChange?: (window: "08-09" | "18-19") => void;
+  issyFlowDayCategory?: "all" | "weekday" | "weekend";
+  onIssyFlowDayCategoryChange?: (category: "all" | "weekday" | "weekend") => void;
+  /** KPI 3.1 — chart ↔ map: filter cycling infrastructure features. */
+  infrastructureMapFocus?: string | null;
+  onInfrastructureMapFocus?: (label: string | null) => void;
+  /** Fly the pilot map after a chart drill (lat/lng/zoom). */
+  onRequestPilotMapFocus?: (lat: number, lng: number, zoom?: number) => void;
+  /** KPI 3.2 — selected trend year (synced map + chart highlight). */
+  emissionsIntensityYear?: string | null;
+  onEmissionsIntensityYearChange?: (year: string | null) => void;
 }
 
 const InsightPanel = ({
@@ -74,22 +95,32 @@ const InsightPanel = ({
   onPilotChange,
   onKpiChange,
   onRangeChange,
-  onModeTypesChange,
-  scenario,
-  onScenarioChange,
-  onOpenDataSummary,
-  mapContext,
-  dataQualitySummary,
-  milanEnvironmentWindow = "08-09",
-  onMilanEnvironmentWindowChange,
-}: InsightPanelProps) => {
-  const [selectedModeTypes, setSelectedModeTypes] = useState<string[]>([
+  selectedModeTypes: selectedModeTypesProp = [
     "Pedestrian",
     "Cycle",
     "Public Transport",
     "Private Car",
     "PTW",
-  ]);
+  ],
+  onModeTypesChange,
+  onOpenObservatory,
+  scenario,
+  onScenarioChange,
+  onOpenDataSummary,
+  mapContext,
+  dataQualitySummary,
+  mapSelection,
+  milanEnvironmentWindow = "08-09",
+  onMilanEnvironmentWindowChange,
+  issyFlowDayCategory = "all",
+  onIssyFlowDayCategoryChange,
+  infrastructureMapFocus = null,
+  onInfrastructureMapFocus,
+  onRequestPilotMapFocus,
+  emissionsIntensityYear = null,
+  onEmissionsIntensityYearChange,
+}: InsightPanelProps) => {
+  const selectedModeTypes = selectedModeTypesProp;
 
   const cityData = CITY_DATA.find((c) => c.city === selectedCity);
   const kpiDef = ELABORATOR_KPIS.find((k) => k.id === selectedKpi);
@@ -104,14 +135,99 @@ const InsightPanel = ({
   const supportedKpisForPilot = selectedPilot?.supportedKpis || ELABORATOR_KPIS.map((kpi) => kpi.id);
   const availableKpis = ELABORATOR_KPIS.filter((kpi) => supportedKpisForPilot.includes(kpi.id));
   const [summaryOpen, setSummaryOpen] = useState(false);
+  const [chartRadarFocus, setChartRadarFocus] = useState<string | null>(null);
+  const [chartA11yFocus, setChartA11yFocus] = useState<string | null>(null);
+
+  useEffect(() => {
+    setChartRadarFocus(null);
+    setChartA11yFocus(null);
+  }, [selectedKpi]);
+
+  const isIssyCity = selectedCity.toLowerCase().includes("issy");
+  const issyFlowsQueryEnabled = isIssyCity && selectedKpi === "kpi1.2";
+  const { data: issyFlowFeatures } = useIssyFlowData(issyFlowDayCategory, issyFlowsQueryEnabled);
+  const issyModeShareFromCsv = useMemo(
+    () =>
+      issyFlowsQueryEnabled && issyFlowFeatures?.length
+        ? buildIssyModeShareKpiSlices(issyFlowFeatures)
+        : null,
+    [issyFlowsQueryEnabled, issyFlowFeatures]
+  );
+  const usingIssyObservedModeShare = !!issyModeShareFromCsv;
+
+  const chartExplorerKeys = useMemo(() => {
+    if (selectedKpi === "kpi1.2") return selectedModeTypes;
+    if (selectedKpi === "kpi2.1") return chartRadarFocus ? [chartRadarFocus] : [];
+    if (selectedKpi === "kpi3.1") return infrastructureMapFocus ? [infrastructureMapFocus] : [];
+    if (selectedKpi === "kpi3.2") return emissionsIntensityYear ? [emissionsIntensityYear] : [];
+    if (selectedKpi === "kpi4.2") return chartA11yFocus ? [chartA11yFocus] : [];
+    return [];
+  }, [
+    selectedKpi,
+    selectedModeTypes,
+    chartRadarFocus,
+    infrastructureMapFocus,
+    emissionsIntensityYear,
+    chartA11yFocus,
+  ]);
+
+  const handleExplorerChartDrill = useCallback(
+    (payload: ChartDrillPayload) => {
+      const pilotLat = typeof selectedPilot?.lat === "number" ? selectedPilot.lat : undefined;
+      const pilotLon = typeof selectedPilot?.lng === "number" ? selectedPilot.lng : undefined;
+      const lat = pilotLat ?? cityData?.lat;
+      const lng = pilotLon ?? cityData?.lon;
+
+      switch (payload.source) {
+        case "kpi1.2":
+          onModeTypesChange?.([payload.key]);
+          break;
+        case "kpi2.1":
+          setChartRadarFocus((prev) => (prev === payload.key ? null : payload.key));
+          break;
+        case "kpi3.1":
+          onInfrastructureMapFocus?.(infrastructureMapFocus === payload.key ? null : payload.key);
+          break;
+        case "kpi3.2":
+          onEmissionsIntensityYearChange?.(emissionsIntensityYear === payload.key ? null : payload.key);
+          break;
+        case "kpi4.2":
+          setChartA11yFocus((prev) => (prev === payload.key ? null : payload.key));
+          break;
+        default:
+          break;
+      }
+      if (lat != null && lng != null) {
+        onRequestPilotMapFocus?.(lat, lng, 13);
+      }
+    },
+    [
+      cityData?.lat,
+      cityData?.lon,
+      infrastructureMapFocus,
+      selectedPilot?.lat,
+      selectedPilot?.lng,
+      emissionsIntensityYear,
+      onInfrastructureMapFocus,
+      onModeTypesChange,
+      onEmissionsIntensityYearChange,
+      onRequestPilotMapFocus,
+    ]
+  );
+
+  const emissionsYearSeriesIntensity = useMemo(() => {
+    if (selectedKpi !== "kpi3.2" || !emissionsIntensityYear) return null;
+    return getKpi32TimeSeriesIntensity(cityData?.kpiData["kpi3.2"], emissionsIntensityYear);
+  }, [cityData?.kpiData, emissionsIntensityYear, selectedKpi]);
 
   const handleModeTypeToggle = (modeType: string) => {
     const newSelected = selectedModeTypes.includes(modeType)
       ? selectedModeTypes.filter((m) => m !== modeType)
       : [...selectedModeTypes, modeType];
-    setSelectedModeTypes(newSelected);
     onModeTypesChange?.(newSelected);
   };
+
+  const segmentFocusId = mapSelection?.segmentId ?? null;
 
   const isModeShare = selectedKpi === "kpi1.2";
   const modeTypes = isModeShare && kpiValue?.breakdown
@@ -131,6 +247,9 @@ const InsightPanel = ({
       isHelsinkiObservedBeforeAfter: helsinkiBA,
       hasSegmentContext: !!mapContext,
     });
+    const liveContextLine = dataQualitySummary
+      ? `Active layer: ${dataQualitySummary.recordsLabel}; ${dataQualitySummary.spatialQuality}; ${dataQualitySummary.temporalCoverage}.`
+      : undefined;
     return buildImpactAtGlance({
       selectedCity,
       pilotName: selectedPilot.name,
@@ -140,8 +259,9 @@ const InsightPanel = ({
       kpiRef: kd.ref,
       changeVerb: "Change in card metric:",
       disclaimerLine: disc.line,
+      liveContextLine,
     });
-  }, [selectedPilot, selectedKpi, selectedCity, scenario, mapContext]);
+  }, [selectedPilot, selectedKpi, selectedCity, scenario, mapContext, dataQualitySummary]);
 
   const reportHref = useMemo(() => {
     const q = new URLSearchParams({
@@ -179,10 +299,15 @@ const InsightPanel = ({
 
   if (!kpiDef || !kpiValue) return null;
 
-  const baselineKvSlice = baselineKpiSlice(kpiValue);
-  const interventionKvSlice = interventionKpiSlice(kpiValue);
-  const baselineMainValue = computeBaselineMainValue(kpiValue);
-  const interventionMainValue = Number(kpiValue.mainValue);
+  const baselineKvSlice = issyModeShareFromCsv?.baseline ?? baselineKpiSlice(kpiValue);
+  const interventionKvSlice = issyModeShareFromCsv?.intervention ?? interventionKpiSlice(kpiValue);
+  const baselineMainValue = issyModeShareFromCsv
+    ? issyModeShareFromCsv.baseline.mainValue
+    : computeBaselineMainValue(kpiValue);
+  const interventionMainValue = issyModeShareFromCsv
+    ? issyModeShareFromCsv.intervention.mainValue
+    : Number(kpiValue.mainValue);
+  const headlineChange = issyModeShareFromCsv?.intervention.change ?? kpiValue.change;
   const currentMainValue = scenario === "baseline" ? baselineMainValue : interventionMainValue;
   const currentBreakdown =
     scenario === "baseline" ? baselineKvSlice.breakdown : interventionKvSlice.breakdown;
@@ -193,7 +318,7 @@ const InsightPanel = ({
     breakdown: currentBreakdown,
   };
 
-  const isPositiveChange = kpiValue.change > 0;
+  const isPositiveChange = headlineChange > 0;
   const changeColor = isPositiveChange ? "text-green" : "text-red-500";
   const TrendIcon = isPositiveChange ? TrendingUp : TrendingDown;
 
@@ -201,7 +326,7 @@ const InsightPanel = ({
     !!baselineKvSlice.breakdown && Object.keys(baselineKvSlice.breakdown).length > 0;
 
   return (
-    <div className="absolute top-20 left-4 z-30 w-[320px] max-h-[calc(100vh-6.5rem)] overflow-y-auto bg-[linear-gradient(165deg,rgba(255,255,255,0.18)_0%,rgba(255,255,255,0.07)_45%,rgba(255,255,255,0.04)_100%)] backdrop-blur-[30px] rounded-2xl shadow-[0_10px_40px_rgba(10,10,45,0.35)] text-white border border-white/35">
+    <div className="absolute top-20 left-4 z-30 w-[320px] max-h-[calc(100vh-6.5rem)] overflow-y-auto bg-[linear-gradient(165deg,rgba(255,255,255,0.18)_0%,rgba(255,255,255,0.07)_45%,rgba(255,255,255,0.04)_100%)] backdrop-blur-[30px] rounded-2xl shadow-[0_10px_40px_rgba(10,10,45,0.35)] text-white border border-white/35 leading-intel tracking-intel">
       <div className="pointer-events-none absolute inset-0 rounded-2xl bg-[radial-gradient(120%_60%_at_15%_0%,rgba(255,255,255,0.32)_0%,rgba(255,255,255,0.08)_45%,rgba(255,255,255,0)_80%)]" />
       <div className="pointer-events-none absolute inset-[1px] rounded-2xl border border-white/20" />
       {/* Header with City & KPI Selector */}
@@ -253,9 +378,16 @@ const InsightPanel = ({
         {selectedPilot && (
           <div className="mt-3 rounded-lg border border-primary-foreground/25 bg-primary-foreground/10 p-2.5 text-[11px] text-primary-foreground/90">
             <p className="font-semibold">
-              {selectedCity} — {selectedPilot.name}
+              {kpiDef.ref} — {kpiFramework?.displayName || kpiDef.shortName}
             </p>
-            <p className="mt-0.5">{selectedPilot.goal}</p>
+            <p className="mt-0.5 leading-snug">
+              {kpiDefinition?.interpretation ||
+                getPlainLanguageSummary(selectedKpi) ||
+                kpiFramework?.question}
+            </p>
+            <p className="mt-1.5 text-[10px] text-primary-foreground/70 leading-snug">
+              {selectedPilot.name}: {selectedPilot.title}
+            </p>
           </div>
         )}
 
@@ -277,6 +409,9 @@ const InsightPanel = ({
                 <div id="insight-summary-print-target" className="space-y-4">
                   <DialogHeader>
                     <DialogTitle>Story in plain words</DialogTitle>
+                    <DialogDescription className="sr-only">
+                      Narrative summary of the selected KPI, city, and pilot for printing or sharing.
+                    </DialogDescription>
                     <p className="text-xs text-muted-foreground font-normal">
                       {kpiDef.ref} · {selectedCity}
                       {selectedPilot ? ` · ${selectedPilot.name}` : ""}
@@ -317,7 +452,7 @@ const InsightPanel = ({
                         <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Change on card</p>
                         <p className="font-semibold tabular-nums text-foreground">
                           {isPositiveChange ? "+" : ""}
-                          {formatKpiFigure(kpiValue.change)}
+                          {formatKpiFigure(headlineChange)}
                           {kpiDef.unit === "%" ? " pp" : ""}
                         </p>
                       </div>
@@ -326,18 +461,33 @@ const InsightPanel = ({
 
                   <section className="space-y-2">
                     <h3 className="text-sm font-semibold text-foreground">Plots</h3>
+                    <p className="text-[9px] text-muted-foreground leading-snug">
+                      Chart selections drive the explorer map filters and camera (Pilot view).
+                    </p>
                     {summaryHasBreakdown ? (
                       <div className="grid sm:grid-cols-2 gap-3">
                         <div className="space-y-1">
                           <p className="text-xs font-medium text-muted-foreground">Before (baseline)</p>
                           <div className="insight-summary-chart-wrap rounded-lg overflow-hidden border border-white/15 bg-[#151130] min-h-[200px]">
-                            <KPIChart kpiId={selectedKpi} data={baselineKvSlice} cityName={selectedCity} />
+                            <KPIChart
+                              kpiId={selectedKpi}
+                              data={baselineKvSlice}
+                              cityName={selectedCity}
+                              chartSelectionKeys={chartExplorerKeys}
+                              onChartDrill={handleExplorerChartDrill}
+                            />
                           </div>
                         </div>
                         <div className="space-y-1">
                           <p className="text-xs font-medium text-muted-foreground">After (intervention)</p>
                           <div className="insight-summary-chart-wrap rounded-lg overflow-hidden border border-white/15 bg-[#151130] min-h-[200px]">
-                            <KPIChart kpiId={selectedKpi} data={interventionKvSlice} cityName={selectedCity} />
+                            <KPIChart
+                              kpiId={selectedKpi}
+                              data={interventionKvSlice}
+                              cityName={selectedCity}
+                              chartSelectionKeys={chartExplorerKeys}
+                              onChartDrill={handleExplorerChartDrill}
+                            />
                           </div>
                         </div>
                       </div>
@@ -347,7 +497,13 @@ const InsightPanel = ({
                           This KPI uses the headline metric for baseline vs after; the chart shows the intervention view only.
                         </p>
                         <div className="insight-summary-chart-wrap rounded-lg overflow-hidden border border-white/15 bg-[#151130] min-h-[200px]">
-                          <KPIChart kpiId={selectedKpi} data={interventionKvSlice} cityName={selectedCity} />
+                          <KPIChart
+                            kpiId={selectedKpi}
+                            data={interventionKvSlice}
+                            cityName={selectedCity}
+                            chartSelectionKeys={chartExplorerKeys}
+                            onChartDrill={handleExplorerChartDrill}
+                          />
                         </div>
                       </div>
                     )}
@@ -401,186 +557,239 @@ const InsightPanel = ({
             aria-label="Comparison"
             className="flex-1 data-[state=on]:bg-violet/20 data-[state=on]:text-violet data-[state=on]:border-violet border border-border-color/30 text-xs shrink-0 whitespace-nowrap px-1"
           >
-            comparission
+            Comparison
           </ToggleGroupItem>
         </ToggleGroup>
       </div>
 
-      {selectedCity === "Milan" && selectedKpi === "kpi3.2" && onMilanEnvironmentWindowChange && (
-          <div className="px-5 pb-3">
-            <p className="text-[10px] font-semibold text-foreground/90 mb-1.5">Time of day (Milan roads)</p>
-            <ToggleGroup
-              type="single"
-              value={milanEnvironmentWindow}
-              onValueChange={(v) => {
-                if (v === "08-09" || v === "18-19") onMilanEnvironmentWindowChange(v);
-              }}
-              className="w-full"
-            >
-              <ToggleGroupItem
-                value="08-09"
-                className="flex-1 text-[10px] data-[state=on]:bg-violet/20 data-[state=on]:text-violet data-[state=on]:border-violet border border-border-color/30"
-              >
-                08–09
-              </ToggleGroupItem>
-              <ToggleGroupItem
-                value="18-19"
-                className="flex-1 text-[10px] data-[state=on]:bg-violet/20 data-[state=on]:text-violet data-[state=on]:border-violet border border-border-color/30"
-              >
-                18–19
-              </ToggleGroupItem>
-            </ToggleGroup>
-            <p className="text-[9px] text-muted-foreground mt-1.5 leading-snug">
-              Morning vs evening hours change how busy the segments look — pick one to compare.
-            </p>
-          </div>
-        )}
-
-      {/* Main Stat */}
-      <div className="relative px-5 py-4 bg-white/[0.03]">
-        <div className="mb-3">
-          <p className="text-xs font-semibold text-violet drop-shadow-[0_0_10px_rgba(139,92,246,0.7)]">KPI Card</p>
-        </div>
-
-        {mapContext && (
-          <div className="mb-3 rounded-lg border border-violet/45 bg-violet/25 backdrop-blur-2xl p-3 text-[11px] shadow-[inset_0_1px_0_rgba(255,255,255,0.22)]">
-            <p className="font-semibold text-violet mb-1">Map focus: one street segment</p>
-            <p className="text-foreground">Segment: {mapContext.segmentName}</p>
-            <p className="text-white/80">
-              Speed: {mapContext.speed !== null ? `${mapContext.speed.toFixed(1)} km/h` : "n/a"}
-            </p>
-            <p className="text-white/80">
-              Congestion index: {mapContext.congestion !== null ? mapContext.congestion.toFixed(2) : "n/a"}
-            </p>
-          </div>
-        )}
-
+      {/* Level 1 — analytical KPI card */}
+      <div className="relative px-5 py-4 bg-white/[0.03] border-b border-border-color/20">
         <div className="flex items-start justify-between gap-3">
           {scenario !== "comparison" ? (
-            <div className="flex flex-col">
+            <div className="flex flex-col min-w-0">
               <div className="flex items-baseline gap-2 mb-1">
-                <span className="text-4xl font-bold text-violet tracking-tight drop-shadow-[0_0_14px_rgba(139,92,246,0.75)] tabular-nums">
+                <span className="text-4xl font-semibold text-violet tracking-tight tabular-nums">
                   {formatKpiFigure(currentMainValue)}
                 </span>
-                <span className="text-lg font-bold text-violet drop-shadow-[0_0_10px_rgba(139,92,246,0.7)]">{kpiValue.unit}</span>
+                <span className="text-intel-kpi-label font-semibold text-violet">{kpiValue.unit}</span>
               </div>
               {isModeShare && (
-                <span className="text-[10px] text-white/70 mt-0.5 leading-relaxed">
-                  Share of sustainable modes
-                </span>
+                <span className="text-intel-meta text-white/70 mt-0.5">Share of sustainable modes</span>
               )}
             </div>
           ) : (
             <div className="flex flex-col gap-2 w-full">
-              <p className="text-[10px] text-primary-foreground/80 leading-snug mb-1">
-                Side‑by‑side for the same indicator: numbers before changes vs after changes.
-              </p>
               <div className="flex items-baseline gap-2">
-                <span className="text-xs text-white/90 font-medium w-[5.75rem] shrink-0">Before</span>
-                <span className="text-2xl font-bold text-white tabular-nums">{formatKpiFigure(baselineMainValue)}</span>
+                <span className="text-intel-meta text-white/90 font-medium w-[5.75rem] shrink-0">Before</span>
+                <span className="text-2xl font-semibold text-white tabular-nums">{formatKpiFigure(baselineMainValue)}</span>
                 <span className="text-sm font-semibold text-violet">{kpiValue.unit}</span>
               </div>
               <div className="flex items-baseline gap-2">
-                <span className="text-xs text-white/90 font-medium w-[5.75rem] shrink-0">After</span>
-                <span className="text-2xl font-bold text-violet drop-shadow-[0_0_10px_rgba(139,92,246,0.55)] tabular-nums">
+                <span className="text-intel-meta text-white/90 font-medium w-[5.75rem] shrink-0">After</span>
+                <span className="text-2xl font-semibold text-violet tabular-nums">
                   {formatKpiFigure(interventionMainValue)}
                 </span>
                 <span className="text-sm font-semibold text-violet">{kpiValue.unit}</span>
               </div>
             </div>
           )}
-
           {(scenario === "intervention" || scenario === "comparison") && (
-            <div className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg ${isPositiveChange ? 'bg-green/20' : 'bg-red-500/20'} ${changeColor} flex-shrink-0`}>
+            <div
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg ${isPositiveChange ? "bg-green/20" : "bg-red-500/20"} ${changeColor} flex-shrink-0`}
+            >
               <TrendIcon className="h-3 w-3" />
-              <span className="text-xs font-bold tabular-nums">
+              <span className="text-intel-meta font-semibold tabular-nums">
                 {isPositiveChange ? "+" : ""}
-                {formatKpiFigure(kpiValue.change)}
+                {formatKpiFigure(headlineChange)}
                 {kpiDef.unit === "%" ? "pp" : ""}
               </span>
             </div>
           )}
         </div>
-        <div className="mt-3 flex items-center justify-between">
-          <button
-            onClick={onOpenDataSummary}
-            className="text-[11px] font-semibold text-violet hover:underline"
-          >
-            Data Summary
-          </button>
-          {kpiDefinition && (
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted-bg text-muted-foreground">
-              {kpiDefinition.dataLabel}
-            </span>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          {dataQualitySummary?.provenanceType && (
+            <DataProvenanceBadge type={dataQualitySummary.provenanceType} />
           )}
-          {kpiFramework?.isModelled && (
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted-bg text-muted-foreground">
-              Modelled estimate
-            </span>
-          )}
-          {kpiFramework?.isMock && (
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted-bg text-muted-foreground">
-              Mock/demo value
+          {dataQualitySummary && (
+            <span className="text-intel-meta text-white/60">
+              Confidence: {dataQualitySummary.confidence}
             </span>
           )}
         </div>
-        {dataQualitySummary && (
-          <p className="mt-3 text-[10px] text-white/80">
-            Data confidence: <span className="font-semibold text-white">{dataQualitySummary.confidence}</span>
-          </p>
-        )}
       </div>
 
-      {/* Chart */}
-      <div className="px-4 py-3 bg-muted-bg/40 border-y border-border-color/30">
-        <KPIChart
-          kpiId={selectedKpi}
-          data={currentKpiValue}
-          cityName={selectedCity}
-        />
-      </div>
-      {/* Mode Type Filter (for Mode Share KPI) */}
-      {isModeShare && (
-        <div className="px-4 py-3 bg-card/60">
-          <span className="text-xs font-semibold text-foreground mb-3 block">Travel modes shown in the chart</span>
-          
-          <div className="space-y-2">
-            {[
-              "Pedestrian",
-              "Cycle",
-              "Public Transport",
-              "Private Car",
-              "PTW"
-            ].map((modeType) => {
-              const isSelected = selectedModeTypes.includes(modeType);
-              const value = currentBreakdown?.[modeType] || 0;
-              // Show raw number instead of percentage for monitored data
-              const displayValue = Math.round(value);
-              return (
-                <div
-                  key={modeType}
-                  className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted-bg/60 transition-colors cursor-pointer"
-                  onClick={() => handleModeTypeToggle(modeType)}
-                >
-                  <Checkbox
-                    checked={isSelected}
-                    onCheckedChange={() => handleModeTypeToggle(modeType)}
-                    className="data-[state=checked]:bg-violet data-[state=checked]:border-violet"
-                  />
-                  <div className="flex-1 flex items-center justify-between">
-                    <span className="text-xs text-foreground font-medium">{modeType}</span>
-                    <span className="text-xs text-muted-foreground">{displayValue}</span>
-                  </div>
-                </div>
-              );
-            })}
+      {/* Level 3 — segment focus (chart + observatory link) */}
+      {segmentFocusId && (
+        <div className="px-4 py-3 bg-muted-bg/50 border-b border-border-color/30">
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <p className="text-intel-label font-semibold text-violet">Segment focus</p>
+            {onOpenObservatory && (
+              <button
+                type="button"
+                onClick={onOpenObservatory}
+                className="text-intel-meta font-semibold text-violet hover:underline"
+              >
+                Open observatory
+              </button>
+            )}
           </div>
-          <p className="text-[10px] text-muted-foreground mt-3 pt-3 border-t border-border-color/30">
-            {kpiDef.ref} - {kpiDef.name}
+          <p className="text-intel-meta text-muted-foreground mb-2 leading-snug">
+            Chart and map stay linked to the selected approach arm.
           </p>
+          <KPIChart
+            kpiId={selectedKpi}
+            data={currentKpiValue}
+            cityName={selectedCity}
+            chartSelectionKeys={chartExplorerKeys}
+            onChartDrill={handleExplorerChartDrill}
+          />
         </div>
       )}
 
+      <Accordion type="multiple" defaultValue={[]} className="px-5 pb-2">
+        {dataQualitySummary && (
+          <AccordionItem value="data-trust" className="border-border-color/30">
+            <AccordionTrigger className="text-intel-meta font-semibold py-2 hover:no-underline">
+              Data trust & filters
+            </AccordionTrigger>
+            <AccordionContent>
+              <LayerTrustStrip summary={dataQualitySummary} compact />
+            </AccordionContent>
+          </AccordionItem>
+        )}
+        {issyFlowsQueryEnabled && onIssyFlowDayCategoryChange && (
+          <AccordionItem value="issy-day" className="border-border-color/30">
+            <AccordionTrigger className="text-[10px] font-semibold py-2 hover:no-underline">
+              Zone flows (Issy CSV)
+            </AccordionTrigger>
+            <AccordionContent>
+              <ToggleGroup
+                type="single"
+                value={issyFlowDayCategory}
+                onValueChange={(v) => {
+                  if (v === "all" || v === "weekday" || v === "weekend") onIssyFlowDayCategoryChange(v);
+                }}
+                className="w-full"
+              >
+                <ToggleGroupItem
+                  value="all"
+                  className="flex-1 text-[10px] data-[state=on]:bg-violet/20 data-[state=on]:text-violet data-[state=on]:border-violet border border-border-color/30"
+                >
+                  All days
+                </ToggleGroupItem>
+                <ToggleGroupItem
+                  value="weekday"
+                  className="flex-1 text-[10px] data-[state=on]:bg-violet/20 data-[state=on]:text-violet data-[state=on]:border-violet border border-border-color/30"
+                >
+                  Weekday
+                </ToggleGroupItem>
+                <ToggleGroupItem
+                  value="weekend"
+                  className="flex-1 text-[10px] data-[state=on]:bg-violet/20 data-[state=on]:text-violet data-[state=on]:border-violet border border-border-color/30"
+                >
+                  Weekend
+                </ToggleGroupItem>
+              </ToggleGroup>
+              <p className="text-[9px] text-muted-foreground mt-1.5 leading-snug">
+                Matches bundled November extracts; map arcs and sidebar line reuse the same filter.
+              </p>
+            </AccordionContent>
+          </AccordionItem>
+        )}
+        {selectedCity === "Milan" && selectedKpi === "kpi3.2" && onMilanEnvironmentWindowChange && (
+          <AccordionItem value="milan-window" className="border-border-color/30">
+            <AccordionTrigger className="text-[10px] font-semibold py-2 hover:no-underline">
+              Time of day (Milan roads)
+            </AccordionTrigger>
+            <AccordionContent>
+              <ToggleGroup
+                type="single"
+                value={milanEnvironmentWindow}
+                onValueChange={(v) => {
+                  if (v === "08-09" || v === "18-19") onMilanEnvironmentWindowChange(v);
+                }}
+                className="w-full"
+              >
+                <ToggleGroupItem
+                  value="08-09"
+                  className="flex-1 text-[10px] data-[state=on]:bg-violet/20 data-[state=on]:text-violet data-[state=on]:border-violet border border-border-color/30"
+                >
+                  08–09
+                </ToggleGroupItem>
+                <ToggleGroupItem
+                  value="18-19"
+                  className="flex-1 text-[10px] data-[state=on]:bg-violet/20 data-[state=on]:text-violet data-[state=on]:border-violet border border-border-color/30"
+                >
+                  18–19
+                </ToggleGroupItem>
+              </ToggleGroup>
+              <p className="text-[9px] text-muted-foreground mt-1.5 leading-snug">
+                Morning vs evening RETE windows — map segments follow this band.
+              </p>
+            </AccordionContent>
+          </AccordionItem>
+        )}
+        {isModeShare && (
+          <AccordionItem value="mode-filter" className="border-border-color/30">
+            <AccordionTrigger className="text-[10px] font-semibold py-2 hover:no-underline">
+              Travel modes (map filter)
+            </AccordionTrigger>
+            <AccordionContent>
+              <div className="space-y-2">
+                {["Pedestrian", "Cycle", "Public Transport", "Private Car", "PTW"].map((modeType) => {
+                  const isSelected = selectedModeTypes.includes(modeType);
+                  const value = currentBreakdown?.[modeType] || 0;
+                  const displayValue = usingIssyObservedModeShare
+                    ? `${value.toFixed(1)}%`
+                    : String(Math.round(value));
+                  return (
+                    <div
+                      key={modeType}
+                      className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted-bg/60 transition-colors cursor-pointer"
+                      onClick={() => handleModeTypeToggle(modeType)}
+                    >
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={() => handleModeTypeToggle(modeType)}
+                        className="data-[state=checked]:bg-violet data-[state=checked]:border-violet"
+                      />
+                      <div className="flex-1 flex items-center justify-between">
+                        <span className="text-xs text-foreground font-medium">{modeType}</span>
+                        <span className="text-xs text-muted-foreground">{displayValue}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        )}
+        <AccordionItem value="methodology" className="border-border-color/30">
+          <AccordionTrigger className="text-intel-meta font-semibold py-2 hover:no-underline">
+            Methodology & data summary
+          </AccordionTrigger>
+          <AccordionContent>
+            <button
+              type="button"
+              onClick={onOpenDataSummary}
+              className="text-intel-meta font-semibold text-violet hover:underline"
+            >
+              Open data summary
+            </button>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+
+      {mapContext && (
+        <div className="mx-5 mb-3 rounded-lg border border-violet/45 bg-violet/25 backdrop-blur-2xl p-3 text-intel-meta shadow-[inset_0_1px_0_rgba(255,255,255,0.22)]">
+          <p className="font-semibold text-violet mb-1">Map focus</p>
+          <p className="text-foreground">{mapContext.segmentName}</p>
+          <p className="text-white/80">
+            Speed: {mapContext.speed !== null ? `${mapContext.speed.toFixed(1)} km/h` : "n/a"} · Congestion:{" "}
+            {mapContext.congestion !== null ? mapContext.congestion.toFixed(2) : "n/a"}
+          </p>
+        </div>
+      )}
       {/* Footer - KPI Info */}
       <div className="px-4 py-2 bg-violet/10 border-t border-border-color/30">
         <p className="text-[10px] text-muted-foreground">

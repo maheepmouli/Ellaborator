@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
 @import 'leaflet/dist/leaflet.css';
 @tailwind base;
 @tailwind components;
@@ -55,6 +55,13 @@
 
     --radius: 0.75rem;
 
+    /* Intelligence UI type scale */
+    --text-meta: 0.8125rem; /* 13px */
+    --text-label: 0.875rem; /* 14px */
+    --text-kpi-label: 1rem; /* 16px */
+    --leading-intel: 1.5;
+    --tracking-intel: 0.01em;
+
     /* ELAB Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(259, 60%, 27%) 0%, hsl(231, 89%, 68%) 100%);
     --gradient-blue: linear-gradient(135deg, hsl(206, 74%, 76%) 0%, hsl(231, 89%, 68%) 100%);
@@ -99,6 +106,32 @@
     font-weight: 700;
   }
 
+  .intel-ui {
+    letter-spacing: var(--tracking-intel);
+    line-height: var(--leading-intel);
+  }
+
+  .text-intel-meta {
+    font-size: var(--text-meta);
+    font-weight: 500;
+    letter-spacing: var(--tracking-intel);
+    line-height: var(--leading-intel);
+  }
+
+  .text-intel-label {
+    font-size: var(--text-label);
+    font-weight: 600;
+    letter-spacing: var(--tracking-intel);
+    line-height: var(--leading-intel);
+  }
+
+  .text-intel-kpi-label {
+    font-size: var(--text-kpi-label);
+    font-weight: 600;
+    letter-spacing: var(--tracking-intel);
+    line-height: var(--leading-intel);
+  }
+
   /* Gradient utilities */
   .gradient-primary {
     background: var(--gradient-primary);
@@ -119,6 +152,11 @@
   .gradient-accent {
     background: var(--gradient-accent);
     height: 3px;
+  }
+
+  /* Data Catalogue — type chips use text-white; override body text-foreground on table cells */
+  .data-catalogue .catalogue-status-chip.text-white {
+    color: #ffffff !important;
   }
 }
 
@@ -161,4 +199,71 @@
     -webkit-print-color-adjust: exact;
     break-inside: avoid;
   }
+}
+
+/* Issy junction arm labels (Leaflet divIcon) */
+.leaflet-div-icon.issy-arm-label {
+  background: transparent;
+  border: none;
+}
+
+/* Issy junction sample dots — solid fill + white ring (reference UI) */
+.leaflet-div-icon.junction-marker-icon {
+  background: transparent !important;
+  border: none !important;
+}
+
+.junction-marker-dot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.junction-marker-dot__fill {
+  border-radius: 50%;
+  border: 2.5px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+}
+
+.junction-marker-anchor {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.junction-marker-anchor__halo {
+  position: absolute;
+  inset: -10px;
+  border-radius: 50%;
+  border: 2px dashed #a78bfa;
+  opacity: 0.9;
+}
+
+.junction-marker-anchor__ring {
+  position: absolute;
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+.junction-marker-anchor__ring--white {
+  width: 30px;
+  height: 30px;
+  border: 2.5px solid #ffffff;
+}
+
+.junction-marker-anchor__ring--accent {
+  width: 24px;
+  height: 24px;
+  border: 2.5px solid #f97316;
+}
+
+.junction-marker-anchor__core {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  z-index: 1;
 }
