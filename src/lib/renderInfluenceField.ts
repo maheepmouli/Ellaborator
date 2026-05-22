@@ -19,10 +19,10 @@ export function renderInfluenceField(
 ): void {
   const { center, radiusMeters, flagship = false } = options;
   const rings = [
-    { scale: 1, fill: flagship ? 0.09 : 0.06, stroke: 0 },
-    { scale: 0.72, fill: flagship ? 0.07 : 0.045, stroke: 0 },
-    { scale: 0.48, fill: flagship ? 0.05 : 0.03, stroke: 0 },
-    { scale: 0.28, fill: flagship ? 0.035 : 0.02, stroke: 0 },
+    { scale: 1, fill: flagship ? 0.055 : 0.038, stroke: 0 },
+    { scale: 0.72, fill: flagship ? 0.042 : 0.028, stroke: 0 },
+    { scale: 0.48, fill: flagship ? 0.03 : 0.018, stroke: 0 },
+    { scale: 0.28, fill: flagship ? 0.02 : 0.012, stroke: 0 },
   ];
 
   rings.forEach((ring) => {

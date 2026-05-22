@@ -10,8 +10,11 @@ import { Button } from "@/components/ui/button";
 import {
   stakeholderReportDisclaimer,
   buildImpactAtGlance,
+  buildStakeholderPrintSummary,
+  getPlainLanguageSummary,
   resolveImpactDisclaimer,
 } from "@/data/narratives";
+import { getIssyPilotProfile } from "@/data/issyPilotProfiles";
 import {
   baselineKpiSlice,
   interventionKpiSlice,
@@ -46,8 +49,67 @@ const StakeholderReport = () => {
     window.print();
   };
 
+  const baselineMain = kpiValue ? computeBaselineMainValue(kpiValue) : 0;
+  const interventionMain = kpiValue ? Number(kpiValue.mainValue) : 0;
+
+  const stakeholderBrief = useMemo(() => {
+    if (!cityData || !kpiMeta || !kpiValue) return null;
+    const helsinki = city === "Helsinki" && (kpiId === "kpi1.2" || kpiId === "kpi2.1");
+    const disc = resolveImpactDisclaimer({
+      kpiId,
+      isMockFramework: !!kpiFramework?.isMock,
+      isHelsinkiObservedBeforeAfter: helsinki,
+      hasSegmentContext: false,
+    });
+    if (pilot) {
+      const issyProfile = getIssyPilotProfile(pilot.id);
+      const defaultFw = issyProfile ? getKpiFrameworkConfig(issyProfile.defaultKpi) : null;
+      const focusNote =
+        issyProfile && issyProfile.defaultKpi !== kpiId
+          ? `Primary lens for this pilot is ${defaultFw?.displayName || issyProfile.defaultKpi}.`
+          : undefined;
+      return buildStakeholderPrintSummary({
+        selectedCity: city,
+        pilot: {
+          name: pilot.name,
+          title: pilot.title,
+          description: pilot.description,
+          interventionType: pilot.interventionType,
+          goal: pilot.goal,
+          datasets: pilot.datasets,
+          focusNote,
+        },
+        kpiRef: kpiMeta.ref,
+        kpiDisplayName: kpiFramework?.displayName || kpiMeta.shortName,
+        kpiPlainLanguage: getPlainLanguageSummary(kpiId) || kpiMeta.question,
+        scenario,
+        unit: kpiValue.unit,
+        baselineMainValue: baselineMain,
+        interventionMainValue: interventionMain,
+        headlineChange: kpiValue.change,
+        disclaimerLine: disc.line,
+      });
+    }
+    return null;
+  }, [
+    city,
+    cityData,
+    kpiMeta,
+    kpiValue,
+    pilot,
+    scenario,
+    kpiId,
+    kpiFramework?.displayName,
+    kpiFramework?.isMock,
+    baselineMain,
+    interventionMain,
+  ]);
+
   const impact = useMemo(() => {
     if (!cityData || !kpiMeta || !kpiValue) return null;
+    if (stakeholderBrief) {
+      return { lead: stakeholderBrief.lead, bullets: stakeholderBrief.bullets };
+    }
     const helsinki = city === "Helsinki" && (kpiId === "kpi1.2" || kpiId === "kpi2.1");
     const disc = resolveImpactDisclaimer({
       kpiId,
@@ -57,25 +119,28 @@ const StakeholderReport = () => {
     });
     return buildImpactAtGlance({
       selectedCity: city,
-      pilotName: pilot?.name || pilotName || city,
+      pilotName: pilotName || city,
       kpiDisplayName: kpiFramework?.displayName || kpiMeta.shortName,
       scenario,
       kpiValue,
       kpiRef: kpiMeta.ref,
       changeVerb: "Change:",
       disclaimerLine: disc.line,
+      headlineMainValue: interventionMain,
+      headlineChange: kpiValue.change,
     });
   }, [
     city,
     cityData,
     kpiMeta,
     kpiValue,
-    pilot?.name,
     pilotName,
     scenario,
     kpiId,
     kpiFramework?.displayName,
     kpiFramework?.isMock,
+    stakeholderBrief,
+    interventionMain,
   ]);
 
   if (!cityData || !kpiMeta || !kpiValue) {
@@ -126,9 +191,35 @@ const StakeholderReport = () => {
           </p>
         </header>
 
+        {stakeholderBrief && (
+          <section className="mb-8 rounded-xl border border-violet/20 bg-violet/5 p-5">
+            <h2 className="text-lg font-semibold text-purple mb-2">What this pilot is about</h2>
+            <p className="text-sm font-semibold text-violet">{stakeholderBrief.pilotAbout.title}</p>
+            <p className="text-sm mt-2 leading-relaxed">{stakeholderBrief.pilotAbout.description}</p>
+            <p className="text-xs mt-3">
+              <strong>Intervention:</strong> {stakeholderBrief.pilotAbout.interventionType}
+              <br />
+              <strong>Goal:</strong> {stakeholderBrief.pilotAbout.goal}
+            </p>
+            <ul className="list-disc pl-5 text-xs mt-2 space-y-0.5 text-muted-foreground">
+              {stakeholderBrief.pilotAbout.datasets.map((d) => (
+                <li key={d}>{d}</li>
+              ))}
+            </ul>
+            {stakeholderBrief.pilotAbout.focusNote && (
+              <p className="text-xs mt-3 text-amber-900 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
+                {stakeholderBrief.pilotAbout.focusNote}
+              </p>
+            )}
+          </section>
+        )}
+
         {impact && (
           <section className="mb-8">
-            <h2 className="text-lg font-semibold text-purple mb-2">Impact at a glance</h2>
+            <h2 className="text-lg font-semibold text-purple mb-2">KPI readout</h2>
+            {stakeholderBrief && (
+              <p className="text-sm text-muted-foreground mb-3">{stakeholderBrief.kpiPlainLanguage}</p>
+            )}
             <p className="text-sm leading-relaxed mb-3">{impact.lead}</p>
             <ul className="list-disc pl-5 text-sm space-y-1.5">
               {impact.bullets.map((b, i) => (

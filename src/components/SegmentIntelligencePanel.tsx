@@ -1048,7 +1048,7 @@ function ObservatoryTabContent({
 
   if (selectedKpi === "kpi3.2") {
     if (tabId === "field") return <ClimateFieldTab view={view} />;
-    if (tabId === "delta") return <ClimateDeltaTab view={view} />;
+    if (tabId === "delta" || tabId === "beforeAfter") return <ClimateDeltaTab view={view} />;
     return <ClimateFieldTab view={view} />;
   }
 
@@ -1311,6 +1311,7 @@ export default function SegmentIntelligencePanel({
     () => getObservatoryConfig(selectedKpi, city || "Issy-les-Moulineaux", pilotId),
     [selectedKpi, city, pilotId]
   );
+  const observatoryKpiDef = useMemo(() => getKpiDefinition(selectedKpi), [selectedKpi]);
   const [activeRegistryTab, setActiveRegistryTab] = useState<ObservatoryTabId>("overview");
   const [expanded, setExpanded] = useState(false);
   const isFlagship = pilotId === "issy-p2";
@@ -1648,10 +1649,15 @@ export default function SegmentIntelligencePanel({
               className="flex-shrink-0 flex items-center justify-between px-5 py-3"
               style={{ borderTop: `1px solid ${C.border}`, background: "rgba(255,255,255,0.02)" }}
             >
-              <div className="flex items-center gap-2 text-[10px] text-white/30">
-                <GitBranch className="h-3 w-3" />
-                <span>
-                  ELABORATOR · WP7 · {pilotLabel ?? "Issy"} · {dataSourceTrustLabel(kpiPrimaryIssySource(selectedKpi))}
+              <div className="flex flex-col gap-1 text-[10px] text-white/50 max-w-[70%]">
+                <div className="flex items-center gap-2">
+                  <GitBranch className="h-3 w-3 shrink-0" />
+                  <span>
+                    ELABORATOR · {pilotLabel ?? "Issy"} · {dataSourceTrustLabel(kpiPrimaryIssySource(selectedKpi))}
+                  </span>
+                </div>
+                <span className="pl-5 font-semibold text-white/65">
+                  Provenance: {observatoryKpiDef?.dataLabel ?? "Derived"} · Observed / Derived / Modelled / Mock
                 </span>
               </div>
               <div className="flex items-center gap-2">

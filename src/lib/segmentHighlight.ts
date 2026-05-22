@@ -48,15 +48,15 @@ export function getSegmentHighlight(
   if (value <= lowThreshold) {
     return { band: "Low", color: "#22C55E", weight: 5.8, opacity: 0.9 };
   }
-  return { band: "Mid", color: "#7B8AB8", weight: 3.2, opacity: 0.35 };
+  return { band: "Mid", color: "#94A3D4", weight: 5.5, opacity: 0.78 };
 }
 
 /** Junction study: keep all four arms readable on the map. */
 export function applyJunctionHighlightVisibility(style: SegmentHighlightStyle): SegmentHighlightStyle {
   return {
     ...style,
-    weight: Math.max(style.weight, 5.5),
-    opacity: Math.max(style.opacity, 0.88),
+    weight: Math.max(style.weight, 7),
+    opacity: Math.max(style.opacity, 0.92),
   };
 }
 

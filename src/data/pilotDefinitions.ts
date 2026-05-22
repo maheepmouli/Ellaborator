@@ -125,7 +125,7 @@ export const CITY_PILOTS: Record<string, SelectedPilot[]> = {
       name: "Pilot 1",
       title: "Luminous and interactive road markings for bicycles",
       description:
-        "In December 2024, a light-emitting marking system was installed in Issy-les-Moulineaux to improve safety on shared mobility lanes. LED panels in the pavement activate when cyclists approach and when the traffic light is green, alerting drivers with illuminated signals.",
+        "Light-emitting pavement markings improve cyclist visibility and alert drivers when cyclists approach intersections.",
       interventionType: "Luminous bicycle markings",
       goal: "Improve cyclist visibility and reduce conflicts at junctions through interactive pavement signals.",
       scale: "street",

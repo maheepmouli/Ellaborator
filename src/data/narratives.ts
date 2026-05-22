@@ -100,6 +100,24 @@ export function resolveImpactDisclaimer(args: {
   };
 }
 
+export type StakeholderPilotBrief = {
+  name: string;
+  title: string;
+  description: string;
+  interventionType: string;
+  goal: string;
+  datasets: string[];
+  /** Optional line (e.g. default KPI vs selected KPI on Issy pilots). */
+  focusNote?: string;
+};
+
+export type StakeholderPrintSummary = {
+  lead: string;
+  pilotAbout: StakeholderPilotBrief;
+  kpiPlainLanguage: string;
+  bullets: string[];
+};
+
 export function buildImpactAtGlance(args: {
   selectedCity: string;
   pilotName: string;
@@ -109,30 +127,85 @@ export function buildImpactAtGlance(args: {
   kpiRef: string;
   changeVerb: string;
   disclaimerLine: string;
-  /** Live map layer trust line (records, linkage, period). */
   liveContextLine?: string;
+  /** When set, overrides CARD mainValue for narrative consistency with before/after block. */
+  headlineMainValue?: number;
+  headlineChange?: number;
 }): { lead: string; bullets: string[] } {
+  const full = buildStakeholderPrintSummary({
+    selectedCity: args.selectedCity,
+    pilot: {
+      name: args.pilotName,
+      title: args.pilotName,
+      description: "",
+      interventionType: "",
+      goal: "",
+      datasets: [],
+    },
+    kpiRef: args.kpiRef,
+    kpiDisplayName: args.kpiDisplayName,
+    kpiPlainLanguage: "",
+    scenario: args.scenario,
+    unit: args.kpiValue.unit,
+    baselineMainValue: args.headlineMainValue ?? args.kpiValue.mainValue,
+    interventionMainValue: args.headlineMainValue ?? args.kpiValue.mainValue,
+    headlineChange: args.headlineChange ?? args.kpiValue.change,
+    disclaimerLine: args.disclaimerLine,
+    liveContextLine: args.liveContextLine,
+    omitPilotAbout: true,
+  });
+  return { lead: full.lead, bullets: full.bullets };
+}
+
+/** Printable / dialog stakeholder brief — pilot context + KPI readout aligned with sidebar figures. */
+export function buildStakeholderPrintSummary(args: {
+  selectedCity: string;
+  pilot: StakeholderPilotBrief;
+  kpiRef: string;
+  kpiDisplayName: string;
+  kpiPlainLanguage: string;
+  scenario: "baseline" | "intervention" | "comparison";
+  unit: string;
+  baselineMainValue: number;
+  interventionMainValue: number;
+  headlineChange: number;
+  disclaimerLine: string;
+  liveContextLine?: string;
+  issyOdNote?: string;
+  omitPilotAbout?: boolean;
+}): StakeholderPrintSummary {
   const scen =
     args.scenario === "baseline"
       ? "baseline period"
       : args.scenario === "intervention"
         ? "intervention view"
         : "before vs after snapshot";
-  const main = `${args.kpiValue.mainValue}${args.kpiValue.unit ? args.kpiValue.unit : ""}`;
-  const bullet1 = `${args.kpiRef} (${args.kpiDisplayName}): headline value ${main} in ${scen}.`;
+  const headline =
+    args.scenario === "baseline" ? args.baselineMainValue : args.interventionMainValue;
+  const unitSuffix = args.unit === "%" ? "%" : args.unit ? ` ${args.unit}` : "";
+  const bullet1 = `${args.kpiRef} (${args.kpiDisplayName}): headline value ${headline}${unitSuffix} in ${scen}.`;
   const changeStr =
-    args.kpiValue.change === 0
-      ? "no net change coded in CARD"
-      : `${args.changeVerb} ${args.kpiValue.change > 0 ? "+" : ""}${args.kpiValue.change}`;
+    args.headlineChange === 0
+      ? "no net change coded on the card"
+      : `Change on card: ${args.headlineChange > 0 ? "+" : ""}${args.headlineChange}${args.unit === "%" ? " pp" : unitSuffix}`;
   const bullet2 =
     args.scenario === "comparison" || args.scenario === "intervention"
-      ? `Directional shift in card metrics: ${changeStr}${args.kpiValue.unit === "%" ? " pp" : ""}.`
-      : `Baseline-relative shift (card): ${changeStr}${args.kpiValue.unit === "%" ? " pp" : ""}.`;
-  const bullet3 = args.liveContextLine || args.disclaimerLine;
-  const bullet4 = args.liveContextLine ? args.disclaimerLine : undefined;
+      ? `Directional shift vs baseline: ${changeStr}.`
+      : `Baseline figure on card: ${args.baselineMainValue}${unitSuffix}.`;
+  const bullets: string[] = [bullet1, bullet2];
+  if (args.liveContextLine) bullets.push(args.liveContextLine);
+  if (args.issyOdNote) bullets.push(args.issyOdNote);
+  bullets.push(args.disclaimerLine);
+
+  const lead = args.omitPilotAbout
+    ? `${args.selectedCity} — ${args.pilot.name}: quick readout for stakeholder conversations. Figures come from ELABORATOR layers for the selected KPI; treat mock/demo values as illustrative only.`
+    : `${args.selectedCity} — ${args.pilot.name}: stakeholder conversation brief. What the pilot tests, which data feeds the map, and how to read the KPI card — verify figures in Data Summary before external quotes.`;
+
   return {
-    lead: `${args.selectedCity} — ${args.pilotName}: quick readout for stakeholder conversations. Figures come from ELABORATOR layers for the selected KPI; treat mock/demo values as illustrative only.`,
-    bullets: bullet4 ? [bullet1, bullet2, bullet3, bullet4] : [bullet1, bullet2, bullet3],
+    lead,
+    pilotAbout: args.pilot,
+    kpiPlainLanguage: args.kpiPlainLanguage,
+    bullets,
   };
 }
 

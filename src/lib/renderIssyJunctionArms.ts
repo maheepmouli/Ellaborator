@@ -158,30 +158,34 @@ export function renderIssyJunctionArms(
     const favourable = isJunctionComparisonFavourable(metrics.delta, selectedKpi);
     const deltaColor = favourable ? COMPARISON_FAVOURABLE_COLOR : COMPARISON_OTHER_COLOR;
 
-    let lineColor = highlight.color;
-    let lineWeight = Math.max(highlight.weight, 6);
-    let lineOpacity = highlight.opacity;
+    const armAccent = arm?.color ?? highlight.color;
+    let lineColor = armAccent;
+    let lineWeight = Math.max(highlight.weight, 8.5);
+    let lineOpacity = Math.max(highlight.opacity, 0.96);
     let dashArray: string | undefined;
 
     if (scenario === "comparison") {
       lineColor = deltaColor;
-      lineWeight = comparisonLineWeight(metrics.absDelta);
-      lineOpacity = Math.min(0.92, 0.5 + metrics.absDelta / 80);
+      lineWeight = Math.max(comparisonLineWeight(metrics.absDelta), 8);
+      lineOpacity = Math.min(0.98, 0.72 + metrics.absDelta / 120);
     } else if (scenario === "baseline") {
-      lineColor = BASELINE_GHOST_COLOR;
-      lineWeight = Math.max(5, highlight.weight - 1);
-      lineOpacity = 0.72;
+      lineColor = "#cbd5e1";
+      lineWeight = Math.max(6.5, highlight.weight - 0.5);
+      lineOpacity = 0.82;
       dashArray = "7 5";
     } else if (selectedKpi === "kpi1.2" && options.modeAccent) {
       lineColor = options.modeAccent;
+      lineWeight = Math.max(lineWeight, 8);
+    } else {
+      lineColor = highlight.color === "#7B8AB8" ? armAccent : highlight.color;
     }
 
     const focusDim =
-      options.selectedSegmentId && !isSelected ? 0.38 : 1;
+      options.selectedSegmentId && !isSelected ? 0.42 : 1;
     const lineStyle = {
-      color: lineColor,
-      weight: isSelected ? lineWeight + 1 : lineWeight,
-      opacity: Math.min(0.98, lineOpacity * focusDim),
+      color: isSelected ? "#ffffff" : lineColor,
+      weight: isSelected ? lineWeight + 5 : lineWeight,
+      opacity: isSelected ? 1 : Math.min(0.98, lineOpacity * focusDim),
       dashArray,
       lineJoin: "round" as const,
       lineCap: "round" as const,
@@ -246,6 +250,17 @@ export function renderIssyJunctionArms(
     }
 
     const visibleLine = L.polyline(approachCoords, lineStyle).addTo(map);
+    if (isSelected) {
+      const halo = L.polyline(approachCoords, {
+        color: armAccent,
+        weight: lineStyle.weight + 6,
+        opacity: 0.62,
+        lineJoin: "round",
+        lineCap: "round",
+        interactive: false,
+      }).addTo(map);
+      refs.polylines.push(halo);
+    }
     const hitLine = L.polyline(approachCoords, {
       color: "#000000",
       weight: 24,
@@ -276,7 +291,7 @@ export function renderIssyJunctionArms(
 
     const wire = (layer: L.Polyline) => {
       layer.on("mouseover", () => {
-        visibleLine.setStyle({ weight: lineStyle.weight + 2, opacity: 0.98 });
+        visibleLine.setStyle({ weight: lineStyle.weight + 2.5, opacity: 1 });
         options.onSegmentHover?.({ segmentId: segment.id, segmentName: segmentLabel });
       });
       layer.on("mouseout", () => {

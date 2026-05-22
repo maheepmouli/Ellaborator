@@ -23,7 +23,7 @@ export const ISSY_P2_JUNCTION = {
   lon: 2.261046,
   name: "Pont d'Issy × Quai du Président Roosevelt",
   shortName: "Stalingrad junction",
-  radiusMeters: 280,
+  radiusMeters: 220,
 } as const;
 
 /** Clockwise from west: Pont / Rouget / Quai north / Quai south (mapped to nearest API arms). */
