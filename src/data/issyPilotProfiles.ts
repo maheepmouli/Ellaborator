@@ -16,12 +16,12 @@ export interface IssyPilotProfile {
 export const ISSY_PILOT_PROFILES: Record<IssyPilotId, IssyPilotProfile> = {
   "issy-p1": {
     id: "issy-p1",
-    analyticalIdentity: "Safe school corridor",
+    analyticalIdentity: "Luminous bicycle markings",
     defaultKpi: "kpi2.1",
     primaryRenderer: "issy-junction-arms",
     heroCopy:
-      "School-adjacent safety pressure on the four monitored approach arms — segment intensity, not city-wide OD.",
-    legendSubtitle: "Pilot 1 — corridor safety lens",
+      "Interactive pavement markings for cyclist visibility — junction arms show observed traficissy segment context; KPI 1.2 mode share uses zone-to-zone OD CSV in city view.",
+    legendSubtitle: "Pilot 1 — luminous markings",
     schoolRadiusM: 450,
   },
   "issy-p2": {
@@ -30,17 +30,17 @@ export const ISSY_PILOT_PROFILES: Record<IssyPilotId, IssyPilotProfile> = {
     defaultKpi: "kpi1.2",
     primaryRenderer: "issy-junction-arms",
     heroCopy:
-      "Junction observatory at Stalingrad — live traficissy arms, scenario baseline/intervention/comparison, zone flows in city view.",
+      "Mobility observatory at the study junction — OD flow arcs in city view; approach arms show observed segment traffic, not per-street mode-share measurement.",
     legendSubtitle: "Pilot 2 — mobility observatory (flagship)",
   },
   "issy-p3": {
     id: "issy-p3",
-    analyticalIdentity: "Environmental sensing",
+    analyticalIdentity: "GecoAir & climate context",
     defaultKpi: "kpi3.2",
     primaryRenderer: "issy-climate-hex",
     heroCopy:
-      "Climate hex field and emissions narrative around the junction — use the year control for intensity.",
-    legendSubtitle: "Pilot 3 — environmental sensing",
+      "GecoAir citizen engagement and derived environmental pressure around the junction — not measured CO₂ unless emissions data is linked.",
+    legendSubtitle: "Pilot 3 — GecoAir app",
   },
 };
 

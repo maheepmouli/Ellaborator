@@ -633,8 +633,10 @@ const InsightPanel = ({
               </button>
             )}
           </div>
-          <p className="text-intel-meta text-muted-foreground mb-2 leading-snug">
-            Chart and map stay linked to the selected approach arm.
+            <p className="text-intel-meta text-muted-foreground mb-2 leading-snug">
+            {isIssyCity && isModeShare
+              ? "City view: zone-to-zone OD arcs. Junction view: observed traficissy segment context on arms — not CSV mode share per street."
+              : "Chart and map stay linked to the selected approach arm."}
           </p>
           <KPIChart
             kpiId={selectedKpi}
@@ -660,7 +662,7 @@ const InsightPanel = ({
         {issyFlowsQueryEnabled && onIssyFlowDayCategoryChange && (
           <AccordionItem value="issy-day" className="border-border-color/30">
             <AccordionTrigger className="text-[10px] font-semibold py-2 hover:no-underline">
-              Zone flows (Issy CSV)
+              Zone-to-zone flow (observed OD CSV)
             </AccordionTrigger>
             <AccordionContent>
               <ToggleGroup
@@ -691,7 +693,8 @@ const InsightPanel = ({
                 </ToggleGroupItem>
               </ToggleGroup>
               <p className="text-[9px] text-muted-foreground mt-1.5 leading-snug">
-                Matches bundled November extracts; map arcs and sidebar line reuse the same filter.
+                Observed OD flow data (zone_in / zone_out). Map arcs show zone-to-zone movement — not measured
+                values on individual street segments. Junction arms use traficissy segment API only.
               </p>
             </AccordionContent>
           </AccordionItem>

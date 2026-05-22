@@ -287,10 +287,10 @@ export const PILOT_SCROLL_STORIES: Record<string, PilotScrollStoryStep[]> = {
   "issy-p1": [
     {
       id: "i1-zone",
-      eyebrow: "School-area mobility",
+      eyebrow: "Luminous bicycle markings",
       title: "Zone-to-zone storytelling",
       narrative:
-        "Issy Pilot 1 maps school Vicinity interventions through zone-to-zone flow CSV extracts. Thick ribbons on KPI 1.2 represent OD links — thinning logic caps simultaneous arcs for readability.",
+        "Issy Pilot 1 (light-emitting pavement markings) uses zone-to-zone OD CSV for KPI 1.2. Arcs are origin–destination flows — not measured values on individual street segments.",
       bullets: [
         "comparison mode emphasizes green ribbons for sustainable-mode uplift, purple otherwise.",
         "Zoom in early — distant views hide directional cues anchored at centroid markers.",
@@ -318,10 +318,10 @@ export const PILOT_SCROLL_STORIES: Record<string, PilotScrollStoryStep[]> = {
   "issy-p2": [
     {
       id: "i2-cycle",
-      eyebrow: "Cycle lane continuity",
-      title: "Corridor counts vs KPI card",
+      eyebrow: "Mobility observatory",
+      title: "OD flows vs segment API",
       narrative:
-        "Pilot 2 focuses on uninterrupted cycling along commuter streets. Bicycle counting APIs and infra layers may load where joins succeed; KPI 1.2 can still blend demo scaffolding with plotted evidence.",
+        "Pilot 2 is the mobility observatory: KPI 1.2 mode share from observed OD CSV in city view; junction arms show traficissy segment speed/congestion only. Do not read CSV shares onto each arm.",
       bullets: [
         "Cross-check KPI 3.1 (infrastructure continuity) narratives with mapped cycle assets when exposed.",
         "Use Data Summary before claiming observed-only percentages from the headline card.",
@@ -348,10 +348,10 @@ export const PILOT_SCROLL_STORIES: Record<string, PilotScrollStoryStep[]> = {
   "issy-p3": [
     {
       id: "i3-ops",
-      eyebrow: "Operations tuning",
-      title: "Congestion-sensitive tuning",
+      eyebrow: "GecoAir app",
+      title: "Citizen air quality & mobility",
       narrative:
-        "Pilot 3 ties signal timing and street operations to congestion-style indicators. Layers may derive from blended APIs — reserve precise deltas for symmetric windows.",
+        "Pilot 3 tests the GecoAir app for pollution awareness. Climate KPI layers use derived traffic-pressure proxies unless direct emissions feeds are linked.",
       bullets: [
         "KPI 2.1 / 3.2 storylines complement KPI 1.2 when corridors show stress hotspots.",
       ],

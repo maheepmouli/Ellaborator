@@ -1,11 +1,10 @@
 /**
  * SegmentIntelligencePanel
  *
- * Cinematic floating observatory popup for the single monitored intersection
- * of Issy-les-Moulineaux Pilot 2 (Cycle Lane Continuity).
+ * Issy junction observatory (all study pilots) at Stalingrad / Issy study coordinates.
+ * KPI 1.2 mode share: observed OD CSV at city level; arms = traficissy segment context only.
  *
  * Coordinates: 48.829725, 2.261046
- * Streets:     Quai de Stalingrad × Quai d'Issy (traficissy arms #5416 / #5968)
  *
  * Structure:
  *   Header  →  TabBar  →  [ Overview | Before/After | Intersection | Insights | Data ]
@@ -62,6 +61,15 @@ import {
 import type { MapScenario } from "@/context/MapIntelligenceContext";
 import { exportObservatoryReport } from "@/lib/exportObservatory";
 import { getKpiDefinition } from "@/config/kpiDefinitions";
+import {
+  ISSY_JUNCTION_ARM_VISUAL_DISCLAIMER,
+  ISSY_JUNCTION_KPI12_ARM_NOTE,
+  ISSY_OD_CSV_DISCLAIMER,
+  getIssyPilotInterventionCopy,
+  segmentHasDirectKpiDataset,
+  dataSourceTrustLabel,
+  kpiPrimaryIssySource,
+} from "@/lib/issyDataTransparency";
 
 // ─── Palette ─────────────────────────────────────────────────────────────────
 const C = {
@@ -252,7 +260,8 @@ function OverviewTab({ view }: { view: JunctionStudyView }) {
       <GlassCard className="px-4 py-3">
         <div className="grid grid-cols-2 gap-x-5 gap-y-2 text-[11px]">
           {[
-            ["Segment ID",      view.id],
+            ["Approach arm",    view.armLabel],
+            ["traficissy ID",   view.segmentApiId],
             ["Intersection",    view.shortName],
             ["Monitoring",      view.monitoringPeriod],
             ["Sensors active",  `${view.sensors} stations`],
@@ -376,7 +385,74 @@ function hexToRgb(hex: string): string {
   return `${r},${g},${b}`;
 }
 
-function BeforeAfterTab({ view }: { view: JunctionStudyView }) {
+function TransparencyNotice({
+  children,
+  tone = "amber",
+}: {
+  children: React.ReactNode;
+  tone?: "amber" | "cyan";
+}) {
+  const border = tone === "cyan" ? "rgba(99,204,255,0.35)" : "rgba(245,158,11,0.35)";
+  const bg = tone === "cyan" ? "rgba(99,204,255,0.08)" : "rgba(245,158,11,0.08)";
+  return (
+    <div
+      className="rounded-lg border px-3 py-2.5 text-[10px] text-white/65 leading-relaxed"
+      style={{ borderColor: border, background: bg }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function MobilityKpi12ArmTab({ view }: { view: JunctionStudyView }) {
+  const { baseline, intervention } = view;
+  return (
+    <div className="space-y-4">
+      <TransparencyNotice>
+        <p className="font-semibold text-white/80 mb-1">Observed OD flow data (city / pilot level)</p>
+        <p>{ISSY_OD_CSV_DISCLAIMER}</p>
+        <p className="mt-2">{ISSY_JUNCTION_KPI12_ARM_NOTE}</p>
+      </TransparencyNotice>
+
+      <GlassCard className="px-4 py-3">
+        <p className="text-[11px] font-semibold text-white/60 mb-2">
+          Observed segment data — {view.armLabel}
+        </p>
+        <p className="text-[10px] text-white/40 mb-3">
+          Segment ID {view.segmentApiId} · traficissy API · {dataSourceTrustLabel("traficissy-segment")}
+        </p>
+        <div className="grid grid-cols-2 gap-2 text-[11px]">
+          <div>
+            <p className="text-white/35 text-[10px]">Baseline (derived)</p>
+            <p className="text-white/75 font-medium">{baseline.avgSpeedKmh.toFixed(1)} km/h</p>
+            <p className="text-white/45">Congestion {(baseline.peakCongestion * 100).toFixed(0)}%</p>
+          </div>
+          <div>
+            <p className="text-white/35 text-[10px]">Latest observation</p>
+            <p className="text-white/75 font-medium">{intervention.avgSpeedKmh.toFixed(1)} km/h</p>
+            <p className="text-white/45">Congestion {(intervention.peakCongestion * 100).toFixed(0)}%</p>
+          </div>
+        </div>
+        <p className="text-[10px] text-white/40 mt-3 leading-snug">
+          Map line weight on this arm reflects traffic context from the segment API — not modal share
+          from zone_in / zone_out CSV. Open the sidebar at city zoom for zone-to-zone flow arcs and
+          mode-share percentages.
+        </p>
+      </GlassCard>
+    </div>
+  );
+}
+
+function BeforeAfterTab({
+  view,
+  selectedKpi,
+}: {
+  view: JunctionStudyView;
+  selectedKpi: string;
+}) {
+  if (selectedKpi === "kpi1.2") {
+    return <MobilityKpi12ArmTab view={view} />;
+  }
   const { baseline, intervention } = view;
   const modes = Object.keys(baseline.modeShare) as (keyof typeof baseline.modeShare)[];
   const maxVal = Math.max(...modes.map((m) => Math.max(baseline.modeShare[m], intervention.modeShare[m])));
@@ -443,9 +519,16 @@ function BeforeAfterTab({ view }: { view: JunctionStudyView }) {
         </div>
       </div>
 
-      {/* Mirrored mode share */}
+      {!segmentHasDirectKpiDataset(selectedKpi) && (
+        <TransparencyNotice>
+          No direct segment-level dataset for this KPI on the selected arm. Showing derived pilot-level
+          context from traficissy speed and congestion fields.
+        </TransparencyNotice>
+      )}
+
+      {/* Mirrored mode share — safety/climate proxies only; not OD CSV */}
       <GlassCard className="px-4 py-3 space-y-2.5">
-        <p className="text-[11px] font-semibold text-white/60 mb-3">Modal share comparison</p>
+        <p className="text-[11px] font-semibold text-white/60 mb-3">Derived corridor comparison (segment API)</p>
         {modes.map((mode) => (
           <MirroredModeBar
             key={mode}
@@ -516,7 +599,6 @@ function IntersectionSVG({
   const cx      = size / 2;
   const cy      = size / 2;
   const roadW   = 36;
-  const cycleW  = 5;
 
   return (
     <svg
@@ -565,48 +647,9 @@ function IntersectionSVG({
       {/* Glow at center */}
       <circle cx={cx} cy={cy} r={28} fill="url(#centerGlow)" />
 
-      {/* ── Cycle lanes ─────────────────────────────────────────────────────── */}
-      {/* South approach (new cycle lane added) — glowing cyan strip */}
-      <rect
-        x={cx + roadW / 2 - cycleW - 2}
-        y={cy + roadW / 2}
-        width={cycleW}
-        height={size / 2 - roadW / 2}
-        fill={C.cyan}
-        opacity="0.75"
-        rx="1"
-      />
-      {/* South approach glow */}
-      <rect
-        x={cx + roadW / 2 - cycleW - 2}
-        y={cy + roadW / 2}
-        width={cycleW}
-        height={size / 2 - roadW / 2}
-        fill={C.cyan}
-        opacity="0.3"
-        rx="1"
-        filter="url(#blur2)"
-      />
-      {/* East approach cycle lane */}
-      <rect
-        x={cx + roadW / 2}
-        y={cy - roadW / 2 + 2}
-        width={size / 2 - roadW / 2}
-        height={cycleW}
-        fill={C.cyan}
-        opacity="0.75"
-        rx="1"
-      />
-      <rect
-        x={cx + roadW / 2}
-        y={cy - roadW / 2 + 2}
-        width={size / 2 - roadW / 2}
-        height={cycleW}
-        fill={C.cyan}
-        opacity="0.3"
-        rx="1"
-        filter="url(#blur2)"
-      />
+      {/* Movement-direction hints (derived schematic — not measured geometry) */}
+      <line x1={cx} y1={cy + roadW / 2 + 8} x2={cx} y2={size - 14} stroke={C.cyan} strokeWidth="1.5" opacity="0.45" markerEnd="url(#none)" />
+      <line x1={cx + roadW / 2 + 8} y1={cy} x2={size - 14} y2={cy} stroke={C.lime} strokeWidth="1.5" opacity="0.35" />
 
       {/* ── Pedestrian crossings ─────────────────────────────────────────── */}
       {[0, 1, 2, 3, 4].map((i) => (
@@ -646,9 +689,9 @@ function IntersectionSVG({
       <text x={size - 2} y={cy + 3} textAnchor="end" fill={highlightArmId === "east" ? "#10b981" : "#ffffff55"} fontSize="7" fontFamily="sans-serif">Rouget (E)</text>
       <text x={4} y={cy + 3} textAnchor="start" fill={highlightArmId === "west" ? "#f43f5e" : "#ffffff55"} fontSize="7" fontFamily="sans-serif">Pont Issy (W)</text>
 
-      {/* ── Cycle lane legend dot ──────────────────────────────────────────── */}
-      <circle cx={8} cy={size - 12} r={4} fill={C.cyan} opacity="0.85" />
-      <text x={16} y={size - 9} fill={C.cyan} fontSize="7" fontFamily="sans-serif" opacity="0.85">New cycle lane</text>
+      <text x={size / 2} y={size - 4} textAnchor="middle" fill="#ffffff45" fontSize="6" fontFamily="sans-serif">
+        Visualized movement direction
+      </text>
     </svg>
   );
 }
@@ -673,9 +716,19 @@ function SensorDot({ cx, cy }: { cx: number; cy: number }) {
   );
 }
 
-function IntersectionTab({ view }: { view: JunctionStudyView }) {
+function IntersectionTab({
+  view,
+  pilotId,
+}: {
+  view: JunctionStudyView;
+  pilotId?: string | null;
+}) {
+  const intervention = getIssyPilotInterventionCopy(pilotId);
   return (
     <div className="space-y-4">
+      <TransparencyNotice tone="cyan">
+        {intervention.schematicCaption}. {ISSY_JUNCTION_ARM_VISUAL_DISCLAIMER}
+      </TransparencyNotice>
       <GlassCard className="px-4 py-4 flex flex-col items-center">
         <p className="text-[11px] font-semibold text-white/50 mb-3 self-start">
           Junction schematic — {view.shortName}
@@ -707,13 +760,8 @@ function IntersectionTab({ view }: { view: JunctionStudyView }) {
       </GlassCard>
 
       <GlassCard className="px-4 py-3">
-        <p className="text-[11px] font-semibold text-white/50 mb-2">Intervention summary</p>
-        <p className="text-[11px] text-white/60 leading-relaxed">
-          A continuous protected cycle lane was added on the <span className="text-cyan-400">south approach</span> and the
-          <span className="text-cyan-400"> east approach</span> of the junction, closing a critical
-          gap in the city cycling network. Pedestrian crossings remain unchanged. No traffic
-          signal modifications were made.
-        </p>
+        <p className="text-[11px] font-semibold text-white/50 mb-2">{intervention.title}</p>
+        <p className="text-[11px] text-white/60 leading-relaxed">{intervention.summary}</p>
       </GlassCard>
     </div>
   );
@@ -721,9 +769,22 @@ function IntersectionTab({ view }: { view: JunctionStudyView }) {
 
 // ─── Tab 4 — Insights ─────────────────────────────────────────────────────────
 
-function InsightsTab({ view }: { view: JunctionStudyView }) {
+function InsightsTab({
+  view,
+  selectedKpi,
+}: {
+  view: JunctionStudyView;
+  selectedKpi: string;
+}) {
+  const isMobility = selectedKpi === "kpi1.2";
   return (
     <div className="space-y-4">
+      {isMobility && (
+        <TransparencyNotice>
+          {ISSY_OD_CSV_DISCLAIMER} Use the map at city zoom for zone-to-zone flow arcs; this arm panel
+          only summarises observed traficissy segment speed and congestion.
+        </TransparencyNotice>
+      )}
       {/* Narrative */}
       <GlassCard className="px-4 py-4">
         <div
@@ -737,11 +798,13 @@ function InsightsTab({ view }: { view: JunctionStudyView }) {
           <span className="text-white font-medium">{(view.intervention.peakCongestion * 100).toFixed(0)}%</span> versus a
           derived baseline of {(view.baseline.peakCongestion * 100).toFixed(0)}%.
         </p>
-        <p className="text-[12px] text-white/75 leading-[1.7] mt-3">
-          Cycle proxy trips on this arm move from {view.baseline.dailyCycleCount} to{" "}
-          {view.intervention.dailyCycleCount} passages/day. CO₂ proxy improves from{" "}
-          {view.baseline.co2ProxyKgDay} to {view.intervention.co2ProxyKgDay} kg/day on this segment.
-        </p>
+        {!isMobility && (
+          <p className="text-[12px] text-white/75 leading-[1.7] mt-3">
+            Derived flow estimate on this approach: daily cycling proxy {view.baseline.dailyCycleCount} →{" "}
+            {view.intervention.dailyCycleCount}. Environmental proxy {view.baseline.co2ProxyKgDay} →{" "}
+            {view.intervention.co2ProxyKgDay} kg/day ({dataSourceTrustLabel("derived-proxy")}).
+          </p>
+        )}
       </GlassCard>
 
       {/* Key findings */}
@@ -749,13 +812,20 @@ function InsightsTab({ view }: { view: JunctionStudyView }) {
         <p className="text-[11px] font-semibold text-white/50 mb-3">Key findings</p>
         <div className="space-y-2.5">
           {(
-            [
-              { Icon: Bike, text: "Cycling continuity restored — journey time to river cycle path reduced by ~4 min" },
-              { Icon: Car, text: "Car dominance reduced at peak hours, particularly 08:00–09:00 and 17:30–18:30" },
-              { Icon: Leaf, text: "Estimated CO₂ reduction of 182 kg/day vs baseline (15% improvement)" },
-              { Icon: Footprints, text: "Pedestrian crossing behaviour unchanged — no safety incidents reported post-intervention" },
-              { Icon: BarChart3, text: "Strongest signal in north-east corridor; west approach shows minimal change" },
-            ] as const
+            isMobility
+              ? [
+                  { Icon: Bike, text: "Modal split for KPI 1.2 is computed from observed OD CSV at pilot level — not per street segment on this arm." },
+                  { Icon: Gauge, text: `Observed speed on this arm: ${view.intervention.avgSpeedKmh.toFixed(1)} km/h (traficissy segment API).` },
+                  { Icon: Car, text: `Congestion index ${(view.intervention.peakCongestion * 100).toFixed(0)}% — use for traffic context only.` },
+                  { Icon: BarChart3, text: "Compare zone-to-zone arcs in city view before citing mode-share change in percentage points." },
+                ]
+              : [
+                  { Icon: Bike, text: "Safety pressure uses derived proxy from segment speed (reference 60 km/h) — not an official star rating." },
+                  { Icon: Car, text: "Congestion-linked pressure shifts with live traficissy snapshots on each approach arm." },
+                  { Icon: Leaf, text: "Climate proxies are derived from congestion — not measured CO₂ unless emissions data is linked." },
+                  { Icon: Footprints, text: "Schematic shows visualized movement direction, not facility inventory geometry." },
+                  { Icon: BarChart3, text: "Strongest comparison signals depend on scenario tab (baseline / intervention / comparison)." },
+                ]
           ).map((f, i) => (
             <div key={i} className="flex items-start gap-2.5 text-[11px]">
               <WhiteSymbol icon={f.Icon} className="h-3.5 w-3.5 mt-0.5" />
@@ -845,10 +915,14 @@ function ClimateFieldTab({ view }: { view: JunctionStudyView }) {
 
   return (
     <div className="space-y-4">
+      <TransparencyNotice>
+        {dataSourceTrustLabel("derived-proxy")} — environmental pressure from congestion / traffic
+        intensity, not measured CO₂. See docs/ISSY_KPI_METHODOLOGY.md.
+      </TransparencyNotice>
       <GlassCard className="px-4 py-3">
         <p className="text-[11px] text-white/55 leading-relaxed">
-          Climate view for this approach arm — emissions proxy and environmental pressure from the same
-          scenario path as the map hex field. No modal-share or cycling facility metrics here.
+          Climate view for this approach arm — derived environmental pressure aligned with the map hex
+          field. No modal-share or per-street OD CSV values here.
         </p>
       </GlassCard>
       <div className="grid grid-cols-2 gap-2.5">
@@ -958,12 +1032,14 @@ function ObservatoryTabContent({
   selectedKpi,
   view,
   pilotLabel,
+  pilotId,
   config,
 }: {
   tabId: ObservatoryTabId;
   selectedKpi: string;
   view: JunctionStudyView;
   pilotLabel?: string;
+  pilotId?: string | null;
   config: ObservatoryConfig;
 }) {
   if (tabId === "data") {
@@ -982,20 +1058,28 @@ function ObservatoryTabContent({
   }
 
   if (selectedKpi === "kpi1.2") {
-    if (tabId === "modes" || tabId === "beforeAfter") return <BeforeAfterTab view={view} />;
-    if (tabId === "corridor") return <InsightsTab view={view} />;
-    return <BeforeAfterTab view={view} />;
+    if (tabId === "modes" || tabId === "beforeAfter") {
+      return <BeforeAfterTab view={view} selectedKpi={selectedKpi} />;
+    }
+    if (tabId === "corridor") return <InsightsTab view={view} selectedKpi={selectedKpi} />;
+    return <BeforeAfterTab view={view} selectedKpi={selectedKpi} />;
   }
 
   if (selectedKpi === "kpi2.1") {
-    if (tabId === "pressure" || tabId === "overview") return <IntersectionTab view={view} />;
-    if (tabId === "beforeAfter") return <BeforeAfterTab view={view} />;
-    return <IntersectionTab view={view} />;
+    if (tabId === "pressure" || tabId === "overview") {
+      return <IntersectionTab view={view} pilotId={pilotId} />;
+    }
+    if (tabId === "beforeAfter") return <BeforeAfterTab view={view} selectedKpi={selectedKpi} />;
+    return <IntersectionTab view={view} pilotId={pilotId} />;
   }
 
-  if (tabId === "beforeAfter") return <BeforeAfterTab view={view} />;
-  if (tabId === "intersection" || tabId === "pressure") return <IntersectionTab view={view} />;
-  if (tabId === "corridor" || tabId === "insights") return <InsightsTab view={view} />;
+  if (tabId === "beforeAfter") return <BeforeAfterTab view={view} selectedKpi={selectedKpi} />;
+  if (tabId === "intersection" || tabId === "pressure") {
+    return <IntersectionTab view={view} pilotId={pilotId} />;
+  }
+  if (tabId === "corridor" || tabId === "insights") {
+    return <InsightsTab view={view} selectedKpi={selectedKpi} />;
+  }
   return <OverviewTab view={view} />;
 }
 
@@ -1047,15 +1131,49 @@ function DataTab({
           },
         ]
       : null;
+  const mobilitySources =
+    selectedKpi === "kpi1.2"
+      ? [
+          {
+            title: "ISSY1 zone-to-zone flow CSV",
+            type: "observed",
+            spatial: "zone OD (not street segments)",
+            temporal: "Nov 2024 baseline · Nov 2025 post",
+            format: "CSV",
+            confidence: "High",
+          },
+          {
+            title: "Traffic Segment API (traficissy)",
+            type: "observed",
+            spatial: "segment arms only",
+            temporal: "Live snapshot",
+            format: "REST API",
+            confidence: "High",
+          },
+        ]
+      : null;
+  const safetySources =
+    selectedKpi === "kpi2.1"
+      ? [
+          {
+            title: "Traffic Segment API (traficissy)",
+            type: "observed",
+            spatial: "direct-coordinates",
+            temporal: "Jun 2024 – ongoing",
+            format: "REST API",
+            confidence: "High",
+          },
+          {
+            title: "Safety pressure proxy",
+            type: "derived",
+            spatial: "segment",
+            temporal: "Derived baseline vs live",
+            format: "formula",
+            confidence: "Medium",
+          },
+        ]
+      : null;
   const defaultSources = [
-    {
-      title: "Bicycle Counting API",
-      type: "observed",
-      spatial: "direct-coordinates",
-      temporal: "Jun 2024 – ongoing",
-      format: "REST API",
-      confidence: "High",
-    },
     {
       title: "Traffic Segment API (traficissy)",
       type: "observed",
@@ -1065,7 +1183,8 @@ function DataTab({
       confidence: "High",
     },
   ];
-  const sources = climateSources ?? facilitySources ?? defaultSources;
+  const sources =
+    climateSources ?? facilitySources ?? mobilitySources ?? safetySources ?? defaultSources;
   return (
     <div className="space-y-4">
       {/* Data source chips */}
@@ -1207,7 +1326,8 @@ export default function SegmentIntelligencePanel({
       pilotLabel,
       selectedKpi,
       kpi32IntensityScale,
-      scenario
+      scenario,
+      pilotId
     );
     return new Map(views.map((v) => [v.segmentApiId, v.bandColor]));
   }, [junctionArms, pilotLabel, selectedKpi, kpi32IntensityScale, scenario]);
@@ -1222,9 +1342,10 @@ export default function SegmentIntelligencePanel({
       pilotLabel,
       selectedKpi,
       kpi32IntensityScale,
-      scenario
+      scenario,
+      pilotId
     );
-  }, [segments, selectedSegmentId, pilotLabel, selectedKpi, kpi32IntensityScale, junctionArms, scenario]);
+  }, [segments, selectedSegmentId, pilotLabel, selectedKpi, kpi32IntensityScale, junctionArms, scenario, pilotId]);
 
   useEffect(() => {
     if (isOpen) {
@@ -1515,6 +1636,7 @@ export default function SegmentIntelligencePanel({
                     selectedKpi={selectedKpi}
                     view={view}
                     pilotLabel={pilotLabel}
+                    pilotId={pilotId}
                     config={observatoryConfig}
                   />
                 </motion.div>
@@ -1528,7 +1650,9 @@ export default function SegmentIntelligencePanel({
             >
               <div className="flex items-center gap-2 text-[10px] text-white/30">
                 <GitBranch className="h-3 w-3" />
-                <span>ELABORATOR · WP7 · Issy Pilot 2</span>
+                <span>
+                  ELABORATOR · WP7 · {pilotLabel ?? "Issy"} · {dataSourceTrustLabel(kpiPrimaryIssySource(selectedKpi))}
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <button

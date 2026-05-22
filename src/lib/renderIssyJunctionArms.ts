@@ -25,6 +25,13 @@ import {
   isJunctionComparisonFavourable,
   type MapScenario,
 } from "@/lib/junctionScenarioValues";
+import {
+  dataSourceTrustLabel,
+  junctionArmMetricTitle,
+  junctionArmValueCaption,
+  kpiPrimaryIssySource,
+} from "@/lib/issyDataTransparency";
+import { provenanceBadgesHtml } from "@/lib/dataProvenance";
 
 export type JunctionObservatoryClick = (detail: {
   segmentId: string;
@@ -187,11 +194,19 @@ export function renderIssyJunctionArms(
           ? "Intervention (observed)"
           : "Change vs baseline";
 
+    const speed = (props.vitesse_km_h as number | undefined) ?? null;
+    const congestion = (props.indice_de_congestion as number | undefined) ?? null;
+    const trustKind = kpiPrimaryIssySource(selectedKpi);
+    const trustBadge = provenanceBadgesHtml([dataSourceTrustLabel(trustKind), "traficissy"]);
+    const metricTitle = junctionArmMetricTitle(selectedKpi);
+
     const popupContent = `
-      <div style="font-family: 'DM Sans', sans-serif; padding: 8px; min-width: 180px;">
+      <div style="font-family: 'DM Sans', sans-serif; padding: 8px; min-width: 200px;">
+        <div style="margin-bottom: 6px;">${trustBadge}</div>
         <p style="font-size: 11px; color: #8578C3; margin: 0 0 4px 0; text-transform: uppercase;">${ISSY_P2_JUNCTION.shortName}</p>
         <p style="font-size: 10px; color: #96C2EF; margin: 0 0 4px 0; font-weight: 600;">${segmentLabel}</p>
-        <p style="font-size: 10px; color: #A78BFA; margin: 0 0 6px 0; font-weight: 600;">${scenarioLabel}</p>
+        <p style="font-size: 10px; color: #A78BFA; margin: 0 0 4px 0; font-weight: 600;">${metricTitle}</p>
+        <p style="font-size: 10px; color: #A78BFA; margin: 0 0 6px 0;">${scenarioLabel}</p>
         ${
           scenario === "comparison"
             ? `<p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Baseline: ${metrics.baseline.toFixed(1)}</p>
@@ -203,7 +218,11 @@ export function renderIssyJunctionArms(
                <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Band: ${highlight.band}</p>
                <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Baseline: ${metrics.baseline.toFixed(1)} · Post: ${metrics.intervention.toFixed(1)}</p>`
         }
-        <p style="font-size: 10px; color: #96C2EF; margin-top: 6px; font-weight: 600;">Click for segment analysis</p>
+        ${speed != null ? `<p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Speed: ${speed.toFixed(1)} km/h (observed)</p>` : ""}
+        ${congestion != null ? `<p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Congestion index: ${congestion.toFixed(2)} (observed)</p>` : ""}
+        <p style="font-size: 9px; color: #A78BFA; margin-top: 6px; line-height: 1.35;">${junctionArmValueCaption(selectedKpi)}</p>
+        <p style="font-size: 9px; color: #96C2EF; margin-top: 4px;">Visualized movement direction — not zone-to-zone OD measurement.</p>
+        <p style="font-size: 10px; color: #96C2EF; margin-top: 6px; font-weight: 600;">Click for observatory</p>
       </div>
     `;
 

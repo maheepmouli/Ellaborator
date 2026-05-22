@@ -827,9 +827,9 @@ const DataCatalogue = () => {
                 <span className="text-white/70 font-medium">Integration status. </span>
                 Issy bundles baseline/post zone-flow CSVs under{" "}
                 <code className="text-white/55">/public/data/issy/</code>; live traficissy and city APIs
-                power the map and segment observatory. Readiness in the matrix is derived automatically
-                from this registry — when a dataset is parser-ready with active data, the linked KPI
-                shows as ready for that city.
+                power the map and segment observatory. Zone OD flows must not be read as street-level
+                measurements — see <code className="text-white/55">docs/ISSY_KPI_METHODOLOGY.md</code>.
+                Readiness in the matrix is derived automatically from this registry.
               </div>
             </div>
           </GlassCard>

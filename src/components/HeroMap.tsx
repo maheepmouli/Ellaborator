@@ -897,7 +897,8 @@ const HeroMap = ({
               <p style="font-size: 11px; font-weight: 700; color: ${flow.change >= 0 ? "#22C55E" : "#A78BFA"}; margin-top: 4px;">
                 Change: ${flow.change >= 0 ? "+" : ""}${flow.change.toFixed(2)} (${flow.changePercent.toFixed(1)}%)
               </p>
-              <p style="font-size: 9px; color: #96C2EF; margin-top: 4px;">Observed zone-to-zone CSV flow</p>
+              <p style="font-size: 9px; color: #96C2EF; margin-top: 4px;">Observed OD flow data — zone-to-zone, not street-level measurement.</p>
+              <p style="font-size: 9px; color: #A78BFA; margin-top: 4px; line-height: 1.35;">Zone-to-zone values are derived from origin/destination flow data and should not be interpreted as direct measurements for each street segment.</p>
             </div>
           `;
           line.bindPopup(tooltip);

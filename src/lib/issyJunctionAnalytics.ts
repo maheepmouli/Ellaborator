@@ -17,6 +17,8 @@ import {
   getJunctionScenarioMetrics,
   type MapScenario,
 } from "@/lib/junctionScenarioValues";
+import { getIssyPilotInterventionCopy } from "@/lib/issyDataTransparency";
+import type { IssyPilotId } from "@/data/issyPilotProfiles";
 
 export interface JunctionPeriodView {
   label: string;
@@ -99,8 +101,10 @@ export function buildJunctionStudyView(
   pilotLabel = "Issy-les-Moulineaux",
   selectedKpi = "kpi2.1",
   kpi32IntensityScale = 1,
-  scenario: MapScenario = "intervention"
+  scenario: MapScenario = "intervention",
+  pilotId?: string | null
 ): JunctionStudyView {
+  const interventionCopy = getIssyPilotInterventionCopy(pilotId);
   const arm = armFromSegment(segment);
   const seed = armSeed(segment.id);
   const speed = segment.vitesse_km_h ?? 20;
@@ -163,7 +167,7 @@ export function buildJunctionStudyView(
     selectedKpi,
     kpiLabel: kpiDef?.name ?? selectedKpi,
     pilot: pilotLabel,
-    interventionType: "Cycle Lane Continuity",
+    interventionType: interventionCopy.title,
     coordinates: [ISSY_P2_JUNCTION.lat, ISSY_P2_JUNCTION.lon],
     monitoringPeriod: "Jun 2024 — ongoing",
     sensors: 1,
@@ -194,13 +198,35 @@ export function buildJunctionStudyView(
       trendCycle: buildTrend(interventionCycles, 8),
       trendCar: buildTrend(interventionCo2 / 3, -20),
     },
-    timeline: [
-      { date: "Jun 2024", event: "Baseline monitoring begins", status: "done" },
-      { date: "Sep 2024", event: "Cycle infrastructure deployed", status: "done" },
-      { date: "Nov 2024", event: "Post-intervention monitoring begins", status: "done" },
-      { date: "Q2 2025", event: "Full impact evaluation report", status: "upcoming" },
-    ],
+    timeline: pilotTimeline(pilotId as IssyPilotId | undefined),
   };
+}
+
+function pilotTimeline(pilotId?: IssyPilotId) {
+  switch (pilotId) {
+    case "issy-p1":
+      return [
+        { date: "Dec 2024", event: "Luminous marking system installed", status: "done" as const },
+        { date: "Nov 2024", event: "Baseline OD flow extract (CSV)", status: "done" as const },
+        { date: "Nov 2025", event: "Post-intervention OD flow extract (CSV)", status: "done" as const },
+        { date: "2025", event: "Visibility & conflict monitoring", status: "upcoming" as const },
+      ];
+    case "issy-p3":
+      return [
+        { date: "2024", event: "GecoAir app pilot launch", status: "done" as const },
+        { date: "2024", event: "Mobility observatory integration", status: "done" as const },
+        { date: "Nov 2025", event: "Post-intervention traffic snapshot", status: "done" as const },
+        { date: "2025", event: "Citizen engagement evaluation", status: "upcoming" as const },
+      ];
+    case "issy-p2":
+    default:
+      return [
+        { date: "Jun 2024", event: "Observatory baseline monitoring", status: "done" as const },
+        { date: "Nov 2024", event: "OD flow baseline (CSV)", status: "done" as const },
+        { date: "Nov 2025", event: "OD flow post-intervention (CSV)", status: "done" as const },
+        { date: "Q2 2025", event: "Decision-support evaluation", status: "upcoming" as const },
+      ];
+  }
 }
 
 export function buildJunctionStudyViews(
@@ -208,11 +234,12 @@ export function buildJunctionStudyViews(
   pilotLabel?: string,
   selectedKpi?: string,
   kpi32IntensityScale?: number,
-  scenario: MapScenario = "intervention"
+  scenario: MapScenario = "intervention",
+  pilotId?: string | null
 ): JunctionStudyView[] {
   const arms = segments.filter((s) => getIssyJunctionArm(s.id));
   return arms.map((s) =>
-    buildJunctionStudyView(s, arms, pilotLabel, selectedKpi, kpi32IntensityScale, scenario)
+    buildJunctionStudyView(s, arms, pilotLabel, selectedKpi, kpi32IntensityScale, scenario, pilotId)
   );
 }
 

@@ -27,7 +27,7 @@ export type ObservatoryConfig = {
 const KPI_OBSERVATORY: Record<string, Omit<ObservatoryConfig, "kpiId" | "emptyState">> = {
   "kpi1.2": {
     title: "Mode share observatory",
-    subtitle: "Travel behaviour and modal split on the selected corridor",
+    subtitle: "Modal split from observed OD CSV (city view); junction arms show traficissy segment context only",
     tabs: [
       { id: "modes", label: "Modes" },
       { id: "corridor", label: "Corridor" },

@@ -93,19 +93,20 @@ export function resolveMapLegend(
         return {
           marker: "line",
           items: ISSY_FLOW_MODE_ITEMS,
-          hint: "Junction study — mode share on the four approach arms (intervention / observed).",
+          hint: "City view — observed zone-to-zone OD arcs (CSV). Not per-street measurement.",
         };
       case "segments":
         return kpiId === "kpi1.2"
           ? {
               marker: "line",
-              items: ISSY_FLOW_MODE_ITEMS,
-              hint: "Junction study — mode share intensity on the four approach arms (intervention / observed).",
+              items: SAFETY_SEGMENT_RAMP,
+              hint:
+                "Junction study — observed traficissy segment traffic context on approach arms (visualized movement direction). Modal split KPI uses OD CSV in city view only.",
             }
           : {
               marker: "line",
               items: SAFETY_SEGMENT_RAMP,
-              hint: "Junction study — segment pressure on the four approach arms (intervention / observed).",
+              hint: "Junction study — observed segment data + derived safety pressure on approach arms.",
             };
       case "facility-points":
         return {
@@ -158,7 +159,7 @@ export function resolveMapLegend(
         return {
           marker: "line",
           items: ISSY_FLOW_MODE_ITEMS,
-          hint: "Directional OD flows between zones; centroid markers show activity nodes.",
+          hint: "Observed OD flow data — zone-to-zone arcs between zone centroids (not street-level measurement).",
         };
       case "segments":
         return {
