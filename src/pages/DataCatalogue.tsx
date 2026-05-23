@@ -13,8 +13,10 @@ import {
   Filter,
   Download,
   Info,
+  FileText,
 } from "lucide-react";
 import Header from "@/components/Header";
+import IssyKpiMethodologySection from "@/components/IssyKpiMethodologySection";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -115,9 +117,18 @@ const CITY_DOT: Record<string, string> = {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function GlassCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+function GlassCard({
+  children,
+  className = "",
+  id,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  id?: string;
+}) {
   return (
     <div
+      id={id}
       className={`rounded-2xl border bg-white/[0.04] backdrop-blur-sm ${className}`}
       style={{ borderColor: "rgba(255,255,255,0.10)" }}
     >
@@ -751,6 +762,16 @@ const DataCatalogue = () => {
             <ReadinessMatrix />
           </GlassCard>
 
+          {/* ── Issy KPI derivation ── */}
+          <GlassCard id="issy-kpi-methodology" className="p-6 mb-6 scroll-mt-24">
+            <SectionTitle
+              icon={<FileText className="h-4 w-4" />}
+              title="Issy-les-Moulineaux — KPI derivation"
+              sub="How each ELABORATOR KPI is computed for Issy today: data sources, steps, and formulas"
+            />
+            <IssyKpiMethodologySection />
+          </GlassCard>
+
           {/* ── Dataset Registry ── */}
           <GlassCard className="p-6 mb-6">
             <SectionTitle
@@ -828,7 +849,12 @@ const DataCatalogue = () => {
                 Issy bundles baseline/post zone-flow CSVs under{" "}
                 <code className="text-white/55">/public/data/issy/</code>; live traficissy and city APIs
                 power the map and segment observatory. Zone OD flows must not be read as street-level
-                measurements — see <code className="text-white/55">docs/ISSY_KPI_METHODOLOGY.md</code>.
+                measurements — see the{" "}
+                <a href="#issy-kpi-methodology" className="text-violet-300 hover:text-violet-200 underline">
+                  Issy KPI derivation
+                </a>{" "}
+                section above or{" "}
+                <code className="text-white/55">docs/ISSY_KPI_METHODOLOGY.md</code> in the repository.
                 Readiness in the matrix is derived automatically from this registry.
               </div>
             </div>

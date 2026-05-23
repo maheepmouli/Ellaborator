@@ -2,6 +2,8 @@
 
 This document describes how ELABORATOR currently computes Issy KPIs, which datasets feed each view, and known limitations. It aligns with Valeria’s data-transparency review (zone OD vs segment API).
 
+**In-app mirror:** Data Catalogue → [Issy KPI derivation](https://ellaborator.vercel.app/data-catalogue#issy-kpi-methodology) (content sourced from `src/data/issyKpiMethodology.ts`).
+
 ## A. Data sources
 
 | Source | What it provides | Geometry | Role in app |
@@ -15,15 +17,37 @@ Bundled CSV paths (demo): `/public/data/issy/ISSY1_baseline_traffic_data_novembe
 
 ## B. KPI 1.2 — Mobility Mode Share
 
-**Primary source (city / pilot view):** ISSY1 baseline + post CSV (observed OD flow).
+**Data type:** observed (OD CSV)  
+**Primary source:** ISSY1 baseline + post CSV  
+**Direction:** OD flow data is primary; **mode share is derived from OD volumes**, not the reverse.
+
+### Steps
 
 1. Parse CSV rows into zone-pair features.
-2. Aggregate `avg_traffic` by `vehicle_category` (mapped to ELABORATOR mode buckets).
-3. Mode share = category total ÷ all categories total (per period).
-4. Compare baseline vs post-intervention; change = post share − baseline share (**percentage points**).
-5. **Spatial representation:** zone-to-zone flow arcs between zone centroids — **not** street-level measurement.
+2. Aggregate `avg_traffic` by `(zone_in, zone_out, vehicle_category)` (optional `day_category` filter).
+3. Map `vehicle_category` → ELABORATOR mode buckets (`src/lib/travelModeMapLink.ts`).
+4. Sum volumes across all zone pairs per mode for baseline and post periods.
+5. Compute mode share % and sustainable share (pedestrian + cycle + public transport).
+6. Compare baseline vs post-intervention; change = post − baseline (**percentage points**).
+7. Map: zone-to-zone flow arcs between zone centroids — **not** street-level measurement.
 
-**Junction study view (arms):**
+### Formulas
+
+```
+flow(z_in, z_out, cat) = Σ avg_traffic
+
+V_m = Σ flow over all zone pairs for mode m
+
+Share_m (%) = 100 × V_m / Σ_all V
+
+S = Share_Pedestrian + Share_Cycle + Share_PublicTransport
+
+ΔS = S_post − S_baseline   (percentage points)
+```
+
+**Fallback:** if CSV fails to load, sidebar may use CITY_DATA mock (e.g. 45% headline).
+
+### Junction study view (arms)
 
 - Arms use **traficissy** segment geometry and live speed/congestion only.
 - Line colour / index on arms is **traffic context**, not CSV mode share assigned to each street.
@@ -31,29 +55,40 @@ Bundled CSV paths (demo): `/public/data/issy/ISSY1_baseline_traffic_data_novembe
 
 ## C. KPI 2.1 — Road User Safety
 
-**Source:** traficissy segment data (observed).
+**Data type:** derived proxy  
+**Source:** traficissy segment data (observed inputs)
 
-**Current proxy (derived):**
+### Formula
 
 ```
-safetyPressure = 100 − (speed_km_h / referenceSpeed) × 100
+safetyPressure = max(0, 100 − (vitesse_km_h / 60) × 100)
 ```
 
 `referenceSpeed` = 60 km/h (configurable assumption).
 
-Higher value ⇒ higher pressure / lower speed condition. This is a **derived proxy**, not an official iRAP or crash-based safety score.
+Higher value ⇒ higher pressure / lower speed condition. Junction study aggregates pressure across approach-arm segments.
+
+**Sidebar:** star / radar values may still use CITY_DATA demo until iRAP or crash-based scores are integrated. This is a **derived proxy**, not an official iRAP or crash-based safety score.
 
 ## D. KPI 3.2 — Climate and Environmental Impact
 
-Where no direct CO₂ or air-quality raster is linked for Issy:
+**Data type:** derived proxy (+ mock time series on sidebar)
 
-**Proxy (derived / modelled):**
+### Segment / map
 
 ```
-environmentalPressure ≈ congestion_index × 100
+environmentalPressure = indice_de_congestion × 100
 ```
 
-(or equivalent normalized traffic pressure from segment API).
+### Sidebar chart / hex field
+
+```
+intensity(year) = clamp(timeSeries[year].value, 0, 120)
+
+polygonBase = intensity(selectedYear) ?? (100 − mainValue)
+```
+
+Junction / hex colouring may scale segment pressure by chart-year anchor for visual consistency — **not** measured CO₂.
 
 Label as **derived proxy**. Do not present as measured CO₂ reduction unless emissions inventory data is integrated.
 
@@ -61,21 +96,40 @@ Pilot 3 (GecoAir) narrative is citizen / app-driven; map hex field remains proxy
 
 ## E. KPI 3.1 — Zero-Emission Facilities and Services
 
-**Source:** cycling infrastructure API when available (observed).
+**Data type:** observed (when API loads)
+
+**Source:** cycling infrastructure API.
+
+```
+N_type = count(features where facility_type = type)
+mainValue = Σ N_type   (or CITY_DATA mock if API partial)
+```
 
 Points / segments with API geometry render on map; otherwise partial or unavailable.
 
 ## F. KPI 4.1 — User Satisfaction
 
+**Data type:** mock
+
 No observed Issy satisfaction survey integrated in the current build.
+
+```
+N/A — placeholder until survey dataset linked
+```
 
 Treat headline values as **mock / demo** or unavailable until survey data is linked.
 
 ## G. KPI 4.2 — Accessibility and Security
 
-Derived from infrastructure proximity / isochrone-style logic where shown.
+**Data type:** derived / demo
 
-Label **derived** unless a direct accessibility audit dataset is linked (e.g. Milan-style workbooks).
+No Issy-specific accessibility audit workbook (unlike Milan). Map may use inferred proximity layers; sidebar uses CITY_DATA feature counts.
+
+```
+N/A — no Issy audit file in current integration
+```
+
+Label **derived** unless a direct accessibility audit dataset is linked (e.g. Milan-style workbooks). Not EN 17210 field audit.
 
 ## H. Data transparency rules
 
@@ -89,8 +143,9 @@ Label **derived** unless a direct accessibility audit dataset is linked (e.g. Mi
 ## UI contract (Issy)
 
 - CSV → “Observed OD flow data” + OD disclaimer.
-- traficissy → “Observed segment data”.
+- traficissy → “Observed segment data” (KPI 2.1 / 3.2 map layers use derived formulas on observed fields).
 - Safety / climate junction metrics → “Derived proxy”.
 - Junction schematic → “Visualized movement direction / derived representation”.
 
-See `src/lib/issyDataTransparency.ts` for in-app copy constants.
+See `src/lib/issyDataTransparency.ts` for in-app copy constants.  
+See `src/data/issyKpiMethodology.ts` and `src/components/IssyKpiMethodologySection.tsx` for Data Catalogue cards.
