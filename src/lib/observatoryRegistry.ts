@@ -27,7 +27,8 @@ export type ObservatoryConfig = {
 const KPI_OBSERVATORY: Record<string, Omit<ObservatoryConfig, "kpiId" | "emptyState">> = {
   "kpi1.2": {
     title: "Mode share observatory",
-    subtitle: "Modal split from observed OD CSV (city view); junction arms show traficissy segment context only",
+    subtitle:
+      "Modal split from observed OD CSV (city view); the monitored intervention corridor shows traficissy segment context only",
     tabs: [
       { id: "modes", label: "Overview" },
       { id: "corridor", label: "Flows" },
@@ -38,7 +39,7 @@ const KPI_OBSERVATORY: Record<string, Omit<ObservatoryConfig, "kpiId" | "emptySt
   },
   "kpi2.1": {
     title: "Safety pressure observatory",
-    subtitle: "Speed, congestion, and segment-level risk on approach arms",
+    subtitle: "Speed, congestion, and segment-level risk on the monitored intervention corridor",
     tabs: [
       { id: "pressure", label: "Overview" },
       { id: "beforeAfter", label: "Temporal" },
@@ -49,7 +50,7 @@ const KPI_OBSERVATORY: Record<string, Omit<ObservatoryConfig, "kpiId" | "emptySt
   },
   "kpi3.2": {
     title: "Environmental field observatory",
-    subtitle: "Emissions proxy and climate intensity around the junction",
+    subtitle: "Emissions proxy and climate intensity around the monitored intervention corridor",
     tabs: [
       { id: "field", label: "Overview" },
       { id: "delta", label: "Comparison" },

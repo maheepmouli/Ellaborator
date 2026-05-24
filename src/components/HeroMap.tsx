@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import L from "leaflet";
 import { ScatterplotLayer } from "@deck.gl/layers";
 import type { Layer } from "@deck.gl/core";
+import { useQuery } from "@tanstack/react-query";
 import "leaflet/dist/leaflet.css";
 import { CITY_DATA, ELABORATOR_KPIS, generateHexbinData } from "@/data/kpiDefinitions";
 import { useLatestTrafficData } from "@/hooks/use-traffic-data";
@@ -51,6 +52,10 @@ import {
   areAllTravelModesSelected,
   travelModeMatchesIssyVehicleCategory,
 } from "@/lib/travelModeMapLink";
+import {
+  ISSY_OD_CSV_DISCLAIMER,
+  ISSY_OD_DIRECTIONAL_NOTE,
+} from "@/lib/issyDataTransparency";
 import { getKpi32TimeSeriesIntensity, resolveKpi32PolygonBaseIntensity } from "@/lib/kpi32YearIntensity";
 import {
   dedupeTrafficBySegmentId,
@@ -60,6 +65,21 @@ import {
   ISSY_P2_JUNCTION,
   junctionMarkerLatLng,
 } from "@/lib/issyPilot2Junction";
+
+type CphStreetFeatureCollection = {
+  type: "FeatureCollection";
+  features: Array<{
+    type: "Feature";
+    geometry: { type: "LineString"; coordinates: [number, number][] };
+    properties?: {
+      street?: string;
+      cameraId?: string;
+      siteName?: string;
+      source?: string;
+      osmId?: number;
+    };
+  }>;
+};
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -174,6 +194,38 @@ function pilotFallbackCoord(
   };
 }
 
+function inferCopenhagenCameraId(siteName: string): string {
+  const value = siteName.toLowerCase();
+  if (value.includes("norregade") || value.includes("norreport")) return "norreport";
+  if (value.includes("vandkunsten") || value.includes("radhuus") || value.includes("rådhus")) {
+    return "vandkunsten";
+  }
+  if (value.includes("gammeltorv") || value.includes("vestergade")) return "gammeltorv";
+  if (value.includes("frederiksholms") || value.includes("stormgade")) return "stormgade";
+  return "unknown";
+}
+
+function directionBearingDeg(direction: string): number {
+  const d = direction.toLowerCase();
+  if (d.includes("north") || d.includes("nord")) return 0;
+  if (d.includes("east") || d.includes("øst") || d.includes("ost")) return 90;
+  if (d.includes("south") || d.includes("syd")) return 180;
+  if (d.includes("west") || d.includes("vest")) return 270;
+  return 45;
+}
+
+function corridorMatchesSelection(
+  selectedId: string | null | undefined,
+  cameraId: string,
+  segmentId: string
+): boolean {
+  if (!selectedId) return true;
+  if (selectedId === segmentId) return true;
+  if (selectedId === `corridor:${cameraId}`) return true;
+  if (selectedId.includes(cameraId)) return true;
+  return false;
+}
+
 const HeroMap = ({
   onMapReady,
   onCitySelect,
@@ -280,6 +332,20 @@ const HeroMap = ({
     selectedPilotId,
     scenario
   );
+  const { data: copenhagenStreetGeoJson } = useQuery<CphStreetFeatureCollection | null>({
+    queryKey: ["copenhagen-streets-geojson"],
+    queryFn: async () => {
+      const response = await fetch("/data/copenhagen/streets.geojson");
+      if (!response.ok) return null;
+      return response.json() as Promise<CphStreetFeatureCollection>;
+    },
+    enabled:
+      !!currentCity &&
+      currentCity.toLowerCase().includes("copenhagen") &&
+      selectedKpi !== "kpi4.2",
+    staleTime: 1000 * 60 * 60,
+    refetchOnWindowFocus: false,
+  });
   const { data: issyFlows } = useIssyFlowData(
     issyFlowDayCategory,
     !!currentCity && isIssyCity(currentCity) && selectedKpi === "kpi1.2"
@@ -575,8 +641,7 @@ const HeroMap = ({
             p.properties?.type !== "mock" &&
             p.properties?.dataOrigin !== "mock"
         ).length;
-        const minRequired =
-          cityKey.includes("copenhagen") && observedCount >= 4 ? observedCount : minCount;
+        const minRequired = cityKey.includes("copenhagen") ? sourcePoints.length : minCount;
         if (sourcePoints.length >= minRequired) return sourcePoints;
         const anchorValue =
           sourcePoints.length > 0
@@ -796,6 +861,13 @@ const HeroMap = ({
           circlesRef.current.push(zoneMarker);
         });
 
+        const reverseFlowSet = new Set<string>();
+        issyFlows.forEach((f) => {
+          if (f.baselineValue > 0 || f.interventionValue > 0) {
+            reverseFlowSet.add(`${f.fromZone}|${f.toZone}|${f.vehicleCategory}`);
+          }
+        });
+
         let rankedFlows = issyFlows
           .map((flow) => {
             const from = getIssyZoneCentroid(flow.fromZone);
@@ -809,7 +881,10 @@ const HeroMap = ({
                 : scenario === "intervention"
                   ? interventionValue
                   : Math.abs(flow.change);
-            return { ...flow, from, to, renderValue };
+            const reverseObserved = reverseFlowSet.has(
+              `${flow.toZone}|${flow.fromZone}|${flow.vehicleCategory}`
+            );
+            return { ...flow, from, to, renderValue, reverseObserved };
           })
           .filter((flow): flow is NonNullable<typeof flow> => !!flow)
           .filter((flow) => flow.renderValue >= 0.5);
@@ -885,20 +960,25 @@ const HeroMap = ({
             opacity: 0.95,
           }).addTo(mapRef.current!);
 
+          const reverseLine = flow.reverseObserved
+            ? `<p style="font-size: 9px; color: #96C2EF; margin-top: 4px;">Reverse leg (zone ${flow.toZone} → zone ${flow.fromZone}) is also present in the dataset and rendered separately.</p>`
+            : `<p style="font-size: 9px; color: #A78BFA; margin-top: 4px;">No reverse record (zone ${flow.toZone} → zone ${flow.fromZone}) in the dataset — reverse movement is not inferred.</p>`;
+
           const tooltip = `
-            <div style="font-family: 'DM Sans', sans-serif; padding: 8px; min-width: 190px;">
+            <div style="font-family: 'DM Sans', sans-serif; padding: 8px; min-width: 200px;">
               <p style="font-size: 10px; color: #2F1B6D; margin: 0 0 3px 0; font-weight: 700;">Data Quality</p>
-              <div style="margin-bottom: 4px;">${badge("Observed")}${badge("Zone-flow")}${badge("Baseline/Post")}${badge("CSV")}</div>
-              <p style="font-size: 11px; color: #8578C3; margin: 0 0 4px 0; text-transform: uppercase;">Issy Zone Flow</p>
+              <div style="margin-bottom: 4px;">${badge("Observed")}${badge("Zone-flow")}${badge("Directional")}${badge("CSV")}</div>
+              <p style="font-size: 11px; color: #8578C3; margin: 0 0 4px 0; text-transform: uppercase;">Issy Zone OD Flow</p>
               <p style="font-size: 10px; color: #96C2EF; margin: 0;">Mode: ${flow.vehicleCategory}</p>
-              <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">From zone ${flow.fromZone} → zone ${flow.toZone}</p>
+              <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Direction: zone ${flow.fromZone} → zone ${flow.toZone}</p>
               <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Baseline avg: ${flow.baselineValue.toFixed(2)}</p>
               <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Post avg: ${flow.interventionValue.toFixed(2)}</p>
               <p style="font-size: 11px; font-weight: 700; color: ${flow.change >= 0 ? "#22C55E" : "#A78BFA"}; margin-top: 4px;">
                 Change: ${flow.change >= 0 ? "+" : ""}${flow.change.toFixed(2)} (${flow.changePercent.toFixed(1)}%)
               </p>
-              <p style="font-size: 9px; color: #96C2EF; margin-top: 4px;">Observed OD flow data — zone-to-zone, not street-level measurement.</p>
-              <p style="font-size: 9px; color: #A78BFA; margin-top: 4px; line-height: 1.35;">Zone-to-zone values are derived from origin/destination flow data and should not be interpreted as direct measurements for each street segment.</p>
+              ${reverseLine}
+              <p style="font-size: 9px; color: #A78BFA; margin-top: 4px; line-height: 1.35;">${ISSY_OD_DIRECTIONAL_NOTE}</p>
+              <p style="font-size: 9px; color: #A78BFA; margin-top: 4px; line-height: 1.35;">${ISSY_OD_CSV_DISCLAIMER}</p>
             </div>
           `;
           line.bindPopup(tooltip);
@@ -1239,6 +1319,203 @@ const HeroMap = ({
         selectedKpi === "kpi2.1" &&
         (!trafficData?.results || trafficData.results.length === 0);
 
+      const isCopenhagenCity = currentCity.toLowerCase().includes("copenhagen");
+      if (isCopenhagenCity && selectedKpi !== "kpi4.2") {
+        const observedPoints = (localCityPoints || []).filter(
+          (p) => p.properties?.dataOrigin === "local-city-dataset"
+        );
+        const modeSelected = selectedModeTypes?.length ? selectedModeTypes : [];
+        const recomputeKpi12Pct = (breakdown: any): number => {
+          const total = Number(breakdown?.total ?? 0);
+          if (total <= 0) return 0;
+          const hasAny = modeSelected.length > 0 && !areAllTravelModesSelected(modeSelected);
+          const bike = Number(breakdown?.bike ?? 0);
+          const pedestrian = Number(breakdown?.pedestrian ?? 0);
+          const motorised = Number(breakdown?.motorised ?? 0);
+          const ptw = Number(breakdown?.ptw ?? 0);
+          if (!hasAny) return ((bike + pedestrian) / total) * 100;
+          let selected = 0;
+          if (modeSelected.includes("Cycle")) selected += bike;
+          if (modeSelected.includes("Pedestrian")) selected += pedestrian;
+          if (modeSelected.includes("Private Car")) selected += motorised;
+          if (modeSelected.includes("Public Transport")) selected += motorised;
+          if (modeSelected.includes("PTW")) selected += ptw;
+          return (selected / total) * 100;
+        };
+
+        const cameraValueById = new Map<string, number[]>();
+
+        observedPoints.forEach((point) => {
+          const props = point.properties || {};
+          const cameraId = inferCopenhagenCameraId(String(props.streetName ?? ""));
+          const modeBreakdown = props.modeBreakdown as
+            | {
+                pre: { bike: number; pedestrian: number; motorised: number; ptw: number; total: number };
+                post: { bike: number; pedestrian: number; motorised: number; ptw: number; total: number };
+              }
+            | undefined;
+
+          let baselineValue = Number(props.baselineValue ?? point.value ?? 0);
+          let interventionValue = Number(props.interventionValue ?? point.value ?? 0);
+          if (selectedKpi === "kpi1.2" && modeBreakdown) {
+            baselineValue = recomputeKpi12Pct(modeBreakdown.pre);
+            interventionValue = recomputeKpi12Pct(modeBreakdown.post);
+          }
+          const comparisonValue =
+            typeof props.comparisonValue === "number"
+              ? Number(props.comparisonValue)
+              : interventionValue - baselineValue;
+          const renderValue =
+            scenario === "baseline"
+              ? baselineValue
+              : scenario === "comparison"
+                ? comparisonValue
+                : interventionValue;
+          const compareValue = scenario === "comparison" ? Math.abs(renderValue) : renderValue;
+          if (compareValue < filterRange[0] || compareValue > filterRange[1]) return;
+
+          if (!cameraValueById.has(cameraId)) cameraValueById.set(cameraId, []);
+          cameraValueById.get(cameraId)!.push(interventionValue);
+
+          const color =
+            scenario === "comparison"
+              ? renderValue >= 0
+                ? "#22C55E"
+                : "#A78BFA"
+              : getValueColor(interventionValue, selectedKpi === "kpi2.1");
+          const segmentId = String(props.segmentId || props.id || point.id);
+          const direction = String(props.direction ?? props.mode ?? "n/a");
+          const isSelected = corridorMatchesSelection(
+            selectedJunctionSegmentId,
+            cameraId,
+            segmentId
+          );
+
+          const isEnvironmental = selectedKpi === "kpi3.2";
+          const marker = L.circleMarker([point.lat, point.lon], {
+            radius: isEnvironmental ? (isSelected ? 11 : 9) : (isSelected ? 8.8 : 7),
+            fillColor: color,
+            fillOpacity: isEnvironmental ? (isSelected ? 0.42 : 0.22) : (isSelected ? 0.92 : 0.34),
+            color: isEnvironmental ? "rgba(180,210,255,0.45)" : (isSelected ? "#ffffff" : "#E6E8FF"),
+            weight: isEnvironmental ? (isSelected ? 1.4 : 0.9) : (isSelected ? 2.1 : 1.2),
+            opacity: isEnvironmental ? (isSelected ? 0.85 : 0.5) : (isSelected ? 1 : 0.45),
+          }).addTo(mapRef.current!);
+
+          const popup = isEnvironmental
+            ? `
+            <div style="font-family: 'DM Sans', sans-serif; padding: 8px; min-width: 215px;">
+              <p style="font-size: 11px; color: #8578C3; margin: 0 0 2px 0; text-transform: uppercase;">Climate Impact Observatory</p>
+              <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Site context: ${String(props.streetName ?? "Copenhagen corridor")}</p>
+              <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Before environmental pressure: ${baselineValue.toFixed(1)}%</p>
+              <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Intervention environmental pressure: ${interventionValue.toFixed(1)}%</p>
+              <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Comparison: ${comparisonValue >= 0 ? "+" : ""}${comparisonValue.toFixed(1)} pp</p>
+              <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Derived environmental proxy from observed mobility intensity</p>
+              <p style="font-size: 9px; color: #96C2EF; margin-top: 4px;">Not directly measured emissions</p>
+              <p style="font-size: 9px; color: #96C2EF; margin-top: 2px;">Source: OpenTrafficCam observed dataset · modelled field</p>
+            </div>
+          `
+            : `
+            <div style="font-family: 'DM Sans', sans-serif; padding: 8px; min-width: 205px;">
+              <p style="font-size: 11px; color: #8578C3; margin: 0 0 2px 0; text-transform: uppercase;">Directional mobility counts</p>
+              <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Camera/site: ${String(props.streetName ?? "Copenhagen camera")}</p>
+              <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Observed camera direction: ${direction}</p>
+              <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Before: ${baselineValue.toFixed(1)}%</p>
+              <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Intervention: ${interventionValue.toFixed(1)}%</p>
+              <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Comparison: ${comparisonValue >= 0 ? "+" : ""}${comparisonValue.toFixed(1)} pp</p>
+              <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Corridor activity (active mobility share): ${interventionValue.toFixed(1)}%</p>
+              <p style="font-size: 9px; color: #96C2EF; margin-top: 4px;">Source: OpenTrafficCam observed dataset</p>
+            </div>
+          `;
+          marker.bindPopup(popup);
+          marker.on("click", () => {
+            const segmentName = `${String(props.streetName ?? "Camera")} · ${direction}`;
+            onSegmentFocus?.({ segmentName, speed: null, congestion: null });
+            onJunctionSegmentClickRef.current?.({
+              segmentId,
+              segmentName,
+              speed: null,
+              congestion: null,
+            });
+          });
+          circlesRef.current.push(marker);
+
+          if (!isEnvironmental) {
+            const arrow = L.marker([point.lat, point.lon], {
+              icon: L.divIcon({
+                className: "cph-direction-arrow",
+                html: `<div style="transform: translate(10px, -10px) rotate(${directionBearingDeg(direction)}deg); color:${color}; opacity:${isSelected ? 0.95 : 0.35}; font-size:${isSelected ? 17 : 14}px; font-weight:700;">➤</div>`,
+                iconSize: [20, 20],
+                iconAnchor: [10, 10],
+              }),
+              interactive: false,
+              zIndexOffset: 750,
+            }).addTo(mapRef.current!);
+            markersRef.current.push(arrow);
+          } else {
+            const glow = L.circle([point.lat, point.lon], {
+              radius: isSelected ? 140 : 110,
+              fillColor: color,
+              fillOpacity: isSelected ? 0.12 : 0.06,
+              color,
+              weight: 0.6,
+              opacity: isSelected ? 0.35 : 0.2,
+            }).addTo(mapRef.current!);
+            circlesRef.current.push(glow);
+          }
+        });
+
+        if (copenhagenStreetGeoJson?.features?.length) {
+          copenhagenStreetGeoJson.features.forEach((feature) => {
+            const coords = feature.geometry?.coordinates;
+            if (!coords || coords.length < 2) return;
+            const cameraId = feature.properties?.cameraId ?? "unknown";
+            const vals = cameraValueById.get(cameraId) ?? [];
+            const avg = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 50;
+            const isSelected = corridorMatchesSelection(
+              selectedJunctionSegmentId,
+              cameraId,
+              `corridor:${cameraId}`
+            );
+              const isEnvironmental = selectedKpi === "kpi3.2";
+              const line = L.polyline(
+              coords.map(([lon, lat]) => [lat, lon] as [number, number]),
+              {
+                  color: isSelected ? "#ffffff" : getValueColor(avg, selectedKpi === "kpi2.1"),
+                  weight: isEnvironmental ? (isSelected ? 5.2 : 4.4) : (isSelected ? 6.5 : 4.2),
+                  opacity: isEnvironmental ? (isSelected ? 0.72 : 0.28) : (isSelected ? 0.95 : 0.34),
+                lineCap: "round",
+                lineJoin: "round",
+              }
+            ).addTo(mapRef.current!);
+            line.bindPopup(`
+              <div style="font-family: 'DM Sans', sans-serif; padding: 6px; min-width: 170px;">
+                  <p style="font-size: 11px; color: #8578C3; margin: 0 0 3px 0; text-transform: uppercase;">${isEnvironmental ? "Environmental influence corridor" : "Corridor activity"}</p>
+                <p style="font-size: 10px; color: #96C2EF; margin: 0;">Street: ${feature.properties?.street ?? "n/a"}</p>
+                  <p style="font-size: 9px; color: #96C2EF; margin-top: 4px;">${
+                    isEnvironmental
+                      ? "Derived environmental proxy from observed mobility intensity"
+                      : "Source: OpenTrafficCam observed dataset + OSM street centerline"
+                  }</p>
+              </div>
+            `);
+            line.on("click", () => {
+              const segmentName = `${feature.properties?.street ?? "Street corridor"} · ${feature.properties?.siteName ?? cameraId}`;
+              onSegmentFocus?.({ segmentName, speed: null, congestion: null });
+              onJunctionSegmentClickRef.current?.({
+                segmentId: `corridor:${cameraId}`,
+                segmentName,
+                speed: null,
+                congestion: null,
+              });
+            });
+            polylinesRef.current.push(line);
+          });
+        }
+
+        addInterventionLayer(cityData, showInterventionLayer);
+        return;
+      }
+
       // Road safety is best represented as clustered hotspots with drill-in zoom.
       // Issy normally expects segment geometry from the traffic API; when it is empty, hotspots + scaled grid fallback read as real "data" rather than an empty map.
       if (
@@ -1393,12 +1670,188 @@ const HeroMap = ({
         }
         
         if (!points) {
-          // Generate synthetic points
-          points = generateHexbinData(cityData, selectedKpi, 200);
+          const isCopenhagenKpi42 =
+            currentCity.toLowerCase().includes("copenhagen") && selectedKpi === "kpi4.2";
+          if (isCopenhagenKpi42) {
+            points = [];
+          } else {
+            // Generate synthetic points
+            points = generateHexbinData(cityData, selectedKpi, 200);
+          }
         }
         points = ensureCityCoverage(points, 55, 220);
 
         if (selectedKpi === "kpi1.2") {
+          const isCopenhagen = currentCity.toLowerCase().includes("copenhagen");
+          if (isCopenhagen) {
+            const modeSelected = selectedModeTypes?.length ? selectedModeTypes : [];
+            const selectFromBreakdown = (breakdown: any): number => {
+              const total = Number(breakdown?.total ?? 0);
+              if (total <= 0) return 0;
+              const hasAny = modeSelected.length > 0 && !areAllTravelModesSelected(modeSelected);
+              const bike = Number(breakdown?.bike ?? 0);
+              const pedestrian = Number(breakdown?.pedestrian ?? 0);
+              const motorised = Number(breakdown?.motorised ?? 0);
+              const ptw = Number(breakdown?.ptw ?? 0);
+              if (!hasAny) {
+                return ((bike + pedestrian) / total) * 100;
+              }
+              let selected = 0;
+              if (modeSelected.includes("Cycle")) selected += bike;
+              if (modeSelected.includes("Pedestrian")) selected += pedestrian;
+              if (modeSelected.includes("Private Car")) selected += motorised;
+              if (modeSelected.includes("Public Transport")) selected += motorised;
+              if (modeSelected.includes("PTW")) selected += ptw;
+              return (selected / total) * 100;
+            };
+
+            const cameraValueById = new Map<string, number[]>();
+
+            points.forEach((point) => {
+              if (point.properties?.dataOrigin !== "local-city-dataset") return;
+              const props = point.properties || {};
+              const modeBreakdown = props.modeBreakdown as
+                | {
+                    pre: { bike: number; pedestrian: number; motorised: number; ptw: number; total: number };
+                    post: { bike: number; pedestrian: number; motorised: number; ptw: number; total: number };
+                  }
+                | undefined;
+              if (!modeBreakdown) return;
+
+              const baselinePct = selectFromBreakdown(modeBreakdown.pre);
+              const interventionPct = selectFromBreakdown(modeBreakdown.post);
+              const scenarioValue =
+                scenario === "baseline"
+                  ? baselinePct
+                  : scenario === "comparison"
+                    ? interventionPct - baselinePct
+                    : interventionPct;
+              const compareValue = scenario === "comparison" ? Math.abs(scenarioValue) : scenarioValue;
+              if (compareValue < filterRange[0] || compareValue > filterRange[1]) return;
+
+              const cameraId = inferCopenhagenCameraId(String(props.streetName ?? ""));
+              if (!cameraValueById.has(cameraId)) cameraValueById.set(cameraId, []);
+              cameraValueById.get(cameraId)!.push(interventionPct);
+
+              const color =
+                scenario === "comparison"
+                  ? scenarioValue >= 0
+                    ? "#22C55E"
+                    : "#A78BFA"
+                  : getValueColor(interventionPct, false);
+              const segmentId = String(props.segmentId || props.id || point.id);
+              const isSelected = corridorMatchesSelection(
+                selectedJunctionSegmentId,
+                cameraId,
+                segmentId
+              );
+              const size = Math.max(6, Math.min(18, 6 + interventionPct * 0.12));
+              const circle = L.circleMarker([point.lat, point.lon], {
+                radius: isSelected ? size + 1.4 : size,
+                fillColor: color,
+                fillOpacity: isSelected ? 0.9 : 0.34,
+                color: isSelected ? "#ffffff" : "#E6E8FF",
+                weight: isSelected ? 2.1 : 1.2,
+                opacity: isSelected ? 1 : 0.45,
+              }).addTo(mapRef.current!);
+
+              const direction = String(props.direction ?? props.mode ?? "n/a");
+              const popup = `
+                <div style="font-family: 'DM Sans', sans-serif; padding: 8px; min-width: 200px;">
+                  <p style="font-size: 10px; color: #2F1B6D; margin: 0 0 3px 0; font-weight: 700;">Data Quality</p>
+                  <div style="margin-bottom: 4px;">${badge("Exact")}${badge("Observed")}${badge("Per direction")}${badge("Pre + Post")}</div>
+                  <p style="font-size: 11px; color: #8578C3; margin: 0 0 2px 0; text-transform: uppercase;">Directional mobility counts</p>
+                  <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Camera/site: ${String(props.streetName ?? "Copenhagen camera")}</p>
+                  <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Observed camera direction: ${direction}</p>
+                  <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Baseline: ${baselinePct.toFixed(1)}%</p>
+                  <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Intervention: ${interventionPct.toFixed(1)}%</p>
+                  <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Active mobility share: ${interventionPct.toFixed(1)}%</p>
+                  <p style="font-size: 11px; font-weight: 700; color: ${scenarioValue >= 0 ? "#22C55E" : "#A78BFA"}; margin-top: 4px;">Comparison: ${scenarioValue >= 0 ? "+" : ""}${scenarioValue.toFixed(1)} pp</p>
+                  <p style="font-size: 9px; color: #96C2EF; margin-top: 4px;">Source: OpenTrafficCam observed dataset</p>
+                  ${props.spatialNote ? `<p style="font-size: 9px; color: #96C2EF; margin-top: 4px;">${String(props.spatialNote)}</p>` : ""}
+                </div>
+              `;
+              circle.bindPopup(popup);
+              circle.on("click", () => {
+                const segmentName = `${String(props.streetName ?? "Camera")} · ${direction}`;
+                onSegmentFocus?.({
+                  segmentName,
+                  speed: null,
+                  congestion: null,
+                });
+                onJunctionSegmentClickRef.current?.({
+                  segmentId,
+                  segmentName,
+                  speed: null,
+                  congestion: null,
+                });
+              });
+              circlesRef.current.push(circle);
+
+              const bearing = directionBearingDeg(direction);
+              const arrow = L.marker([point.lat, point.lon], {
+                icon: L.divIcon({
+                  className: "cph-direction-arrow",
+                  html: `<div style="transform: translate(10px, -10px) rotate(${bearing}deg); color:${color}; opacity:${isSelected ? 0.95 : 0.35}; font-size:${isSelected ? 17 : 14}px; font-weight:700;">➤</div>`,
+                  iconSize: [20, 20],
+                  iconAnchor: [10, 10],
+                }),
+                interactive: false,
+                zIndexOffset: 750,
+              }).addTo(mapRef.current!);
+              markersRef.current.push(arrow);
+            });
+
+            if (copenhagenStreetGeoJson?.features?.length) {
+              copenhagenStreetGeoJson.features.forEach((feature) => {
+                const coords = feature.geometry?.coordinates;
+                if (!coords || coords.length < 2) return;
+                const cameraId = feature.properties?.cameraId ?? "unknown";
+                const vals = cameraValueById.get(cameraId) ?? [];
+                const avg = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 50;
+                const streetColor = getValueColor(avg, false);
+                const isSelected = corridorMatchesSelection(
+                  selectedJunctionSegmentId,
+                  cameraId,
+                  `corridor:${cameraId}`
+                );
+                const latLngs: [number, number][] = coords.map(([lon, lat]) => [lat, lon]);
+                const poly = L.polyline(latLngs, {
+                  color: isSelected ? "#ffffff" : streetColor,
+                  weight: isSelected ? 6.5 : 4.2,
+                  opacity: isSelected ? 0.95 : 0.34,
+                  lineCap: "round",
+                  lineJoin: "round",
+                }).addTo(mapRef.current!);
+                poly.bindPopup(`
+                  <div style="font-family: 'DM Sans', sans-serif; padding: 6px; min-width: 170px;">
+                    <p style="font-size: 11px; color: #8578C3; margin: 0 0 3px 0; text-transform: uppercase;">Corridor activity</p>
+                    <p style="font-size: 10px; color: #96C2EF; margin: 0;">Street: ${feature.properties?.street ?? "n/a"}</p>
+                    <p style="font-size: 9px; color: #96C2EF; margin-top: 4px;">Source: OSM via Overpass</p>
+                  </div>
+                `);
+                poly.on("click", () => {
+                  const segmentName = `${feature.properties?.street ?? "Street corridor"} · ${feature.properties?.siteName ?? cameraId}`;
+                  onSegmentFocus?.({
+                    segmentName,
+                    speed: null,
+                    congestion: null,
+                  });
+                  onJunctionSegmentClickRef.current?.({
+                    segmentId: `corridor:${cameraId}`,
+                    segmentName,
+                    speed: null,
+                    congestion: null,
+                  });
+                });
+                polylinesRef.current.push(poly);
+              });
+            }
+
+            addInterventionLayer(cityData, showInterventionLayer);
+            return;
+          }
+
           const buckets = new Map<string, { lat: number; lon: number; total: number; count: number }>();
           points.forEach((point) => {
             if (point.value < filterRange[0] || point.value > filterRange[1]) return;
@@ -1499,16 +1952,40 @@ const HeroMap = ({
                             selectedKpi === "kpi3.1" ? "" : 
                             "%";
           
+          const isCph = currentCity.toLowerCase().includes("copenhagen") &&
+            point.properties?.dataOrigin === "local-city-dataset";
+          const baselineNum = typeof props.baselineValue === "number" ? (props.baselineValue as number) : undefined;
+          const interventionNum = typeof props.interventionValue === "number" ? (props.interventionValue as number) : undefined;
+          const deltaNum =
+            typeof props.comparisonValue === "number"
+              ? (props.comparisonValue as number)
+              : interventionNum !== undefined && baselineNum !== undefined
+                ? interventionNum - baselineNum
+                : undefined;
+          const cphHeader = isCph
+            ? `
+              <p style="font-size: 11px; color: #8578C3; margin: 0 0 2px 0; text-transform: uppercase;">${String(props.streetName ?? "Copenhagen camera")}</p>
+              ${props.direction ? `<p style="font-size: 10px; color: #96C2EF; margin: 0 0 4px 0;">Direction: ${String(props.direction)}</p>` : ""}
+              <p style="font-size: 16px; font-weight: bold; color: #2F1B6D; margin: 0 0 4px 0;">${point.value.toFixed(1)}${valueLabel}</p>
+              ${baselineNum !== undefined ? `<p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Baseline: ${baselineNum.toFixed(1)}${valueLabel}</p>` : ""}
+              ${interventionNum !== undefined ? `<p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Intervention: ${interventionNum.toFixed(1)}${valueLabel}</p>` : ""}
+              ${deltaNum !== undefined ? `<p style="font-size: 10px; font-weight: 700; color: ${deltaNum >= 0 ? "#22C55E" : "#A78BFA"}; margin: 2px 0;">Δ ${deltaNum >= 0 ? "+" : ""}${deltaNum.toFixed(1)}${valueLabel}</p>` : ""}
+              <p style="font-size: 9px; color: #96C2EF; margin: 4px 0 0 0;">Source: OpenTrafficCam Excel · Type: observed</p>
+            `
+            : "";
           const popupContent = `
-            <div style="font-family: 'DM Sans', sans-serif; padding: 6px; min-width: 120px;">
+            <div style="font-family: 'DM Sans', sans-serif; padding: 6px; min-width: 140px;">
               <p style="font-size: 10px; color: #2F1B6D; margin: 0 0 3px 0; font-weight: 700;">Data Quality</p>
               <div style="margin-bottom: 4px;">${
-                props.locationMethod === "approximate_cluster"
+                isCph
+                  ? `${badge("Exact")}${badge("Observed")}${badge("Per direction")}${badge("Pre + Post")}`
+                  : props.locationMethod === "approximate_cluster"
                   ? `${badge("Approximate")}${badge("Inferred")}${badge("Coverage-expanded")}${badge("Proxy")}`
                   : props.spatialQuality === "inferred"
                     ? `${badge("Inferred")}${badge("Derived proxy")}${badge("Point/flow-based")}${badge("Available period")}`
                     : `${badge("Exact")}${badge(String(props.type || "observed"))}${badge("Point-level")}${badge("2024 snapshot")}`
               }</div>
+              ${isCph ? cphHeader : `
               <p style="font-size: 11px; color: #8578C3; margin: 0 0 4px 0; text-transform: uppercase;">${dataType}</p>
               ${selectedKpi === "kpi3.1" && props.type_amgt_cycl ? (
                 `<p style="font-size: 18px; font-weight: bold; color: #2F1B6D; margin: 0 0 6px 0;">${props.type_amgt_cycl}</p>`
@@ -1518,6 +1995,7 @@ const HeroMap = ({
               ${props.type_amgt_cycl && selectedKpi !== "kpi3.1" ? `<p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Type: ${props.type_amgt_cycl}</p>` : ''}
               ${props.localisation ? `<p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">${props.localisation}</p>` : ''}
               ${props.longueur_m !== undefined ? `<p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Length: ${typeof props.longueur_m === 'number' ? props.longueur_m.toFixed(0) : props.longueur_m}m</p>` : ''}
+              `}
               <div style="border-top: 1px solid rgba(101, 125, 245, 0.2); padding-top: 4px; margin-top: 4px;">
                 <p style="font-size: 9px; color: #96C2EF; margin: 0;">${
                   point.properties?.dataOrigin === "local-city-dataset"
@@ -1541,6 +2019,11 @@ const HeroMap = ({
       }
       // AREAS VISUALIZATION (Polygons) - for accessibility/catchment/coverage/emissions
       else if (isAreaVisualization(selectedKpi)) {
+        if (currentCity.toLowerCase().includes("copenhagen") && selectedKpi === "kpi4.2") {
+          // Copenhagen KPI4.2 has no observed accessibility dataset linked yet.
+          addInterventionLayer(cityData, showInterventionLayer);
+          return;
+        }
         if (isIssy && selectedKpi === "kpi3.2") {
           /* Issy climate hex rendered above */
         } else if (selectedKpi === "kpi3.2" && renderIntent === "hex") {
@@ -1776,13 +2259,16 @@ const HeroMap = ({
     }
     if (currentCity.toLowerCase().includes("copenhagen")) {
       const total = localCityPoints?.length || 0;
+      const isEnvironmental = selectedKpi === "kpi3.2";
       onDataQualitySummaryChange({
         recordsLabel: `${total.toLocaleString()} camera sites`,
         spatialQuality: "exact OpenTrafficCam coordinates",
-        dataType: "observed camera counts",
+        dataType: isEnvironmental
+          ? "derived environmental proxy from observed mobility intensity"
+          : "observed camera counts",
         temporalCoverage: "before-after",
         confidence: total >= 4 ? "High" : "Medium",
-        provenanceType: "observed",
+        provenanceType: isEnvironmental ? "derived" : "observed",
         geometryLinkage: "exact",
         spatialSystemHint: spatialPlan.legendHint,
       });

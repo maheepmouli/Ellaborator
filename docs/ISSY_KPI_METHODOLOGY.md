@@ -24,12 +24,21 @@ Bundled CSV paths (demo): `/public/data/issy/ISSY1_baseline_traffic_data_novembe
 ### Steps
 
 1. Parse CSV rows into zone-pair features.
-2. Aggregate `avg_traffic` by `(zone_in, zone_out, vehicle_category)` (optional `day_category` filter).
-3. Map `vehicle_category` → ELABORATOR mode buckets (`src/lib/travelModeMapLink.ts`).
-4. Sum volumes across all zone pairs per mode for baseline and post periods.
-5. Compute mode share % and sustainable share (pedestrian + cycle + public transport).
-6. Compare baseline vs post-intervention; change = post − baseline (**percentage points**).
-7. Map: zone-to-zone flow arcs between zone centroids — **not** street-level measurement.
+2. **Each row is directional** — one record describes movement from `zone_in` to `zone_out` for one `vehicle_category`. The reverse direction (`zone_out` → `zone_in`) is only present if a separate row exists in the CSV.
+3. Aggregate `avg_traffic` by `(zone_in, zone_out, vehicle_category)` (optional `day_category` filter). **Reverse pairs are never inferred.**
+4. Map `vehicle_category` → ELABORATOR mode buckets (`src/lib/travelModeMapLink.ts`).
+5. Sum volumes across all zone pairs per mode for baseline and post periods.
+6. Compute mode share % and sustainable share (pedestrian + cycle + public transport).
+7. Compare baseline vs post-intervention; change = post − baseline (**percentage points**).
+8. Map: **one OD arc per CSV row** between zone centroids — never split across multiple streets or assigned to junction arms.
+
+### Directional OD rules (Valeria, 2026-05-24)
+
+- OD flow is **directional**. Each row in the CSV represents one direction only.
+- **Reverse flows are not inferred** unless a reverse row is present in the dataset.
+- One OD relation is **never split into multiple street arms** or street-level directions.
+- **Junction arms use traficissy API only.** No OD CSV mode share is assigned to street arms.
+- At junction zoom with KPI 1.2 selected, the OD mode share is shown only as **zone-level context** — never as an arm-level measurement.
 
 ### Formulas
 

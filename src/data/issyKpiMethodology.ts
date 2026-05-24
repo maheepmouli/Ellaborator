@@ -7,6 +7,7 @@ import {
   ISSY_JUNCTION_ARM_VISUAL_DISCLAIMER,
   ISSY_JUNCTION_KPI12_ARM_NOTE,
   ISSY_OD_CSV_DISCLAIMER,
+  ISSY_OD_DIRECTIONAL_NOTE,
   kpiPrimaryIssySource,
   type IssyDataSourceKind,
 } from "@/lib/issyDataTransparency";
@@ -67,12 +68,14 @@ export const ISSY_KPI_METHODOLOGY: IssyKpiMethodologyEntry[] = [
         ],
         steps: [
           "Parse ISSY1 baseline and post-intervention CSV rows (vehicle_category, zone_in, zone_out, hour, day_category, avg_traffic).",
-          "Aggregate volumes by origin zone, destination zone, and vehicle category (optional weekday / weekend filter).",
+          "Each row is a directional movement: zone_in → zone_out for one vehicle category. The reverse direction is only present if a separate row exists.",
+          "Aggregate volumes per (zone_in, zone_out, vehicle_category) pair (optional weekday / weekend filter). Reverse pairs are never inferred.",
           "Map each vehicle_category token to ELABORATOR mode buckets (Pedestrian, Cycle, Public Transport, Private Car, PTW).",
           "Sum flows across all zone pairs per mode for baseline and post periods.",
           "Compute mode share percentages and sustainable share (pedestrian + cycle + public transport).",
           "Compare post vs baseline; report change in percentage points on the KPI card.",
-          "Draw zone-to-zone flow arcs on the map at city / pilot zoom. Junction arms use traficissy segment context only — not per-street mode share from the CSV.",
+          "Draw one OD arc per CSV row between zone centroids on the map at city / pilot zoom — never split across multiple contextual streets.",
+          "The monitored intervention corridor uses traficissy segment context only. No per-street mode share is assigned from the OD CSV.",
         ],
         formulas: `OD roll-up (per period, optional day filter):
   flow(z_in, z_out, cat) = Σ avg_traffic
@@ -93,6 +96,9 @@ Fallback if CSV fails to load:
   sidebar uses CITY_DATA mock (e.g. 45% headline) — not observed OD.`,
         limitations: [
           "Direction of computation: OD flow data is primary; mode share is derived from OD volumes, not the reverse.",
+          ISSY_OD_DIRECTIONAL_NOTE,
+          "OD rows represent only the listed zone_in → zone_out directions. Reverse or street-level directions are not inferred.",
+          "One OD relation is rendered as one zone-to-zone arc — it is never split across multiple contextual streets.",
           ISSY_OD_CSV_DISCLAIMER,
           ISSY_JUNCTION_KPI12_ARM_NOTE,
           ISSY_JUNCTION_ARM_VISUAL_DISCLAIMER,
@@ -119,8 +125,8 @@ Fallback if CSV fails to load:
         steps: [
           "Fetch live road segments from the traficissy API (geometry, vitesse_km_h, indice_de_congestion).",
           "For each segment, compute a 0–100 safety pressure score from speed vs a reference speed.",
-          "Colour segment polylines and junction approach arms by this derived pressure.",
-          "Aggregate across approach-arm segments in the junction observatory study view.",
+          "Colour segment polylines with one highlighted monitored intervention corridor and low-opacity contextual streets.",
+          "Aggregate monitored-corridor context in the junction observatory study view.",
           "Sidebar star / radar values may still use CITY_DATA demo until official iRAP or crash-based scores are integrated.",
         ],
         formulas: `Per segment (traficissy):
@@ -129,7 +135,7 @@ Fallback if CSV fails to load:
 referenceSpeed = 60 km/h (configurable assumption)
 
 Junction study (illustrative):
-  armPressure ≈ mean or representative segment pressure on approach arms
+  corridorPressure ≈ representative segment pressure on the monitored intervention corridor
 
 Not an official iRAP Star Rating or crash-based safety score.`,
         limitations: [

@@ -84,27 +84,80 @@ function toScenarioValue(record: NormalizedCityRecord, scenario: ScenarioType): 
   return record.interventionValue ?? record.value;
 }
 
-function aggregateCountsByMode(rows: Record<string, unknown>[]) {
-  let total = 0;
-  let bike = 0;
-  let pedestrian = 0;
-  let motorized = 0;
+interface CphFlowAgg {
+  /** flow / direction label, e.g. "Norregade north". */
+  flow: string;
+  total: number;
+  bike: number;
+  pedestrian: number;
+  motorized: number;
+  ptw: number;
+}
 
+function aggregateCphRows(rows: Record<string, unknown>[]): Map<string, CphFlowAgg> {
+  const byFlow = new Map<string, CphFlowAgg>();
   rows.forEach((row) => {
-    const mode = String(row.classification || "").toLowerCase();
+    const cls = String(row.classification || "").toLowerCase();
+    const flow = String(row.flow || "").trim();
+    if (!flow) return;
     const count = parseNumber(row.count);
-    total += count;
-    if (mode.includes("bicycl")) bike += count;
-    else if (mode.includes("pedestrian")) pedestrian += count;
-    else if (mode.includes("car") || mode.includes("bus") || mode.includes("truck") || mode.includes("motor")) {
-      motorized += count;
+    if (!count) return;
+    const agg =
+      byFlow.get(flow) ?? {
+        flow,
+        total: 0,
+        bike: 0,
+        pedestrian: 0,
+        motorized: 0,
+        ptw: 0,
+      };
+    agg.total += count;
+    if (cls.includes("bicycl") || cls.includes("cargo_bike")) agg.bike += count;
+    else if (cls.includes("pedestrian")) agg.pedestrian += count;
+    else if (
+      cls.includes("motorcycl") ||
+      cls.includes("scooter")
+    ) {
+      agg.ptw += count;
+    } else if (
+      cls.includes("car") ||
+      cls.includes("bus") ||
+      cls.includes("truck") ||
+      cls.includes("van") ||
+      cls.includes("train")
+    ) {
+      agg.motorized += count;
     }
+    byFlow.set(flow, agg);
   });
+  return byFlow;
+}
 
-  return { total, bike, pedestrian, motorized };
+function cphSiteMetric(agg: CphFlowAgg, kpiId: string): number {
+  if (agg.total <= 0) return 0;
+  switch (kpiId) {
+    case "kpi1.2": {
+      const sustainable = agg.bike + agg.pedestrian;
+      return clampPercent((100 * sustainable) / agg.total);
+    }
+    case "kpi2.1": {
+      const motorPlusPtw = agg.motorized + agg.ptw;
+      const sharePct = (100 * motorPlusPtw) / agg.total;
+      return clampPercent(sharePct * 0.6 + clampPercent(agg.total / 200) * 0.4);
+    }
+    case "kpi3.2": {
+      const motorPct = (100 * (agg.motorized + agg.ptw)) / agg.total;
+      return clampPercent(motorPct * 0.7 + clampPercent(agg.total / 250) * 0.3);
+    }
+    default:
+      return clampPercent((100 * agg.total) / 500);
+  }
 }
 
 async function parseCopenhagenRecords(kpiId: string): Promise<NormalizedCityRecord[]> {
+  if (kpiId === "kpi4.2") {
+    return [];
+  }
   const cacheKey = `copenhagen-${kpiId}`;
   const cached = normalizedRecordCache.get(cacheKey);
   if (cached) return cached;
@@ -120,74 +173,109 @@ async function parseCopenhagenRecords(kpiId: string): Promise<NormalizedCityReco
       workbook.Sheets.Overview || workbook.Sheets[workbook.SheetNames[0]],
       { header: 1, raw: false }
     );
-    const coordRow = overviewRows.find((row) => String(row?.[0] || "").toLowerCase().includes("coordinates"));
-    const siteRow = overviewRows.find((row) => String(row?.[0] || "").toLowerCase().includes("site"));
-    const datePostRow = overviewRows.find((row) => String(row?.[0] || "").toLowerCase().includes("date post"));
+    const coordRow = overviewRows.find((row) =>
+      String(row?.[0] || "").toLowerCase().includes("coordinates")
+    );
+    const siteRow = overviewRows.find((row) =>
+      String(row?.[0] || "").toLowerCase().includes("site")
+    );
+    const datePreRow = overviewRows.find((row) =>
+      String(row?.[0] || "").toLowerCase().includes("date pre")
+    );
+    const datePostRow = overviewRows.find((row) =>
+      String(row?.[0] || "").toLowerCase().includes("date post")
+    );
 
     const coords = parseCoordinates(String(coordRow?.[1] || ""));
     if (!coords) continue;
     const siteName = String(siteRow?.[1] || "Copenhagen camera");
 
-    const postSheetName = workbook.SheetNames.find(
-      (name) => name.toLowerCase().includes("data_") && name.toLowerCase().includes("post")
+    const sheetNames = workbook.SheetNames;
+    const preSheetName = sheetNames.find(
+      (name) => /^data_/i.test(name) && /pre/i.test(name)
     );
-    const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(
-      postSheetName ? workbook.Sheets[postSheetName] : workbook.Sheets[workbook.SheetNames[0]],
-      { defval: null }
+    const postSheetName = sheetNames.find(
+      (name) => /^data_/i.test(name) && /post/i.test(name)
     );
-    const agg = aggregateCountsByMode(rows);
-    if (agg.total <= 0) continue;
 
-    const bikeShare = (agg.bike / agg.total) * 100;
-    const motorizedShare = (agg.motorized / agg.total) * 100;
-    const intensity = clampPercent(agg.total / 150);
+    const preRows = preSheetName
+      ? XLSX.utils.sheet_to_json<Record<string, unknown>>(workbook.Sheets[preSheetName], {
+          defval: null,
+        })
+      : [];
+    const postRows = postSheetName
+      ? XLSX.utils.sheet_to_json<Record<string, unknown>>(workbook.Sheets[postSheetName], {
+          defval: null,
+        })
+      : [];
 
-    let value = intensity;
-    let baselineValue = clampPercent(value * 0.9);
-    let dataType: NormalizedCityRecord["type"] = "observed";
-    if (kpiId === "kpi1.2") {
-      value = clampPercent(bikeShare);
-      baselineValue = clampPercent(value * 0.92);
-    } else if (kpiId === "kpi2.1") {
-      value = clampPercent(motorizedShare * 0.65 + intensity * 0.35);
-      baselineValue = clampPercent(value * 1.07);
-      dataType = "derived";
-    } else if (kpiId === "kpi3.2") {
-      value = clampPercent(intensity * 0.8 + motorizedShare * 0.2);
-      baselineValue = clampPercent(value * 1.08);
-      dataType = "modelled";
-    }
+    const preByFlow = aggregateCphRows(preRows);
+    const postByFlow = aggregateCphRows(postRows);
+    const allFlows = new Set<string>([...preByFlow.keys(), ...postByFlow.keys()]);
+    if (allFlows.size === 0) continue;
 
-    const siteId = siteName.toLowerCase().replace(/\s+/g, "-");
-    records.push({
-      id: `copenhagen-${kpiId}-${siteId}`,
-      city: "Copenhagen",
-      cityId: "copenhagen",
-      interventionId: inferCopenhagenPilot(siteName),
-      kpiId,
-      sourceFile: filePath,
-      geometryType: kpiId === "kpi3.2" ? "hex" : "point",
-      lat: coords.lat,
-      lng: coords.lon,
-      geometry: [[coords.lat, coords.lon]],
-      timestamp: String(datePostRow?.[1] || ""),
-      value,
-      baselineValue,
-      interventionValue: value,
-      comparisonValue: value - baselineValue,
-      source: "OpenTrafficCam counts",
-      method: "Aggregated from post-period camera counts",
-      type: dataType,
-      spatialQuality: "exact",
-      geometryLinkage: "exact",
-      temporalCoverage: "before-after",
-      locationMethod: "coordinates",
-      segmentId: siteId,
-      streetName: siteName,
-      spatialNote: overviewRows.some((row) => String(row?.[0] || "").toLowerCase().includes("street"))
-        ? String(overviewRows.find((row) => String(row?.[0] || "").toLowerCase().includes("street"))?.[1] || siteName)
-        : siteName,
-      parserStatus: "ready",
+    const siteId = siteName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    const intervention = inferCopenhagenPilot(siteName);
+    const tempCoverage: NormalizedCityRecord["temporalCoverage"] =
+      preByFlow.size > 0 && postByFlow.size > 0 ? "before-after" : "single-period";
+
+    allFlows.forEach((flow) => {
+      const pre = preByFlow.get(flow);
+      const post = postByFlow.get(flow);
+      const baselineAgg = pre ?? { flow, total: 0, bike: 0, pedestrian: 0, motorized: 0, ptw: 0 };
+      const interventionAgg =
+        post ?? { flow, total: 0, bike: 0, pedestrian: 0, motorized: 0, ptw: 0 };
+      const baselineValue = cphSiteMetric(baselineAgg, kpiId);
+      const interventionValue = cphSiteMetric(interventionAgg, kpiId);
+      const flowId = flow.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      records.push({
+        id: `copenhagen-${kpiId}-${siteId}-${flowId}`,
+        city: "Copenhagen",
+        cityId: "copenhagen",
+        interventionId: intervention,
+        kpiId,
+        sourceFile: filePath,
+        geometryType: kpiId === "kpi3.2" ? "hex" : "point",
+        lat: coords.lat,
+        lng: coords.lon,
+        geometry: [[coords.lat, coords.lon]],
+        timestamp: String(datePostRow?.[1] || ""),
+        value: interventionValue || baselineValue,
+        baselineValue,
+        interventionValue,
+        comparisonValue: interventionValue - baselineValue,
+        mode: flow,
+        modeBreakdown: {
+          pre: {
+            bike: baselineAgg.bike,
+            pedestrian: baselineAgg.pedestrian,
+            motorised: baselineAgg.motorized,
+            ptw: baselineAgg.ptw,
+            total: baselineAgg.total,
+          },
+          post: {
+            bike: interventionAgg.bike,
+            pedestrian: interventionAgg.pedestrian,
+            motorised: interventionAgg.motorized,
+            ptw: interventionAgg.ptw,
+            total: interventionAgg.total,
+          },
+        },
+        source: "OpenTrafficCam counts (pre + post per direction)",
+        method:
+          "Pre and post 15-min counts aggregated by direction (flow column) and vehicle classification; coordinates from workbook Overview sheet.",
+        type: "observed",
+        spatialQuality: "exact",
+        geometryLinkage: "exact",
+        temporalCoverage: tempCoverage,
+        locationMethod: "coordinates",
+        segmentId: `${siteId}-${flowId}`,
+        streetName: siteName,
+        spatialNote: `${siteName} · direction: ${flow}${
+          datePreRow ? ` · pre: ${String(datePreRow[1] ?? "").split(",")[0]}` : ""
+        }${datePostRow ? ` · post: ${String(datePostRow[1] ?? "").split(",")[0]}` : ""}`,
+        parserStatus: "ready",
+      });
     });
   }
 
@@ -451,12 +539,15 @@ export async function loadLocalCityPoints(
           siteId: record.segmentId,
           pilotId: record.interventionId,
           streetName: record.streetName,
+          mode: record.mode,
+          direction: record.mode,
           dataOrigin: record.type === "mock" ? "mock" : "local-city-dataset",
           sourceFile: record.sourceFile,
           geometryType: record.geometryType,
           baselineValue: record.baselineValue,
           interventionValue: record.interventionValue ?? record.value,
           comparisonValue: record.comparisonValue,
+          modeBreakdown: record.modeBreakdown,
           scenario,
           interventionId: record.interventionId,
           temporalCoverage: record.temporalCoverage || "single-period",
@@ -466,6 +557,10 @@ export async function loadLocalCityPoints(
           parserStatus: record.parserStatus || "partial",
         },
       }));
+  }
+
+  if (normalizeCityKey(cityName) === "copenhagen" && kpiId === "kpi4.2") {
+    return [];
   }
 
   // fallback synthetic if parser not ready

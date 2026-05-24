@@ -13,7 +13,7 @@ function kpiDataNote(city: string, pilotId: string, kpiId: string): string | nul
   if (!isIssy) return null;
 
   if (kpiId === "kpi1.2") {
-    return "KPI 1.2 mode share: observed OD CSV (zone-to-zone) in city view. Junction arms show traficissy segment context only — not per-street OD values.";
+    return "KPI 1.2 mode share: observed OD CSV (zone-to-zone) in city view. The monitored intervention corridor shows traficissy segment context only — not per-street OD values.";
   }
   if (kpiId === "kpi2.1") {
     return "KPI 2.1 safety: observed traficissy segment speed/congestion with a derived safety-pressure proxy (not an official star rating).";

@@ -161,8 +161,9 @@ export const DATASET_REGISTRY: DatasetMetadata[] = [
     id: "cph-otc-counts",
     city: "Copenhagen",
     pilotIds: ["cph-p1", "cph-p2", "cph-p3"],
-    title: "OpenTrafficCam Counts 2024/2025",
-    source: "SharePoint: Copenhagen/OTC Combined counts ELABORATOR.xlsx",
+    title: "OpenTrafficCam Counts 2024/2025 (per camera, per direction)",
+    source:
+      "SharePoint: Copenhagen/OpenTrafficCam Counts 2024 and 2025/Countings_<site>_sortet.xlsx",
     fileFormat: "xlsx",
     dataType: "observed",
     geometryType: "point",
@@ -172,12 +173,12 @@ export const DATASET_REGISTRY: DatasetMetadata[] = [
     beforeAfterStatus: "both",
     linkedKpis: ["kpi1.2", "kpi2.1"],
     interventionScale: "street",
-    parserStatus: "partial",
+    parserStatus: "ready",
     realDataStatus: "active",
     updateStatus: "static",
     responsiblePartner: "Copenhagen",
     notes:
-      "Camera locations have exact coords. Category breakdown (ped/cycle/car) available. Before/after requires date-range splitting from the combined sheet.",
+      "Per-workbook Overview sheet exposes machine-readable site name + lat/lon. Pre and Post raw sheets (Data_<site>_Pre / Data_<site>_Post) give 15-min counts by vehicle classification (bicyclist, pedestrian, car, bus, truck, motorcyclist, scooter_driver, cargo_bike_driver, …) and by direction (`flow` column, e.g. 'Norregade north', 'Norregade south'). Parser aggregates Pre + Post per (camera, direction, classification) and renders one map point per camera/direction with baseline / intervention / Δ. Remaining work: full ELABORATOR mode-mapping review and time-of-day / weekday normalisation across cameras.",
   },
 
   // ─── HELSINKI ─────────────────────────────────────────────────────────────

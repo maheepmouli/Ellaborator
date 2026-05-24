@@ -1,0 +1,201 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            12.5706481,
+            55.6828409
+          ],
+          [
+            12.5707109,
+            55.6827441
+          ],
+          [
+            12.5707754,
+            55.6826242
+          ],
+          [
+            12.5708203,
+            55.6825213
+          ]
+        ]
+      },
+      "properties": {
+        "source": "OSM Overpass",
+        "osmId": 1694119,
+        "street": "Nørregade",
+        "cameraId": "norreport",
+        "siteName": "Norregade/Norre Voldgade"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            12.5696262,
+            55.6773642
+          ],
+          [
+            12.5697277,
+            55.677426
+          ],
+          [
+            12.5698656,
+            55.6775165
+          ],
+          [
+            12.5700331,
+            55.6776014
+          ]
+        ]
+      },
+      "properties": {
+        "source": "OSM Overpass",
+        "osmId": 1700503,
+        "street": "Vestergade",
+        "cameraId": "gammeltorv",
+        "siteName": "Gammeltorv/Vestergade"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            12.5728527,
+            55.6780219
+          ],
+          [
+            12.5727748,
+            55.6780849
+          ],
+          [
+            12.5727688,
+            55.6780895
+          ],
+          [
+            12.5724966,
+            55.678301
+          ],
+          [
+            12.5723194,
+            55.6784294
+          ]
+        ]
+      },
+      "properties": {
+        "source": "OSM Overpass",
+        "osmId": 1794685,
+        "street": "Gammeltorv",
+        "cameraId": "gammeltorv",
+        "siteName": "Gammeltorv/Vestergade"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            12.5746984,
+            55.6762258
+          ],
+          [
+            12.5746599,
+            55.6762112
+          ]
+        ]
+      },
+      "properties": {
+        "source": "OSM Overpass",
+        "osmId": 1880943,
+        "street": "Vandkunsten",
+        "cameraId": "vandkunsten",
+        "siteName": "Vandkunsten/Radhuusstraede"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            12.5729606,
+            55.6743482
+          ],
+          [
+            12.5730472,
+            55.6744318
+          ]
+        ]
+      },
+      "properties": {
+        "source": "OSM Overpass",
+        "osmId": 4373501,
+        "street": "Stormgade",
+        "cameraId": "stormgade",
+        "siteName": "Frederiksholmskanal/Stormgade"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            12.5778654,
+            55.6743182
+          ],
+          [
+            12.5784828,
+            55.6738004
+          ]
+        ]
+      },
+      "properties": {
+        "source": "OSM Overpass",
+        "osmId": 8122870,
+        "street": "Frederiksholms Kanal",
+        "cameraId": "stormgade",
+        "siteName": "Frederiksholmskanal/Stormgade"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            12.5739659,
+            55.67708
+          ],
+          [
+            12.5743266,
+            55.6766632
+          ]
+        ]
+      },
+      "properties": {
+        "source": "OSM Overpass",
+        "osmId": 654333412,
+        "street": "Rådhusstræde",
+        "cameraId": "vandkunsten",
+        "siteName": "Vandkunsten/Radhuusstraede"
+      }
+    }
+  ],
+  "metadata": {
+    "generatedAt": "2026-05-24T15:41:05.620Z",
+    "source": "https://overpass-api.de/api/interpreter",
+    "clipRadiusMeters": 220,
+    "queryRadiusMeters": 450,
+    "cameraCount": 4
+  }
+}

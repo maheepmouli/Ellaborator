@@ -20,7 +20,7 @@ export const ISSY_PILOT_PROFILES: Record<IssyPilotId, IssyPilotProfile> = {
     defaultKpi: "kpi2.1",
     primaryRenderer: "issy-junction-arms",
     heroCopy:
-      "Interactive pavement markings for cyclist visibility — junction arms show observed traficissy segment context; KPI 1.2 mode share uses zone-to-zone OD CSV in city view.",
+      "Interactive pavement markings for cyclist visibility — the monitored intervention corridor shows observed traficissy segment context; KPI 1.2 mode share uses zone-to-zone OD CSV in city view.",
     legendSubtitle: "Pilot 1 — luminous markings",
     schoolRadiusM: 450,
   },
@@ -30,7 +30,7 @@ export const ISSY_PILOT_PROFILES: Record<IssyPilotId, IssyPilotProfile> = {
     defaultKpi: "kpi1.2",
     primaryRenderer: "issy-junction-arms",
     heroCopy:
-      "Mobility observatory at the study junction — OD flow arcs in city view; approach arms show observed segment traffic, not per-street mode-share measurement.",
+      "Mobility observatory at the study junction — OD flow arcs in city view; the monitored intervention corridor shows observed segment traffic, not per-street mode-share measurement.",
     legendSubtitle: "Pilot 2 — mobility observatory (flagship)",
   },
   "issy-p3": {

@@ -12,6 +12,11 @@ export type LocationMethod =
   | "pilot_area_inference"
   | "approximate_cluster";
 
+export interface ModeBreakdown {
+  pre: { bike: number; pedestrian: number; motorised: number; ptw: number; total: number };
+  post: { bike: number; pedestrian: number; motorised: number; ptw: number; total: number };
+}
+
 export interface NormalizedCityRecord {
   id: string;
   city: string;
@@ -29,6 +34,7 @@ export interface NormalizedCityRecord {
   interventionValue?: number;
   comparisonValue?: number;
   mode?: string;
+  modeBreakdown?: ModeBreakdown;
   source: string;
   method: string;
   type: DataTypeLabel;

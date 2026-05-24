@@ -844,18 +844,37 @@ const DataCatalogue = () => {
           <GlassCard className="p-5">
             <div className="flex items-start gap-3">
               <Info className="h-4 w-4 text-white/40 flex-shrink-0 mt-0.5" />
-              <div className="text-[12px] text-white/50 leading-relaxed">
-                <span className="text-white/70 font-medium">Integration status. </span>
-                Issy bundles baseline/post zone-flow CSVs under{" "}
-                <code className="text-white/55">/public/data/issy/</code>; live traficissy and city APIs
-                power the map and segment observatory. Zone OD flows must not be read as street-level
-                measurements — see the{" "}
-                <a href="#issy-kpi-methodology" className="text-violet-300 hover:text-violet-200 underline">
-                  Issy KPI derivation
-                </a>{" "}
-                section above or{" "}
-                <code className="text-white/55">docs/ISSY_KPI_METHODOLOGY.md</code> in the repository.
-                Readiness in the matrix is derived automatically from this registry.
+              <div className="text-[12px] text-white/50 leading-relaxed space-y-2">
+                <p>
+                  <span className="text-white/70 font-medium">Issy. </span>
+                  Baseline/post zone-flow CSVs live under{" "}
+                  <code className="text-white/55">/public/data/issy/</code>. Live traficissy and city
+                  APIs power the map and segment observatory. <strong className="text-white/70">
+                    OD rows represent only listed zone_in → zone_out directions.
+                  </strong>{" "}
+                  Reverse or street-level directions are not inferred — see the{" "}
+                  <a
+                    href="#issy-kpi-methodology"
+                    className="text-violet-300 hover:text-violet-200 underline"
+                  >
+                    Issy KPI derivation
+                  </a>{" "}
+                  section above or{" "}
+                  <code className="text-white/55">docs/ISSY_KPI_METHODOLOGY.md</code> in the
+                  repository.
+                </p>
+                <p>
+                  <span className="text-white/70 font-medium">Copenhagen. </span>
+                  Per-camera OpenTrafficCam workbooks include machine-readable sensor coordinates,
+                  direction labels (<code className="text-white/55">flow</code> column), pre/post
+                  count sheets, and per-classification volumes. Map points are real sensors per
+                  direction — no synthetic fallback when ≥4 cameras are loaded. Remaining work is
+                  category/KPI mapping and before-after normalisation; see{" "}
+                  <code className="text-white/55">docs/COPENHAGEN_DATA_AUDIT.md</code>.
+                </p>
+                <p className="text-white/40">
+                  Readiness in the matrix is derived automatically from this registry.
+                </p>
               </div>
             </div>
           </GlassCard>

@@ -12,7 +12,7 @@ import {
   getSegmentHighlight,
   segmentMetricKindForKpi,
 } from "@/lib/segmentHighlight";
-import { trimSegmentApproachFromJunction, outerApproachPoint } from "@/lib/junctionArmRendering";
+import { trimSegmentApproachFromJunction } from "@/lib/junctionArmRendering";
 import { createJunctionSampleDotIcon } from "@/lib/junctionSampleMarkers";
 import { junctionArmSeed } from "@/lib/junctionScenarioValues";
 import { issyModeColor } from "@/lib/issyMapRouting";
@@ -71,8 +71,8 @@ function segmentProps(segment: MapSegment) {
 }
 
 /**
- * Renders the four junction approach arms with click → observatory wiring.
- * Used for KPI 2.1 (safety lines) and KPI 1.2 (mode-share lines on the same four segments).
+ * Renders a single monitored intervention corridor with low-opacity contextual streets.
+ * Used for KPI 2.1 / 1.2 / 3.2 contextual traficissy segment monitoring.
  */
 export function renderIssyJunctionArms(
   map: L.Map,
@@ -180,11 +180,11 @@ export function renderIssyJunctionArms(
       lineColor = highlight.color === "#7B8AB8" ? armAccent : highlight.color;
     }
 
-    const focusDim =
-      options.selectedSegmentId && !isSelected ? 0.42 : 1;
+    // Corridor-first model: non-selected streets are context only (always dimmed).
+    const focusDim = isSelected ? 1 : options.selectedSegmentId ? 0.24 : 0.34;
     const lineStyle = {
       color: isSelected ? "#ffffff" : lineColor,
-      weight: isSelected ? lineWeight + 5 : lineWeight,
+      weight: isSelected ? lineWeight + 5 : Math.max(3.8, lineWeight * 0.62),
       opacity: isSelected ? 1 : Math.min(0.98, lineOpacity * focusDim),
       dashArray,
       lineJoin: "round" as const,
@@ -203,6 +203,11 @@ export function renderIssyJunctionArms(
     const trustKind = kpiPrimaryIssySource(selectedKpi);
     const trustBadge = provenanceBadgesHtml([dataSourceTrustLabel(trustKind), "traficissy"]);
     const metricTitle = junctionArmMetricTitle(selectedKpi);
+
+    const kpi12Note =
+      selectedKpi === "kpi1.2"
+        ? `<p style="font-size: 9px; color: #A78BFA; margin-top: 6px; line-height: 1.35;">Mode share comes from the OD CSV at zone level. The monitored intervention corridor shows traffic context from the traficissy segment API.</p>`
+        : "";
 
     const popupContent = `
       <div style="font-family: 'DM Sans', sans-serif; padding: 8px; min-width: 200px;">
@@ -225,7 +230,8 @@ export function renderIssyJunctionArms(
         ${speed != null ? `<p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Speed: ${speed.toFixed(1)} km/h (observed)</p>` : ""}
         ${congestion != null ? `<p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Congestion index: ${congestion.toFixed(2)} (observed)</p>` : ""}
         <p style="font-size: 9px; color: #A78BFA; margin-top: 6px; line-height: 1.35;">${junctionArmValueCaption(selectedKpi)}</p>
-        <p style="font-size: 9px; color: #96C2EF; margin-top: 4px;">Visualized movement direction — not zone-to-zone OD measurement.</p>
+        ${kpi12Note}
+        <p style="font-size: 9px; color: #96C2EF; margin-top: 4px;">Monitored intervention corridor with observed traficissy context. Nearby streets are low-opacity context only.</p>
         <p style="font-size: 10px; color: #96C2EF; margin-top: 6px; font-weight: 600;">Click for observatory</p>
       </div>
     `;
@@ -303,23 +309,6 @@ export function renderIssyJunctionArms(
     wire(hitLine);
 
     refs.polylines.push(visibleLine, hitLine);
-  });
-
-  ISSY_JUNCTION_ARMS.forEach((armCfg) => {
-    const seg = roadSegments.find((s) => s.id === armCfg.segmentId);
-    if (!seg?.coordinates?.length) return;
-    const approach = trimSegmentApproachFromJunction(seg.coordinates, armCfg.id);
-    const [lat, lon] = outerApproachPoint(approach, armCfg.id);
-    const label = L.marker([lat, lon], {
-      interactive: false,
-      icon: L.divIcon({
-        className: "issy-arm-label",
-        html: `<span style="font:600 10px/1.2 'DM Sans',sans-serif;color:#e8e4ff;text-shadow:0 1px 4px #000">${armCfg.armLabel}</span>`,
-        iconSize: [72, 14],
-        iconAnchor: [36, 7],
-      }),
-    }).addTo(map);
-    refs.markers.push(label);
   });
 
   const [markerLat, markerLng] = junctionMarkerLatLng(roadSegments);

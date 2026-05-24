@@ -591,8 +591,8 @@ const InsightPanel = ({
           )}
           <p className="text-intel-meta font-medium text-white/82 mb-3 leading-snug">
             {isIssyCity && isModeShare
-              ? "Junction arm: observed traficissy segment context. Mode share KPI uses OD CSV in city view."
-              : "Chart and map stay linked to the selected approach arm."}
+              ? "Monitored intervention corridor: observed traficissy segment context. Mode share KPI uses OD CSV in city view."
+              : "Chart and map stay linked to the selected monitored intervention corridor."}
           </p>
           <KPIChart
             kpiId={selectedKpi}

@@ -4,12 +4,16 @@ import type { IssyPilotId } from "@/data/issyPilotProfiles";
 export const ISSY_OD_CSV_DISCLAIMER =
   "Zone-to-zone values are derived from origin/destination flow data and should not be interpreted as direct measurements for each street segment.";
 
+/** Direction semantics for OD CSV rows. */
+export const ISSY_OD_DIRECTIONAL_NOTE =
+  "OD flow is directional and based on zone_in → zone_out records. Reverse movement is only shown if a reverse record exists in the dataset.";
+
 /** Junction arms at study zoom — visual + traficissy context only. */
 export const ISSY_JUNCTION_ARM_VISUAL_DISCLAIMER =
-  "Approach arms show visualized movement direction and observed traficissy segment context (speed, congestion). They are not zone-to-zone OD measurements.";
+  "Context streets show low-opacity observed traficissy segment geometry around the monitored intervention corridor. They are not zone-to-zone OD measurements.";
 
 export const ISSY_JUNCTION_KPI12_ARM_NOTE =
-  "No direct segment-level mode-share dataset on this arm. Modal split for KPI 1.2 comes from observed OD flow CSV at city / pilot level. Arm lines use observed traficissy segment data as traffic context only.";
+  "Mode share comes from the OD CSV at zone level. The monitored intervention corridor shows only traffic context from the traficissy segment API. No direct mode-share measurement is available for contextual streets.";
 
 export type IssyDataSourceKind = "traficissy-segment" | "od-csv" | "bike-api" | "infra-api" | "derived-proxy" | "mock";
 
@@ -82,7 +86,8 @@ export function getIssyPilotInterventionCopy(pilotId: string | null | undefined)
         title: "Mobility observatory",
         summary:
           "The Mobility Observatory supports the city of Issy-les-Moulineaux with a dynamic mobility decision-making tool. It integrates car flow, logistics flow, cycling flow, and modal split indicators to support safety, carbon footprint, and inclusiveness decisions.",
-        schematicCaption: "Visualized movement direction / derived representation — traficissy segment context on approach arms.",
+        schematicCaption:
+          "Visualized movement direction / derived representation — one monitored intervention corridor with contextual traficissy streets.",
       };
   }
 }
@@ -97,7 +102,7 @@ export function junctionArmMetricTitle(kpiId: string): string {
 
 export function junctionArmValueCaption(kpiId: string): string {
   if (kpiId === "kpi1.2") {
-    return "Derived flow estimate from traficissy speed/congestion — not OD mode share on this arm.";
+    return "Observed traffic segment context from traficissy API (speed, congestion). No direct mode-share measurement on contextual streets.";
   }
   if (kpiId === "kpi2.1") {
     return "Derived proxy: 100 − (speed / 60 km/h reference) × 100. Not an official safety rating.";

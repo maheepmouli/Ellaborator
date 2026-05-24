@@ -1,13 +1,13 @@
 /**
  * SegmentIntelligencePanel
  *
- * Issy junction observatory (all study pilots) at Stalingrad / Issy study coordinates.
- * KPI 1.2 mode share: observed OD CSV at city level; arms = traficissy segment context only.
+ * Issy monitored corridor observatory (all study pilots) at Stalingrad / Issy study coordinates.
+ * KPI 1.2 mode share: observed OD CSV at city level; corridor = traficissy segment context only.
  *
  * Coordinates: 48.829725, 2.261046
  *
  * Structure:
- *   Header  →  TabBar  →  [ Overview | Before/After | Intersection | Insights | Data ]
+ *   Header  →  TabBar  →  [ Overview | Before/After | Corridor | Insights | Data ]
  */
 
 import { useState, useEffect, useMemo, useCallback } from "react";
@@ -47,7 +47,6 @@ import {
 import { ISSY_JUNCTION_ARMS, ISSY_P2_JUNCTION } from "@/lib/issyPilot2Junction";
 import {
   buildJunctionStudyView,
-  buildJunctionStudyViews,
   pickDefaultSegment,
   type JunctionStudyView,
 } from "@/lib/issyJunctionAnalytics";
@@ -260,12 +259,12 @@ function OverviewTab({ view }: { view: JunctionStudyView }) {
       <GlassCard className="px-4 py-3">
         <div className="grid grid-cols-2 gap-x-5 gap-y-2 text-[11px]">
           {[
-            ["Approach arm",    view.armLabel],
+            ["Monitored corridor", view.name],
             ["traficissy ID",   view.segmentApiId],
-            ["Intersection",    view.shortName],
+            ["Junction node",   view.shortName],
             ["Monitoring",      view.monitoringPeriod],
             ["Sensors active",  `${view.sensors} stations`],
-            ["Approaches",      `${view.approachesCovered}/${view.totalApproaches} covered`],
+            ["Context streets", `${view.approachesCovered}/${view.totalApproaches} available`],
             ["Intervention",    view.interventionType],
           ].map(([k, v]) => (
             <div key={k}>
@@ -279,7 +278,7 @@ function OverviewTab({ view }: { view: JunctionStudyView }) {
       {/* Sensor coverage bar */}
       <div>
         <div className="flex justify-between mb-1 text-[10px] text-white/40">
-          <span>Approach coverage</span>
+          <span>Context street coverage</span>
           <span>{view.approachesCovered}/{view.totalApproaches} monitored</span>
         </div>
         <div className="h-1.5 rounded-full overflow-hidden" style={{ background: C.border }}>
@@ -416,7 +415,7 @@ function MobilityKpi12ArmTab({ view }: { view: JunctionStudyView }) {
 
       <GlassCard className="px-4 py-3">
         <p className="text-[11px] font-semibold text-white/60 mb-2">
-          Observed segment data — {view.armLabel}
+          Observed segment data — monitored intervention corridor
         </p>
         <p className="text-[10px] text-white/40 mb-3">
           Segment ID {view.segmentApiId} · traficissy API · {dataSourceTrustLabel("traficissy-segment")}
@@ -434,7 +433,7 @@ function MobilityKpi12ArmTab({ view }: { view: JunctionStudyView }) {
           </div>
         </div>
         <p className="text-[10px] text-white/40 mt-3 leading-snug">
-          Map line weight on this arm reflects traffic context from the segment API — not modal share
+          Map line weight on this monitored corridor reflects traffic context from the segment API — not modal share
           from zone_in / zone_out CSV. Open the sidebar at city zoom for zone-to-zone flow arcs and
           mode-share percentages.
         </p>
@@ -521,7 +520,7 @@ function BeforeAfterTab({
 
       {!segmentHasDirectKpiDataset(selectedKpi) && (
         <TransparencyNotice>
-          No direct segment-level dataset for this KPI on the selected arm. Showing derived pilot-level
+          No direct segment-level dataset for this KPI on the selected monitored corridor. Showing derived pilot-level
           context from traficissy speed and congestion fields.
         </TransparencyNotice>
       )}
@@ -683,11 +682,10 @@ function IntersectionSVG({
       {/* Sensor 3: East approach */}
       <SensorDot cx={cx + roadW / 2 + 22} cy={cy + roadW / 4} />
 
-      {/* ── Street name labels ─────────────────────────────────────────────── */}
-      <text x={cx} y={10} textAnchor="middle" fill={highlightArmId === "north" ? "#63ccff" : "#ffffff55"} fontSize="7" fontFamily="sans-serif">Quai Roosevelt (N)</text>
-      <text x={cx} y={size - 2} textAnchor="middle" fill={highlightArmId === "south" ? "#f59e0b" : "#ffffff55"} fontSize="7" fontFamily="sans-serif">Quai Roosevelt (S)</text>
-      <text x={size - 2} y={cy + 3} textAnchor="end" fill={highlightArmId === "east" ? "#10b981" : "#ffffff55"} fontSize="7" fontFamily="sans-serif">Rouget (E)</text>
-      <text x={4} y={cy + 3} textAnchor="start" fill={highlightArmId === "west" ? "#f43f5e" : "#ffffff55"} fontSize="7" fontFamily="sans-serif">Pont Issy (W)</text>
+      {/* Monitored corridor emphasis without equal-weight arm labels */}
+      <text x={size / 2} y={10} textAnchor="middle" fill="#9FE6FF" fontSize="7" fontFamily="sans-serif">
+        Monitored intervention corridor highlighted
+      </text>
 
       <text x={size / 2} y={size - 4} textAnchor="middle" fill="#ffffff45" fontSize="6" fontFamily="sans-serif">
         Visualized movement direction
@@ -731,32 +729,17 @@ function IntersectionTab({
       </TransparencyNotice>
       <GlassCard className="px-4 py-4 flex flex-col items-center">
         <p className="text-[11px] font-semibold text-white/50 mb-3 self-start">
-          Junction schematic — {view.shortName}
+          Monitored intervention corridor schematic — {view.shortName}
         </p>
         <IntersectionSVG expanded highlightArmId={view.armId} />
       </GlassCard>
 
-      {/* Sensor legend */}
       <GlassCard className="px-4 py-3">
-        <p className="text-[11px] font-semibold text-white/50 mb-2.5">Active sensors</p>
-        <div className="space-y-2">
-          {ISSY_JUNCTION_ARMS.map((arm) => (
-            <div key={arm.segmentId} className="flex items-start gap-2.5 text-[11px]">
-              <div className="mt-0.5 flex-shrink-0">
-                <motion.div
-                  className="h-2 w-2 rounded-full"
-                  style={{ background: arm.color }}
-                  animate={{ opacity: [0.5, 1, 0.5] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                />
-              </div>
-              <div>
-                <p className="text-white/75 font-medium leading-tight">{arm.mapLabel}</p>
-                <p className="text-white/35">{arm.apiLabel} · {arm.segmentId}</p>
-              </div>
-            </div>
-          ))}
-        </div>
+        <p className="text-[11px] font-semibold text-white/50 mb-2.5">Corridor monitoring scope</p>
+        <p className="text-[11px] text-white/65 leading-relaxed">
+          Active monitored intervention corridor: <span className="text-white/80 font-medium">{view.name}</span> ({view.segmentApiId}).
+          Nearby traficissy segments remain visible as low-opacity contextual streets and are not analyzed as equal measured approaches.
+        </p>
       </GlassCard>
 
       <GlassCard className="px-4 py-3">
@@ -781,7 +764,7 @@ function InsightsTab({
     <div className="space-y-4">
       {isMobility && (
         <TransparencyNotice>
-          {ISSY_OD_CSV_DISCLAIMER} Use the map at city zoom for zone-to-zone flow arcs; this arm panel
+          {ISSY_OD_CSV_DISCLAIMER} Use the map at city zoom for zone-to-zone flow arcs; this monitored corridor panel
           only summarises observed traficissy segment speed and congestion.
         </TransparencyNotice>
       )}
@@ -792,7 +775,7 @@ function InsightsTab({
           style={{ background: `linear-gradient(90deg, ${C.cyan}, ${C.violet})` }}
         />
         <p className="text-[12px] text-white/75 leading-[1.7]">
-          On <span className="text-white font-medium">{view.armLabel}</span> ({view.name}), the latest API
+          On the <span className="text-white font-medium">monitored intervention corridor</span> ({view.name}), the latest API
           snapshot shows <span className="text-white font-medium">{view.intervention.avgSpeedKmh.toFixed(1)} km/h</span> average
           speed and a congestion index of{" "}
           <span className="text-white font-medium">{(view.intervention.peakCongestion * 100).toFixed(0)}%</span> versus a
@@ -800,7 +783,7 @@ function InsightsTab({
         </p>
         {!isMobility && (
           <p className="text-[12px] text-white/75 leading-[1.7] mt-3">
-            Derived flow estimate on this approach: daily cycling proxy {view.baseline.dailyCycleCount} →{" "}
+            Derived flow estimate on this monitored corridor: daily cycling proxy {view.baseline.dailyCycleCount} →{" "}
             {view.intervention.dailyCycleCount}. Environmental proxy {view.baseline.co2ProxyKgDay} →{" "}
             {view.intervention.co2ProxyKgDay} kg/day ({dataSourceTrustLabel("derived-proxy")}).
           </p>
@@ -814,14 +797,14 @@ function InsightsTab({
           {(
             isMobility
               ? [
-                  { Icon: Bike, text: "Modal split for KPI 1.2 is computed from observed OD CSV at pilot level — not per street segment on this arm." },
-                  { Icon: Gauge, text: `Observed speed on this arm: ${view.intervention.avgSpeedKmh.toFixed(1)} km/h (traficissy segment API).` },
+                  { Icon: Bike, text: "Modal split for KPI 1.2 is computed from observed OD CSV at pilot level — not per street segment on this monitored corridor." },
+                  { Icon: Gauge, text: `Observed speed on the monitored corridor: ${view.intervention.avgSpeedKmh.toFixed(1)} km/h (traficissy segment API).` },
                   { Icon: Car, text: `Congestion index ${(view.intervention.peakCongestion * 100).toFixed(0)}% — use for traffic context only.` },
                   { Icon: BarChart3, text: "Compare zone-to-zone arcs in city view before citing mode-share change in percentage points." },
                 ]
               : [
                   { Icon: Bike, text: "Safety pressure uses derived proxy from segment speed (reference 60 km/h) — not an official star rating." },
-                  { Icon: Car, text: "Congestion-linked pressure shifts with live traficissy snapshots on each approach arm." },
+                  { Icon: Car, text: "Congestion-linked pressure shifts with live traficissy snapshots on the monitored intervention corridor." },
                   { Icon: Leaf, text: "Climate proxies are derived from congestion — not measured CO₂ unless emissions data is linked." },
                   { Icon: Footprints, text: "Schematic shows visualized movement direction, not facility inventory geometry." },
                   { Icon: BarChart3, text: "Strongest comparison signals depend on scenario tab (baseline / intervention / comparison)." },
@@ -891,7 +874,7 @@ function ClimateFieldTab({ view }: { view: JunctionStudyView }) {
       note: `Band: ${view.kpiBand}`,
     },
     {
-      label: "CO₂ proxy (observed arm)",
+      label: "CO₂ proxy (observed corridor)",
       value: `${intervention.co2ProxyKgDay}`,
       suffix: " kg/day",
       color: C.cyan,
@@ -921,7 +904,7 @@ function ClimateFieldTab({ view }: { view: JunctionStudyView }) {
       </TransparencyNotice>
       <GlassCard className="px-4 py-3">
         <p className="text-[11px] text-white/55 leading-relaxed">
-          Climate view for this approach arm — derived environmental pressure aligned with the map hex
+          Climate view for this monitored corridor — derived environmental pressure aligned with the map hex
           field. No modal-share or per-street OD CSV values here.
         </p>
       </GlassCard>
@@ -1135,9 +1118,9 @@ function DataTab({
     selectedKpi === "kpi1.2"
       ? [
           {
-            title: "ISSY1 zone-to-zone flow CSV",
+            title: "ISSY1 zone-to-zone flow CSV (directional zone_in → zone_out)",
             type: "observed",
-            spatial: "zone OD (not street segments)",
+            spatial: "zone OD only — not split across contextual streets",
             temporal: "Nov 2024 baseline · Nov 2025 post",
             format: "CSV",
             confidence: "High",
@@ -1145,7 +1128,7 @@ function DataTab({
           {
             title: "Traffic Segment API (traficissy)",
             type: "observed",
-            spatial: "segment arms only",
+            spatial: "monitored corridor + contextual streets — traffic context, no mode share",
             temporal: "Live snapshot",
             format: "REST API",
             confidence: "High",
@@ -1321,18 +1304,6 @@ export default function SegmentIntelligencePanel({
     [segments]
   );
 
-  const armBandColors = useMemo(() => {
-    const views = buildJunctionStudyViews(
-      junctionArms,
-      pilotLabel,
-      selectedKpi,
-      kpi32IntensityScale,
-      scenario,
-      pilotId
-    );
-    return new Map(views.map((v) => [v.segmentApiId, v.bandColor]));
-  }, [junctionArms, pilotLabel, selectedKpi, kpi32IntensityScale, scenario]);
-
   const view = useMemo(() => {
     const seg =
       segments.find((s) => s.id === selectedSegmentId) ?? pickDefaultSegment(segments);
@@ -1376,7 +1347,7 @@ export default function SegmentIntelligencePanel({
         >
           <p className="text-sm font-semibold text-white">Segment observatory</p>
           <p className="text-xs text-white/55 mt-2 leading-relaxed">
-            Junction traffic for the four approach arms is still loading or unavailable. Try again in a moment, or pick another arm after data appears on the map.
+            Monitored intervention corridor data is still loading or unavailable. Try again in a moment, or pick another monitored corridor after data appears on the map.
           </p>
           <button
             type="button"
@@ -1450,7 +1421,7 @@ export default function SegmentIntelligencePanel({
                 {observatoryConfig.title}
               </p>
               <h2 className="text-[17px] font-bold text-white leading-tight mt-1">
-                {view.armLabel}
+                Monitored intervention corridor
               </h2>
               <p className="text-[12px] mt-0.5 font-medium" style={{ color: view.armColor }}>
                 {view.name}
@@ -1465,25 +1436,26 @@ export default function SegmentIntelligencePanel({
               )}
 
               <div className="flex flex-wrap gap-1 mt-2.5">
-                {ISSY_JUNCTION_ARMS.map((arm) => {
-                  const active = view.segmentApiId === arm.segmentId;
-                  const bandColor = armBandColors.get(arm.segmentId) ?? arm.color;
-                  return (
-                    <button
-                      key={arm.segmentId}
-                      type="button"
-                      onClick={() => onSelectSegmentId?.(arm.segmentId)}
-                      className="px-2 py-1 rounded-md text-[10px] font-medium border transition-colors"
-                      style={{
-                        borderColor: active ? bandColor : "rgba(255,255,255,0.12)",
-                        background: active ? `${bandColor}22` : "rgba(255,255,255,0.04)",
-                        color: active ? bandColor : "rgba(255,255,255,0.45)",
-                      }}
-                    >
-                      {arm.armLabel}
-                    </button>
-                  );
-                })}
+                <span
+                  className="px-2 py-1 rounded-md text-[10px] font-medium border"
+                  style={{
+                    borderColor: "rgba(99,204,255,0.45)",
+                    background: "rgba(99,204,255,0.12)",
+                    color: "#9FE6FF",
+                  }}
+                >
+                  Active monitored corridor · {view.segmentApiId}
+                </span>
+                <span
+                  className="px-2 py-1 rounded-md text-[10px] font-medium border"
+                  style={{
+                    borderColor: "rgba(255,255,255,0.16)",
+                    background: "rgba(255,255,255,0.04)",
+                    color: "rgba(255,255,255,0.52)",
+                  }}
+                >
+                  Other streets shown as contextual geometry only
+                </span>
               </div>
 
               <div className="flex flex-wrap gap-1.5 mt-2">
@@ -1582,7 +1554,7 @@ export default function SegmentIntelligencePanel({
                     animate={{ opacity: [1, 0.2, 1] }}
                     transition={{ duration: 2, repeat: Infinity }}
                   />
-                  <span className="text-white/55">4 arms · traficissy API</span>
+                  <span className="text-white/55">1 monitored corridor · traficissy API context</span>
                 </div>
                 <div className="flex items-center gap-2 text-[10px]">
                   <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ background: C.lavender }} />

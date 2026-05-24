@@ -51,7 +51,7 @@ export const DATASET_RENDERING_RULES: DatasetRenderingRule[] = [
     likelyKpi: "Mobility, Safety, Climate, Infrastructure",
     geometryType: "hex",
     renderingStyle:
-      "Junction arms + climate hex field + soft influence buffer (280 m); segment observatory on arm click",
+      "Single monitored intervention corridor + climate hex field + soft influence buffer (280 m); observatory opens on monitored corridor click",
     parserStatus: "ready",
     realDataStatus: "active",
   },

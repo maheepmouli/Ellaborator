@@ -101,12 +101,12 @@ export function resolveMapLegend(
               marker: "line",
               items: SAFETY_SEGMENT_RAMP,
               hint:
-                "Junction study — observed traficissy segment traffic context on approach arms (visualized movement direction). Modal split KPI uses OD CSV in city view only.",
+                "Junction study — one monitored intervention corridor with observed traficissy traffic context; nearby streets are low-opacity context. Modal split KPI uses OD CSV in city view only.",
             }
           : {
               marker: "line",
               items: SAFETY_SEGMENT_RAMP,
-              hint: "Junction study — observed segment data + derived safety pressure on approach arms.",
+              hint: "Junction study — observed segment data + derived safety pressure on the monitored intervention corridor.",
             };
       case "facility-points":
         return {

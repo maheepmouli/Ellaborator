@@ -8,6 +8,7 @@ import MapControls from "@/components/MapControls";
 import MapTour from "@/components/MapTour";
 import DataSummaryPanel from "@/components/ScenarioPanel";
 import SegmentIntelligencePanel from "@/components/SegmentIntelligencePanel";
+import CopenhagenObservatoryPanel from "@/components/CopenhagenObservatoryPanel";
 import { getPilotsByCity, SelectedPilot, ViewState } from "@/data/pilotDefinitions";
 import { CITY_DATA, ELABORATOR_KPIS } from "@/data/kpiDefinitions";
 import { resolveMapLegend, type MapLegendMarker } from "@/lib/mapLayerLegend";
@@ -19,7 +20,7 @@ import { getIssyPilotProfile } from "@/data/issyPilotProfiles";
 import { canOpenObservatory } from "@/lib/observatoryAccess";
 import type { MapSelectionState } from "@/types/mapSelection";
 import { useMilanSpeedSegments } from "@/hooks/use-milan-segment-data";
-import type { MapSegment } from "@/services/trafficApi";
+import type { TrafficSegment } from "@/types/traffic";
 import { TimeWindowChip } from "@/components/TimeWindowChip";
 import { MapIntelligenceProvider, useMapIntelligence } from "@/context/MapIntelligenceContext";
 
@@ -219,19 +220,33 @@ const MapContent = () => {
     selectedCity === "Milan" && selectedKpi === "kpi2.1"
   );
 
-  const observatorySegments: MapSegment[] = useMemo(() => {
+  const observatorySegments: TrafficSegment[] = useMemo(() => {
     if (selectedCity.toLowerCase().includes("issy") && issyJunctionTraffic?.results?.length) {
       return issyJunctionTraffic.results;
     }
     if (selectedCity === "Milan" && milanSpeedForObservatory?.records?.length) {
       return milanSpeedForObservatory.records.map((record) => ({
         id: record.id,
-        coordinates: record.coordinates,
-        value: record.value,
-        properties: {
-          segment: String(record.properties?.streetName || record.id),
-          vitesse_km_h: Number(record.properties?.avgSpeed || 0),
-          indice_de_congestion: Math.min(1, record.value / 100),
+        segment: String(record.properties?.streetName || record.id),
+        type: "Radial",
+        noeud_amont: "milan-upstream",
+        noeud_aval: "milan-downstream",
+        geo_shape: {
+          type: "Feature",
+          geometry: {
+            type: "LineString",
+            coordinates: (record.coordinates || []).map(([lat, lon]) => [lon, lat] as [number, number]),
+          },
+          properties: {},
+        },
+        date_et_heure_de_comptage_utc: new Date().toISOString(),
+        distance_metres: Math.max(1, Math.round((record.coordinates?.length || 2) * 25)),
+        vitesse_km_h: Number(record.properties?.avgSpeed || 0),
+        temps_perdu_secondes: 0,
+        indice_de_congestion: Math.min(1, record.value / 100),
+        geo_point_2d: {
+          lon: Number(record.properties?.centroidLon ?? record.coordinates?.[0]?.[1] ?? 9.19),
+          lat: Number(record.properties?.centroidLat ?? record.coordinates?.[0]?.[0] ?? 45.47),
         },
       }));
     }
@@ -605,25 +620,37 @@ const MapContent = () => {
         />
       )}
 
-      <SegmentIntelligencePanel
-        isOpen={isObservatoryOpen}
-        onClose={() => setIsObservatoryOpen(false)}
-        pilotLabel={
-          selectedPilot
-            ? `${selectedCity} — ${selectedPilot.name}`
-            : undefined
-        }
-        segments={observatorySegments}
-        selectedSegmentId={selectedJunctionSegmentId}
-        onSelectSegmentId={(id) => patchSelection({ segmentId: id })}
-        selectedKpi={selectedKpi}
-        scenario={scenario}
-        city={selectedCity}
-        pilotId={selectedPilot?.id}
-        kpi32IntensityScale={
-          issyKpi32Intensity != null ? issyKpi32Intensity / 100 : 1
-        }
-      />
+      {selectedCity === "Copenhagen" ? (
+        <CopenhagenObservatoryPanel
+          isOpen={isObservatoryOpen}
+          onClose={() => setIsObservatoryOpen(false)}
+          selectedKpi={selectedKpi}
+          scenario={scenario}
+          selectedModeTypes={selectedModeTypes}
+          selectedDirectionId={selectedJunctionSegmentId}
+          onSelectDirectionId={(id) => patchSelection({ segmentId: id })}
+        />
+      ) : (
+        <SegmentIntelligencePanel
+          isOpen={isObservatoryOpen}
+          onClose={() => setIsObservatoryOpen(false)}
+          pilotLabel={
+            selectedPilot
+              ? `${selectedCity} — ${selectedPilot.name}`
+              : undefined
+          }
+          segments={observatorySegments}
+          selectedSegmentId={selectedJunctionSegmentId}
+          onSelectSegmentId={(id) => patchSelection({ segmentId: id })}
+          selectedKpi={selectedKpi}
+          scenario={scenario}
+          city={selectedCity}
+          pilotId={selectedPilot?.id}
+          kpi32IntensityScale={
+            issyKpi32Intensity != null ? issyKpi32Intensity / 100 : 1
+          }
+        />
+      )}
 
       {/* Bottom Attribution */}
       <div

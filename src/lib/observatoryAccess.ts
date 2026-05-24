@@ -17,5 +17,11 @@ export function canOpenObservatory(
   if (city === "Milan" && kpiId === "kpi2.1") {
     return true;
   }
+  if (
+    city === "Copenhagen" &&
+    ["kpi1.2", "kpi2.1", "kpi3.1", "kpi3.2", "kpi4.1", "kpi4.2"].includes(kpiId)
+  ) {
+    return true;
+  }
   return false;
 }
