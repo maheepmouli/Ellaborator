@@ -46,7 +46,7 @@ import {
 } from "@/lib/issyMapLayers";
 import type { IssyDayCategory } from "@/services/issyFlowData";
 import { DeckLeafletOverlay } from "@/components/map/DeckLeafletOverlay";
-import type { LocalCityPoint } from "@/services/localCityData";
+import { getLocalCityDiagnostics, type LocalCityPoint } from "@/services/localCityData";
 import { infrastructureChartLabelMatchesFeature } from "@/lib/infrastructureChartMapLink";
 import {
   areAllTravelModesSelected,
@@ -1320,28 +1320,89 @@ const HeroMap = ({
         (!trafficData?.results || trafficData.results.length === 0);
 
       const isCopenhagenCity = currentCity.toLowerCase().includes("copenhagen");
-      if (isCopenhagenCity && selectedKpi !== "kpi4.2") {
+      if (isCopenhagenCity && selectedKpi !== "kpi1.2") {
+        addInterventionLayer(cityData, showInterventionLayer);
+        return;
+      }
+      if (isCopenhagenCity && selectedKpi === "kpi1.2") {
         const observedPoints = (localCityPoints || []).filter(
           (p) => p.properties?.dataOrigin === "local-city-dataset"
         );
+        const cphDiagnostics = getLocalCityDiagnostics("Copenhagen", selectedKpi, selectedPilotId);
+        if (observedPoints.length === 0) {
+          const recordsLabel =
+            cphDiagnostics?.reason === "files-unavailable"
+              ? "Observed directional source unavailable"
+              : cphDiagnostics?.reason === "pilot-scope-empty"
+                ? "No observed directional mobility records for the selected configuration."
+                : "No observed directional mobility records for the selected configuration.";
+          const temporalCoverage =
+            cphDiagnostics?.reason === "files-unavailable"
+              ? "source unavailable"
+              : "before-after";
+          onDataQualitySummaryChange?.({
+            recordsLabel,
+            spatialQuality: "exact OpenTrafficCam coordinates",
+            dataType: "observed directional camera counts",
+            temporalCoverage,
+            confidence: cphDiagnostics?.reason === "files-unavailable" ? "Low" : "Medium",
+            provenanceType: "observed",
+            geometryLinkage: "exact",
+            spatialSystemHint: "Observed directional mobility count points only.",
+          });
+          addInterventionLayer(cityData, showInterventionLayer);
+          return;
+        }
         const modeSelected = selectedModeTypes?.length ? selectedModeTypes : [];
-        const recomputeKpi12Pct = (breakdown: any): number => {
-          const total = Number(breakdown?.total ?? 0);
-          if (total <= 0) return 0;
-          const hasAny = modeSelected.length > 0 && !areAllTravelModesSelected(modeSelected);
+        const strictModeFilterActive =
+          modeSelected.length > 0 && !areAllTravelModesSelected(modeSelected);
+        const selectedCountFromBreakdown = (breakdown: any): number => {
           const bike = Number(breakdown?.bike ?? 0);
           const pedestrian = Number(breakdown?.pedestrian ?? 0);
           const motorised = Number(breakdown?.motorised ?? 0);
           const ptw = Number(breakdown?.ptw ?? 0);
-          if (!hasAny) return ((bike + pedestrian) / total) * 100;
+          if (!strictModeFilterActive) return bike + pedestrian;
           let selected = 0;
           if (modeSelected.includes("Cycle")) selected += bike;
           if (modeSelected.includes("Pedestrian")) selected += pedestrian;
-          if (modeSelected.includes("Private Car")) selected += motorised;
-          if (modeSelected.includes("Public Transport")) selected += motorised;
+          if (modeSelected.includes("Private Car") || modeSelected.includes("Public Transport")) {
+            selected += motorised;
+          }
           if (modeSelected.includes("PTW")) selected += ptw;
+          return selected;
+        };
+        const recomputeKpi12Pct = (breakdown: any): number => {
+          const total = Number(breakdown?.total ?? 0);
+          if (total <= 0) return 0;
+          const selected = selectedCountFromBreakdown(breakdown);
           return (selected / total) * 100;
         };
+        if (
+          strictModeFilterActive &&
+          !observedPoints.some((point) => {
+            const modeBreakdown = point.properties?.modeBreakdown as
+              | { pre: { bike: number; pedestrian: number; motorised: number; ptw: number; total: number }; post: { bike: number; pedestrian: number; motorised: number; ptw: number; total: number } }
+              | undefined;
+            if (!modeBreakdown) return false;
+            return (
+              selectedCountFromBreakdown(modeBreakdown.pre) > 0 ||
+              selectedCountFromBreakdown(modeBreakdown.post) > 0
+            );
+          })
+        ) {
+          onDataQualitySummaryChange?.({
+            recordsLabel: "No observed directional mobility records for the selected configuration.",
+            spatialQuality: "exact OpenTrafficCam coordinates",
+            dataType: "observed directional camera counts",
+            temporalCoverage: "before-after",
+            confidence: "High",
+            provenanceType: "observed",
+            geometryLinkage: "exact",
+            spatialSystemHint: "Mode filter currently excludes all observed directional rows.",
+          });
+          addInterventionLayer(cityData, showInterventionLayer);
+          return;
+        }
 
         const cameraValueById = new Map<string, number[]>();
 
@@ -1391,39 +1452,27 @@ const HeroMap = ({
             segmentId
           );
 
-          const isEnvironmental = selectedKpi === "kpi3.2";
           const marker = L.circleMarker([point.lat, point.lon], {
-            radius: isEnvironmental ? (isSelected ? 11 : 9) : (isSelected ? 8.8 : 7),
+            radius: isSelected ? 8.8 : 7,
             fillColor: color,
-            fillOpacity: isEnvironmental ? (isSelected ? 0.42 : 0.22) : (isSelected ? 0.92 : 0.34),
-            color: isEnvironmental ? "rgba(180,210,255,0.45)" : (isSelected ? "#ffffff" : "#E6E8FF"),
-            weight: isEnvironmental ? (isSelected ? 1.4 : 0.9) : (isSelected ? 2.1 : 1.2),
-            opacity: isEnvironmental ? (isSelected ? 0.85 : 0.5) : (isSelected ? 1 : 0.45),
+            fillOpacity: isSelected ? 0.92 : 0.34,
+            color: isSelected ? "#ffffff" : "#E6E8FF",
+            weight: isSelected ? 2.1 : 1.2,
+            opacity: isSelected ? 1 : 0.45,
           }).addTo(mapRef.current!);
 
-          const popup = isEnvironmental
-            ? `
-            <div style="font-family: 'DM Sans', sans-serif; padding: 8px; min-width: 215px;">
-              <p style="font-size: 11px; color: #8578C3; margin: 0 0 2px 0; text-transform: uppercase;">Climate Impact Observatory</p>
-              <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Site context: ${String(props.streetName ?? "Copenhagen corridor")}</p>
-              <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Before environmental pressure: ${baselineValue.toFixed(1)}%</p>
-              <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Intervention environmental pressure: ${interventionValue.toFixed(1)}%</p>
-              <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Comparison: ${comparisonValue >= 0 ? "+" : ""}${comparisonValue.toFixed(1)} pp</p>
-              <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Derived environmental proxy from observed mobility intensity</p>
-              <p style="font-size: 9px; color: #96C2EF; margin-top: 4px;">Not directly measured emissions</p>
-              <p style="font-size: 9px; color: #96C2EF; margin-top: 2px;">Source: OpenTrafficCam observed dataset · modelled field</p>
-            </div>
-          `
-            : `
+          const popup = `
             <div style="font-family: 'DM Sans', sans-serif; padding: 8px; min-width: 205px;">
               <p style="font-size: 11px; color: #8578C3; margin: 0 0 2px 0; text-transform: uppercase;">Directional mobility counts</p>
               <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Camera/site: ${String(props.streetName ?? "Copenhagen camera")}</p>
               <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Observed camera direction: ${direction}</p>
+              <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Selected mode: ${strictModeFilterActive ? modeSelected.join(", ") : "Active mobility (bike + pedestrian)"}</p>
               <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Before: ${baselineValue.toFixed(1)}%</p>
               <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Intervention: ${interventionValue.toFixed(1)}%</p>
               <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Comparison: ${comparisonValue >= 0 ? "+" : ""}${comparisonValue.toFixed(1)} pp</p>
-              <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Corridor activity (active mobility share): ${interventionValue.toFixed(1)}%</p>
-              <p style="font-size: 9px; color: #96C2EF; margin-top: 4px;">Source: OpenTrafficCam observed dataset</p>
+              <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Observed directional count comparison (selected mode set): ${interventionValue.toFixed(1)}%</p>
+              <p style="font-size: 9px; color: #96C2EF; margin-top: 4px;">Source: OpenTrafficCam Excel (observed)</p>
+              <p style="font-size: 9px; color: #96C2EF; margin-top: 2px;">Data type: observed directional counts · Geometry: exact sensor location / linked street geometry</p>
             </div>
           `;
           marker.bindPopup(popup);
@@ -1439,29 +1488,17 @@ const HeroMap = ({
           });
           circlesRef.current.push(marker);
 
-          if (!isEnvironmental) {
-            const arrow = L.marker([point.lat, point.lon], {
-              icon: L.divIcon({
-                className: "cph-direction-arrow",
-                html: `<div style="transform: translate(10px, -10px) rotate(${directionBearingDeg(direction)}deg); color:${color}; opacity:${isSelected ? 0.95 : 0.35}; font-size:${isSelected ? 17 : 14}px; font-weight:700;">➤</div>`,
-                iconSize: [20, 20],
-                iconAnchor: [10, 10],
-              }),
-              interactive: false,
-              zIndexOffset: 750,
-            }).addTo(mapRef.current!);
-            markersRef.current.push(arrow);
-          } else {
-            const glow = L.circle([point.lat, point.lon], {
-              radius: isSelected ? 140 : 110,
-              fillColor: color,
-              fillOpacity: isSelected ? 0.12 : 0.06,
-              color,
-              weight: 0.6,
-              opacity: isSelected ? 0.35 : 0.2,
-            }).addTo(mapRef.current!);
-            circlesRef.current.push(glow);
-          }
+          const arrow = L.marker([point.lat, point.lon], {
+            icon: L.divIcon({
+              className: "cph-direction-arrow",
+              html: `<div style="transform: translate(10px, -10px) rotate(${directionBearingDeg(direction)}deg); color:${color}; opacity:${isSelected ? 0.95 : 0.35}; font-size:${isSelected ? 17 : 14}px; font-weight:700;">➤</div>`,
+              iconSize: [20, 20],
+              iconAnchor: [10, 10],
+            }),
+            interactive: false,
+            zIndexOffset: 750,
+          }).addTo(mapRef.current!);
+          markersRef.current.push(arrow);
         });
 
         if (copenhagenStreetGeoJson?.features?.length) {
@@ -1476,26 +1513,21 @@ const HeroMap = ({
               cameraId,
               `corridor:${cameraId}`
             );
-              const isEnvironmental = selectedKpi === "kpi3.2";
               const line = L.polyline(
               coords.map(([lon, lat]) => [lat, lon] as [number, number]),
               {
-                  color: isSelected ? "#ffffff" : getValueColor(avg, selectedKpi === "kpi2.1"),
-                  weight: isEnvironmental ? (isSelected ? 5.2 : 4.4) : (isSelected ? 6.5 : 4.2),
-                  opacity: isEnvironmental ? (isSelected ? 0.72 : 0.28) : (isSelected ? 0.95 : 0.34),
+                  color: isSelected ? "#ffffff" : getValueColor(avg, false),
+                  weight: isSelected ? 6.5 : 4.2,
+                  opacity: isSelected ? 0.95 : 0.34,
                 lineCap: "round",
                 lineJoin: "round",
               }
             ).addTo(mapRef.current!);
             line.bindPopup(`
               <div style="font-family: 'DM Sans', sans-serif; padding: 6px; min-width: 170px;">
-                  <p style="font-size: 11px; color: #8578C3; margin: 0 0 3px 0; text-transform: uppercase;">${isEnvironmental ? "Environmental influence corridor" : "Corridor activity"}</p>
+                  <p style="font-size: 11px; color: #8578C3; margin: 0 0 3px 0; text-transform: uppercase;">Linked local street geometry</p>
                 <p style="font-size: 10px; color: #96C2EF; margin: 0;">Street: ${feature.properties?.street ?? "n/a"}</p>
-                  <p style="font-size: 9px; color: #96C2EF; margin-top: 4px;">${
-                    isEnvironmental
-                      ? "Derived environmental proxy from observed mobility intensity"
-                      : "Source: OpenTrafficCam observed dataset + OSM street centerline"
-                  }</p>
+                  <p style="font-size: 9px; color: #96C2EF; margin-top: 4px;">Source: OpenTrafficCam observed dataset + OSM street centerline</p>
               </div>
             `);
             line.on("click", () => {
@@ -2259,16 +2291,32 @@ const HeroMap = ({
     }
     if (currentCity.toLowerCase().includes("copenhagen")) {
       const total = localCityPoints?.length || 0;
-      const isEnvironmental = selectedKpi === "kpi3.2";
+      const kpiUnavailable = selectedKpi !== "kpi1.2";
+      const cphDiagnostics = getLocalCityDiagnostics("Copenhagen", selectedKpi, selectedPilotId);
+      const recordsLabel = kpiUnavailable
+        ? "KPI preview only — not available yet"
+        : cphDiagnostics?.reason === "files-unavailable"
+          ? "Observed directional source unavailable"
+          : cphDiagnostics?.reason === "pilot-scope-empty"
+            ? "No observed directional mobility records for the selected configuration."
+            : `${total.toLocaleString()} camera-direction points`;
       onDataQualitySummaryChange({
-        recordsLabel: `${total.toLocaleString()} camera sites`,
+        recordsLabel,
         spatialQuality: "exact OpenTrafficCam coordinates",
-        dataType: isEnvironmental
-          ? "derived environmental proxy from observed mobility intensity"
-          : "observed camera counts",
-        temporalCoverage: "before-after",
-        confidence: total >= 4 ? "High" : "Medium",
-        provenanceType: isEnvironmental ? "derived" : "observed",
+        dataType: kpiUnavailable
+          ? "preview state"
+          : "observed directional mobility counts",
+        temporalCoverage:
+          !kpiUnavailable && cphDiagnostics?.reason === "files-unavailable"
+            ? "source unavailable"
+            : "before-after",
+        confidence:
+          kpiUnavailable || cphDiagnostics?.reason === "files-unavailable"
+            ? "Low"
+            : total >= 4
+              ? "High"
+              : "Medium",
+        provenanceType: kpiUnavailable ? "derived" : "observed",
         geometryLinkage: "exact",
         spatialSystemHint: spatialPlan.legendHint,
       });
@@ -2302,6 +2350,7 @@ const HeroMap = ({
     currentCity,
     selectedKpi,
     localCityPoints,
+    selectedPilotId,
     milanSpeedSegments,
     issyFlows,
     onDataQualitySummaryChange,

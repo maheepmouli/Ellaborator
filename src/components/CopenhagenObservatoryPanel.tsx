@@ -3,8 +3,10 @@ import { AnimatePresence, motion } from "framer-motion";
 import { X, Camera, ArrowRight, Activity, BarChart3, Database } from "lucide-react";
 import { ResponsiveContainer, LineChart, Line, Tooltip as RechTooltip, XAxis, YAxis } from "recharts";
 import { useLocalCityData } from "@/hooks/use-local-city-data";
+import { getLocalCityDiagnostics } from "@/services/localCityData";
 import { CITY_DATA } from "@/data/kpiDefinitions";
 import type { MapScenario } from "@/context/MapIntelligenceContext";
+import { areAllTravelModesSelected } from "@/lib/travelModeMapLink";
 
 type ModeBreakdown = {
   pre: { bike: number; pedestrian: number; motorised: number; ptw: number; total: number };
@@ -19,6 +21,7 @@ interface Props {
   selectedModeTypes: string[];
   selectedDirectionId?: string | null;
   onSelectDirectionId?: (id: string) => void;
+  selectedPilotId?: string | null;
 }
 
 const C = {
@@ -42,13 +45,12 @@ function pct(part: number, total: number): number {
 }
 
 function selectedCount(b: ModeBreakdown["post"], modes: string[]): number {
-  const hasAny = modes.length > 0;
+  const hasAny = modes.length > 0 && !areAllTravelModesSelected(modes);
   if (!hasAny) return b.bike + b.pedestrian;
   let total = 0;
   if (modes.includes("Cycle")) total += b.bike;
   if (modes.includes("Pedestrian")) total += b.pedestrian;
-  if (modes.includes("Private Car")) total += b.motorised;
-  if (modes.includes("Public Transport")) total += b.motorised;
+  if (modes.includes("Private Car") || modes.includes("Public Transport")) total += b.motorised;
   if (modes.includes("PTW")) total += b.ptw;
   return total;
 }
@@ -62,6 +64,13 @@ function badge(label: string) {
   );
 }
 
+function selectedModeLabel(modes: string[]): string {
+  if (!modes.length || areAllTravelModesSelected(modes)) {
+    return "Bicycle + pedestrian categories";
+  }
+  return modes.join(", ");
+}
+
 export default function CopenhagenObservatoryPanel({
   isOpen,
   onClose,
@@ -70,6 +79,7 @@ export default function CopenhagenObservatoryPanel({
   selectedModeTypes,
   selectedDirectionId,
   onSelectDirectionId,
+  selectedPilotId,
 }: Props) {
   const isEnvironmental = selectedKpi === "kpi3.2";
   const isMobility = selectedKpi === "kpi1.2";
@@ -80,9 +90,10 @@ export default function CopenhagenObservatoryPanel({
     "Copenhagen",
     selectedKpi,
     center,
-    undefined,
+    selectedPilotId,
     "intervention"
   );
+  const diagnostics = getLocalCityDiagnostics("Copenhagen", selectedKpi, selectedPilotId);
 
   const rows = useMemo(() => {
     const source = (points || []).filter((p) => p.properties?.dataOrigin === "local-city-dataset");
@@ -97,16 +108,7 @@ export default function CopenhagenObservatoryPanel({
         const preActive = mb.pre.bike + mb.pre.pedestrian;
         const postActive = mb.post.bike + mb.post.pedestrian;
         const selectedPost = selectedCount(mb.post, selectedModeTypes || []);
-        const selectedPre = (() => {
-          if (!selectedModeTypes?.length) return preActive;
-          let total = 0;
-          if (selectedModeTypes.includes("Cycle")) total += mb.pre.bike;
-          if (selectedModeTypes.includes("Pedestrian")) total += mb.pre.pedestrian;
-          if (selectedModeTypes.includes("Private Car")) total += mb.pre.motorised;
-          if (selectedModeTypes.includes("Public Transport")) total += mb.pre.motorised;
-          if (selectedModeTypes.includes("PTW")) total += mb.pre.ptw;
-          return total;
-        })();
+        const selectedPre = selectedCount(mb.pre, selectedModeTypes || []);
         const baselineMobility = pct(selectedPre, mb.pre.total);
         const interventionMobility = pct(selectedPost, mb.post.total);
         const envFrom = (b: ModeBreakdown["pre"] | ModeBreakdown["post"]) => {
@@ -136,6 +138,8 @@ export default function CopenhagenObservatoryPanel({
             { t: "Mid", v: (baselinePct + interventionPct) / 2 },
             { t: "Post", v: interventionPct },
           ],
+          selectedPre,
+          selectedPost,
           preActive,
           postActive,
         };
@@ -145,6 +149,8 @@ export default function CopenhagenObservatoryPanel({
   }, [points, scenario, selectedModeTypes, isEnvironmental]);
 
   const selected = rows.find((r) => r.id === selectedDirectionId) || rows[0];
+  const strictModeFilterActive = isMobility && selectedModeTypes.length > 0 && !areAllTravelModesSelected(selectedModeTypes);
+  const hasSelectedModeRecords = rows.some((r) => r.selectedPre > 0 || r.selectedPost > 0);
 
   return (
     <AnimatePresence>
@@ -159,14 +165,14 @@ export default function CopenhagenObservatoryPanel({
         >
           <div className="mb-3 flex items-start justify-between gap-3">
             <div>
-              <p className="text-xs text-white/55 uppercase tracking-wider">Copenhagen Observatory</p>
+              <p className="text-xs text-white/55 uppercase tracking-wider">Copenhagen Mobility Observatory</p>
               <h3 className="text-sm font-semibold text-white">
-                {isEnvironmental ? "Environmental Pressure Observatory" : "Directional mobility counts"}
+                {isEnvironmental ? "KPI Preview" : "Directional mobility observations"}
               </h3>
               <p className="text-[11px] text-white/60">
                 {isEnvironmental
-                  ? "Derived environmental proxy from observed mobility intensity"
-                  : "OpenTrafficCam observed dataset · observed camera direction analysis"}
+                  ? "Not available yet for demo presentation."
+                  : "OpenTrafficCam pre/post directional observations supporting KPI1.2"}
               </p>
             </div>
             <button onClick={onClose} className="rounded p-1 text-white/70 hover:bg-white/10 hover:text-white">
@@ -187,26 +193,47 @@ export default function CopenhagenObservatoryPanel({
                 Required for KPI4.2 support: observed accessibility audits (e.g. barrier-free network, curb ramps, crossing accessibility, sidewalk quality, POI accessibility), geocoded to corridor segments with pre/post coverage.
               </p>
             </div>
+          ) : strictModeFilterActive && !hasSelectedModeRecords ? (
+            <div className="rounded-xl border p-3 text-[12px] leading-relaxed" style={{ borderColor: C.border, background: C.glass }}>
+              <div className="mb-2 flex items-center gap-2 text-white/85"><Database className="h-4 w-4" />No observed directional mobility records for the selected configuration.</div>
+              <p className="text-white/70">
+                The selected mode filter has no observed OpenTrafficCam records in the current directional camera dataset.
+              </p>
+              <p className="mt-2 text-white/60">
+                Try another mode or re-enable all categories to view directional mobility observations.
+              </p>
+            </div>
           ) : rows.length === 0 ? (
             <div className="rounded-xl border p-3 text-[12px] leading-relaxed" style={{ borderColor: C.border, background: C.glass }}>
-              <div className="mb-2 flex items-center gap-2 text-white/85"><Database className="h-4 w-4" />No observed dataset for {selectedKpi.toUpperCase()}</div>
+              <div className="mb-2 flex items-center gap-2 text-white/85"><Database className="h-4 w-4" />{
+                diagnostics?.reason === "files-unavailable"
+                  ? "Observed directional source unavailable"
+                  : "No observed directional mobility records for the selected configuration."
+              }</div>
               <p className="text-white/70">
-                This KPI currently has no linked observed dataset in Copenhagen.
+                {diagnostics?.reason === "files-unavailable"
+                  ? (diagnostics.message || "One or more required OpenTrafficCam directional files could not be loaded at runtime.")
+                  : diagnostics?.reason === "pilot-scope-empty"
+                    ? "The selected pilot scope has no directional camera rows for the current KPI and scenario."
+                    : "No observed directional mobility records were found for the current configuration."}
               </p>
-              <p className="mt-2 text-white/60">
-                Available observed directional mobility datasets: KPI1.2, KPI2.1, KPI3.2 (OpenTrafficCam pre/post counts).
-              </p>
-              <p className="mt-2 text-white/60">
-                To support this KPI, add an observed dataset that maps to the same camera-direction corridor geometry with pre/post fields.
-              </p>
+              {diagnostics?.reason === "files-unavailable" && diagnostics.missingFiles?.length ? (
+                <p className="mt-2 text-white/60">
+                  Missing files: {diagnostics.missingFiles.map((file) => file.split("/").pop()).join(", ")}
+                </p>
+              ) : (
+                <p className="mt-2 text-white/60">
+                  Available observed directional mobility datasets: KPI1.2 (primary), with directional pre/post camera counts.
+                </p>
+              )}
             </div>
           ) : (
             <>
               <div className="mb-3 flex flex-wrap gap-1.5">
-                {badge(isEnvironmental ? "Derived" : "Observed")}
-                {badge("Pre / Post")}
-                {badge(isEnvironmental ? "Modelled field" : "Observed camera direction")}
-                {badge(isEnvironmental ? "Environmental intensity" : "Active mobility share")}
+                {badge(isEnvironmental ? "Derived" : "OBSERVED")}
+                {badge("PRE/POST DIRECTIONAL COMPARISON")}
+                {badge(isEnvironmental ? "Modelled field" : "DIRECTIONAL COUNTS")}
+                {badge(isEnvironmental ? "Environmental intensity" : "CAMERA-BASED")}
               </div>
 
               {selected ? (
@@ -217,13 +244,16 @@ export default function CopenhagenObservatoryPanel({
                     <ArrowRight className="h-3.5 w-3.5 text-white/60" />
                     <span className="text-[12px] text-white/75">{selected.direction}</span>
                   </div>
+                  <p className="text-[11px] text-white/70 mb-2">
+                    Selected mode: <span className="text-white/90">{selectedModeLabel(selectedModeTypes)}</span>
+                  </p>
                   <div className="grid grid-cols-3 gap-2 text-[11px]">
                     <div className="rounded-lg border p-2" style={{ borderColor: C.border }}>
-                      <p className="text-white/55">{isEnvironmental ? "Before pressure" : "Before"}</p>
+                      <p className="text-white/55">{isEnvironmental ? "Before pressure" : "Pre observations"}</p>
                       <p className="text-sm font-semibold text-white">{selected.baselinePct.toFixed(1)}%</p>
                     </div>
                     <div className="rounded-lg border p-2" style={{ borderColor: C.border }}>
-                      <p className="text-white/55">{isEnvironmental ? "Intervention pressure" : "Intervention"}</p>
+                      <p className="text-white/55">{isEnvironmental ? "Intervention pressure" : "Post observations"}</p>
                       <p className="text-sm font-semibold text-white">{selected.interventionPct.toFixed(1)}%</p>
                     </div>
                     <div className="rounded-lg border p-2" style={{ borderColor: C.border }}>
@@ -245,16 +275,21 @@ export default function CopenhagenObservatoryPanel({
                             `${v.toFixed(1)}%`,
                             isEnvironmental
                               ? "modelled environmental intensity"
-                              : "active mobility share",
+                              : "observed directional comparison",
                           ]}
                         />
                       </LineChart>
                     </ResponsiveContainer>
                   </div>
+                  <div className="mt-3 space-y-1 text-[10px] text-white/65">
+                    <p>Source: OpenTrafficCam Excel</p>
+                    <p>Data type: observed directional counts</p>
+                    <p>Geometry: exact sensor location / linked street geometry</p>
+                  </div>
                 </div>
               ) : (
                 <div className="mb-3 rounded-xl border p-3 text-[12px] text-white/65" style={{ borderColor: C.border, background: C.glass }}>
-                  No observed camera-direction records are available for the current selection.
+                  No observed directional mobility records for the selected configuration.
                 </div>
               )}
 
@@ -274,7 +309,7 @@ export default function CopenhagenObservatoryPanel({
                         <span className="text-[10px] text-white/55">{row.direction}</span>
                       </div>
                       <div className="grid grid-cols-3 gap-2 text-[10px] text-white/70">
-                        <span className="inline-flex items-center gap-1"><Activity className="h-3 w-3" />{isEnvironmental ? "Before pressure" : "Before"} {row.baselinePct.toFixed(1)}%</span>
+                        <span className="inline-flex items-center gap-1"><Activity className="h-3 w-3" />{isEnvironmental ? "Before pressure" : "Pre"} {row.baselinePct.toFixed(1)}%</span>
                         <span className="inline-flex items-center gap-1"><BarChart3 className="h-3 w-3" />{isEnvironmental ? "Post pressure" : "Post"} {row.interventionPct.toFixed(1)}%</span>
                         <span className={row.delta >= 0 ? "text-lime-300" : "text-violet-300"}>{row.delta >= 0 ? "+" : ""}{row.delta.toFixed(1)} pp</span>
                       </div>

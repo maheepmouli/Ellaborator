@@ -9,6 +9,9 @@ import type { LayerTrustSummary } from "@/components/LayerTrustStrip";
 import { DataProvenanceBadge } from "@/components/DataProvenanceBadge";
 
 function kpiDataNote(city: string, pilotId: string, kpiId: string): string | null {
+  if (city === "Copenhagen" && kpiId === "kpi1.2") {
+    return "KPI 1.2 supporting indicator: observed directional mobility counts from OpenTrafficCam with pre/post camera-direction comparison at exact sensor locations.";
+  }
   const isIssy = city.toLowerCase().includes("issy");
   if (!isIssy) return null;
 

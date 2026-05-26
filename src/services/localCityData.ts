@@ -10,6 +10,8 @@ export interface LocalCityPoint {
 }
 
 const normalizedRecordCache = new Map<string, NormalizedCityRecord[]>();
+const copenhagenParseDiagnostics = new Map<string, CopenhagenParseDiagnostics>();
+const localCityDiagnosticsCache = new Map<string, LocalCityDiagnostics>();
 
 const COPENHAGEN_CAMERA_FILES = [
   "/sharepoint-data/Copenhagen/OpenTrafficCam Counts 2024 and 2025/Countings_Norreport_sortet.xlsx",
@@ -94,6 +96,48 @@ interface CphFlowAgg {
   ptw: number;
 }
 
+type CopenhagenParseStatus = "ok" | "files-unavailable" | "no-records";
+
+interface CopenhagenParseDiagnostics {
+  status: CopenhagenParseStatus;
+  message: string;
+  missingFiles: string[];
+  loadedFiles: string[];
+}
+
+export type LocalCityDiagnosticsReason =
+  | "ok"
+  | "files-unavailable"
+  | "pilot-scope-empty"
+  | "mode-scope-empty"
+  | "no-records";
+
+export interface LocalCityDiagnostics {
+  reason: LocalCityDiagnosticsReason;
+  message: string;
+  missingFiles?: string[];
+  loadedFiles?: string[];
+}
+
+function localCityDiagnosticsKey(
+  cityName: string,
+  kpiId: string,
+  selectedPilotId?: string | null
+): string {
+  return `${normalizeCityKey(cityName)}::${kpiId}::${selectedPilotId ?? "all"}`;
+}
+
+export function getLocalCityDiagnostics(
+  cityName: string,
+  kpiId: string,
+  selectedPilotId?: string | null
+): LocalCityDiagnostics | null {
+  return (
+    localCityDiagnosticsCache.get(localCityDiagnosticsKey(cityName, kpiId, selectedPilotId)) ||
+    null
+  );
+}
+
 function aggregateCphRows(rows: Record<string, unknown>[]): Map<string, CphFlowAgg> {
   const byFlow = new Map<string, CphFlowAgg>();
   rows.forEach((row) => {
@@ -163,119 +207,158 @@ async function parseCopenhagenRecords(kpiId: string): Promise<NormalizedCityReco
   if (cached) return cached;
 
   const records: NormalizedCityRecord[] = [];
+  const missingFiles: string[] = [];
+  const loadedFiles: string[] = [];
 
   for (const filePath of COPENHAGEN_CAMERA_FILES) {
-    const response = await fetch(encodeURI(filePath));
-    if (!response.ok) continue;
+    try {
+      const response = await fetch(encodeURI(filePath));
+      if (!response.ok) {
+        missingFiles.push(filePath);
+        continue;
+      }
+      loadedFiles.push(filePath);
 
-    const workbook = XLSX.read(await response.arrayBuffer(), { type: "array" });
-    const overviewRows = XLSX.utils.sheet_to_json<(string | number | null)[]>(
-      workbook.Sheets.Overview || workbook.Sheets[workbook.SheetNames[0]],
-      { header: 1, raw: false }
-    );
-    const coordRow = overviewRows.find((row) =>
-      String(row?.[0] || "").toLowerCase().includes("coordinates")
-    );
-    const siteRow = overviewRows.find((row) =>
-      String(row?.[0] || "").toLowerCase().includes("site")
-    );
-    const datePreRow = overviewRows.find((row) =>
-      String(row?.[0] || "").toLowerCase().includes("date pre")
-    );
-    const datePostRow = overviewRows.find((row) =>
-      String(row?.[0] || "").toLowerCase().includes("date post")
-    );
+      const workbook = XLSX.read(await response.arrayBuffer(), { type: "array" });
+      const overviewRows = XLSX.utils.sheet_to_json<(string | number | null)[]>(
+        workbook.Sheets.Overview || workbook.Sheets[workbook.SheetNames[0]],
+        { header: 1, raw: false }
+      );
+      const coordRow = overviewRows.find((row) =>
+        String(row?.[0] || "").toLowerCase().includes("coordinates")
+      );
+      const siteRow = overviewRows.find((row) =>
+        String(row?.[0] || "").toLowerCase().includes("site")
+      );
+      const datePreRow = overviewRows.find((row) =>
+        String(row?.[0] || "").toLowerCase().includes("date pre")
+      );
+      const datePostRow = overviewRows.find((row) =>
+        String(row?.[0] || "").toLowerCase().includes("date post")
+      );
 
-    const coords = parseCoordinates(String(coordRow?.[1] || ""));
-    if (!coords) continue;
-    const siteName = String(siteRow?.[1] || "Copenhagen camera");
+      const coords = parseCoordinates(String(coordRow?.[1] || ""));
+      if (!coords) continue;
+      const siteName = String(siteRow?.[1] || "Copenhagen camera");
 
-    const sheetNames = workbook.SheetNames;
-    const preSheetName = sheetNames.find(
-      (name) => /^data_/i.test(name) && /pre/i.test(name)
-    );
-    const postSheetName = sheetNames.find(
-      (name) => /^data_/i.test(name) && /post/i.test(name)
-    );
+      const sheetNames = workbook.SheetNames;
+      const preSheetName = sheetNames.find(
+        (name) => /^data_/i.test(name) && /pre/i.test(name)
+      );
+      const postSheetName = sheetNames.find(
+        (name) => /^data_/i.test(name) && /post/i.test(name)
+      );
 
-    const preRows = preSheetName
-      ? XLSX.utils.sheet_to_json<Record<string, unknown>>(workbook.Sheets[preSheetName], {
-          defval: null,
-        })
-      : [];
-    const postRows = postSheetName
-      ? XLSX.utils.sheet_to_json<Record<string, unknown>>(workbook.Sheets[postSheetName], {
-          defval: null,
-        })
-      : [];
+      const preRows = preSheetName
+        ? XLSX.utils.sheet_to_json<Record<string, unknown>>(workbook.Sheets[preSheetName], {
+            defval: null,
+          })
+        : [];
+      const postRows = postSheetName
+        ? XLSX.utils.sheet_to_json<Record<string, unknown>>(workbook.Sheets[postSheetName], {
+            defval: null,
+          })
+        : [];
 
-    const preByFlow = aggregateCphRows(preRows);
-    const postByFlow = aggregateCphRows(postRows);
-    const allFlows = new Set<string>([...preByFlow.keys(), ...postByFlow.keys()]);
-    if (allFlows.size === 0) continue;
+      const preByFlow = aggregateCphRows(preRows);
+      const postByFlow = aggregateCphRows(postRows);
+      const allFlows = new Set<string>([...preByFlow.keys(), ...postByFlow.keys()]);
+      if (allFlows.size === 0) continue;
 
-    const siteId = siteName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-    const intervention = inferCopenhagenPilot(siteName);
-    const tempCoverage: NormalizedCityRecord["temporalCoverage"] =
-      preByFlow.size > 0 && postByFlow.size > 0 ? "before-after" : "single-period";
+      const siteId = siteName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      const intervention = inferCopenhagenPilot(siteName);
+      const tempCoverage: NormalizedCityRecord["temporalCoverage"] =
+        preByFlow.size > 0 && postByFlow.size > 0 ? "before-after" : "single-period";
 
-    allFlows.forEach((flow) => {
-      const pre = preByFlow.get(flow);
-      const post = postByFlow.get(flow);
-      const baselineAgg = pre ?? { flow, total: 0, bike: 0, pedestrian: 0, motorized: 0, ptw: 0 };
-      const interventionAgg =
-        post ?? { flow, total: 0, bike: 0, pedestrian: 0, motorized: 0, ptw: 0 };
-      const baselineValue = cphSiteMetric(baselineAgg, kpiId);
-      const interventionValue = cphSiteMetric(interventionAgg, kpiId);
-      const flowId = flow.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-      records.push({
-        id: `copenhagen-${kpiId}-${siteId}-${flowId}`,
-        city: "Copenhagen",
-        cityId: "copenhagen",
-        interventionId: intervention,
-        kpiId,
-        sourceFile: filePath,
-        geometryType: kpiId === "kpi3.2" ? "hex" : "point",
-        lat: coords.lat,
-        lng: coords.lon,
-        geometry: [[coords.lat, coords.lon]],
-        timestamp: String(datePostRow?.[1] || ""),
-        value: interventionValue || baselineValue,
-        baselineValue,
-        interventionValue,
-        comparisonValue: interventionValue - baselineValue,
-        mode: flow,
-        modeBreakdown: {
-          pre: {
-            bike: baselineAgg.bike,
-            pedestrian: baselineAgg.pedestrian,
-            motorised: baselineAgg.motorized,
-            ptw: baselineAgg.ptw,
-            total: baselineAgg.total,
+      allFlows.forEach((flow) => {
+        const pre = preByFlow.get(flow);
+        const post = postByFlow.get(flow);
+        const baselineAgg = pre ?? { flow, total: 0, bike: 0, pedestrian: 0, motorized: 0, ptw: 0 };
+        const interventionAgg =
+          post ?? { flow, total: 0, bike: 0, pedestrian: 0, motorized: 0, ptw: 0 };
+        const baselineValue = cphSiteMetric(baselineAgg, kpiId);
+        const interventionValue = cphSiteMetric(interventionAgg, kpiId);
+        const flowId = flow.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+        records.push({
+          id: `copenhagen-${kpiId}-${siteId}-${flowId}`,
+          city: "Copenhagen",
+          cityId: "copenhagen",
+          interventionId: intervention,
+          kpiId,
+          sourceFile: filePath,
+          geometryType: kpiId === "kpi3.2" ? "hex" : "point",
+          lat: coords.lat,
+          lng: coords.lon,
+          geometry: [[coords.lat, coords.lon]],
+          timestamp: String(datePostRow?.[1] || ""),
+          value: interventionValue || baselineValue,
+          baselineValue,
+          interventionValue,
+          comparisonValue: interventionValue - baselineValue,
+          mode: flow,
+          modeBreakdown: {
+            pre: {
+              bike: baselineAgg.bike,
+              pedestrian: baselineAgg.pedestrian,
+              motorised: baselineAgg.motorized,
+              ptw: baselineAgg.ptw,
+              total: baselineAgg.total,
+            },
+            post: {
+              bike: interventionAgg.bike,
+              pedestrian: interventionAgg.pedestrian,
+              motorised: interventionAgg.motorized,
+              ptw: interventionAgg.ptw,
+              total: interventionAgg.total,
+            },
           },
-          post: {
-            bike: interventionAgg.bike,
-            pedestrian: interventionAgg.pedestrian,
-            motorised: interventionAgg.motorized,
-            ptw: interventionAgg.ptw,
-            total: interventionAgg.total,
-          },
-        },
-        source: "OpenTrafficCam counts (pre + post per direction)",
-        method:
-          "Pre and post 15-min counts aggregated by direction (flow column) and vehicle classification; coordinates from workbook Overview sheet.",
-        type: "observed",
-        spatialQuality: "exact",
-        geometryLinkage: "exact",
-        temporalCoverage: tempCoverage,
-        locationMethod: "coordinates",
-        segmentId: `${siteId}-${flowId}`,
-        streetName: siteName,
-        spatialNote: `${siteName} · direction: ${flow}${
-          datePreRow ? ` · pre: ${String(datePreRow[1] ?? "").split(",")[0]}` : ""
-        }${datePostRow ? ` · post: ${String(datePostRow[1] ?? "").split(",")[0]}` : ""}`,
-        parserStatus: "ready",
+          source: "OpenTrafficCam counts (pre + post per direction)",
+          method:
+            "Pre and post 15-min counts aggregated by direction (flow column) and vehicle classification; coordinates from workbook Overview sheet.",
+          type: "observed",
+          spatialQuality: "exact",
+          geometryLinkage: "exact",
+          temporalCoverage: tempCoverage,
+          locationMethod: "coordinates",
+          segmentId: `${siteId}-${flowId}`,
+          streetName: siteName,
+          spatialNote: `${siteName} · direction: ${flow}${
+            datePreRow ? ` · pre: ${String(datePreRow[1] ?? "").split(",")[0]}` : ""
+          }${datePostRow ? ` · post: ${String(datePostRow[1] ?? "").split(",")[0]}` : ""}`,
+          parserStatus: "ready",
+        });
       });
+    } catch {
+      missingFiles.push(filePath);
+    }
+  }
+
+  if (missingFiles.length > 0 || loadedFiles.length !== COPENHAGEN_CAMERA_FILES.length) {
+    copenhagenParseDiagnostics.set(kpiId, {
+      status: "files-unavailable",
+      message:
+        "Observed directional source files are unavailable. Copenhagen KPI1.2 rendering is disabled until all four Countings_*_sortet.xlsx files are reachable.",
+      missingFiles,
+      loadedFiles,
+    });
+    normalizedRecordCache.set(cacheKey, []);
+    return [];
+  }
+
+  if (records.length === 0) {
+    copenhagenParseDiagnostics.set(kpiId, {
+      status: "no-records",
+      message:
+        "All four directional source files loaded, but no directional pre/post rows were parsed for the selected KPI.",
+      missingFiles: [],
+      loadedFiles,
+    });
+  } else {
+    copenhagenParseDiagnostics.set(kpiId, {
+      status: "ok",
+      message: "Directional observed counts loaded from all four per-site OpenTrafficCam files.",
+      missingFiles: [],
+      loadedFiles,
     });
   }
 
@@ -517,8 +600,13 @@ export async function loadLocalCityPoints(
   const filtered = selectedPilotId
     ? records.filter((record) => record.interventionId === selectedPilotId)
     : records;
+  const diagnosticsKey = localCityDiagnosticsKey(cityName, kpiId, selectedPilotId);
 
   if (filtered.length > 0) {
+    localCityDiagnosticsCache.set(diagnosticsKey, {
+      reason: "ok",
+      message: "Observed records loaded for the selected configuration.",
+    });
     return filtered
       .filter((record) => typeof record.lat === "number" && typeof record.lng === "number")
       .map((record, index) => ({
@@ -559,7 +647,26 @@ export async function loadLocalCityPoints(
       }));
   }
 
-  if (normalizeCityKey(cityName) === "copenhagen" && kpiId === "kpi4.2") {
+  if (normalizeCityKey(cityName) === "copenhagen") {
+    const parseDiagnostics = copenhagenParseDiagnostics.get(kpiId);
+    if (parseDiagnostics?.status === "files-unavailable") {
+      localCityDiagnosticsCache.set(diagnosticsKey, {
+        reason: "files-unavailable",
+        message: parseDiagnostics.message,
+        missingFiles: parseDiagnostics.missingFiles,
+        loadedFiles: parseDiagnostics.loadedFiles,
+      });
+    } else if (records.length > 0 && selectedPilotId) {
+      localCityDiagnosticsCache.set(diagnosticsKey, {
+        reason: "pilot-scope-empty",
+        message: "No observed directional mobility records for the selected pilot scope.",
+      });
+    } else {
+      localCityDiagnosticsCache.set(diagnosticsKey, {
+        reason: "no-records",
+        message: "No observed directional mobility records for the selected configuration.",
+      });
+    }
     return [];
   }
 

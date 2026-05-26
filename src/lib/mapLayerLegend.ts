@@ -65,6 +65,7 @@ export function resolveMapLegend(
 ): MapLegendSpec {
   const isIssy = city.toLowerCase().includes("issy");
   const isMilan = city === "milan";
+  const isCopenhagen = city.toLowerCase().includes("copenhagen");
   const spatial = resolveSpatialSystem(city, kpiId, {
     junctionStudy: options?.issyJunctionStudy,
   });
@@ -141,6 +142,14 @@ export function resolveMapLegend(
       default:
         break;
     }
+  }
+
+  if (isCopenhagen && kpiId === "kpi1.2") {
+    return {
+      marker: "point",
+      items: POINT_INTENSITY_ITEMS,
+      hint: "Directional OpenTrafficCam observations: one point per camera direction. Values are pre/post observed counts and selected-mode proportions at sensor-direction level (supporting KPI1.2).",
+    };
   }
 
   if (isIssy && spatial) {

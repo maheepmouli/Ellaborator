@@ -868,8 +868,10 @@ const DataCatalogue = () => {
                   Per-camera OpenTrafficCam workbooks include machine-readable sensor coordinates,
                   direction labels (<code className="text-white/55">flow</code> column), pre/post
                   count sheets, and per-classification volumes. Map points are real sensors per
-                  direction — no synthetic fallback when ≥4 cameras are loaded. Remaining work is
-                  category/KPI mapping and before-after normalisation; see{" "}
+                  direction with exact geometry and observed pre/post values. KPI1.2 is marked{" "}
+                  <strong className="text-white/70">ready</strong> as a supporting indicator with
+                  observed directional mobility counts (not a full city-wide modal share dataset);
+                  see{" "}
                   <code className="text-white/55">docs/COPENHAGEN_DATA_AUDIT.md</code>.
                 </p>
                 <p className="text-white/40">

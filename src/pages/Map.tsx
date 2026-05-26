@@ -185,6 +185,12 @@ const MapContent = () => {
   }, [selectedKpi]);
 
   useEffect(() => {
+    if (selectedCity === "Copenhagen" && selectedKpi !== "kpi1.2") {
+      setIsObservatoryOpen(false);
+    }
+  }, [selectedCity, selectedKpi]);
+
+  useEffect(() => {
     setInfrastructureMapFocus(null);
     setEmissionsIntensityYear(null);
     setIsObservatoryOpen(false);
@@ -309,6 +315,10 @@ const MapContent = () => {
   const handleCitySelect = (city: string) => {
     setSelectedCity(city);
     setIntelCity(city);
+    if (city === "Copenhagen") {
+      setSelectedKpi("kpi1.2");
+      setIntelKpiId("kpi1.2");
+    }
   };
 
   const handleSegmentHover = useCallback(
@@ -629,6 +639,7 @@ const MapContent = () => {
           selectedModeTypes={selectedModeTypes}
           selectedDirectionId={selectedJunctionSegmentId}
           onSelectDirectionId={(id) => patchSelection({ segmentId: id })}
+          selectedPilotId={selectedPilot?.id}
         />
       ) : (
         <SegmentIntelligencePanel

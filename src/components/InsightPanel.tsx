@@ -29,7 +29,9 @@ import {
 } from "@/lib/kpiBaselineVersusIntervention";
 import { formatKpiFigure } from "@/lib/formatKpiFigure";
 import { useIssyFlowData } from "@/hooks/use-issy-flow-data";
+import { useLocalCityData } from "@/hooks/use-local-city-data";
 import { buildIssyModeShareKpiSlices } from "@/lib/issyFlowAggregates";
+import { areAllTravelModesSelected } from "@/lib/travelModeMapLink";
 import type { ChartDrillPayload } from "@/types/chartMapInteraction";
 import { getKpi32TimeSeriesIntensity } from "@/lib/kpi32YearIntensity";
 import { LayerTrustStrip, type LayerTrustSummary } from "@/components/LayerTrustStrip";
@@ -143,6 +145,9 @@ const InsightPanel = ({
   }, [selectedKpi]);
 
   const isIssyCity = selectedCity.toLowerCase().includes("issy");
+  const isCopenhagenCity = selectedCity === "Copenhagen";
+  const isCopenhagenKpi12 = isCopenhagenCity && selectedKpi === "kpi1.2";
+  const isCopenhagenPreviewKpi = isCopenhagenCity && selectedKpi !== "kpi1.2";
   const issyFlowsQueryEnabled = isIssyCity && selectedKpi === "kpi1.2";
   const { data: issyFlowFeatures } = useIssyFlowData(issyFlowDayCategory, issyFlowsQueryEnabled);
   const issyModeShareFromCsv = useMemo(
@@ -153,6 +158,100 @@ const InsightPanel = ({
     [issyFlowsQueryEnabled, issyFlowFeatures]
   );
   const usingIssyObservedModeShare = !!issyModeShareFromCsv;
+  const copenhagenCenter = cityData ? { lat: cityData.lat, lon: cityData.lon } : null;
+  const shouldUseCopenhagenObserved =
+    selectedCity === "Copenhagen" && selectedKpi === "kpi1.2";
+  const { data: copenhagenLocalPoints } = useLocalCityData(
+    "Copenhagen",
+    selectedKpi,
+    shouldUseCopenhagenObserved ? copenhagenCenter : null,
+    selectedPilotId || null,
+    "intervention"
+  );
+  const copenhagenObservedModeShare = useMemo(() => {
+    if (!shouldUseCopenhagenObserved || !copenhagenLocalPoints?.length) return null;
+    const strictModeFilterActive =
+      selectedModeTypes.length > 0 && !areAllTravelModesSelected(selectedModeTypes);
+    const sumBySelection = (
+      b?: { bike?: number; pedestrian?: number; motorised?: number; ptw?: number; total?: number }
+    ) => {
+      const bike = Number(b?.bike ?? 0);
+      const pedestrian = Number(b?.pedestrian ?? 0);
+      const motorised = Number(b?.motorised ?? 0);
+      const ptw = Number(b?.ptw ?? 0);
+      if (!strictModeFilterActive) return bike + pedestrian;
+      let selected = 0;
+      if (selectedModeTypes.includes("Cycle")) selected += bike;
+      if (selectedModeTypes.includes("Pedestrian")) selected += pedestrian;
+      if (selectedModeTypes.includes("Private Car") || selectedModeTypes.includes("Public Transport")) {
+        selected += motorised;
+      }
+      if (selectedModeTypes.includes("PTW")) selected += ptw;
+      return selected;
+    };
+
+    let preSelected = 0;
+    let postSelected = 0;
+    let preTotal = 0;
+    let postTotal = 0;
+    let preBike = 0;
+    let postBike = 0;
+    let prePed = 0;
+    let postPed = 0;
+    let preMotor = 0;
+    let postMotor = 0;
+    let prePtw = 0;
+    let postPtw = 0;
+
+    copenhagenLocalPoints
+      .filter((p) => p.properties?.dataOrigin === "local-city-dataset")
+      .forEach((point) => {
+        const modeBreakdown = point.properties?.modeBreakdown as
+          | {
+              pre: { bike: number; pedestrian: number; motorised: number; ptw: number; total: number };
+              post: { bike: number; pedestrian: number; motorised: number; ptw: number; total: number };
+            }
+          | undefined;
+        if (!modeBreakdown) return;
+        preSelected += sumBySelection(modeBreakdown.pre);
+        postSelected += sumBySelection(modeBreakdown.post);
+        preTotal += Number(modeBreakdown.pre.total ?? 0);
+        postTotal += Number(modeBreakdown.post.total ?? 0);
+        preBike += Number(modeBreakdown.pre.bike ?? 0);
+        postBike += Number(modeBreakdown.post.bike ?? 0);
+        prePed += Number(modeBreakdown.pre.pedestrian ?? 0);
+        postPed += Number(modeBreakdown.post.pedestrian ?? 0);
+        preMotor += Number(modeBreakdown.pre.motorised ?? 0);
+        postMotor += Number(modeBreakdown.post.motorised ?? 0);
+        prePtw += Number(modeBreakdown.pre.ptw ?? 0);
+        postPtw += Number(modeBreakdown.post.ptw ?? 0);
+      });
+
+    const baselineMain = preTotal > 0 ? (preSelected / preTotal) * 100 : 0;
+    const interventionMain = postTotal > 0 ? (postSelected / postTotal) * 100 : 0;
+    const toPct = (n: number, d: number) => (d > 0 ? (n / d) * 100 : 0);
+
+    return {
+      baselineMain,
+      interventionMain,
+      change: interventionMain - baselineMain,
+      breakdownBaseline: {
+        Pedestrian: toPct(prePed, preTotal),
+        Cycle: toPct(preBike, preTotal),
+        "Public Transport": toPct(preMotor, preTotal),
+        "Private Car": toPct(preMotor, preTotal),
+        PTW: toPct(prePtw, preTotal),
+      },
+      breakdownIntervention: {
+        Pedestrian: toPct(postPed, postTotal),
+        Cycle: toPct(postBike, postTotal),
+        "Public Transport": toPct(postMotor, postTotal),
+        "Private Car": toPct(postMotor, postTotal),
+        PTW: toPct(postPtw, postTotal),
+      },
+      hasSelectedRecords: postSelected > 0 || preSelected > 0,
+    };
+  }, [shouldUseCopenhagenObserved, copenhagenLocalPoints, selectedModeTypes]);
 
   const chartExplorerKeys = useMemo(() => {
     if (selectedKpi === "kpi1.2") return selectedModeTypes;
@@ -270,15 +369,35 @@ const InsightPanel = ({
 
   if (!kpiDef || !kpiValue) return null;
 
-  const baselineKvSlice = issyModeShareFromCsv?.baseline ?? baselineKpiSlice(kpiValue);
-  const interventionKvSlice = issyModeShareFromCsv?.intervention ?? interventionKpiSlice(kpiValue);
+  const baselineKvSlice = issyModeShareFromCsv
+    ? issyModeShareFromCsv.baseline
+    : copenhagenObservedModeShare
+      ? {
+          mainValue: copenhagenObservedModeShare.baselineMain,
+          breakdown: copenhagenObservedModeShare.breakdownBaseline,
+          change: 0,
+        }
+      : baselineKpiSlice(kpiValue);
+  const interventionKvSlice = issyModeShareFromCsv
+    ? issyModeShareFromCsv.intervention
+    : copenhagenObservedModeShare
+      ? {
+          mainValue: copenhagenObservedModeShare.interventionMain,
+          breakdown: copenhagenObservedModeShare.breakdownIntervention,
+          change: copenhagenObservedModeShare.change,
+        }
+      : interventionKpiSlice(kpiValue);
   const baselineMainValue = issyModeShareFromCsv
     ? issyModeShareFromCsv.baseline.mainValue
-    : computeBaselineMainValue(kpiValue);
+    : copenhagenObservedModeShare
+      ? copenhagenObservedModeShare.baselineMain
+      : computeBaselineMainValue(kpiValue);
   const interventionMainValue = issyModeShareFromCsv
     ? issyModeShareFromCsv.intervention.mainValue
-    : Number(kpiValue.mainValue);
-  const headlineChange = issyModeShareFromCsv?.intervention.change ?? kpiValue.change;
+    : copenhagenObservedModeShare
+      ? copenhagenObservedModeShare.interventionMain
+      : Number(kpiValue.mainValue);
+  const headlineChange = issyModeShareFromCsv?.intervention.change ?? copenhagenObservedModeShare?.change ?? kpiValue.change;
   const currentMainValue = scenario === "baseline" ? baselineMainValue : interventionMainValue;
   const currentBreakdown =
     scenario === "baseline" ? baselineKvSlice.breakdown : interventionKvSlice.breakdown;
@@ -446,18 +565,41 @@ const InsightPanel = ({
               {availableKpis.map((kpi) => (
                 <SelectItem key={kpi.id} value={kpi.id} className="text-sm py-2.5 hover:bg-violet/10 focus:bg-violet/10">
                   {kpi.ref} - {getKpiFrameworkConfig(kpi.id)?.displayName || kpi.shortName}
+                  {isCopenhagenCity && kpi.id !== "kpi1.2" ? " (Not available yet)" : ""}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
 
+          {isCopenhagenPreviewKpi && (
+            <div className="mt-3 rounded-xl border border-amber-400/35 bg-amber-500/10 px-3 py-2">
+              <p className="text-[11px] font-semibold text-amber-100">Copenhagen preview KPI</p>
+              <p className="text-[10px] mt-1 leading-relaxed text-amber-100/85">
+                KPI1.2 is the production-ready Copenhagen layer for this demo. Other KPIs stay visible for roadmap context and may show limited or not-available data.
+              </p>
+            </div>
+          )}
+
           <div className="mt-3 rounded-xl border border-primary-foreground/30 bg-primary-foreground/12 px-3 py-3 space-y-2">
             <p className="text-intel-label font-bold text-primary-foreground">
-              {kpiDef.ref} — {kpiFramework?.displayName || kpiDef.shortName}
+              {isCopenhagenKpi12
+                ? "Observed directional mobility counts"
+                : `${kpiDef.ref} — ${kpiFramework?.displayName || kpiDef.shortName}`}
             </p>
             <p className="text-intel-body text-primary-foreground/95 leading-relaxed">
-              {kpiDefinition?.interpretation || kpiFramework?.summary || kpiDef.question}
+              {isCopenhagenKpi12
+                ? "OpenTrafficCam pre/post directional observations supporting KPI1.2"
+                : (kpiDefinition?.interpretation || kpiFramework?.summary || kpiDef.question)}
             </p>
+            {isCopenhagenKpi12 && (
+              <div className="rounded-lg border border-white/20 bg-white/8 px-2.5 py-2 text-[10px] text-white/90 leading-relaxed space-y-1">
+                <p><span className="font-semibold text-white">Data type:</span> OBSERVED · DIRECTIONAL COUNTS · CAMERA-BASED</p>
+                <p><span className="font-semibold text-white">Method:</span> Observed counts by camera direction and movement category</p>
+                <p>
+                  <span className="font-semibold text-white">Limitation:</span> This is not a full city-wide modal share indicator. Values represent observed directional counts at monitored camera locations.
+                </p>
+              </div>
+            )}
             {selectedPilot && (
               <p className="text-intel-body font-semibold text-primary-foreground/95 leading-snug">
                 {selectedPilot.name}: {selectedPilot.title}

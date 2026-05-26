@@ -4,6 +4,7 @@ import { CITY_DATA, ELABORATOR_KPIS } from "@/data/kpiDefinitions";
 import { getKpiFrameworkConfig } from "@/config/kpiFramework";
 import { getKpiDefinition } from "@/config/kpiDefinitions";
 import { getPilotById } from "@/data/pilotDefinitions";
+import { useLocalCityData } from "@/hooks/use-local-city-data";
 
 interface ScenarioPanelProps {
   scenario: "baseline" | "intervention" | "comparison";
@@ -28,13 +29,52 @@ const ScenarioPanel = ({
   const kpiFramework = getKpiFrameworkConfig(selectedKpi);
   const kpiDefinition = getKpiDefinition(selectedKpi);
   const selectedPilot = getPilotById(selectedCity, selectedPilotId);
+  const isCopenhagenMobility = selectedCity === "Copenhagen" && selectedKpi === "kpi1.2";
+  const copenhagenCenter = cityData ? { lat: cityData.lat, lon: cityData.lon } : null;
+  const { data: copenhagenPoints } = useLocalCityData(
+    "Copenhagen",
+    selectedKpi,
+    isCopenhagenMobility ? copenhagenCenter : null,
+    selectedPilotId,
+    "intervention"
+  );
 
   if (!kpiDef || !kpiValue) return null;
 
-  const baselineMainValue = Math.max(0, Number(kpiValue.mainValue) - (kpiValue.change || 0));
-  const interventionMainValue = Number(kpiValue.mainValue);
+  const copenhagenObserved = (() => {
+    if (!isCopenhagenMobility || !copenhagenPoints?.length) return null;
+    let preActive = 0;
+    let postActive = 0;
+    let preTotal = 0;
+    let postTotal = 0;
+    copenhagenPoints
+      .filter((p) => p.properties?.dataOrigin === "local-city-dataset")
+      .forEach((point) => {
+        const mb = point.properties?.modeBreakdown as
+          | {
+              pre: { bike: number; pedestrian: number; motorised: number; ptw: number; total: number };
+              post: { bike: number; pedestrian: number; motorised: number; ptw: number; total: number };
+            }
+          | undefined;
+        if (!mb) return;
+        preActive += Number(mb.pre.bike ?? 0) + Number(mb.pre.pedestrian ?? 0);
+        postActive += Number(mb.post.bike ?? 0) + Number(mb.post.pedestrian ?? 0);
+        preTotal += Number(mb.pre.total ?? 0);
+        postTotal += Number(mb.post.total ?? 0);
+      });
+    const baseline = preTotal > 0 ? (preActive / preTotal) * 100 : 0;
+    const intervention = postTotal > 0 ? (postActive / postTotal) * 100 : 0;
+    return { baseline, intervention, change: intervention - baseline };
+  })();
 
-  const changeLabel = `${kpiValue.change > 0 ? "+" : ""}${kpiValue.change}${kpiDef.unit === "%" ? "pp" : ""}`;
+  const baselineMainValue = copenhagenObserved
+    ? copenhagenObserved.baseline
+    : Math.max(0, Number(kpiValue.mainValue) - (kpiValue.change || 0));
+  const interventionMainValue = copenhagenObserved
+    ? copenhagenObserved.intervention
+    : Number(kpiValue.mainValue);
+  const changeValue = copenhagenObserved?.change ?? kpiValue.change;
+  const changeLabel = `${changeValue > 0 ? "+" : ""}${changeValue.toFixed(1)}${kpiDef.unit === "%" ? "pp" : ""}`;
   const methodLabel = kpiDefinition?.method || (kpiFramework?.isModelled ? "Modelled estimate" : "Observed / reported");
   const typeLabel =
     kpiFramework?.isMock
@@ -42,10 +82,13 @@ const ScenarioPanel = ({
       : (kpiDefinition?.dataLabel?.toLowerCase() as "observed" | "derived" | "modelled" | undefined) ||
         (kpiFramework?.isModelled ? "modelled" : "observed");
   const isHelsinkiObservedBeforeAfter = selectedCity === "Helsinki" && (selectedKpi === "kpi1.2" || selectedKpi === "kpi2.1");
+  const isCopenhagenObservedBeforeAfter = isCopenhagenMobility;
   const dataTypeLabel = isHelsinkiObservedBeforeAfter
     ? (selectedKpi === "kpi2.1" ? "derived" : "observed")
+    : isCopenhagenObservedBeforeAfter
+      ? "observed"
     : typeLabel;
-  const temporalLabel = isHelsinkiObservedBeforeAfter ? "before-after" : "single-period";
+  const temporalLabel = isHelsinkiObservedBeforeAfter || isCopenhagenObservedBeforeAfter ? "before-after" : "single-period";
   const spatialLabel = selectedCity === "Milan" ? "matched" : selectedCity === "Helsinki" ? "inferred" : "exact";
 
   return (
@@ -86,9 +129,9 @@ const ScenarioPanel = ({
         </div>
         <div className="relative px-6 pb-3 flex flex-wrap gap-1.5 text-[10px] text-white/90 border-b border-white/10">
           <span className="px-2 py-0.5 rounded-full bg-white/10 border border-white/20">Spatial: {selectedCity === "Milan" ? "matched" : selectedCity === "Helsinki" ? "inferred" : "exact"}</span>
-          <span className="px-2 py-0.5 rounded-full bg-white/10 border border-white/20">Method: {isHelsinkiObservedBeforeAfter ? "derived proxy" : dataTypeLabel}</span>
+          <span className="px-2 py-0.5 rounded-full bg-white/10 border border-white/20">Method: {isHelsinkiObservedBeforeAfter ? "derived proxy" : isCopenhagenObservedBeforeAfter ? "Observed counts by camera direction and movement category" : dataTypeLabel}</span>
           <span className="px-2 py-0.5 rounded-full bg-white/10 border border-white/20">Temporal: {temporalLabel}</span>
-          <span className="px-2 py-0.5 rounded-full bg-white/10 border border-white/20">Source: {isHelsinkiObservedBeforeAfter ? "Local" : "API/Local"}</span>
+          <span className="px-2 py-0.5 rounded-full bg-white/10 border border-white/20">Source: {isHelsinkiObservedBeforeAfter ? "Local" : isCopenhagenObservedBeforeAfter ? "OpenTrafficCam Excel" : "API/Local"}</span>
         </div>
 
         {/* Content */}
@@ -129,11 +172,14 @@ const ScenarioPanel = ({
             <p className="text-xs font-bold text-white mb-3">Data Transparency</p>
             <div className="grid grid-cols-2 gap-3 text-[11px] text-white/80">
               <p><span className="text-white font-semibold">Data Type:</span> {dataTypeLabel}</p>
-              <p><span className="text-white font-semibold">Source:</span> {isHelsinkiObservedBeforeAfter ? "Telraam" : (kpiDefinition?.dataSource || "City-provided dataset")}</p>
+              <p><span className="text-white font-semibold">Source:</span> {isHelsinkiObservedBeforeAfter ? "Telraam" : isCopenhagenObservedBeforeAfter ? "OpenTrafficCam Excel" : (kpiDefinition?.dataSource || "City-provided dataset")}</p>
               <p><span className="text-white font-semibold">Spatial:</span> {spatialLabel}</p>
               <p><span className="text-white font-semibold">Temporal:</span> {temporalLabel}</p>
-              <p><span className="text-white font-semibold">Method:</span> {isHelsinkiObservedBeforeAfter ? "Derived from Telraam flows" : methodLabel}</p>
+              <p><span className="text-white font-semibold">Method:</span> {isHelsinkiObservedBeforeAfter ? "Derived from Telraam flows" : isCopenhagenObservedBeforeAfter ? "Observed counts by camera direction and movement category" : methodLabel}</p>
               {spatialLabel === "inferred" && <p><span className="text-white font-semibold">Note:</span> Location inferred from network segment</p>}
+              {isCopenhagenObservedBeforeAfter && (
+                <p><span className="text-white font-semibold">Limitation:</span> This is not a full city-wide modal share indicator. Values represent observed directional counts at monitored camera locations.</p>
+              )}
             </div>
           </div>
         </div>

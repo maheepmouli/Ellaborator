@@ -171,14 +171,14 @@ export const DATASET_REGISTRY: DatasetMetadata[] = [
     spatialLinkageMethod: "direct-coordinates",
     temporalCoverage: "2024–2025",
     beforeAfterStatus: "both",
-    linkedKpis: ["kpi1.2", "kpi2.1"],
+    linkedKpis: ["kpi1.2"],
     interventionScale: "street",
     parserStatus: "ready",
     realDataStatus: "active",
     updateStatus: "static",
     responsiblePartner: "Copenhagen",
     notes:
-      "Per-workbook Overview sheet exposes machine-readable site name + lat/lon. Pre and Post raw sheets (Data_<site>_Pre / Data_<site>_Post) give 15-min counts by vehicle classification (bicyclist, pedestrian, car, bus, truck, motorcyclist, scooter_driver, cargo_bike_driver, …) and by direction (`flow` column, e.g. 'Norregade north', 'Norregade south'). Parser aggregates Pre + Post per (camera, direction, classification) and renders one map point per camera/direction with baseline / intervention / Δ. Remaining work: full ELABORATOR mode-mapping review and time-of-day / weekday normalisation across cameras.",
+      "This dataset provides observed directional mobility counts from OpenTrafficCam sensors and supports KPI1.2 analysis. Machine-readable camera coordinates are available in each workbook Overview sheet, with directional pre/post counts in Data_<site>_Pre / Data_<site>_Post. It should not be interpreted as a complete city-wide modal share dataset.",
   },
 
   // ─── HELSINKI ─────────────────────────────────────────────────────────────
