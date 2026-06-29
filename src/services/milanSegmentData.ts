@@ -71,6 +71,12 @@ const speedCache = new Map<string, MilanSegmentDataset>();
 const environmentCache = new Map<string, MilanSegmentDataset>();
 const cameraCache = new Map<string, Record<string, unknown>[]>();
 
+const MILAN_SPEED_JSON_FALLBACK = "/data/milan/speed-segments.json";
+
+interface MilanSpeedJsonBundle {
+  pilots?: Record<string, MilanSegmentDataset>;
+}
+
 const MILAN_CAMERA_NETWORK = {
   shp: "/sharepoint-data/Milan/3. Road user counts/evaluation_cameras.shp",
   dbf: "/sharepoint-data/Milan/3. Road user counts/evaluation_cameras.dbf",
@@ -182,6 +188,43 @@ function withCameraJoinStats(dataset: MilanSegmentDataset): MilanSegmentDataset 
   return {
     ...dataset,
     stats: { ...dataset.stats, cameraJoinRatePct: rate },
+  };
+}
+
+async function loadMilanSpeedFromJsonFallback(
+  pilotId: "mil-p1" | "mil-p2"
+): Promise<MilanSegmentDataset | null> {
+  try {
+    const response = await fetch(MILAN_SPEED_JSON_FALLBACK);
+    if (!response.ok) return null;
+    const bundle = (await response.json()) as MilanSpeedJsonBundle;
+    const pilotBundle = bundle.pilots?.[pilotId];
+    if (!pilotBundle?.records?.length) return null;
+    return withCameraJoinStats({
+      ...pilotBundle,
+      dataConfidence: pilotBundle.dataConfidence || "proxy",
+      renderMode: "segment",
+      statusMessage:
+        pilotBundle.statusMessage ||
+        `Bundled corridor segments for ${pilotId} (OSM geometry; AMAT shapefiles unavailable on this host).`,
+    });
+  } catch {
+    return null;
+  }
+}
+
+function unavailableMilanSpeedDataset(message: string): MilanSegmentDataset {
+  return {
+    records: [],
+    stats: {
+      parsedSegments: 0,
+      invalidGeometries: 0,
+      missingMetricJoins: 0,
+      avgMetricValue: 0,
+    },
+    dataConfidence: "unavailable",
+    renderMode: "segment",
+    statusMessage: message,
   };
 }
 
@@ -366,38 +409,63 @@ export async function loadMilanSpeedSegments(
   }
 
   const source = SPEED_SOURCES[pilotId];
-  if (!cameraCache.has("milan-cameras")) {
-    try {
-      const cameraFeatures = await readShapefileFeatures(MILAN_CAMERA_NETWORK.shp, MILAN_CAMERA_NETWORK.dbf);
-      const rows = cameraFeatures.map((feature) => feature.properties || {});
-      cameraCache.set("milan-cameras", rows);
-    } catch {
-      cameraCache.set("milan-cameras", []);
+  try {
+    if (!cameraCache.has("milan-cameras")) {
+      try {
+        const cameraFeatures = await readShapefileFeatures(MILAN_CAMERA_NETWORK.shp, MILAN_CAMERA_NETWORK.dbf);
+        const rows = cameraFeatures.map((feature) => feature.properties || {});
+        cameraCache.set("milan-cameras", rows);
+      } catch {
+        cameraCache.set("milan-cameras", []);
+      }
     }
+    const metricRows = await readDbfRows(source.metricDbf);
+    const dataset = await parseMilanSegmentShapefile({
+      file: { shp: source.networkShp, dbf: source.networkDbf },
+      metricType: "speed",
+      sourceLabel: source.label,
+      timeWindow: "08:00-09:00",
+      metricRows,
+    });
+    if (dataset.records.length === 0) {
+      const fallback = await loadMilanSpeedFromJsonFallback(pilotId);
+      if (fallback) {
+        speedCache.set(cacheKey, fallback);
+        return fallback;
+      }
+      const unavailable = unavailableMilanSpeedDataset(
+        dataset.statusMessage || "Segment-level speed metrics are unavailable for this source."
+      );
+      speedCache.set(cacheKey, unavailable);
+      return unavailable;
+    }
+    const filtered = filterMilanSegmentsNearPilot(dataset.records, pilotId);
+    const scoped: MilanSegmentDataset = {
+      ...withCameraJoinStats({
+        ...dataset,
+        records: filtered,
+        stats: {
+          ...dataset.stats,
+          parsedSegments: filtered.length,
+          pilotScoped: true,
+        },
+        statusMessage: `${source.label} clipped to ${pilotId} intervention zone (${filtered.length} segments).`,
+      }),
+    };
+    speedCache.set(cacheKey, scoped);
+    return scoped;
+  } catch {
+    const fallback = await loadMilanSpeedFromJsonFallback(pilotId);
+    if (fallback) {
+      speedCache.set(cacheKey, fallback);
+      return fallback;
+    }
+    const unavailable = unavailableMilanSpeedDataset(
+      "Milan AMAT speed shapefiles are not hosted on this deployment. Add /sharepoint-data/Milan/ or use the bundled fallback."
+    );
+    speedCache.set(cacheKey, unavailable);
+    return unavailable;
   }
-  const metricRows = await readDbfRows(source.metricDbf);
-  const dataset = await parseMilanSegmentShapefile({
-    file: { shp: source.networkShp, dbf: source.networkDbf },
-    metricType: "speed",
-    sourceLabel: source.label,
-    timeWindow: "08:00-09:00",
-    metricRows,
-  });
-  const filtered = filterMilanSegmentsNearPilot(dataset.records, pilotId);
-  const scoped: MilanSegmentDataset = {
-    ...withCameraJoinStats({
-      ...dataset,
-      records: filtered,
-      stats: {
-        ...dataset.stats,
-        parsedSegments: filtered.length,
-        pilotScoped: true,
-      },
-      statusMessage: `${source.label} clipped to ${pilotId} intervention zone (${filtered.length} segments).`,
-    }),
-  };
-  speedCache.set(cacheKey, scoped);
-  return scoped;
 }
 
 export async function loadMilanEnvironmentSegments(

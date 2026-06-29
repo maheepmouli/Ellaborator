@@ -746,17 +746,13 @@ function IntersectionSVG({
 function SensorDot({ cx, cy }: { cx: number; cy: number }) {
   return (
     <g>
-      {/* Outer glow pulse */}
-      <motion.circle
-        cx={cx}
-        cy={cy}
-        r={8}
-        fill={C.cyan}
-        opacity={0}
-        animate={{ opacity: [0, 0.2, 0], r: [5, 12, 5] }}
+      <motion.g
+        style={{ transformOrigin: `${cx}px ${cy}px` }}
+        animate={{ opacity: [0, 0.2, 0], scale: [0.65, 1.45, 0.65] }}
         transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-      />
-      {/* Inner dot */}
+      >
+        <circle cx={cx} cy={cy} r={8} fill={C.cyan} />
+      </motion.g>
       <circle cx={cx} cy={cy} r={3.5} fill={C.cyan} opacity={0.9} />
       <circle cx={cx} cy={cy} r={2} fill="white" opacity={0.8} />
     </g>

@@ -1,0 +1,6004 @@
+{
+  "generatedAt": "2026-06-29T10:27:54.053Z",
+  "source": "OSM Overpass + representative speed metrics",
+  "pilots": {
+    "mil-p1": {
+      "records": [
+        {
+          "id": "speed-08:00-09:00-10000",
+          "coordinates": [
+            [
+              45.4728737,
+              9.1964919
+            ],
+            [
+              45.4730437,
+              9.1961705
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10000,
+            "avgSpeed": 24,
+            "p85Speed": 26.9,
+            "hits": 40,
+            "streetName": "Piazza Cavour",
+            "speedLimit": 28,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 0
+        },
+        {
+          "id": "speed-08:00-09:00-10001",
+          "coordinates": [
+            [
+              45.4775679,
+              9.1955135
+            ],
+            [
+              45.4775865,
+              9.1954329
+            ],
+            [
+              45.477611,
+              9.194803
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10001,
+            "avgSpeed": 25,
+            "p85Speed": 28,
+            "hits": 41,
+            "streetName": "Via Giuseppe Parini",
+            "speedLimit": 29,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 4.081632653061237
+        },
+        {
+          "id": "speed-08:00-09:00-10002",
+          "coordinates": [
+            [
+              45.4778078,
+              9.1921132
+            ],
+            [
+              45.4778195,
+              9.1920718
+            ],
+            [
+              45.4778301,
+              9.1920012
+            ],
+            [
+              45.4778627,
+              9.1916221
+            ],
+            [
+              45.4779054,
+              9.1911524
+            ],
+            [
+              45.4780044,
+              9.1900651
+            ],
+            [
+              45.4780107,
+              9.1899851
+            ],
+            [
+              45.4780354,
+              9.1896917
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10002,
+            "avgSpeed": 26,
+            "p85Speed": 29.1,
+            "hits": 42,
+            "streetName": "Via Fatebenesorelle",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 8.16326530612246
+        },
+        {
+          "id": "speed-08:00-09:00-10003",
+          "coordinates": [
+            [
+              45.4782034,
+              9.194893
+            ],
+            [
+              45.4782174,
+              9.1948241
+            ],
+            [
+              45.4782771,
+              9.1942373
+            ],
+            [
+              45.4782794,
+              9.1941684
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10003,
+            "avgSpeed": 27,
+            "p85Speed": 30.2,
+            "hits": 43,
+            "streetName": "Via Andrea Appiani",
+            "speedLimit": 31,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 12.244897959183684
+        },
+        {
+          "id": "speed-08:00-09:00-10004",
+          "coordinates": [
+            [
+              45.4764111,
+              9.1951609
+            ],
+            [
+              45.4764254,
+              9.1951265
+            ],
+            [
+              45.4764654,
+              9.1950369
+            ],
+            [
+              45.4769112,
+              9.193996
+            ],
+            [
+              45.4769246,
+              9.1939478
+            ],
+            [
+              45.4769275,
+              9.1938949
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10004,
+            "avgSpeed": 24,
+            "p85Speed": 26.9,
+            "hits": 44,
+            "streetName": "Via Bonaventura Cavalieri",
+            "speedLimit": 28,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 0
+        },
+        {
+          "id": "speed-08:00-09:00-10005",
+          "coordinates": [
+            [
+              45.4771077,
+              9.1965231
+            ],
+            [
+              45.477128,
+              9.1965407
+            ],
+            [
+              45.4771777,
+              9.1965839
+            ],
+            [
+              45.4772551,
+              9.1966513
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10005,
+            "avgSpeed": 25,
+            "p85Speed": 28,
+            "hits": 45,
+            "streetName": "Piazza della Repubblica",
+            "speedLimit": 29,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 4.081632653061237
+        },
+        {
+          "id": "speed-08:00-09:00-10006",
+          "coordinates": [
+            [
+              45.4772551,
+              9.1966513
+            ],
+            [
+              45.4775633,
+              9.1965732
+            ],
+            [
+              45.4775954,
+              9.1965641
+            ],
+            [
+              45.4776935,
+              9.1965666
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10006,
+            "avgSpeed": 26,
+            "p85Speed": 29.1,
+            "hits": 46,
+            "streetName": "Piazza della Repubblica",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 8.16326530612246
+        },
+        {
+          "id": "speed-08:00-09:00-10007",
+          "coordinates": [
+            [
+              45.4787478,
+              9.1965463
+            ],
+            [
+              45.4787774,
+              9.1965598
+            ],
+            [
+              45.4788018,
+              9.1965687
+            ],
+            [
+              45.4788275,
+              9.1965731
+            ],
+            [
+              45.4788499,
+              9.1965736
+            ],
+            [
+              45.4788735,
+              9.1965697
+            ],
+            [
+              45.4788884,
+              9.1965659
+            ],
+            [
+              45.478989,
+              9.1965344
+            ],
+            [
+              45.4790186,
+              9.196527
+            ],
+            [
+              45.4790478,
+              9.1965201
+            ],
+            [
+              45.479077,
+              9.1965149
+            ],
+            [
+              45.47912,
+              9.1965107
+            ],
+            [
+              45.4791567,
+              9.19651
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10007,
+            "avgSpeed": 46.5,
+            "p85Speed": 52.1,
+            "hits": 47,
+            "streetName": "Piazza della Repubblica",
+            "speedLimit": 50,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 91.83673469387757
+        },
+        {
+          "id": "speed-08:00-09:00-10008",
+          "coordinates": [
+            [
+              45.4791567,
+              9.19651
+            ],
+            [
+              45.479169,
+              9.196458
+            ],
+            [
+              45.4791704,
+              9.1964421
+            ],
+            [
+              45.4791691,
+              9.1964209
+            ],
+            [
+              45.4791646,
+              9.1963975
+            ],
+            [
+              45.4791557,
+              9.19638
+            ],
+            [
+              45.4791425,
+              9.19636
+            ],
+            [
+              45.4790784,
+              9.1962835
+            ],
+            [
+              45.4790562,
+              9.1962493
+            ],
+            [
+              45.479034,
+              9.1962115
+            ],
+            [
+              45.4789963,
+              9.1961362
+            ],
+            [
+              45.4789655,
+              9.1960798
+            ],
+            [
+              45.4789297,
+              9.1960077
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10008,
+            "avgSpeed": 24,
+            "p85Speed": 26.9,
+            "hits": 48,
+            "streetName": "Piazza della Repubblica",
+            "speedLimit": 28,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 0
+        },
+        {
+          "id": "speed-08:00-09:00-10009",
+          "coordinates": [
+            [
+              45.4771214,
+              9.1980272
+            ],
+            [
+              45.4769165,
+              9.1979134
+            ],
+            [
+              45.4767059,
+              9.1978225
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10009,
+            "avgSpeed": 25,
+            "p85Speed": 28,
+            "hits": 49,
+            "streetName": "Via Daniele Manin",
+            "speedLimit": 29,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 4.081632653061237
+        },
+        {
+          "id": "speed-08:00-09:00-10010",
+          "coordinates": [
+            [
+              45.4766058,
+              9.1976745
+            ],
+            [
+              45.4766168,
+              9.1977221
+            ],
+            [
+              45.4766425,
+              9.1977637
+            ],
+            [
+              45.4767059,
+              9.1978225
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10010,
+            "avgSpeed": 26,
+            "p85Speed": 29.1,
+            "hits": 50,
+            "streetName": "Via Daniele Manin",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 8.16326530612246
+        },
+        {
+          "id": "speed-08:00-09:00-10011",
+          "coordinates": [
+            [
+              45.4786046,
+              9.1968833
+            ],
+            [
+              45.4786559,
+              9.1967613
+            ],
+            [
+              45.4786758,
+              9.1967125
+            ],
+            [
+              45.4787478,
+              9.1965463
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10011,
+            "avgSpeed": 27,
+            "p85Speed": 30.2,
+            "hits": 51,
+            "streetName": "Piazza della Repubblica",
+            "speedLimit": 31,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 12.244897959183684
+        },
+        {
+          "id": "speed-08:00-09:00-10012",
+          "coordinates": [
+            [
+              45.4771603,
+              9.1958259
+            ],
+            [
+              45.4771752,
+              9.1958653
+            ],
+            [
+              45.4771991,
+              9.1959281
+            ],
+            [
+              45.477221,
+              9.1959716
+            ],
+            [
+              45.4772574,
+              9.1960228
+            ],
+            [
+              45.4773069,
+              9.1960912
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10012,
+            "avgSpeed": 32,
+            "p85Speed": 35.8,
+            "hits": 52,
+            "streetName": "Piazza della Repubblica",
+            "speedLimit": 37,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 32.65306122448981
+        },
+        {
+          "id": "speed-08:00-09:00-10013",
+          "coordinates": [
+            [
+              45.477429,
+              9.1982014
+            ],
+            [
+              45.4774944,
+              9.1981202
+            ],
+            [
+              45.4775307,
+              9.1980792
+            ],
+            [
+              45.4775474,
+              9.1980603
+            ],
+            [
+              45.4775887,
+              9.198019
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10013,
+            "avgSpeed": 45.5,
+            "p85Speed": 51,
+            "hits": 53,
+            "streetName": "Bastioni di Porta Venezia",
+            "speedLimit": 50,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 87.7551020408163
+        },
+        {
+          "id": "speed-08:00-09:00-10014",
+          "coordinates": [
+            [
+              45.474209,
+              9.1933522
+            ],
+            [
+              45.4741914,
+              9.1934439
+            ],
+            [
+              45.473938,
+              9.1947539
+            ],
+            [
+              45.4739312,
+              9.1947904
+            ],
+            [
+              45.4739157,
+              9.1948708
+            ],
+            [
+              45.4739106,
+              9.1948973
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10014,
+            "avgSpeed": 26,
+            "p85Speed": 29.1,
+            "hits": 54,
+            "streetName": "Via Carlo Porta",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 8.16326530612246
+        },
+        {
+          "id": "speed-08:00-09:00-10015",
+          "coordinates": [
+            [
+              45.4784259,
+              9.1972759
+            ],
+            [
+              45.4785463,
+              9.1970114
+            ],
+            [
+              45.4786046,
+              9.1968833
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10015,
+            "avgSpeed": 27,
+            "p85Speed": 30.2,
+            "hits": 55,
+            "streetName": "Piazza della Repubblica",
+            "speedLimit": 31,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 12.244897959183684
+        },
+        {
+          "id": "speed-08:00-09:00-10016",
+          "coordinates": [
+            [
+              45.4781141,
+              9.1969903
+            ],
+            [
+              45.4781431,
+              9.1969297
+            ],
+            [
+              45.4781597,
+              9.196895
+            ],
+            [
+              45.4782552,
+              9.1966951
+            ],
+            [
+              45.4782721,
+              9.1966598
+            ],
+            [
+              45.4783103,
+              9.1965745
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10016,
+            "avgSpeed": 48.5,
+            "p85Speed": 54.3,
+            "hits": 56,
+            "streetName": "Piazza della Repubblica",
+            "speedLimit": 50,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 100
+        },
+        {
+          "id": "speed-08:00-09:00-10017",
+          "coordinates": [
+            [
+              45.4728784,
+              9.1954736
+            ],
+            [
+              45.472925,
+              9.1954988
+            ],
+            [
+              45.4732354,
+              9.1956961
+            ],
+            [
+              45.4733003,
+              9.1957393
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10017,
+            "avgSpeed": 25.5,
+            "p85Speed": 28.6,
+            "hits": 57,
+            "streetName": "Piazza Cavour",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 6.122448979591842
+        },
+        {
+          "id": "speed-08:00-09:00-10018",
+          "coordinates": [
+            [
+              45.4753767,
+              9.1925049
+            ],
+            [
+              45.4754525,
+              9.1918249
+            ],
+            [
+              45.4754673,
+              9.1916859
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10018,
+            "avgSpeed": 26,
+            "p85Speed": 29.1,
+            "hits": 58,
+            "streetName": "Via Renzo Bertoni",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 8.16326530612246
+        },
+        {
+          "id": "speed-08:00-09:00-10019",
+          "coordinates": [
+            [
+              45.4768848,
+              9.1992148
+            ],
+            [
+              45.4769106,
+              9.1992026
+            ],
+            [
+              45.4769324,
+              9.199203
+            ],
+            [
+              45.4769562,
+              9.199222
+            ],
+            [
+              45.4769777,
+              9.1992499
+            ],
+            [
+              45.4769943,
+              9.1992814
+            ],
+            [
+              45.4770005,
+              9.1993308
+            ],
+            [
+              45.4769909,
+              9.1993889
+            ],
+            [
+              45.4769654,
+              9.1994553
+            ],
+            [
+              45.4768328,
+              9.1997775
+            ],
+            [
+              45.4767915,
+              9.1998804
+            ],
+            [
+              45.4767568,
+              9.199987
+            ],
+            [
+              45.4766896,
+              9.2002181
+            ],
+            [
+              45.4766482,
+              9.2003605
+            ],
+            [
+              45.4766374,
+              9.2004302
+            ],
+            [
+              45.4766308,
+              9.2004953
+            ],
+            [
+              45.4766236,
+              9.2006061
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10019,
+            "avgSpeed": 27,
+            "p85Speed": 30.2,
+            "hits": 59,
+            "streetName": "Viale Città di Fiume",
+            "speedLimit": 31,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 12.244897959183684
+        },
+        {
+          "id": "speed-08:00-09:00-10020",
+          "coordinates": [
+            [
+              45.4780162,
+              9.1968561
+            ],
+            [
+              45.4779534,
+              9.1969756
+            ],
+            [
+              45.4779232,
+              9.1970289
+            ],
+            [
+              45.4778813,
+              9.1971027
+            ],
+            [
+              45.4778605,
+              9.1971424
+            ],
+            [
+              45.4778426,
+              9.1971775
+            ],
+            [
+              45.4778275,
+              9.1972071
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10020,
+            "avgSpeed": 45.5,
+            "p85Speed": 51,
+            "hits": 60,
+            "streetName": "Piazza della Repubblica",
+            "speedLimit": 50,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 87.7551020408163
+        },
+        {
+          "id": "speed-08:00-09:00-10021",
+          "coordinates": [
+            [
+              45.4776546,
+              9.1979529
+            ],
+            [
+              45.4776716,
+              9.1979502
+            ],
+            [
+              45.477694,
+              9.1979481
+            ],
+            [
+              45.477704,
+              9.1979496
+            ],
+            [
+              45.4777139,
+              9.1979511
+            ],
+            [
+              45.4777553,
+              9.1979581
+            ],
+            [
+              45.477799,
+              9.1979717
+            ],
+            [
+              45.4778228,
+              9.1979761
+            ],
+            [
+              45.4778381,
+              9.1979805
+            ],
+            [
+              45.4778481,
+              9.1979834
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10021,
+            "avgSpeed": 25,
+            "p85Speed": 28,
+            "hits": 61,
+            "streetName": "Piazza della Repubblica",
+            "speedLimit": 29,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 4.081632653061237
+        },
+        {
+          "id": "speed-08:00-09:00-10022",
+          "coordinates": [
+            [
+              45.4749554,
+              9.1915992
+            ],
+            [
+              45.4750313,
+              9.1916129
+            ],
+            [
+              45.4752996,
+              9.1916578
+            ],
+            [
+              45.4754673,
+              9.1916859
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10022,
+            "avgSpeed": 26,
+            "p85Speed": 29.1,
+            "hits": 62,
+            "streetName": "Corso di Porta Nuova",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 8.16326530612246
+        },
+        {
+          "id": "speed-08:00-09:00-10023",
+          "coordinates": [
+            [
+              45.4757553,
+              9.1949667
+            ],
+            [
+              45.4757696,
+              9.194879
+            ],
+            [
+              45.4758097,
+              9.1946685
+            ],
+            [
+              45.475813,
+              9.1946506
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10023,
+            "avgSpeed": 27,
+            "p85Speed": 30.2,
+            "hits": 63,
+            "streetName": "Piazza Stati Uniti d'America",
+            "speedLimit": 31,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 12.244897959183684
+        },
+        {
+          "id": "speed-08:00-09:00-10024",
+          "coordinates": [
+            [
+              45.4749554,
+              9.1915992
+            ],
+            [
+              45.4749413,
+              9.1917272
+            ],
+            [
+              45.4748768,
+              9.1923144
+            ],
+            [
+              45.4748689,
+              9.1923835
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10024,
+            "avgSpeed": 25.5,
+            "p85Speed": 28.6,
+            "hits": 64,
+            "streetName": "Via Montebello",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 6.122448979591842
+        },
+        {
+          "id": "speed-08:00-09:00-10025",
+          "coordinates": [
+            [
+              45.4728348,
+              9.1927843
+            ],
+            [
+              45.4728987,
+              9.1928108
+            ],
+            [
+              45.4740873,
+              9.1933019
+            ],
+            [
+              45.474209,
+              9.1933522
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10025,
+            "avgSpeed": 25,
+            "p85Speed": 28,
+            "hits": 40,
+            "streetName": "Via Marco de Marchi",
+            "speedLimit": 29,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 4.081632653061237
+        },
+        {
+          "id": "speed-08:00-09:00-10026",
+          "coordinates": [
+            [
+              45.4731846,
+              9.1958893
+            ],
+            [
+              45.473237,
+              9.1957982
+            ],
+            [
+              45.4732592,
+              9.1957725
+            ],
+            [
+              45.4733003,
+              9.1957393
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10026,
+            "avgSpeed": 26,
+            "p85Speed": 29.1,
+            "hits": 41,
+            "streetName": "Piazza Cavour",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 8.16326530612246
+        },
+        {
+          "id": "speed-08:00-09:00-10027",
+          "coordinates": [
+            [
+              45.4733003,
+              9.1957393
+            ],
+            [
+              45.4743941,
+              9.1964279
+            ],
+            [
+              45.4752528,
+              9.1969687
+            ],
+            [
+              45.475379,
+              9.1970481
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10027,
+            "avgSpeed": 27,
+            "p85Speed": 30.2,
+            "hits": 42,
+            "streetName": "Via Daniele Manin",
+            "speedLimit": 31,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 12.244897959183684
+        },
+        {
+          "id": "speed-08:00-09:00-10028",
+          "coordinates": [
+            [
+              45.4730437,
+              9.1961705
+            ],
+            [
+              45.4731846,
+              9.1958893
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10028,
+            "avgSpeed": 24,
+            "p85Speed": 26.9,
+            "hits": 43,
+            "streetName": "Piazza Cavour",
+            "speedLimit": 28,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 0
+        },
+        {
+          "id": "speed-08:00-09:00-10029",
+          "coordinates": [
+            [
+              45.4764983,
+              9.1938062
+            ],
+            [
+              45.4763056,
+              9.1937692
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10029,
+            "avgSpeed": 25,
+            "p85Speed": 28,
+            "hits": 44,
+            "streetName": "Via Andrea Appiani",
+            "speedLimit": 29,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 4.081632653061237
+        },
+        {
+          "id": "speed-08:00-09:00-10030",
+          "coordinates": [
+            [
+              45.4763056,
+              9.1937692
+            ],
+            [
+              45.4760872,
+              9.193726
+            ],
+            [
+              45.476044,
+              9.1937126
+            ],
+            [
+              45.4759898,
+              9.1937068
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10030,
+            "avgSpeed": 26,
+            "p85Speed": 29.1,
+            "hits": 45,
+            "streetName": "Via Andrea Appiani",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 8.16326530612246
+        },
+        {
+          "id": "speed-08:00-09:00-10031",
+          "coordinates": [
+            [
+              45.476366,
+              9.1951289
+            ],
+            [
+              45.4763615,
+              9.1950858
+            ],
+            [
+              45.476347,
+              9.1950181
+            ],
+            [
+              45.4763074,
+              9.1949319
+            ],
+            [
+              45.4761905,
+              9.194827
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10031,
+            "avgSpeed": 35,
+            "p85Speed": 39.2,
+            "hits": 46,
+            "streetName": "Via Filippo Turati",
+            "speedLimit": 40,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 44.89795918367347
+        },
+        {
+          "id": "speed-08:00-09:00-10032",
+          "coordinates": [
+            [
+              45.4725216,
+              9.1954137
+            ],
+            [
+              45.4725483,
+              9.1954157
+            ],
+            [
+              45.4725983,
+              9.1954194
+            ],
+            [
+              45.4726508,
+              9.1954261
+            ],
+            [
+              45.472736,
+              9.1954411
+            ],
+            [
+              45.4728132,
+              9.195456
+            ],
+            [
+              45.4728784,
+              9.1954736
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10032,
+            "avgSpeed": 24,
+            "p85Speed": 26.9,
+            "hits": 47,
+            "streetName": "Piazza Cavour",
+            "speedLimit": 28,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 0
+        },
+        {
+          "id": "speed-08:00-09:00-10033",
+          "coordinates": [
+            [
+              45.4784259,
+              9.1972759
+            ],
+            [
+              45.4785045,
+              9.1973443
+            ],
+            [
+              45.4786414,
+              9.1974702
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10033,
+            "avgSpeed": 33,
+            "p85Speed": 37,
+            "hits": 48,
+            "streetName": "Piazza della Repubblica",
+            "speedLimit": 38,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 36.734693877551024
+        },
+        {
+          "id": "speed-08:00-09:00-10034",
+          "coordinates": [
+            [
+              45.4780162,
+              9.1968561
+            ],
+            [
+              45.4780807,
+              9.1969446
+            ],
+            [
+              45.4781141,
+              9.1969903
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10034,
+            "avgSpeed": 34,
+            "p85Speed": 38.1,
+            "hits": 49,
+            "streetName": "Piazza della Repubblica",
+            "speedLimit": 39,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 40.81632653061226
+        },
+        {
+          "id": "speed-08:00-09:00-10035",
+          "coordinates": [
+            [
+              45.4781141,
+              9.1969903
+            ],
+            [
+              45.4781689,
+              9.1970519
+            ],
+            [
+              45.4781969,
+              9.1970786
+            ],
+            [
+              45.478241,
+              9.1971207
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10035,
+            "avgSpeed": 35,
+            "p85Speed": 39.2,
+            "hits": 50,
+            "streetName": "Piazza della Repubblica",
+            "speedLimit": 40,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 44.89795918367347
+        },
+        {
+          "id": "speed-08:00-09:00-10036",
+          "coordinates": [
+            [
+              45.4781737,
+              9.1964963
+            ],
+            [
+              45.4780937,
+              9.1964466
+            ],
+            [
+              45.478064,
+              9.1964239
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10036,
+            "avgSpeed": 32,
+            "p85Speed": 35.8,
+            "hits": 51,
+            "streetName": "Piazza della Repubblica",
+            "speedLimit": 37,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 32.65306122448981
+        },
+        {
+          "id": "speed-08:00-09:00-10037",
+          "coordinates": [
+            [
+              45.4786046,
+              9.1968833
+            ],
+            [
+              45.4785228,
+              9.1967869
+            ],
+            [
+              45.4784903,
+              9.1967487
+            ],
+            [
+              45.4784704,
+              9.1967258
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10037,
+            "avgSpeed": 33,
+            "p85Speed": 37,
+            "hits": 52,
+            "streetName": "Piazza della Repubblica",
+            "speedLimit": 38,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 36.734693877551024
+        },
+        {
+          "id": "speed-08:00-09:00-10038",
+          "coordinates": [
+            [
+              45.4761905,
+              9.194827
+            ],
+            [
+              45.475954,
+              9.1946147
+            ],
+            [
+              45.4759074,
+              9.1945783
+            ],
+            [
+              45.4758381,
+              9.1945241
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10038,
+            "avgSpeed": 34,
+            "p85Speed": 38.1,
+            "hits": 53,
+            "streetName": "Via Filippo Turati",
+            "speedLimit": 39,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 40.81632653061226
+        },
+        {
+          "id": "speed-08:00-09:00-10039",
+          "coordinates": [
+            [
+              45.4758381,
+              9.1945241
+            ],
+            [
+              45.4758555,
+              9.1944353
+            ],
+            [
+              45.4758732,
+              9.1943314
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10039,
+            "avgSpeed": 27,
+            "p85Speed": 30.2,
+            "hits": 54,
+            "streetName": "Piazza Stati Uniti d'America",
+            "speedLimit": 31,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 12.244897959183684
+        },
+        {
+          "id": "speed-08:00-09:00-10040",
+          "coordinates": [
+            [
+              45.4747449,
+              9.193575
+            ],
+            [
+              45.474733,
+              9.1937183
+            ],
+            [
+              45.4746436,
+              9.1946497
+            ],
+            [
+              45.4746322,
+              9.1947613
+            ],
+            [
+              45.4746281,
+              9.1947859
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10040,
+            "avgSpeed": 26.7,
+            "p85Speed": 29.9,
+            "hits": 55,
+            "streetName": "Via Montebello",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 11.020408163265307
+        },
+        {
+          "id": "speed-08:00-09:00-10041",
+          "coordinates": [
+            [
+              45.4783403,
+              9.1961199
+            ],
+            [
+              45.4783055,
+              9.1961407
+            ],
+            [
+              45.4782824,
+              9.196142
+            ],
+            [
+              45.4782573,
+              9.1961335
+            ],
+            [
+              45.4782253,
+              9.1961039
+            ],
+            [
+              45.4777668,
+              9.1956879
+            ],
+            [
+              45.4775999,
+              9.1955374
+            ],
+            [
+              45.4775679,
+              9.1955135
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10041,
+            "avgSpeed": 25,
+            "p85Speed": 28,
+            "hits": 56,
+            "streetName": "Piazza della Repubblica",
+            "speedLimit": 29,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 4.081632653061237
+        },
+        {
+          "id": "speed-08:00-09:00-10042",
+          "coordinates": [
+            [
+              45.4781737,
+              9.1964963
+            ],
+            [
+              45.4781345,
+              9.1965841
+            ],
+            [
+              45.4781204,
+              9.1966178
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10042,
+            "avgSpeed": 46.5,
+            "p85Speed": 52.1,
+            "hits": 57,
+            "streetName": "Piazza della Repubblica",
+            "speedLimit": 50,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 91.83673469387757
+        },
+        {
+          "id": "speed-08:00-09:00-10043",
+          "coordinates": [
+            [
+              45.4769275,
+              9.1938949
+            ],
+            [
+              45.4766246,
+              9.1938334
+            ],
+            [
+              45.4764983,
+              9.1938062
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10043,
+            "avgSpeed": 27,
+            "p85Speed": 30.2,
+            "hits": 58,
+            "streetName": "Via Andrea Appiani",
+            "speedLimit": 31,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 12.244897959183684
+        },
+        {
+          "id": "speed-08:00-09:00-10044",
+          "coordinates": [
+            [
+              45.4782034,
+              9.194893
+            ],
+            [
+              45.4782775,
+              9.194928
+            ],
+            [
+              45.4786214,
+              9.1952415
+            ],
+            [
+              45.4786577,
+              9.1952757
+            ],
+            [
+              45.4786869,
+              9.1953031
+            ],
+            [
+              45.4787099,
+              9.1953262
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10044,
+            "avgSpeed": 24,
+            "p85Speed": 26.9,
+            "hits": 59,
+            "streetName": "Via Giuseppe Marcora",
+            "speedLimit": 28,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 0
+        },
+        {
+          "id": "speed-08:00-09:00-10045",
+          "coordinates": [
+            [
+              45.4776592,
+              9.194039
+            ],
+            [
+              45.4776655,
+              9.1939577
+            ],
+            [
+              45.4777149,
+              9.193242
+            ],
+            [
+              45.4777229,
+              9.1931257
+            ],
+            [
+              45.4777858,
+              9.1922174
+            ],
+            [
+              45.477796,
+              9.1921685
+            ],
+            [
+              45.4778078,
+              9.1921132
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10045,
+            "avgSpeed": 25,
+            "p85Speed": 28,
+            "hits": 60,
+            "streetName": "Via Giuseppe Parini",
+            "speedLimit": 29,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 4.081632653061237
+        },
+        {
+          "id": "speed-08:00-09:00-10046",
+          "coordinates": [
+            [
+              45.4783103,
+              9.1965745
+            ],
+            [
+              45.4783659,
+              9.1964556
+            ],
+            [
+              45.4783904,
+              9.1964
+            ],
+            [
+              45.4784599,
+              9.1962455
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10046,
+            "avgSpeed": 43.5,
+            "p85Speed": 48.7,
+            "hits": 61,
+            "streetName": "Piazza della Repubblica",
+            "speedLimit": 50,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 79.59183673469387
+        },
+        {
+          "id": "speed-08:00-09:00-10047",
+          "coordinates": [
+            [
+              45.4756627,
+              9.1943852
+            ],
+            [
+              45.4753543,
+              9.1940968
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10047,
+            "avgSpeed": 27,
+            "p85Speed": 30.2,
+            "hits": 62,
+            "streetName": "Largo Guido Donegani",
+            "speedLimit": 31,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 12.244897959183684
+        },
+        {
+          "id": "speed-08:00-09:00-10048",
+          "coordinates": [
+            [
+              45.4728784,
+              9.1954736
+            ],
+            [
+              45.4729015,
+              9.1951971
+            ],
+            [
+              45.4729052,
+              9.1951523
+            ],
+            [
+              45.4729101,
+              9.1950932
+            ],
+            [
+              45.4729126,
+              9.1950639
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10048,
+            "avgSpeed": 24,
+            "p85Speed": 26.9,
+            "hits": 63,
+            "streetName": "Piazza Cavour",
+            "speedLimit": 28,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 0
+        },
+        {
+          "id": "speed-08:00-09:00-10049",
+          "coordinates": [
+            [
+              45.4758381,
+              9.1945241
+            ],
+            [
+              45.4756627,
+              9.1943852
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10049,
+            "avgSpeed": 25,
+            "p85Speed": 28,
+            "hits": 64,
+            "streetName": "Piazza Stati Uniti d'America",
+            "speedLimit": 29,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 4.081632653061237
+        },
+        {
+          "id": "speed-08:00-09:00-10050",
+          "coordinates": [
+            [
+              45.475379,
+              9.1970481
+            ],
+            [
+              45.4764762,
+              9.1976924
+            ],
+            [
+              45.4765399,
+              9.1977047
+            ],
+            [
+              45.4766058,
+              9.1976745
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10050,
+            "avgSpeed": 26,
+            "p85Speed": 29.1,
+            "hits": 40,
+            "streetName": "Via Daniele Manin",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 8.16326530612246
+        },
+        {
+          "id": "speed-08:00-09:00-10051",
+          "coordinates": [
+            [
+              45.4770434,
+              9.1981919
+            ],
+            [
+              45.4770573,
+              9.1982098
+            ],
+            [
+              45.4770802,
+              9.1982247
+            ],
+            [
+              45.4771052,
+              9.1982276
+            ],
+            [
+              45.4771299,
+              9.1982177
+            ],
+            [
+              45.4771502,
+              9.1981967
+            ],
+            [
+              45.4771628,
+              9.1981758
+            ],
+            [
+              45.4771685,
+              9.1981499
+            ],
+            [
+              45.4771702,
+              9.1981142
+            ],
+            [
+              45.47716,
+              9.1980712
+            ],
+            [
+              45.4771434,
+              9.1980444
+            ],
+            [
+              45.4771214,
+              9.1980272
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10051,
+            "avgSpeed": 27,
+            "p85Speed": 30.2,
+            "hits": 41,
+            "streetName": "Via Daniele Manin",
+            "speedLimit": 31,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 12.244897959183684
+        },
+        {
+          "id": "speed-08:00-09:00-10052",
+          "coordinates": [
+            [
+              45.476366,
+              9.1951289
+            ],
+            [
+              45.4764111,
+              9.1951609
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10052,
+            "avgSpeed": 32,
+            "p85Speed": 35.8,
+            "hits": 42,
+            "streetName": "Via Filippo Turati",
+            "speedLimit": 37,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 32.65306122448981
+        },
+        {
+          "id": "speed-08:00-09:00-10053",
+          "coordinates": [
+            [
+              45.475813,
+              9.1946506
+            ],
+            [
+              45.4758812,
+              9.1946722
+            ],
+            [
+              45.4759427,
+              9.1947142
+            ],
+            [
+              45.476006,
+              9.194771
+            ],
+            [
+              45.4761485,
+              9.1949123
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10053,
+            "avgSpeed": 33,
+            "p85Speed": 37,
+            "hits": 43,
+            "streetName": "Via Filippo Turati",
+            "speedLimit": 38,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 36.734693877551024
+        },
+        {
+          "id": "speed-08:00-09:00-10054",
+          "coordinates": [
+            [
+              45.4753543,
+              9.1940968
+            ],
+            [
+              45.4750328,
+              9.1938023
+            ],
+            [
+              45.47485,
+              9.1936535
+            ],
+            [
+              45.474779,
+              9.1936027
+            ],
+            [
+              45.4747449,
+              9.193575
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10054,
+            "avgSpeed": 26,
+            "p85Speed": 29.1,
+            "hits": 44,
+            "streetName": "Via Principe Amedeo",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 8.16326530612246
+        },
+        {
+          "id": "speed-08:00-09:00-10055",
+          "coordinates": [
+            [
+              45.4771077,
+              9.1965231
+            ],
+            [
+              45.4770402,
+              9.1966067
+            ],
+            [
+              45.4770112,
+              9.1966705
+            ],
+            [
+              45.4768214,
+              9.197088
+            ],
+            [
+              45.4766188,
+              9.1975306
+            ],
+            [
+              45.4766042,
+              9.1976018
+            ],
+            [
+              45.4766058,
+              9.1976745
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10055,
+            "avgSpeed": 27,
+            "p85Speed": 30.2,
+            "hits": 45,
+            "streetName": "Via Iginio Ugo Tarchetti",
+            "speedLimit": 31,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 12.244897959183684
+        },
+        {
+          "id": "speed-08:00-09:00-10056",
+          "coordinates": [
+            [
+              45.4758732,
+              9.1943314
+            ],
+            [
+              45.4759898,
+              9.1937068
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10056,
+            "avgSpeed": 24,
+            "p85Speed": 26.9,
+            "hits": 46,
+            "streetName": "Via della Moscova",
+            "speedLimit": 28,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 0
+        },
+        {
+          "id": "speed-08:00-09:00-10057",
+          "coordinates": [
+            [
+              45.475379,
+              9.1970481
+            ],
+            [
+              45.4754047,
+              9.1968997
+            ],
+            [
+              45.4755686,
+              9.1960097
+            ],
+            [
+              45.4755961,
+              9.1958607
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10057,
+            "avgSpeed": 25,
+            "p85Speed": 28,
+            "hits": 47,
+            "streetName": "Via della Moscova",
+            "speedLimit": 29,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 4.081632653061237
+        },
+        {
+          "id": "speed-08:00-09:00-10058",
+          "coordinates": [
+            [
+              45.4772943,
+              9.1982446
+            ],
+            [
+              45.4770621,
+              9.1986207
+            ],
+            [
+              45.4769246,
+              9.1989011
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10058,
+            "avgSpeed": 48.5,
+            "p85Speed": 54.3,
+            "hits": 48,
+            "streetName": "Viale Città di Fiume",
+            "speedLimit": 50,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 100
+        },
+        {
+          "id": "speed-08:00-09:00-10059",
+          "coordinates": [
+            [
+              45.4773461,
+              9.1960006
+            ],
+            [
+              45.4773392,
+              9.1960164
+            ],
+            [
+              45.4773135,
+              9.1960763
+            ],
+            [
+              45.4773069,
+              9.1960912
+            ],
+            [
+              45.4772895,
+              9.1961313
+            ],
+            [
+              45.4772354,
+              9.1962378
+            ],
+            [
+              45.4771077,
+              9.1965231
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10059,
+            "avgSpeed": 27,
+            "p85Speed": 30.2,
+            "hits": 49,
+            "streetName": "Piazza della Repubblica",
+            "speedLimit": 31,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 12.244897959183684
+        },
+        {
+          "id": "speed-08:00-09:00-10060",
+          "coordinates": [
+            [
+              45.4773461,
+              9.1960006
+            ],
+            [
+              45.4773534,
+              9.1959836
+            ],
+            [
+              45.4773708,
+              9.1959408
+            ],
+            [
+              45.4773857,
+              9.1959072
+            ],
+            [
+              45.4774094,
+              9.1958539
+            ],
+            [
+              45.477458,
+              9.1957395
+            ],
+            [
+              45.4775679,
+              9.1955135
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10060,
+            "avgSpeed": 24,
+            "p85Speed": 26.9,
+            "hits": 50,
+            "streetName": "Piazza della Repubblica",
+            "speedLimit": 28,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 0
+        },
+        {
+          "id": "speed-08:00-09:00-10061",
+          "coordinates": [
+            [
+              45.4769275,
+              9.1938949
+            ],
+            [
+              45.4776003,
+              9.1940184
+            ],
+            [
+              45.4776592,
+              9.194039
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10061,
+            "avgSpeed": 25,
+            "p85Speed": 28,
+            "hits": 51,
+            "streetName": "Via Andrea Appiani",
+            "speedLimit": 29,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 4.081632653061237
+        },
+        {
+          "id": "speed-08:00-09:00-10062",
+          "coordinates": [
+            [
+              45.4791795,
+              9.1943066
+            ],
+            [
+              45.4791378,
+              9.1943456
+            ],
+            [
+              45.4790907,
+              9.1943398
+            ],
+            [
+              45.4790545,
+              9.1943217
+            ],
+            [
+              45.4789806,
+              9.194295
+            ],
+            [
+              45.4788441,
+              9.1942758
+            ],
+            [
+              45.4782794,
+              9.1941684
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10062,
+            "avgSpeed": 26,
+            "p85Speed": 29.1,
+            "hits": 52,
+            "streetName": "Via Andrea Appiani",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 8.16326530612246
+        },
+        {
+          "id": "speed-08:00-09:00-10063",
+          "coordinates": [
+            [
+              45.4751936,
+              9.1946904
+            ],
+            [
+              45.4752419,
+              9.1947024
+            ],
+            [
+              45.4752994,
+              9.1947166
+            ],
+            [
+              45.4755854,
+              9.1946713
+            ],
+            [
+              45.4756143,
+              9.1946453
+            ],
+            [
+              45.4756355,
+              9.1946261
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10063,
+            "avgSpeed": 35,
+            "p85Speed": 39.2,
+            "hits": 53,
+            "streetName": "Largo Guido Donegani",
+            "speedLimit": 40,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 44.89795918367347
+        },
+        {
+          "id": "speed-08:00-09:00-10064",
+          "coordinates": [
+            [
+              45.4756355,
+              9.1946261
+            ],
+            [
+              45.475813,
+              9.1946506
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10064,
+            "avgSpeed": 32,
+            "p85Speed": 35.8,
+            "hits": 54,
+            "streetName": "Piazza Stati Uniti d'America",
+            "speedLimit": 37,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 32.65306122448981
+        },
+        {
+          "id": "speed-08:00-09:00-10065",
+          "coordinates": [
+            [
+              45.4729126,
+              9.1950639
+            ],
+            [
+              45.4729758,
+              9.1950457
+            ],
+            [
+              45.4737682,
+              9.1949194
+            ],
+            [
+              45.4739106,
+              9.1948973
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10065,
+            "avgSpeed": 33,
+            "p85Speed": 37,
+            "hits": 55,
+            "streetName": "Via Filippo Turati",
+            "speedLimit": 38,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 36.734693877551024
+        },
+        {
+          "id": "speed-08:00-09:00-10066",
+          "coordinates": [
+            [
+              45.4758381,
+              9.1945241
+            ],
+            [
+              45.475668,
+              9.1946074
+            ],
+            [
+              45.4756355,
+              9.1946261
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10066,
+            "avgSpeed": 34,
+            "p85Speed": 38.1,
+            "hits": 56,
+            "streetName": "Piazza Stati Uniti d'America",
+            "speedLimit": 39,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 40.81632653061226
+        },
+        {
+          "id": "speed-08:00-09:00-10067",
+          "coordinates": [
+            [
+              45.4780391,
+              9.1980455
+            ],
+            [
+              45.4781025,
+              9.1980696
+            ],
+            [
+              45.4783059,
+              9.1981385
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10067,
+            "avgSpeed": 26.1,
+            "p85Speed": 29.2,
+            "hits": 57,
+            "streetName": "Piazza della Repubblica",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 8.571428571428582
+        },
+        {
+          "id": "speed-08:00-09:00-10068",
+          "coordinates": [
+            [
+              45.4753767,
+              9.1925049
+            ],
+            [
+              45.4753167,
+              9.1924908
+            ],
+            [
+              45.4749331,
+              9.1923978
+            ],
+            [
+              45.4748689,
+              9.1923835
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10068,
+            "avgSpeed": 24,
+            "p85Speed": 26.9,
+            "hits": 58,
+            "streetName": "Via Sandro Sandri",
+            "speedLimit": 28,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 0
+        },
+        {
+          "id": "speed-08:00-09:00-10069",
+          "coordinates": [
+            [
+              45.4748553,
+              9.1925223
+            ],
+            [
+              45.4749192,
+              9.1925362
+            ],
+            [
+              45.4753072,
+              9.1926257
+            ],
+            [
+              45.4753619,
+              9.1926383
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10069,
+            "avgSpeed": 25,
+            "p85Speed": 28,
+            "hits": 59,
+            "streetName": "Via Sandro Sandri",
+            "speedLimit": 29,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 4.081632653061237
+        },
+        {
+          "id": "speed-08:00-09:00-10070",
+          "coordinates": [
+            [
+              45.475813,
+              9.1946506
+            ],
+            [
+              45.4758166,
+              9.1946329
+            ],
+            [
+              45.4758381,
+              9.1945241
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10070,
+            "avgSpeed": 26,
+            "p85Speed": 29.1,
+            "hits": 60,
+            "streetName": "Piazza Stati Uniti d'America",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 8.16326530612246
+        },
+        {
+          "id": "speed-08:00-09:00-10071",
+          "coordinates": [
+            [
+              45.4758723,
+              9.191747
+            ],
+            [
+              45.475983,
+              9.1917643
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10071,
+            "avgSpeed": 27,
+            "p85Speed": 30.2,
+            "hits": 61,
+            "streetName": "Corso di Porta Nuova",
+            "speedLimit": 31,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 12.244897959183684
+        },
+        {
+          "id": "speed-08:00-09:00-10072",
+          "coordinates": [
+            [
+              45.4787099,
+              9.1953262
+            ],
+            [
+              45.4784874,
+              9.1958175
+            ],
+            [
+              45.4784216,
+              9.1959382
+            ],
+            [
+              45.4783403,
+              9.1961199
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10072,
+            "avgSpeed": 48.5,
+            "p85Speed": 54.3,
+            "hits": 62,
+            "streetName": "Piazza della Repubblica",
+            "speedLimit": 50,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 100
+        },
+        {
+          "id": "speed-08:00-09:00-10073",
+          "coordinates": [
+            [
+              45.4789297,
+              9.1960077
+            ],
+            [
+              45.4789401,
+              9.195959
+            ],
+            [
+              45.4789508,
+              9.1959221
+            ],
+            [
+              45.4789628,
+              9.1958852
+            ],
+            [
+              45.4789753,
+              9.1958542
+            ],
+            [
+              45.4791125,
+              9.1955673
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10073,
+            "avgSpeed": 25,
+            "p85Speed": 28,
+            "hits": 63,
+            "streetName": "Piazza della Repubblica",
+            "speedLimit": 29,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 4.081632653061237
+        },
+        {
+          "id": "speed-08:00-09:00-10074",
+          "coordinates": [
+            [
+              45.4788624,
+              9.1955677
+            ],
+            [
+              45.4789278,
+              9.1954265
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10074,
+            "avgSpeed": 43.5,
+            "p85Speed": 48.7,
+            "hits": 64,
+            "streetName": "Piazza della Repubblica",
+            "speedLimit": 50,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 79.59183673469387
+        },
+        {
+          "id": "speed-08:00-09:00-10075",
+          "coordinates": [
+            [
+              45.4793247,
+              9.1939841
+            ],
+            [
+              45.479237,
+              9.1941769
+            ],
+            [
+              45.4792174,
+              9.1942242
+            ],
+            [
+              45.4791984,
+              9.1942688
+            ],
+            [
+              45.4791795,
+              9.1943066
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10075,
+            "avgSpeed": 44.5,
+            "p85Speed": 49.8,
+            "hits": 40,
+            "streetName": "Viale Monte Santo",
+            "speedLimit": 50,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 83.6734693877551
+        },
+        {
+          "id": "speed-08:00-09:00-10076",
+          "coordinates": [
+            [
+              45.4779195,
+              9.198177
+            ],
+            [
+              45.4779724,
+              9.1981363
+            ],
+            [
+              45.4779945,
+              9.1981095
+            ],
+            [
+              45.4780177,
+              9.1980777
+            ],
+            [
+              45.4780391,
+              9.1980455
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10076,
+            "avgSpeed": 24,
+            "p85Speed": 26.9,
+            "hits": 41,
+            "streetName": "Viale Vittorio Veneto",
+            "speedLimit": 28,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 0
+        },
+        {
+          "id": "speed-08:00-09:00-10077",
+          "coordinates": [
+            [
+              45.4782888,
+              9.1975778
+            ],
+            [
+              45.4784114,
+              9.1975305
+            ],
+            [
+              45.4784525,
+              9.1975145
+            ],
+            [
+              45.4785056,
+              9.1974977
+            ],
+            [
+              45.4785262,
+              9.1974919
+            ],
+            [
+              45.4785385,
+              9.1974899
+            ],
+            [
+              45.4785785,
+              9.1974822
+            ],
+            [
+              45.4786414,
+              9.1974702
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10077,
+            "avgSpeed": 25,
+            "p85Speed": 28,
+            "hits": 42,
+            "streetName": "Piazza della Repubblica",
+            "speedLimit": 29,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 4.081632653061237
+        },
+        {
+          "id": "speed-08:00-09:00-10078",
+          "coordinates": [
+            [
+              45.4788987,
+              9.1961476
+            ],
+            [
+              45.4789297,
+              9.1960077
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10078,
+            "avgSpeed": 26,
+            "p85Speed": 29.1,
+            "hits": 43,
+            "streetName": "Piazza della Repubblica",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 8.16326530612246
+        },
+        {
+          "id": "speed-08:00-09:00-10079",
+          "coordinates": [
+            [
+              45.4788996,
+              9.1971604
+            ],
+            [
+              45.4787175,
+              9.1969921
+            ],
+            [
+              45.4786767,
+              9.1969543
+            ],
+            [
+              45.4786046,
+              9.1968833
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 1 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10079,
+            "avgSpeed": 35,
+            "p85Speed": 39.2,
+            "hits": 44,
+            "streetName": "Piazza della Repubblica",
+            "speedLimit": 40,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 44.89795918367347
+        }
+      ],
+      "stats": {
+        "parsedSegments": 80,
+        "invalidGeometries": 0,
+        "missingMetricJoins": 0,
+        "avgMetricValue": 22.94897959183674,
+        "cameraJoinRatePct": 34,
+        "pilotScoped": true
+      },
+      "dataConfidence": "proxy",
+      "renderMode": "segment",
+      "statusMessage": "Pilot 1 speed — bundled OSM corridor segments (representative AMAT-style speeds; use SharePoint shapefiles when hosted)."
+    },
+    "mil-p2": {
+      "records": [
+        {
+          "id": "speed-08:00-09:00-10000",
+          "coordinates": [
+            [
+              45.4569275,
+              9.1714505
+            ],
+            [
+              45.4568793,
+              9.1713864
+            ],
+            [
+              45.4567381,
+              9.1711992
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10000,
+            "avgSpeed": 27.9,
+            "p85Speed": 31.2,
+            "hits": 40,
+            "streetName": "Via Fra' Luca Pacioli",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 15.918367346938785
+        },
+        {
+          "id": "speed-08:00-09:00-10001",
+          "coordinates": [
+            [
+              45.4557752,
+              9.173407
+            ],
+            [
+              45.4557657,
+              9.1734236
+            ],
+            [
+              45.4557064,
+              9.1735302
+            ],
+            [
+              45.4553191,
+              9.1742322
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10001,
+            "avgSpeed": 47.5,
+            "p85Speed": 53.2,
+            "hits": 41,
+            "streetName": "Piazzale Antonio Cantore",
+            "speedLimit": 50,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 95.9183673469388
+        },
+        {
+          "id": "speed-08:00-09:00-10002",
+          "coordinates": [
+            [
+              45.4589944,
+              9.1708566
+            ],
+            [
+              45.4590136,
+              9.1708515
+            ],
+            [
+              45.4590371,
+              9.1708622
+            ],
+            [
+              45.4593415,
+              9.1712212
+            ],
+            [
+              45.4593541,
+              9.1712231
+            ],
+            [
+              45.4593664,
+              9.1712185
+            ],
+            [
+              45.4594806,
+              9.1710135
+            ],
+            [
+              45.4595211,
+              9.1709403
+            ],
+            [
+              45.4595426,
+              9.170901
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10002,
+            "avgSpeed": 29.1,
+            "p85Speed": 32.6,
+            "hits": 42,
+            "streetName": "Piazza Sant'Agostino",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 20.816326530612237
+        },
+        {
+          "id": "speed-08:00-09:00-10003",
+          "coordinates": [
+            [
+              45.4581548,
+              9.1720652
+            ],
+            [
+              45.4581068,
+              9.1719947
+            ],
+            [
+              45.4577531,
+              9.1715225
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10003,
+            "avgSpeed": 27,
+            "p85Speed": 30.2,
+            "hits": 43,
+            "streetName": "Via Ausonio",
+            "speedLimit": 31,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 12.244897959183684
+        },
+        {
+          "id": "speed-08:00-09:00-10004",
+          "coordinates": [
+            [
+              45.4574509,
+              9.1710643
+            ],
+            [
+              45.4575022,
+              9.1711465
+            ],
+            [
+              45.4577531,
+              9.1715225
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10004,
+            "avgSpeed": 24,
+            "p85Speed": 26.9,
+            "hits": 44,
+            "streetName": "Via Ausonio",
+            "speedLimit": 28,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 0
+        },
+        {
+          "id": "speed-08:00-09:00-10005",
+          "coordinates": [
+            [
+              45.4572947,
+              9.170839
+            ],
+            [
+              45.4574509,
+              9.1710643
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10005,
+            "avgSpeed": 38,
+            "p85Speed": 42.6,
+            "hits": 45,
+            "streetName": "Viale Papiniano",
+            "speedLimit": 44,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 57.14285714285715
+        },
+        {
+          "id": "speed-08:00-09:00-10006",
+          "coordinates": [
+            [
+              45.4564862,
+              9.1744487
+            ],
+            [
+              45.4564764,
+              9.1744612
+            ],
+            [
+              45.4564254,
+              9.1745354
+            ],
+            [
+              45.4560238,
+              9.1751282
+            ],
+            [
+              45.4559883,
+              9.1751799
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10006,
+            "avgSpeed": 26,
+            "p85Speed": 29.1,
+            "hits": 46,
+            "streetName": "Via Gaudenzio Ferrari",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 8.16326530612246
+        },
+        {
+          "id": "speed-08:00-09:00-10007",
+          "coordinates": [
+            [
+              45.4549373,
+              9.1766944
+            ],
+            [
+              45.4549888,
+              9.1767642
+            ],
+            [
+              45.4552591,
+              9.1770136
+            ],
+            [
+              45.4552962,
+              9.1770406
+            ],
+            [
+              45.4554509,
+              9.1771451
+            ],
+            [
+              45.4558226,
+              9.1774185
+            ],
+            [
+              45.4558507,
+              9.1774379
+            ],
+            [
+              45.4558753,
+              9.1774558
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10007,
+            "avgSpeed": 27,
+            "p85Speed": 30.2,
+            "hits": 47,
+            "streetName": "Via Conca del Naviglio",
+            "speedLimit": 31,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 12.244897959183684
+        },
+        {
+          "id": "speed-08:00-09:00-10008",
+          "coordinates": [
+            [
+              45.4558753,
+              9.1774558
+            ],
+            [
+              45.4558611,
+              9.1774816
+            ],
+            [
+              45.4557887,
+              9.1776133
+            ],
+            [
+              45.4557658,
+              9.1776784
+            ],
+            [
+              45.4557631,
+              9.177713
+            ],
+            [
+              45.4557765,
+              9.1777708
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10008,
+            "avgSpeed": 24,
+            "p85Speed": 26.9,
+            "hits": 48,
+            "streetName": "Via Conca del Naviglio",
+            "speedLimit": 28,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 0
+        },
+        {
+          "id": "speed-08:00-09:00-10009",
+          "coordinates": [
+            [
+              45.458164,
+              9.1768974
+            ],
+            [
+              45.4581503,
+              9.1769161
+            ],
+            [
+              45.4581353,
+              9.1769365
+            ],
+            [
+              45.4581,
+              9.1769844
+            ],
+            [
+              45.4578097,
+              9.177379
+            ],
+            [
+              45.45779,
+              9.1774058
+            ],
+            [
+              45.457767,
+              9.177437
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10009,
+            "avgSpeed": 29.1,
+            "p85Speed": 32.6,
+            "hits": 49,
+            "streetName": "Via Giovanni Battista Torti",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 20.816326530612237
+        },
+        {
+          "id": "speed-08:00-09:00-10010",
+          "coordinates": [
+            [
+              45.4577531,
+              9.1715225
+            ],
+            [
+              45.4577531,
+              9.1715877
+            ],
+            [
+              45.4578086,
+              9.1724171
+            ],
+            [
+              45.4578104,
+              9.1724676
+            ],
+            [
+              45.4577971,
+              9.1725465
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10010,
+            "avgSpeed": 26,
+            "p85Speed": 29.1,
+            "hits": 50,
+            "streetName": "Via San Calocero",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 8.16326530612246
+        },
+        {
+          "id": "speed-08:00-09:00-10011",
+          "coordinates": [
+            [
+              45.4581548,
+              9.1720652
+            ],
+            [
+              45.4582097,
+              9.1721406
+            ],
+            [
+              45.4582349,
+              9.1721752
+            ],
+            [
+              45.458362,
+              9.1723529
+            ],
+            [
+              45.4588159,
+              9.1729876
+            ],
+            [
+              45.4588671,
+              9.1730594
+            ],
+            [
+              45.4588929,
+              9.1730956
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10011,
+            "avgSpeed": 27,
+            "p85Speed": 30.2,
+            "hits": 51,
+            "streetName": "Via Ausonio",
+            "speedLimit": 31,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 12.244897959183684
+        },
+        {
+          "id": "speed-08:00-09:00-10012",
+          "coordinates": [
+            [
+              45.4610476,
+              9.1741238
+            ],
+            [
+              45.4610049,
+              9.1740689
+            ],
+            [
+              45.4609872,
+              9.1740489
+            ],
+            [
+              45.4608797,
+              9.1739215
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10012,
+            "avgSpeed": 24,
+            "p85Speed": 26.9,
+            "hits": 52,
+            "streetName": "Via Carroccio",
+            "speedLimit": 28,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 0
+        },
+        {
+          "id": "speed-08:00-09:00-10013",
+          "coordinates": [
+            [
+              45.4608797,
+              9.1739215
+            ],
+            [
+              45.4607967,
+              9.1739272
+            ],
+            [
+              45.4607689,
+              9.1739295
+            ],
+            [
+              45.4607308,
+              9.1739306
+            ],
+            [
+              45.4606873,
+              9.1739212
+            ],
+            [
+              45.4606644,
+              9.1739133
+            ],
+            [
+              45.4604875,
+              9.1738519
+            ],
+            [
+              45.460355,
+              9.1738146
+            ],
+            [
+              45.4602959,
+              9.1738063
+            ],
+            [
+              45.4602058,
+              9.1737988
+            ],
+            [
+              45.4594862,
+              9.1738045
+            ],
+            [
+              45.4594689,
+              9.1738104
+            ],
+            [
+              45.4594625,
+              9.1738125
+            ],
+            [
+              45.4594018,
+              9.1738215
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10013,
+            "avgSpeed": 25,
+            "p85Speed": 28,
+            "hits": 53,
+            "streetName": "Via Lesmi",
+            "speedLimit": 29,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 4.081632653061237
+        },
+        {
+          "id": "speed-08:00-09:00-10014",
+          "coordinates": [
+            [
+              45.4558753,
+              9.1774558
+            ],
+            [
+              45.4559113,
+              9.1773986
+            ],
+            [
+              45.4560621,
+              9.1771787
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10014,
+            "avgSpeed": 26,
+            "p85Speed": 29.1,
+            "hits": 54,
+            "streetName": "Via Marco d'Oggiono",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 8.16326530612246
+        },
+        {
+          "id": "speed-08:00-09:00-10015",
+          "coordinates": [
+            [
+              45.4572174,
+              9.1755205
+            ],
+            [
+              45.4572257,
+              9.1755082
+            ],
+            [
+              45.4572894,
+              9.1754171
+            ],
+            [
+              45.4576878,
+              9.1748436
+            ],
+            [
+              45.457734,
+              9.1747825
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10015,
+            "avgSpeed": 28.5,
+            "p85Speed": 31.9,
+            "hits": 55,
+            "streetName": "Via Ariberto",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 18.367346938775512
+        },
+        {
+          "id": "speed-08:00-09:00-10016",
+          "coordinates": [
+            [
+              45.457734,
+              9.1747825
+            ],
+            [
+              45.4577026,
+              9.1747379
+            ],
+            [
+              45.4570233,
+              9.1737555
+            ],
+            [
+              45.4569954,
+              9.1737151
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10016,
+            "avgSpeed": 24,
+            "p85Speed": 26.9,
+            "hits": 56,
+            "streetName": "Via Daniele Crespi",
+            "speedLimit": 28,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 0
+        },
+        {
+          "id": "speed-08:00-09:00-10017",
+          "coordinates": [
+            [
+              45.4574486,
+              9.1730508
+            ],
+            [
+              45.4574201,
+              9.173012
+            ],
+            [
+              45.4568567,
+              9.172245
+            ],
+            [
+              45.4567914,
+              9.1721512
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10017,
+            "avgSpeed": 25,
+            "p85Speed": 28,
+            "hits": 57,
+            "streetName": "Via Fabio Mangone",
+            "speedLimit": 29,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 4.081632653061237
+        },
+        {
+          "id": "speed-08:00-09:00-10018",
+          "coordinates": [
+            [
+              45.4557765,
+              9.1777708
+            ],
+            [
+              45.455569,
+              9.177914
+            ],
+            [
+              45.4555328,
+              9.177937
+            ],
+            [
+              45.455105,
+              9.1782331
+            ],
+            [
+              45.4550228,
+              9.1782915
+            ],
+            [
+              45.454947,
+              9.1783457
+            ],
+            [
+              45.4549003,
+              9.1783791
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10018,
+            "avgSpeed": 26,
+            "p85Speed": 29.1,
+            "hits": 58,
+            "streetName": "Via Conca del Naviglio",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 8.16326530612246
+        },
+        {
+          "id": "speed-08:00-09:00-10019",
+          "coordinates": [
+            [
+              45.4572029,
+              9.1703988
+            ],
+            [
+              45.4571491,
+              9.1704751
+            ],
+            [
+              45.4569526,
+              9.1707594
+            ],
+            [
+              45.456763,
+              9.1711339
+            ],
+            [
+              45.4567381,
+              9.1711992
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10019,
+            "avgSpeed": 27,
+            "p85Speed": 30.2,
+            "hits": 59,
+            "streetName": "Viale Emilio Papiniano",
+            "speedLimit": 31,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 12.244897959183684
+        },
+        {
+          "id": "speed-08:00-09:00-10020",
+          "coordinates": [
+            [
+              45.4556075,
+              9.1717351
+            ],
+            [
+              45.4556165,
+              9.1717497
+            ],
+            [
+              45.4556605,
+              9.171819
+            ],
+            [
+              45.4560255,
+              9.1723673
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10020,
+            "avgSpeed": 24,
+            "p85Speed": 26.9,
+            "hits": 60,
+            "streetName": "Via Francesco Carchidio",
+            "speedLimit": 28,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 0
+        },
+        {
+          "id": "speed-08:00-09:00-10021",
+          "coordinates": [
+            [
+              45.455519,
+              9.1758502
+            ],
+            [
+              45.4555659,
+              9.1759182
+            ],
+            [
+              45.4562373,
+              9.1768929
+            ],
+            [
+              45.4562574,
+              9.176922
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10021,
+            "avgSpeed": 25,
+            "p85Speed": 28,
+            "hits": 61,
+            "streetName": "Via Galeazzo Alessi",
+            "speedLimit": 29,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 4.081632653061237
+        },
+        {
+          "id": "speed-08:00-09:00-10022",
+          "coordinates": [
+            [
+              45.4583211,
+              9.1766869
+            ],
+            [
+              45.458568,
+              9.1767306
+            ],
+            [
+              45.4587636,
+              9.1767268
+            ],
+            [
+              45.4587869,
+              9.1767268
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10022,
+            "avgSpeed": 26,
+            "p85Speed": 29.1,
+            "hits": 62,
+            "streetName": "Via Giuseppe Sapeto",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 8.16326530612246
+        },
+        {
+          "id": "speed-08:00-09:00-10023",
+          "coordinates": [
+            [
+              45.4573493,
+              9.1771487
+            ],
+            [
+              45.4572995,
+              9.1771045
+            ],
+            [
+              45.4567552,
+              9.176309
+            ],
+            [
+              45.4567169,
+              9.1762524
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10023,
+            "avgSpeed": 27,
+            "p85Speed": 30.2,
+            "hits": 63,
+            "streetName": "Via Cicco Simonetta",
+            "speedLimit": 31,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 12.244897959183684
+        },
+        {
+          "id": "speed-08:00-09:00-10024",
+          "coordinates": [
+            [
+              45.4553191,
+              9.1742322
+            ],
+            [
+              45.4555282,
+              9.1740747
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10024,
+            "avgSpeed": 42.5,
+            "p85Speed": 47.6,
+            "hits": 64,
+            "streetName": "Piazzale Antonio Cantore",
+            "speedLimit": 50,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 75.51020408163266
+        },
+        {
+          "id": "speed-08:00-09:00-10025",
+          "coordinates": [
+            [
+              45.4603224,
+              9.1775273
+            ],
+            [
+              45.4602907,
+              9.1774028
+            ],
+            [
+              45.4602405,
+              9.1772056
+            ],
+            [
+              45.4602057,
+              9.1769455
+            ],
+            [
+              45.4601783,
+              9.1768502
+            ],
+            [
+              45.4601552,
+              9.1767873
+            ],
+            [
+              45.4601367,
+              9.1767541
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10025,
+            "avgSpeed": 26.1,
+            "p85Speed": 29.2,
+            "hits": 40,
+            "streetName": "Via Francesco Novati",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 8.571428571428582
+        },
+        {
+          "id": "speed-08:00-09:00-10026",
+          "coordinates": [
+            [
+              45.4590804,
+              9.1782452
+            ],
+            [
+              45.4590886,
+              9.1782343
+            ],
+            [
+              45.4591058,
+              9.1782079
+            ],
+            [
+              45.4591247,
+              9.1781788
+            ],
+            [
+              45.4591821,
+              9.1780906
+            ],
+            [
+              45.4591983,
+              9.178074
+            ],
+            [
+              45.4593085,
+              9.1779638
+            ],
+            [
+              45.4594399,
+              9.1778324
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10026,
+            "avgSpeed": 26.7,
+            "p85Speed": 29.9,
+            "hits": 41,
+            "streetName": "Via Caminadella",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 11.020408163265307
+        },
+        {
+          "id": "speed-08:00-09:00-10027",
+          "coordinates": [
+            [
+              45.457767,
+              9.177437
+            ],
+            [
+              45.4575978,
+              9.1773499
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10027,
+            "avgSpeed": 27.3,
+            "p85Speed": 30.6,
+            "hits": 42,
+            "streetName": "Via Conca del Naviglio",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 13.469387755102034
+        },
+        {
+          "id": "speed-08:00-09:00-10028",
+          "coordinates": [
+            [
+              45.4573493,
+              9.1771487
+            ],
+            [
+              45.4573104,
+              9.1771834
+            ],
+            [
+              45.4572876,
+              9.177224
+            ],
+            [
+              45.4572652,
+              9.1772793
+            ],
+            [
+              45.4572597,
+              9.1773259
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10028,
+            "avgSpeed": 24,
+            "p85Speed": 26.9,
+            "hits": 43,
+            "streetName": "Via Conca del Naviglio",
+            "speedLimit": 28,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 0
+        },
+        {
+          "id": "speed-08:00-09:00-10029",
+          "coordinates": [
+            [
+              45.4577971,
+              9.1725465
+            ],
+            [
+              45.4574841,
+              9.1729999
+            ],
+            [
+              45.4574486,
+              9.1730508
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10029,
+            "avgSpeed": 25,
+            "p85Speed": 28,
+            "hits": 44,
+            "streetName": "Via Cesare da Sesto",
+            "speedLimit": 29,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 4.081632653061237
+        },
+        {
+          "id": "speed-08:00-09:00-10030",
+          "coordinates": [
+            [
+              45.4560446,
+              9.1737985
+            ],
+            [
+              45.4560335,
+              9.1738132
+            ],
+            [
+              45.455964,
+              9.1739003
+            ],
+            [
+              45.4555247,
+              9.1744897
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10030,
+            "avgSpeed": 29.1,
+            "p85Speed": 32.6,
+            "hits": 45,
+            "streetName": "Piazzale Antonio Cantore",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 20.816326530612237
+        },
+        {
+          "id": "speed-08:00-09:00-10031",
+          "coordinates": [
+            [
+              45.455519,
+              9.1758502
+            ],
+            [
+              45.4554908,
+              9.1758115
+            ],
+            [
+              45.4549638,
+              9.1750358
+            ],
+            [
+              45.4549367,
+              9.1749881
+            ],
+            [
+              45.4549189,
+              9.1749617
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10031,
+            "avgSpeed": 27,
+            "p85Speed": 30.2,
+            "hits": 46,
+            "streetName": "Via Galeazzo Alessi",
+            "speedLimit": 31,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 12.244897959183684
+        },
+        {
+          "id": "speed-08:00-09:00-10032",
+          "coordinates": [
+            [
+              45.4549799,
+              9.173579
+            ],
+            [
+              45.455017,
+              9.1736055
+            ],
+            [
+              45.4550579,
+              9.1736143
+            ],
+            [
+              45.4550944,
+              9.1736045
+            ],
+            [
+              45.45513,
+              9.1735762
+            ],
+            [
+              45.4552526,
+              9.173407
+            ],
+            [
+              45.4554664,
+              9.1731117
+            ],
+            [
+              45.4554816,
+              9.1730908
+            ],
+            [
+              45.4555122,
+              9.1730488
+            ],
+            [
+              45.4555224,
+              9.1730351
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10032,
+            "avgSpeed": 26.1,
+            "p85Speed": 29.2,
+            "hits": 47,
+            "streetName": "Piazzale Antonio Cantore",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 8.571428571428582
+        },
+        {
+          "id": "speed-08:00-09:00-10033",
+          "coordinates": [
+            [
+              45.4557765,
+              9.1777708
+            ],
+            [
+              45.4558495,
+              9.1777437
+            ],
+            [
+              45.4561605,
+              9.1776859
+            ],
+            [
+              45.4564664,
+              9.1776757
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10033,
+            "avgSpeed": 25,
+            "p85Speed": 28,
+            "hits": 48,
+            "streetName": "Via Conca del Naviglio",
+            "speedLimit": 29,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 4.081632653061237
+        },
+        {
+          "id": "speed-08:00-09:00-10034",
+          "coordinates": [
+            [
+              45.4574139,
+              9.1775371
+            ],
+            [
+              45.4574101,
+              9.1773419
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10034,
+            "avgSpeed": 26,
+            "p85Speed": 29.1,
+            "hits": 49,
+            "streetName": "Via Conca del Naviglio",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 8.16326530612246
+        },
+        {
+          "id": "speed-08:00-09:00-10035",
+          "coordinates": [
+            [
+              45.4576496,
+              9.1776059
+            ],
+            [
+              45.457767,
+              9.177437
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10035,
+            "avgSpeed": 27,
+            "p85Speed": 30.2,
+            "hits": 50,
+            "streetName": "Via Conca del Naviglio",
+            "speedLimit": 31,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 12.244897959183684
+        },
+        {
+          "id": "speed-08:00-09:00-10036",
+          "coordinates": [
+            [
+              45.45839,
+              9.1778885
+            ],
+            [
+              45.4578254,
+              9.1774853
+            ],
+            [
+              45.457767,
+              9.177437
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10036,
+            "avgSpeed": 24,
+            "p85Speed": 26.9,
+            "hits": 51,
+            "streetName": "Via Conca del Naviglio",
+            "speedLimit": 28,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 0
+        },
+        {
+          "id": "speed-08:00-09:00-10037",
+          "coordinates": [
+            [
+              45.4585311,
+              9.1782599
+            ],
+            [
+              45.4585071,
+              9.1783094
+            ],
+            [
+              45.4584494,
+              9.1784443
+            ],
+            [
+              45.458006,
+              9.1794464
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10037,
+            "avgSpeed": 48.5,
+            "p85Speed": 54.3,
+            "hits": 52,
+            "streetName": "Via Edmondo De Amicis",
+            "speedLimit": 50,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 100
+        },
+        {
+          "id": "speed-08:00-09:00-10038",
+          "coordinates": [
+            [
+              45.4588107,
+              9.1776896
+            ],
+            [
+              45.458776,
+              9.1777758
+            ],
+            [
+              45.4587716,
+              9.1777841
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10038,
+            "avgSpeed": 42.5,
+            "p85Speed": 47.6,
+            "hits": 53,
+            "streetName": "Piazza della Resistenza Partigiana",
+            "speedLimit": 50,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 75.51020408163266
+        },
+        {
+          "id": "speed-08:00-09:00-10039",
+          "coordinates": [
+            [
+              45.4583136,
+              9.1780794
+            ],
+            [
+              45.458457,
+              9.1782012
+            ],
+            [
+              45.4584773,
+              9.1782144
+            ],
+            [
+              45.4585311,
+              9.1782599
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10039,
+            "avgSpeed": 27,
+            "p85Speed": 30.2,
+            "hits": 54,
+            "streetName": "Piazza della Resistenza Partigiana",
+            "speedLimit": 31,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 12.244897959183684
+        },
+        {
+          "id": "speed-08:00-09:00-10040",
+          "coordinates": [
+            [
+              45.4560255,
+              9.1723673
+            ],
+            [
+              45.456135,
+              9.172554
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10040,
+            "avgSpeed": 24,
+            "p85Speed": 26.9,
+            "hits": 55,
+            "streetName": "Piazzale Antonio Cantore",
+            "speedLimit": 28,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 0
+        },
+        {
+          "id": "speed-08:00-09:00-10041",
+          "coordinates": [
+            [
+              45.4577971,
+              9.1725465
+            ],
+            [
+              45.4577878,
+              9.1726779
+            ],
+            [
+              45.4579392,
+              9.1735459
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10041,
+            "avgSpeed": 45.5,
+            "p85Speed": 51,
+            "hits": 56,
+            "streetName": "Via San Calocero",
+            "speedLimit": 50,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 87.7551020408163
+        },
+        {
+          "id": "speed-08:00-09:00-10042",
+          "coordinates": [
+            [
+              45.4562128,
+              9.1726885
+            ],
+            [
+              45.4558536,
+              9.1732872
+            ],
+            [
+              45.4557839,
+              9.1733941
+            ],
+            [
+              45.4557752,
+              9.173407
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10042,
+            "avgSpeed": 46.5,
+            "p85Speed": 52.1,
+            "hits": 57,
+            "streetName": "Piazzale Antonio Cantore",
+            "speedLimit": 50,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 91.83673469387757
+        },
+        {
+          "id": "speed-08:00-09:00-10043",
+          "coordinates": [
+            [
+              45.456392,
+              9.1728423
+            ],
+            [
+              45.4564305,
+              9.1727757
+            ],
+            [
+              45.4567914,
+              9.1721512
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10043,
+            "avgSpeed": 47.5,
+            "p85Speed": 53.2,
+            "hits": 58,
+            "streetName": "Viale Papiniano",
+            "speedLimit": 50,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 95.9183673469388
+        },
+        {
+          "id": "speed-08:00-09:00-10044",
+          "coordinates": [
+            [
+              45.4586779,
+              9.1752186
+            ],
+            [
+              45.458642,
+              9.1752319
+            ],
+            [
+              45.4582927,
+              9.1753612
+            ],
+            [
+              45.4582541,
+              9.1753755
+            ],
+            [
+              45.4582177,
+              9.1753968
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10044,
+            "avgSpeed": 24,
+            "p85Speed": 26.9,
+            "hits": 59,
+            "streetName": "Via Luigi Buffoli",
+            "speedLimit": 28,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 0
+        },
+        {
+          "id": "speed-08:00-09:00-10045",
+          "coordinates": [
+            [
+              45.4581973,
+              9.1754108
+            ],
+            [
+              45.4581521,
+              9.175387
+            ],
+            [
+              45.4581156,
+              9.1753657
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10045,
+            "avgSpeed": 25,
+            "p85Speed": 28,
+            "hits": 60,
+            "streetName": "Via Daniele Crespi",
+            "speedLimit": 29,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 4.081632653061237
+        },
+        {
+          "id": "speed-08:00-09:00-10046",
+          "coordinates": [
+            [
+              45.4561354,
+              9.1774299
+            ],
+            [
+              45.4561188,
+              9.1773681
+            ],
+            [
+              45.4560765,
+              9.1772219
+            ],
+            [
+              45.4560621,
+              9.1771787
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10046,
+            "avgSpeed": 26,
+            "p85Speed": 29.1,
+            "hits": 61,
+            "streetName": "Unnamed link",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 8.16326530612246
+        },
+        {
+          "id": "speed-08:00-09:00-10047",
+          "coordinates": [
+            [
+              45.456135,
+              9.172554
+            ],
+            [
+              45.4561772,
+              9.1726255
+            ],
+            [
+              45.4561929,
+              9.1726533
+            ],
+            [
+              45.4562128,
+              9.1726885
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10047,
+            "avgSpeed": 27,
+            "p85Speed": 30.2,
+            "hits": 62,
+            "streetName": "Piazzale Antonio Cantore",
+            "speedLimit": 31,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 12.244897959183684
+        },
+        {
+          "id": "speed-08:00-09:00-10048",
+          "coordinates": [
+            [
+              45.4603443,
+              9.1751278
+            ],
+            [
+              45.4597335,
+              9.1761113
+            ],
+            [
+              45.4596893,
+              9.1761816
+            ],
+            [
+              45.4594351,
+              9.1766134
+            ],
+            [
+              45.4592874,
+              9.1768643
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10048,
+            "avgSpeed": 45.5,
+            "p85Speed": 51,
+            "hits": 63,
+            "streetName": "Via Edmondo De Amicis",
+            "speedLimit": 50,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 87.7551020408163
+        },
+        {
+          "id": "speed-08:00-09:00-10049",
+          "coordinates": [
+            [
+              45.4603993,
+              9.1777646
+            ],
+            [
+              45.4604162,
+              9.1779261
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10049,
+            "avgSpeed": 27.9,
+            "p85Speed": 31.2,
+            "hits": 64,
+            "streetName": "Piazzetta San Josemaria Escrivà",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 15.918367346938785
+        },
+        {
+          "id": "speed-08:00-09:00-10050",
+          "coordinates": [
+            [
+              45.4604718,
+              9.1775809
+            ],
+            [
+              45.460454,
+              9.177626
+            ],
+            [
+              45.4603993,
+              9.1777646
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10050,
+            "avgSpeed": 28.5,
+            "p85Speed": 31.9,
+            "hits": 40,
+            "streetName": "Piazzetta San Josemaria Escrivà",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 18.367346938775512
+        },
+        {
+          "id": "speed-08:00-09:00-10051",
+          "coordinates": [
+            [
+              45.4603993,
+              9.1777646
+            ],
+            [
+              45.4605347,
+              9.177777
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10051,
+            "avgSpeed": 29.1,
+            "p85Speed": 32.6,
+            "hits": 41,
+            "streetName": "Piazzetta San Josemaria Escrivà",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 20.816326530612237
+        },
+        {
+          "id": "speed-08:00-09:00-10052",
+          "coordinates": [
+            [
+              45.4608312,
+              9.1763327
+            ],
+            [
+              45.4608099,
+              9.1763417
+            ],
+            [
+              45.4607155,
+              9.1763693
+            ],
+            [
+              45.4605284,
+              9.176473
+            ],
+            [
+              45.4602203,
+              9.1767015
+            ],
+            [
+              45.4601367,
+              9.1767541
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10052,
+            "avgSpeed": 25.5,
+            "p85Speed": 28.6,
+            "hits": 42,
+            "streetName": "Via Caminadella",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 6.122448979591842
+        },
+        {
+          "id": "speed-08:00-09:00-10053",
+          "coordinates": [
+            [
+              45.4604162,
+              9.1779261
+            ],
+            [
+              45.4607321,
+              9.1795549
+            ],
+            [
+              45.46074,
+              9.179647
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10053,
+            "avgSpeed": 26.1,
+            "p85Speed": 29.2,
+            "hits": 43,
+            "streetName": "Via Lanzone",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 8.571428571428582
+        },
+        {
+          "id": "speed-08:00-09:00-10054",
+          "coordinates": [
+            [
+              45.4598098,
+              9.17766
+            ],
+            [
+              45.4602234,
+              9.1775716
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10054,
+            "avgSpeed": 26.7,
+            "p85Speed": 29.9,
+            "hits": 44,
+            "streetName": "Via Orazio",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 11.020408163265307
+        },
+        {
+          "id": "speed-08:00-09:00-10055",
+          "coordinates": [
+            [
+              45.4596809,
+              9.1774672
+            ],
+            [
+              45.4597101,
+              9.1775412
+            ],
+            [
+              45.4597417,
+              9.1776111
+            ],
+            [
+              45.4597666,
+              9.1776381
+            ],
+            [
+              45.4598098,
+              9.17766
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10055,
+            "avgSpeed": 27.3,
+            "p85Speed": 30.6,
+            "hits": 45,
+            "streetName": "Via Orazio",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 13.469387755102034
+        },
+        {
+          "id": "speed-08:00-09:00-10056",
+          "coordinates": [
+            [
+              45.4587716,
+              9.1777841
+            ],
+            [
+              45.4587596,
+              9.1778074
+            ],
+            [
+              45.4586988,
+              9.1779189
+            ],
+            [
+              45.4586278,
+              9.1780729
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10056,
+            "avgSpeed": 46.5,
+            "p85Speed": 52.1,
+            "hits": 46,
+            "streetName": "Piazza della Resistenza Partigiana",
+            "speedLimit": 50,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 91.83673469387757
+        },
+        {
+          "id": "speed-08:00-09:00-10057",
+          "coordinates": [
+            [
+              45.4601367,
+              9.1767541
+            ],
+            [
+              45.4600951,
+              9.1767801
+            ],
+            [
+              45.4600494,
+              9.1768152
+            ],
+            [
+              45.4600105,
+              9.1768607
+            ],
+            [
+              45.4597194,
+              9.1773956
+            ],
+            [
+              45.4596809,
+              9.1774672
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10057,
+            "avgSpeed": 28.5,
+            "p85Speed": 31.9,
+            "hits": 47,
+            "streetName": "Via Caminadella",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 18.367346938775512
+        },
+        {
+          "id": "speed-08:00-09:00-10058",
+          "coordinates": [
+            [
+              45.4608797,
+              9.1739215
+            ],
+            [
+              45.4607138,
+              9.1737355
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10058,
+            "avgSpeed": 26,
+            "p85Speed": 29.1,
+            "hits": 48,
+            "streetName": "Via Carroccio",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 8.16326530612246
+        },
+        {
+          "id": "speed-08:00-09:00-10059",
+          "coordinates": [
+            [
+              45.4577971,
+              9.1725465
+            ],
+            [
+              45.4580545,
+              9.172208
+            ],
+            [
+              45.4581137,
+              9.1721364
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10059,
+            "avgSpeed": 27,
+            "p85Speed": 30.2,
+            "hits": 49,
+            "streetName": "Via Cesare da Sesto",
+            "speedLimit": 31,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 12.244897959183684
+        },
+        {
+          "id": "speed-08:00-09:00-10060",
+          "coordinates": [
+            [
+              45.4581137,
+              9.1721364
+            ],
+            [
+              45.4581548,
+              9.1720652
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10060,
+            "avgSpeed": 24,
+            "p85Speed": 26.9,
+            "hits": 50,
+            "streetName": "Via Cesare da Sesto",
+            "speedLimit": 28,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 0
+        },
+        {
+          "id": "speed-08:00-09:00-10061",
+          "coordinates": [
+            [
+              45.4581548,
+              9.1720652
+            ],
+            [
+              45.4581888,
+              9.1720064
+            ],
+            [
+              45.4582117,
+              9.171973
+            ],
+            [
+              45.458296,
+              9.17185
+            ],
+            [
+              45.458943,
+              9.1709057
+            ],
+            [
+              45.4589694,
+              9.1708662
+            ],
+            [
+              45.4589944,
+              9.1708566
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10061,
+            "avgSpeed": 25,
+            "p85Speed": 28,
+            "hits": 51,
+            "streetName": "Via Cesare da Sesto",
+            "speedLimit": 29,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 4.081632653061237
+        },
+        {
+          "id": "speed-08:00-09:00-10062",
+          "coordinates": [
+            [
+              45.455519,
+              9.1758502
+            ],
+            [
+              45.4554863,
+              9.1759005
+            ],
+            [
+              45.4549735,
+              9.1766445
+            ],
+            [
+              45.4549373,
+              9.1766944
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10062,
+            "avgSpeed": 26,
+            "p85Speed": 29.1,
+            "hits": 52,
+            "streetName": "Via Gaudenzio Ferrari",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 8.16326530612246
+        },
+        {
+          "id": "speed-08:00-09:00-10063",
+          "coordinates": [
+            [
+              45.4583211,
+              9.1766869
+            ],
+            [
+              45.4583017,
+              9.1767207
+            ],
+            [
+              45.4582225,
+              9.1768185
+            ],
+            [
+              45.4582,
+              9.1768464
+            ],
+            [
+              45.4581706,
+              9.1768889
+            ],
+            [
+              45.458164,
+              9.1768974
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10063,
+            "avgSpeed": 46.5,
+            "p85Speed": 52.1,
+            "hits": 53,
+            "streetName": "Via Giuseppe Sapeto",
+            "speedLimit": 50,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 91.83673469387757
+        },
+        {
+          "id": "speed-08:00-09:00-10064",
+          "coordinates": [
+            [
+              45.4608312,
+              9.1763327
+            ],
+            [
+              45.4608177,
+              9.1763865
+            ],
+            [
+              45.46067,
+              9.1769276
+            ],
+            [
+              45.4605814,
+              9.1772772
+            ],
+            [
+              45.4605324,
+              9.1774387
+            ],
+            [
+              45.4604743,
+              9.1775753
+            ],
+            [
+              45.4604718,
+              9.1775809
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10064,
+            "avgSpeed": 28.5,
+            "p85Speed": 31.9,
+            "hits": 54,
+            "streetName": "Via Lanzone",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 18.367346938775512
+        },
+        {
+          "id": "speed-08:00-09:00-10065",
+          "coordinates": [
+            [
+              45.4617089,
+              9.1745546
+            ],
+            [
+              45.4616965,
+              9.1745585
+            ],
+            [
+              45.4613858,
+              9.1748441
+            ],
+            [
+              45.4613117,
+              9.1749534
+            ],
+            [
+              45.4612166,
+              9.1751478
+            ],
+            [
+              45.4610736,
+              9.1754611
+            ],
+            [
+              45.4610555,
+              9.1755109
+            ],
+            [
+              45.4609959,
+              9.175675
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10065,
+            "avgSpeed": 29.1,
+            "p85Speed": 32.6,
+            "hits": 55,
+            "streetName": "Via Lanzone",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 20.816326530612237
+        },
+        {
+          "id": "speed-08:00-09:00-10066",
+          "coordinates": [
+            [
+              45.4582177,
+              9.1753968
+            ],
+            [
+              45.4583292,
+              9.1766237
+            ],
+            [
+              45.4583265,
+              9.1766515
+            ],
+            [
+              45.4583211,
+              9.1766869
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10066,
+            "avgSpeed": 42.5,
+            "p85Speed": 47.6,
+            "hits": 56,
+            "streetName": "Via San Calocero",
+            "speedLimit": 50,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 75.51020408163266
+        },
+        {
+          "id": "speed-08:00-09:00-10067",
+          "coordinates": [
+            [
+              45.4549189,
+              9.1749617
+            ],
+            [
+              45.4553937,
+              9.1742939
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10067,
+            "avgSpeed": 27,
+            "p85Speed": 30.2,
+            "hits": 57,
+            "streetName": "Viale Gabriele d'Annunzio",
+            "speedLimit": 31,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 12.244897959183684
+        },
+        {
+          "id": "speed-08:00-09:00-10068",
+          "coordinates": [
+            [
+              45.4585204,
+              9.1744506
+            ],
+            [
+              45.4584951,
+              9.1744585
+            ],
+            [
+              45.4581463,
+              9.174611
+            ],
+            [
+              45.4581195,
+              9.1746225
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10068,
+            "avgSpeed": 24,
+            "p85Speed": 26.9,
+            "hits": 58,
+            "streetName": "Vicolo San Vincenzo",
+            "speedLimit": 28,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 0
+        },
+        {
+          "id": "speed-08:00-09:00-10069",
+          "coordinates": [
+            [
+              45.4569275,
+              9.1714505
+            ],
+            [
+              45.4566405,
+              9.1719482
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10069,
+            "avgSpeed": 45.5,
+            "p85Speed": 51,
+            "hits": 59,
+            "streetName": "Viale Papiniano",
+            "speedLimit": 50,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 87.7551020408163
+        },
+        {
+          "id": "speed-08:00-09:00-10070",
+          "coordinates": [
+            [
+              45.4603224,
+              9.1775273
+            ],
+            [
+              45.4603993,
+              9.1777646
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10070,
+            "avgSpeed": 27.9,
+            "p85Speed": 31.2,
+            "hits": 60,
+            "streetName": "Piazzetta San Josemaria Escrivà",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 15.918367346938785
+        },
+        {
+          "id": "speed-08:00-09:00-10071",
+          "coordinates": [
+            [
+              45.4586278,
+              9.1780729
+            ],
+            [
+              45.4585647,
+              9.1780185
+            ],
+            [
+              45.45839,
+              9.1778885
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10071,
+            "avgSpeed": 27,
+            "p85Speed": 30.2,
+            "hits": 61,
+            "streetName": "Piazza della Resistenza Partigiana",
+            "speedLimit": 31,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 12.244897959183684
+        },
+        {
+          "id": "speed-08:00-09:00-10072",
+          "coordinates": [
+            [
+              45.45839,
+              9.1778885
+            ],
+            [
+              45.4583136,
+              9.1780794
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10072,
+            "avgSpeed": 24,
+            "p85Speed": 26.9,
+            "hits": 62,
+            "streetName": "Piazza della Resistenza Partigiana",
+            "speedLimit": 28,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 0
+        },
+        {
+          "id": "speed-08:00-09:00-10073",
+          "coordinates": [
+            [
+              45.4560446,
+              9.1737985
+            ],
+            [
+              45.4560521,
+              9.1737872
+            ],
+            [
+              45.4561093,
+              9.1737057
+            ],
+            [
+              45.4563878,
+              9.1733199
+            ],
+            [
+              45.4565226,
+              9.1731319
+            ],
+            [
+              45.4565531,
+              9.1730894
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10073,
+            "avgSpeed": 25,
+            "p85Speed": 28,
+            "hits": 63,
+            "streetName": "Piazzale Antonio Cantore",
+            "speedLimit": 29,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 4.081632653061237
+        },
+        {
+          "id": "speed-08:00-09:00-10074",
+          "coordinates": [
+            [
+              45.4594018,
+              9.1738215
+            ],
+            [
+              45.4594966,
+              9.1739503
+            ],
+            [
+              45.4601747,
+              9.1748962
+            ],
+            [
+              45.4602913,
+              9.1750532
+            ],
+            [
+              45.4603035,
+              9.1750696
+            ],
+            [
+              45.460316,
+              9.1750865
+            ],
+            [
+              45.4603287,
+              9.175105
+            ],
+            [
+              45.4603443,
+              9.1751278
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10074,
+            "avgSpeed": 26,
+            "p85Speed": 29.1,
+            "hits": 64,
+            "streetName": "Via Ausonio",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 8.16326530612246
+        },
+        {
+          "id": "speed-08:00-09:00-10075",
+          "coordinates": [
+            [
+              45.4555247,
+              9.1744897
+            ],
+            [
+              45.4554269,
+              9.1743406
+            ],
+            [
+              45.4553937,
+              9.1742939
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10075,
+            "avgSpeed": 27,
+            "p85Speed": 30.2,
+            "hits": 40,
+            "streetName": "Piazzale Antonio Cantore",
+            "speedLimit": 31,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 12.244897959183684
+        },
+        {
+          "id": "speed-08:00-09:00-10076",
+          "coordinates": [
+            [
+              45.4609959,
+              9.175675
+            ],
+            [
+              45.4609462,
+              9.1759222
+            ],
+            [
+              45.4608498,
+              9.1762662
+            ],
+            [
+              45.4608312,
+              9.1763327
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10076,
+            "avgSpeed": 27.3,
+            "p85Speed": 30.6,
+            "hits": 41,
+            "streetName": "Via Lanzone",
+            "speedLimit": 30,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 13.469387755102034
+        },
+        {
+          "id": "speed-08:00-09:00-10077",
+          "coordinates": [
+            [
+              45.4586191,
+              9.1775668
+            ],
+            [
+              45.4585985,
+              9.1775365
+            ],
+            [
+              45.4585039,
+              9.1773971
+            ],
+            [
+              45.4582964,
+              9.1770912
+            ],
+            [
+              45.4582049,
+              9.1769574
+            ],
+            [
+              45.458164,
+              9.1768974
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10077,
+            "avgSpeed": 46.5,
+            "p85Speed": 52.1,
+            "hits": 42,
+            "streetName": "Corso Genova",
+            "speedLimit": 50,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 91.83673469387757
+        },
+        {
+          "id": "speed-08:00-09:00-10078",
+          "coordinates": [
+            [
+              45.4557752,
+              9.173407
+            ],
+            [
+              45.4557214,
+              9.1733257
+            ],
+            [
+              45.4556528,
+              9.1732245
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10078,
+            "avgSpeed": 47.5,
+            "p85Speed": 53.2,
+            "hits": 43,
+            "streetName": "Piazzale Antonio Cantore",
+            "speedLimit": 50,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 1
+          },
+          "value": 95.9183673469388
+        },
+        {
+          "id": "speed-08:00-09:00-10079",
+          "coordinates": [
+            [
+              45.4558887,
+              9.1735769
+            ],
+            [
+              45.4558247,
+              9.1734837
+            ],
+            [
+              45.4557752,
+              9.173407
+            ]
+          ],
+          "properties": {
+            "sourceLabel": "Pilot 2 speed",
+            "timeWindow": "08:00-09:00",
+            "metricType": "speed",
+            "segmentId": 10079,
+            "avgSpeed": 48.5,
+            "p85Speed": 54.3,
+            "hits": 44,
+            "streetName": "Piazzale Antonio Cantore",
+            "speedLimit": 50,
+            "cameraJoin": "nearest_geometry",
+            "cameraCount": 0
+          },
+          "value": 100
+        }
+      ],
+      "stats": {
+        "parsedSegments": 80,
+        "invalidGeometries": 0,
+        "missingMetricJoins": 0,
+        "avgMetricValue": 24.93877551020408,
+        "cameraJoinRatePct": 34,
+        "pilotScoped": true
+      },
+      "dataConfidence": "proxy",
+      "renderMode": "segment",
+      "statusMessage": "Pilot 2 speed — bundled OSM corridor segments (representative AMAT-style speeds; use SharePoint shapefiles when hosted)."
+    }
+  }
+}
