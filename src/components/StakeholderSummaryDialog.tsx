@@ -134,7 +134,7 @@ export function StakeholderSummaryDialog({
                 </div>
                 <div>
                   <p className="text-[10px] uppercase tracking-wide text-muted-foreground">After</p>
-                  <p className="font-semibold tabular-nums text-violet">
+                  <p className="font-semibold tabular-nums text-cyan-200">
                     {formatKpiFigure(interventionMainValue)}
                     <span className="text-muted-foreground font-normal ml-1">{unit}</span>
                   </p>

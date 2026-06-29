@@ -9,6 +9,19 @@ const KPI_SPECIFIC: Record<string, string> = {
   "kpi4.2": "Accessibility geometry is partial for this city. Reach bands use inferred facility points where needed.",
 };
 
+function requiredDatasetHint(city: string, kpiId: string): string {
+  if (city === "Helsinki" && kpiId === "kpi1.2") {
+    return "Intervention geometry is available; directional observed monitoring links are still being completed.";
+  }
+  if (city === "Helsinki" && kpiId === "kpi4.2") {
+    return "Geometry available, monitoring data pending for accessibility-support evidence.";
+  }
+  if (city === "Zaragoza" || city === "Trikala") {
+    return "Intervention area can be shown, but baseline/post observed datasets are still required.";
+  }
+  return "Add baseline and post-intervention observed datasets linked to intervention geometry.";
+}
+
 export function getKpiMissingDataNotice(
   city: string,
   kpiId: string,
@@ -20,10 +33,10 @@ export function getKpiMissingDataNotice(
 
   const cell = KPI_READINESS_MATRIX.find((c) => c.city === city && c.kpiId === kpiId);
   if (cell?.readiness === "missing") {
-    return `No observed dataset linked for ${city} · ${kpiId}. ${cell.notes}`;
+    return `No observed dataset linked for ${city} · ${kpiId}. ${requiredDatasetHint(city, kpiId)}`;
   }
   if (cell?.readiness === "partial") {
-    return `Partial coverage for this KPI. ${cell.notes}${pilot ? ` (${pilot.name})` : ""}`;
+    return `Partial coverage for this KPI. ${cell.notes}${pilot ? ` (${pilot.name})` : ""}. ${requiredDatasetHint(city, kpiId)}`;
   }
 
   if (kpiId === "kpi3.2" && pilot?.datasetType === "derived") {

@@ -8,7 +8,9 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "extract-sharepoint": "node scripts/extract-sharepoint-june2026.mjs",
+    "convert-helsinki-gpkg": "node scripts/convert-helsinki-gpkg.mjs"
   },
   "dependencies": {
     "@deck.gl/core": "^9.3.2",

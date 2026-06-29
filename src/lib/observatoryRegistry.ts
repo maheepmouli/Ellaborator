@@ -8,7 +8,9 @@ export type ObservatoryTabId =
   | "field"
   | "delta"
   | "beforeAfter"
-  | "data";
+  | "data"
+  | "kpiAnalysis"
+  | "methodology";
 
 export type ObservatoryTab = {
   id: ObservatoryTabId;
@@ -23,6 +25,14 @@ export type ObservatoryConfig = {
   primaryMetricLabel: string;
   emptyState?: string;
 };
+
+const UNIFIED_OBSERVATORY_TABS: ObservatoryTab[] = [
+  { id: "overview", label: "Overview" },
+  { id: "data", label: "Data" },
+  { id: "beforeAfter", label: "Before/After" },
+  { id: "kpiAnalysis", label: "KPI Analysis" },
+  { id: "methodology", label: "Methodology" },
+];
 
 const KPI_OBSERVATORY: Record<string, Omit<ObservatoryConfig, "kpiId" | "emptyState">> = {
   "kpi1.2": {
@@ -88,12 +98,22 @@ const KPI_OBSERVATORY: Record<string, Omit<ObservatoryConfig, "kpiId" | "emptySt
   },
 };
 
+const COMMON_CITY_TABS: ObservatoryTab[] = UNIFIED_OBSERVATORY_TABS;
+
 export function getObservatoryConfig(
   kpiId: string,
   city: string,
   pilotId?: string | null
 ): ObservatoryConfig {
-  const base = KPI_OBSERVATORY[kpiId] ?? KPI_OBSERVATORY["kpi2.1"];
+  const kpiBase = KPI_OBSERVATORY[kpiId] ?? KPI_OBSERVATORY["kpi2.1"];
+  const base = {
+    ...kpiBase,
+    tabs: UNIFIED_OBSERVATORY_TABS,
+    subtitle:
+      city === "Issy-les-Moulineaux"
+        ? kpiBase.subtitle
+        : "Intervention-first observatory shell with explicit trust, data readiness, and methodology context.",
+  };
   const readiness = KPI_READINESS_MATRIX.find((c) => c.city === city && c.kpiId === kpiId);
 
   let emptyState: string | undefined;
@@ -110,7 +130,6 @@ export function getObservatoryConfig(
   };
 }
 
-export function defaultObservatoryTab(kpiId: string): ObservatoryTabId {
-  const cfg = KPI_OBSERVATORY[kpiId];
-  return cfg?.tabs[0]?.id ?? "overview";
+export function defaultObservatoryTab(_kpiId?: string): ObservatoryTabId {
+  return "overview";
 }

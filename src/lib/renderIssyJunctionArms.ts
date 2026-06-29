@@ -298,7 +298,13 @@ export function renderIssyJunctionArms(
     const wire = (layer: L.Polyline) => {
       layer.on("mouseover", () => {
         visibleLine.setStyle({ weight: lineStyle.weight + 2.5, opacity: 1 });
-        options.onSegmentHover?.({ segmentId: segment.id, segmentName: segmentLabel });
+        const props = segmentProps(segment);
+        options.onSegmentHover?.({
+          segmentId: segment.id,
+          segmentName: segmentLabel,
+          speed: (props.vitesse_km_h as number | undefined) ?? null,
+          congestion: (props.indice_de_congestion as number | undefined) ?? null,
+        });
       });
       layer.on("mouseout", () => {
         visibleLine.setStyle(lineStyle);

@@ -69,6 +69,18 @@ import {
   dataSourceTrustLabel,
   kpiPrimaryIssySource,
 } from "@/lib/issyDataTransparency";
+import { CityObservatoryTabContent } from "@/components/CityObservatoryTabContent";
+import {
+  confidenceFromDataClass,
+  dataClassLabel,
+  observatoryCorridorLabel,
+  observatoryShellTitle,
+} from "@/lib/observatoryCityContent";
+import { isIssyCity } from "@/lib/issyMapRouting";
+import { ObservatoryGraphicSlot } from "@/components/observatory/ObservatoryGraphicSlot";
+import type { ObservatoryGraphicZone } from "@/lib/observatoryGraphicTypes";
+import { intelAccentValue, intelPanelHeader, intelSectionLabel } from "@/styles/intelPanels";
+import type { PilotGeometryRenderSpec } from "@/lib/pilotGeometryRenderer";
 
 // ─── Palette ─────────────────────────────────────────────────────────────────
 const C = {
@@ -203,7 +215,13 @@ function Sparkline({
 }
 
 // ─── Tab 1 — Overview ─────────────────────────────────────────────────────────
-function OverviewTab({ view }: { view: JunctionStudyView }) {
+function OverviewTab({
+  view,
+  graphicSlot,
+}: {
+  view: JunctionStudyView;
+  graphicSlot?: React.ReactNode;
+}) {
   const { baseline, intervention } = view;
 
   const deltaCount     = intervention.dailyCycleCount - baseline.dailyCycleCount;
@@ -255,6 +273,7 @@ function OverviewTab({ view }: { view: JunctionStudyView }) {
 
   return (
     <div className="space-y-4">
+      {graphicSlot}
       {/* Segment meta */}
       <GlassCard className="px-4 py-3">
         <div className="grid grid-cols-2 gap-x-5 gap-y-2 text-[11px]">
@@ -445,12 +464,19 @@ function MobilityKpi12ArmTab({ view }: { view: JunctionStudyView }) {
 function BeforeAfterTab({
   view,
   selectedKpi,
+  graphicSlot,
 }: {
   view: JunctionStudyView;
   selectedKpi: string;
+  graphicSlot?: React.ReactNode;
 }) {
   if (selectedKpi === "kpi1.2") {
-    return <MobilityKpi12ArmTab view={view} />;
+    return (
+      <div className="space-y-4">
+        {graphicSlot}
+        <MobilityKpi12ArmTab view={view} />
+      </div>
+    );
   }
   const { baseline, intervention } = view;
   const modes = Object.keys(baseline.modeShare) as (keyof typeof baseline.modeShare)[];
@@ -505,6 +531,7 @@ function BeforeAfterTab({
 
   return (
     <div className="space-y-4">
+      {graphicSlot}
       {/* Period headers */}
       <div className="grid items-center gap-0" style={{ gridTemplateColumns: "1fr 82px 1fr" }}>
         <div className="text-right">
@@ -590,9 +617,13 @@ function BeforeAfterTab({
 function IntersectionSVG({
   expanded,
   highlightArmId,
+  streetNS,
+  streetEW,
 }: {
   expanded?: boolean;
   highlightArmId?: string;
+  streetNS?: string;
+  streetEW?: string;
 }) {
   const size    = expanded ? 260 : 200;
   const cx      = size / 2;
@@ -683,6 +714,24 @@ function IntersectionSVG({
       <SensorDot cx={cx + roadW / 2 + 22} cy={cy + roadW / 4} />
 
       {/* Monitored corridor emphasis without equal-weight arm labels */}
+      {streetEW ? (
+        <text x={size / 2} y={cy - roadW / 2 - 6} textAnchor="middle" fill="#ffffff70" fontSize="7" fontFamily="sans-serif">
+          {streetEW.length > 22 ? `${streetEW.slice(0, 20)}…` : streetEW}
+        </text>
+      ) : null}
+      {streetNS ? (
+        <text
+          x={cx + roadW / 2 + 10}
+          y={size / 2}
+          textAnchor="start"
+          fill="#ffffff70"
+          fontSize="7"
+          fontFamily="sans-serif"
+          transform={`rotate(90 ${cx + roadW / 2 + 10} ${size / 2})`}
+        >
+          {streetNS.length > 22 ? `${streetNS.slice(0, 20)}…` : streetNS}
+        </text>
+      ) : null}
       <text x={size / 2} y={10} textAnchor="middle" fill="#9FE6FF" fontSize="7" fontFamily="sans-serif">
         Monitored intervention corridor highlighted
       </text>
@@ -714,31 +763,50 @@ function SensorDot({ cx, cy }: { cx: number; cy: number }) {
   );
 }
 
+function isObservedIssyView(view: JunctionStudyView): boolean {
+  return view.dataSource !== "mock";
+}
+
+function streetLabelsFromView(view: JunctionStudyView): { streetNS?: string; streetEW?: string } {
+  return {
+    streetNS: view.streetNS,
+    streetEW: view.streetEW,
+  };
+}
+
 function IntersectionTab({
   view,
   pilotId,
+  streetLabels,
 }: {
   view: JunctionStudyView;
   pilotId?: string | null;
+  streetLabels?: { streetNS?: string; streetEW?: string };
 }) {
   const intervention = getIssyPilotInterventionCopy(pilotId);
+  const observed = isObservedIssyView(view);
+  const labels = streetLabels ?? streetLabelsFromView(view);
   return (
     <div className="space-y-4">
       <TransparencyNotice tone="cyan">
-        {intervention.schematicCaption}. {ISSY_JUNCTION_ARM_VISUAL_DISCLAIMER}
+        {observed
+          ? `${intervention.schematicCaption}. ${ISSY_JUNCTION_ARM_VISUAL_DISCLAIMER}`
+          : "Schematic intersection layout for the monitored intervention corridor. Street labels are illustrative, not survey-grade geometry."}
       </TransparencyNotice>
       <GlassCard className="px-4 py-4 flex flex-col items-center">
         <p className="text-[11px] font-semibold text-white/50 mb-3 self-start">
           Monitored intervention corridor schematic — {view.shortName}
         </p>
-        <IntersectionSVG expanded highlightArmId={view.armId} />
+        <IntersectionSVG expanded highlightArmId={view.armId} streetNS={labels.streetNS} streetEW={labels.streetEW} />
       </GlassCard>
 
       <GlassCard className="px-4 py-3">
         <p className="text-[11px] font-semibold text-white/50 mb-2.5">Corridor monitoring scope</p>
         <p className="text-[11px] text-white/65 leading-relaxed">
           Active monitored intervention corridor: <span className="text-white/80 font-medium">{view.name}</span> ({view.segmentApiId}).
-          Nearby traficissy segments remain visible as low-opacity contextual streets and are not analyzed as equal measured approaches.
+          {observed
+            ? " Nearby traficissy segments remain visible as low-opacity contextual streets and are not analyzed as equal measured approaches."
+            : " Contextual streets on the map are shown for orientation; metrics use pilot registry mock data until observed feeds are linked."}
         </p>
       </GlassCard>
 
@@ -760,12 +828,18 @@ function InsightsTab({
   selectedKpi: string;
 }) {
   const isMobility = selectedKpi === "kpi1.2";
+  const observed = isObservedIssyView(view);
   return (
     <div className="space-y-4">
-      {isMobility && (
+      {isMobility && observed && (
         <TransparencyNotice>
           {ISSY_OD_CSV_DISCLAIMER} Use the map at city zoom for zone-to-zone flow arcs; this monitored corridor panel
           only summarises observed traficissy segment speed and congestion.
+        </TransparencyNotice>
+      )}
+      {isMobility && !observed && (
+        <TransparencyNotice>
+          Mode-share values are pilot-registry mock data for this corridor. Link observed OD or sensor feeds to replace mock metrics.
         </TransparencyNotice>
       )}
       {/* Narrative */}
@@ -775,8 +849,9 @@ function InsightsTab({
           style={{ background: `linear-gradient(90deg, ${C.cyan}, ${C.violet})` }}
         />
         <p className="text-[12px] text-white/75 leading-[1.7]">
-          On the <span className="text-white font-medium">monitored intervention corridor</span> ({view.name}), the latest API
-          snapshot shows <span className="text-white font-medium">{view.intervention.avgSpeedKmh.toFixed(1)} km/h</span> average
+          On the <span className="text-white font-medium">monitored intervention corridor</span> ({view.name}), the latest{" "}
+          {observed ? "API snapshot" : "mock snapshot"} shows{" "}
+          <span className="text-white font-medium">{view.intervention.avgSpeedKmh.toFixed(1)} km/h</span> average
           speed and a congestion index of{" "}
           <span className="text-white font-medium">{(view.intervention.peakCongestion * 100).toFixed(0)}%</span> versus a
           derived baseline of {(view.baseline.peakCongestion * 100).toFixed(0)}%.
@@ -1017,6 +1092,12 @@ function ObservatoryTabContent({
   pilotLabel,
   pilotId,
   config,
+  streetLabels,
+  cityName = "",
+  scenario = "intervention",
+  selectedModeTypes = [],
+  selectedDirectionId,
+  onSelectDirectionId,
 }: {
   tabId: ObservatoryTabId;
   selectedKpi: string;
@@ -1024,46 +1105,153 @@ function ObservatoryTabContent({
   pilotLabel?: string;
   pilotId?: string | null;
   config: ObservatoryConfig;
+  streetLabels?: { streetNS?: string; streetEW?: string };
+  cityName?: string;
+  scenario?: MapScenario;
+  selectedModeTypes?: string[];
+  selectedDirectionId?: string | null;
+  onSelectDirectionId?: (id: string) => void;
 }) {
+  const resolvedCity = cityName || "Issy-les-Moulineaux";
+
+  const graphicSlot = (zone: ObservatoryGraphicZone) => (
+    <ObservatoryGraphicSlot
+      zone={zone}
+      cityName={resolvedCity}
+      pilotId={pilotId}
+      selectedKpi={selectedKpi}
+      view={view}
+      scenario={scenario}
+      selectedModeTypes={selectedModeTypes}
+      selectedDirectionId={selectedDirectionId}
+      onSelectDirectionId={onSelectDirectionId}
+    />
+  );
+
+  const wrapIssy = (zone: ObservatoryGraphicZone, content: React.ReactNode) => (
+    <>
+      {graphicSlot(zone)}
+      {content}
+    </>
+  );
+
+  if (tabId === "methodology" || (!isIssyCity(cityName) && cityName)) {
+    if (!isIssyCity(cityName) && cityName) {
+      return (
+        <CityObservatoryTabContent
+          tabId={tabId}
+          cityName={cityName}
+          selectedPilotId={pilotId}
+          selectedKpi={selectedKpi}
+          scenario={scenario}
+          view={view}
+          config={config}
+          selectedModeTypes={selectedModeTypes}
+          selectedDirectionId={selectedDirectionId}
+          onSelectDirectionId={onSelectDirectionId}
+        />
+      );
+    }
+    if (tabId === "methodology") {
+      return (
+        <CityObservatoryTabContent
+          tabId="methodology"
+          cityName={cityName || "Issy-les-Moulineaux"}
+          selectedPilotId={pilotId}
+          selectedKpi={selectedKpi}
+          scenario={scenario}
+          view={view}
+          config={config}
+        />
+      );
+    }
+  }
+
   if (tabId === "data") {
     return <DataTab view={view} pilotLabel={pilotLabel} selectedKpi={selectedKpi} config={config} />;
   }
 
+  if (tabId === "kpiAnalysis") {
+    if (selectedKpi === "kpi2.1") {
+      return wrapIssy("kpiAnalysis", <IntersectionTab view={view} pilotId={pilotId} streetLabels={streetLabels} />);
+    }
+    if (selectedKpi === "kpi1.2") {
+      return wrapIssy("kpiAnalysis", <InsightsTab view={view} selectedKpi={selectedKpi} />);
+    }
+    if (selectedKpi === "kpi3.2") {
+      return wrapIssy("kpiAnalysis", <ClimateDeltaTab view={view} />);
+    }
+    return wrapIssy("kpiAnalysis", <InsightsTab view={view} selectedKpi={selectedKpi} />);
+  }
+
   if (selectedKpi === "kpi3.2") {
-    if (tabId === "field") return <ClimateFieldTab view={view} />;
-    if (tabId === "delta" || tabId === "beforeAfter") return <ClimateDeltaTab view={view} />;
-    return <ClimateFieldTab view={view} />;
+    if (tabId === "field" || tabId === "overview") {
+      return wrapIssy("overview", <ClimateFieldTab view={view} />);
+    }
+    if (tabId === "delta" || tabId === "beforeAfter") {
+      return wrapIssy("beforeAfter", <ClimateDeltaTab view={view} />);
+    }
+    return wrapIssy("overview", <ClimateFieldTab view={view} />);
   }
 
   if (selectedKpi === "kpi3.1") {
-    if (tabId === "overview") return <FacilitiesTab view={view} />;
-    return <FacilitiesTab view={view} />;
+    return wrapIssy(tabId === "beforeAfter" ? "beforeAfter" : "overview", <FacilitiesTab view={view} />);
   }
 
   if (selectedKpi === "kpi1.2") {
-    if (tabId === "modes" || tabId === "beforeAfter") {
-      return <BeforeAfterTab view={view} selectedKpi={selectedKpi} />;
+    if (tabId === "modes" || tabId === "overview" || tabId === "beforeAfter") {
+      return (
+        <BeforeAfterTab
+          view={view}
+          selectedKpi={selectedKpi}
+          graphicSlot={graphicSlot(tabId === "beforeAfter" ? "beforeAfter" : "overview")}
+        />
+      );
     }
-    if (tabId === "corridor") return <InsightsTab view={view} selectedKpi={selectedKpi} />;
-    return <BeforeAfterTab view={view} selectedKpi={selectedKpi} />;
+    if (tabId === "corridor") {
+      return wrapIssy("kpiAnalysis", <InsightsTab view={view} selectedKpi={selectedKpi} />);
+    }
+    return (
+      <BeforeAfterTab
+        view={view}
+        selectedKpi={selectedKpi}
+        graphicSlot={graphicSlot("beforeAfter")}
+      />
+    );
   }
 
   if (selectedKpi === "kpi2.1") {
     if (tabId === "pressure" || tabId === "overview") {
-      return <IntersectionTab view={view} pilotId={pilotId} />;
+      return wrapIssy("overview", <IntersectionTab view={view} pilotId={pilotId} streetLabels={streetLabels} />);
     }
-    if (tabId === "beforeAfter") return <BeforeAfterTab view={view} selectedKpi={selectedKpi} />;
-    return <IntersectionTab view={view} pilotId={pilotId} />;
+    if (tabId === "beforeAfter") {
+      return (
+        <BeforeAfterTab
+          view={view}
+          selectedKpi={selectedKpi}
+          graphicSlot={graphicSlot("beforeAfter")}
+        />
+      );
+    }
+    return wrapIssy("overview", <IntersectionTab view={view} pilotId={pilotId} streetLabels={streetLabels} />);
   }
 
-  if (tabId === "beforeAfter") return <BeforeAfterTab view={view} selectedKpi={selectedKpi} />;
+  if (tabId === "beforeAfter") {
+    return (
+      <BeforeAfterTab
+        view={view}
+        selectedKpi={selectedKpi}
+        graphicSlot={graphicSlot("beforeAfter")}
+      />
+    );
+  }
   if (tabId === "intersection" || tabId === "pressure") {
-    return <IntersectionTab view={view} pilotId={pilotId} />;
+    return wrapIssy("overview", <IntersectionTab view={view} pilotId={pilotId} streetLabels={streetLabels} />);
   }
   if (tabId === "corridor" || tabId === "insights") {
-    return <InsightsTab view={view} selectedKpi={selectedKpi} />;
+    return wrapIssy("kpiAnalysis", <InsightsTab view={view} selectedKpi={selectedKpi} />);
   }
-  return <OverviewTab view={view} />;
+  return <OverviewTab view={view} graphicSlot={graphicSlot("overview")} />;
 }
 
 // ─── Tab 5 — Data transparency ────────────────────────────────────────────────
@@ -1080,6 +1268,17 @@ function DataTab({
   config: ObservatoryConfig;
 }) {
   const kpiDef = getKpiDefinition(selectedKpi);
+  const isMock = view.dataSource === "mock";
+  const mockSources = [
+    {
+      title: "Pilot junction registry (mock)",
+      type: "mock",
+      spatial: "intersection schematic",
+      temporal: view.monitoringPeriod,
+      format: "Static registry",
+      confidence: "Medium",
+    },
+  ];
   const climateSources =
     selectedKpi === "kpi3.2"
       ? [
@@ -1166,10 +1365,16 @@ function DataTab({
       confidence: "High",
     },
   ];
-  const sources =
-    climateSources ?? facilitySources ?? mobilitySources ?? safetySources ?? defaultSources;
+  const sources = isMock
+    ? mockSources
+    : climateSources ?? facilitySources ?? mobilitySources ?? safetySources ?? defaultSources;
   return (
     <div className="space-y-4">
+      {isMock && (
+        <TransparencyNotice tone="amber">
+          Metrics and timelines use pilot-registry mock data. Observed sensor or API feeds will replace this layer when linked in the Data Catalogue.
+        </TransparencyNotice>
+      )}
       {/* Data source chips */}
       <GlassCard className="px-4 py-3">
         <p className="text-[11px] font-semibold text-white/50 mb-3">Data sources</p>
@@ -1204,12 +1409,13 @@ function DataTab({
             ["Pilot",                 pilotLabel ?? view.pilot],
             ["Segment ID",            view.segmentApiId],
             ["API label",             view.name],
-            ["Responsible partner",   "Issy-les-Moulineaux"],
+            ["Responsible partner",   isMock ? "ELABORATOR pilot registry" : "Issy-les-Moulineaux"],
             ["WP7 KPI",               kpiDef?.ref ? `${kpiDef.ref} — ${kpiDef.name}` : config.primaryMetricLabel],
             ["Intervention scale",    "Street"],
             ["Before/after",          "Both periods available"],
-            ["Update frequency",      "Live (APIs) / Static (CSV)"],
-            ["Geometry quality",      "Exact (APIs) + Matched (CSV)"],
+            ["Update frequency",      isMock ? "Static (mock registry)" : "Live (APIs) / Static (CSV)"],
+            ["Geometry quality",      isMock ? "Illustrative schematic" : "Exact (APIs) + Matched (CSV)"],
+            ["Data provenance",       isMock ? "Mock" : "Observed"],
           ].map(([k, v]) => (
             <div key={k as string}>
               <p className="text-white/35 text-[10px] mb-0.5">{k}</p>
@@ -1257,6 +1463,8 @@ const REGISTRY_TAB_ICONS: Partial<Record<ObservatoryTabId, React.ReactNode>> = {
   field: <Radio className="h-3.5 w-3.5" />,
   delta: <BarChart2 className="h-3.5 w-3.5" />,
   beforeAfter: <BarChart2 className="h-3.5 w-3.5" />,
+  kpiAnalysis: <BarChart3 className="h-3.5 w-3.5" />,
+  methodology: <FileText className="h-3.5 w-3.5" />,
   data: <Layers className="h-3.5 w-3.5" />,
 };
 
@@ -1275,6 +1483,13 @@ interface SegmentIntelligencePanelProps {
   pilotId?: string | null;
   /** KPI 3.2 chart year intensity (1 = no scale). */
   kpi32IntensityScale?: number;
+  /** Pre-resolved view from Map (mock registry or merged API). */
+  junctionView?: JunctionStudyView | null;
+  streetLabels?: { streetNS: string; streetEW: string };
+  selectedModeTypes?: string[];
+  selectedDirectionId?: string | null;
+  onSelectDirectionId?: (id: string) => void;
+  pilotGeometrySpec?: PilotGeometryRenderSpec | null;
 }
 
 export default function SegmentIntelligencePanel({
@@ -1289,10 +1504,17 @@ export default function SegmentIntelligencePanel({
   city = "",
   pilotId = null,
   kpi32IntensityScale = 1,
+  junctionView = null,
+  streetLabels,
+  selectedModeTypes = [],
+  selectedDirectionId,
+  onSelectDirectionId,
+  pilotGeometrySpec = null,
 }: SegmentIntelligencePanelProps) {
+  const resolvedCity = city || "Issy-les-Moulineaux";
   const observatoryConfig = useMemo(
-    () => getObservatoryConfig(selectedKpi, city || "Issy-les-Moulineaux", pilotId),
-    [selectedKpi, city, pilotId]
+    () => getObservatoryConfig(selectedKpi, resolvedCity, pilotId),
+    [selectedKpi, resolvedCity, pilotId]
   );
   const observatoryKpiDef = useMemo(() => getKpiDefinition(selectedKpi), [selectedKpi]);
   const [activeRegistryTab, setActiveRegistryTab] = useState<ObservatoryTabId>("overview");
@@ -1305,6 +1527,7 @@ export default function SegmentIntelligencePanel({
   );
 
   const view = useMemo(() => {
+    if (junctionView) return junctionView;
     const seg =
       segments.find((s) => s.id === selectedSegmentId) ?? pickDefaultSegment(segments);
     if (!seg) return null;
@@ -1317,7 +1540,22 @@ export default function SegmentIntelligencePanel({
       scenario,
       pilotId
     );
-  }, [segments, selectedSegmentId, pilotLabel, selectedKpi, kpi32IntensityScale, junctionArms, scenario, pilotId]);
+  }, [junctionView, segments, selectedSegmentId, pilotLabel, selectedKpi, kpi32IntensityScale, junctionArms, scenario, pilotId]);
+
+  const resolvedStreetLabels = streetLabels ?? (view ? streetLabelsFromView(view) : undefined);
+  const dataClass =
+    view?.dataClass ??
+    (view?.dataSource === "mock" ? "mock" : view?.dataSource === "observed" ? "observed" : "derived");
+  const confidence = confidenceFromDataClass(dataClass, view?.dataConfidence ?? 0.6);
+  const shellTitle = observatoryShellTitle(resolvedCity, pilotId);
+  const corridorLabel = observatoryCorridorLabel(resolvedCity, pilotId);
+  const perfImprovement =
+    view && view.intervention && view.baseline
+      ? Math.round(
+          ((1 - view.intervention.peakCongestion) / Math.max(0.01, 1 - view.baseline.peakCongestion) - 1) *
+            100
+        )
+      : 18;
 
   useEffect(() => {
     if (isOpen) {
@@ -1394,41 +1632,58 @@ export default function SegmentIntelligencePanel({
             />
 
             {/* ── Header ─────────────────────────────────────────────────────── */}
-            <div
-              className="relative flex-shrink-0 px-5 pt-5 pb-4"
-              style={{ borderBottom: `1px solid ${C.border}` }}
-            >
+            <div className={`relative flex-shrink-0 ${intelPanelHeader}`}>
+              <p className={`${intelSectionLabel} mb-2`}>
+                {resolvedCity}
+                {pilotLabel ? ` · ${pilotLabel.split("—").pop()?.trim() ?? pilotLabel}` : ""}
+              </p>
               {/* Live pulse + status */}
               <div className="flex items-center gap-2 mb-2">
                 <div className="flex items-center gap-1.5">
                   <motion.div
                     className="h-2 w-2 rounded-full"
-                    style={{ background: C.lime }}
+                    style={{ background: dataClass === "mock" ? C.amber : C.lime }}
                     animate={{ opacity: [1, 0.3, 1] }}
                     transition={{ duration: 2, repeat: Infinity }}
                   />
-                  <span className="text-[10px] font-medium text-white/50 uppercase tracking-widest">Live observed</span>
+                  <span className="text-[10px] font-medium text-primary-foreground/80 uppercase tracking-widest">
+                    {dataClassLabel(dataClass)}
+                  </span>
                 </div>
                 <div
-                  className="ml-auto px-2.5 py-0.5 rounded-full text-[10px] font-semibold"
-                  style={{ background: "rgba(101,125,245,0.18)", color: C.violet, border: `1px solid rgba(101,125,245,0.30)` }}
+                  className="ml-auto px-2.5 py-0.5 rounded-full text-[10px] font-semibold border border-white/25 bg-white/10 text-primary-foreground"
                 >
                   {view.kpiLabel}
                 </div>
               </div>
 
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-white/45">
-                {observatoryConfig.title}
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-primary-foreground/75">
+                {shellTitle}
               </p>
-              <h2 className="text-[17px] font-bold text-white leading-tight mt-1">
-                Monitored intervention corridor
+              <h2 className="text-[17px] font-bold text-primary-foreground leading-tight mt-1">
+                {corridorLabel}
               </h2>
-              <p className="text-[12px] mt-0.5 font-medium" style={{ color: view.armColor }}>
+              <p className={`text-[12px] mt-0.5 font-medium ${intelAccentValue}`}>
                 {view.name}
               </p>
               <p className="text-[11px] mt-0.5 text-white/45">
                 {observatoryConfig.subtitle}
               </p>
+              {pilotGeometrySpec?.labelStyle === "aggregate" && (
+                <p className="text-[10px] mt-1.5 text-amber-200/90 font-medium uppercase tracking-wide">
+                  Aggregate view
+                </p>
+              )}
+              {pilotGeometrySpec?.uncertaintyLevel === "high" && (
+                <p className="text-[11px] mt-2 text-amber-200/90 leading-snug border border-amber-400/25 rounded-lg px-2 py-1.5 bg-amber-500/10">
+                  Spatial uncertainty — geometry is contextual, not street-precise.
+                </p>
+              )}
+              {pilotGeometrySpec?.reductionCaption && (
+                <p className="text-[11px] mt-2 text-cyan-100/90 leading-snug border border-cyan-400/25 rounded-lg px-2 py-1.5 bg-cyan-500/10">
+                  {pilotGeometrySpec.reductionCaption}
+                </p>
+              )}
               {observatoryConfig.emptyState && (
                 <p className="text-[11px] mt-2 text-amber-200/90 leading-snug border border-amber-400/25 rounded-lg px-2 py-1.5 bg-amber-500/10">
                   {observatoryConfig.emptyState}
@@ -1459,7 +1714,12 @@ export default function SegmentIntelligencePanel({
               </div>
 
               <div className="flex flex-wrap gap-1.5 mt-2">
-                <Chip label="KPI" value={`${view.kpiValue} · ${view.kpiBand}`} />
+                <Chip label="KPI" value={`${view.kpiValue} · ${view.kpiBand}`} color="rgba(255,255,255,0.9)" />
+                <Chip
+                  label="Confidence"
+                  value={`${confidence.label} (${confidence.pct}%)`}
+                  color={C.cyan}
+                />
                 <Chip
                   icon={MapPin}
                   label="Coords"
@@ -1492,18 +1752,23 @@ export default function SegmentIntelligencePanel({
                 )}
               </div>
 
-              {/* Performance indicator bar */}
-              <div className="mt-3">
+              <div
+                className="mt-3 pb-4 border-b"
+                style={{ borderColor: C.border }}
+              >
                 <div className="flex justify-between text-[10px] text-white/35 mb-1">
-                  <span>Junction performance vs baseline</span>
-                  <span style={{ color: C.lime }}>+18% improvement</span>
+                  <span>Intervention performance vs baseline</span>
+                  <span style={{ color: perfImprovement >= 0 ? C.lime : C.rose }}>
+                    {perfImprovement >= 0 ? "+" : ""}
+                    {perfImprovement}% {perfImprovement >= 0 ? "improvement" : "pressure"}
+                  </span>
                 </div>
                 <div className="h-1 rounded-full overflow-hidden" style={{ background: C.border }}>
                   <motion.div
                     className="h-full rounded-full"
                     style={{ background: `linear-gradient(90deg, ${C.violet}, ${C.cyan}, ${C.lime})` }}
                     initial={{ width: "50%" }}
-                    animate={{ width: "68%" }}
+                    animate={{ width: `${Math.min(92, Math.max(28, 50 + perfImprovement))}%` }}
                     transition={{ duration: 1, ease: "easeOut", delay: 0.4 }}
                   />
                 </div>
@@ -1530,37 +1795,23 @@ export default function SegmentIntelligencePanel({
               </div>
             </div>
 
-            {/* ── Mini junction preview strip ─────────────────────────────── */}
+            {/* ── Observatory graphic header strip ───────────────────────── */}
             <div
-              className="flex-shrink-0 px-5 py-2.5 flex items-center gap-3"
+              className="flex-shrink-0 px-5 py-2.5"
               style={{ borderBottom: `1px solid ${C.border}`, background: "rgba(255,255,255,0.015)" }}
             >
-              <IntersectionSVG highlightArmId={view.armId} />
-              <div className="flex-1 space-y-2">
-                <div className="flex items-center gap-2 text-[10px]">
-                  <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ background: C.cyan }} />
-                  <span className="text-white/55">
-                    {selectedKpi === "kpi3.2"
-                      ? "Climate / emissions field active"
-                      : selectedKpi === "kpi3.1"
-                        ? "Zero-emission facilities in buffer"
-                        : "Cycle continuity corridor active"}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 text-[10px]">
-                  <motion.span
-                    className="h-2 w-2 rounded-full flex-shrink-0"
-                    style={{ background: C.lime }}
-                    animate={{ opacity: [1, 0.2, 1] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  />
-                  <span className="text-white/55">1 monitored corridor · traficissy API context</span>
-                </div>
-                <div className="flex items-center gap-2 text-[10px]">
-                  <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ background: C.lavender }} />
-                  <span className="text-white/55">Post-intervention monitoring</span>
-                </div>
-              </div>
+              <ObservatoryGraphicSlot
+                zone="header"
+                headerMode
+                cityName={resolvedCity}
+                pilotId={pilotId}
+                selectedKpi={selectedKpi}
+                view={view}
+                scenario={scenario}
+                selectedModeTypes={selectedModeTypes}
+                selectedDirectionId={selectedDirectionId}
+                onSelectDirectionId={onSelectDirectionId}
+              />
             </div>
 
             {/* ── Tab bar ─────────────────────────────────────────────────────── */}
@@ -1611,6 +1862,12 @@ export default function SegmentIntelligencePanel({
                     pilotLabel={pilotLabel}
                     pilotId={pilotId}
                     config={observatoryConfig}
+                    streetLabels={resolvedStreetLabels}
+                    cityName={resolvedCity}
+                    scenario={scenario}
+                    selectedModeTypes={selectedModeTypes}
+                    selectedDirectionId={selectedDirectionId}
+                    onSelectDirectionId={onSelectDirectionId}
                   />
                 </motion.div>
               </AnimatePresence>
@@ -1629,7 +1886,8 @@ export default function SegmentIntelligencePanel({
                   </span>
                 </div>
                 <span className="pl-5 font-semibold text-white/65">
-                  Provenance: {observatoryKpiDef?.dataLabel ?? "Derived"} · Observed / Derived / Modelled / Mock
+                  Provenance: {view.sourceLabel || observatoryKpiDef?.dataLabel || "Derived"} ·{" "}
+                  {dataClassLabel(dataClass)}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -1644,11 +1902,11 @@ export default function SegmentIntelligencePanel({
                 {selectedKpi !== "kpi3.2" && selectedKpi !== "kpi3.1" && (
                   <button
                     type="button"
-                    onClick={() => setActiveRegistryTab("corridor")}
+                    onClick={() => setActiveRegistryTab("kpiAnalysis")}
                     className="flex items-center gap-1.5 text-[10px] font-medium px-2.5 py-1.5 rounded-lg transition-colors"
                     style={{ background: "rgba(101,125,245,0.15)", color: C.violet }}
                   >
-                    Read story
+                    KPI analysis
                     <ChevronRight className="h-3 w-3" />
                   </button>
                 )}

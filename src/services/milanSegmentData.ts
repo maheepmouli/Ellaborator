@@ -143,7 +143,7 @@ function distanceSquared(a: [number, number], b: [number, number]): number {
   return dLat * dLat + dLon * dLon;
 }
 
-const MILAN_PILOT_BUFFERS: Record<
+export const MILAN_PILOT_BUFFERS: Record<
   "mil-p1" | "mil-p2" | "mil-p3",
   { lat: number; lon: number; radiusDeg: number }
 > = {
@@ -162,6 +162,9 @@ export function filterMilanSegmentsNearPilot(
   records: MilanSegmentRecord[],
   pilotId: "mil-p1" | "mil-p2" | "mil-p3"
 ): MilanSegmentRecord[] {
+  if (pilotId === "mil-p3") {
+    return [];
+  }
   const anchor = MILAN_PILOT_BUFFERS[pilotId];
   const r2 = anchor.radiusDeg * anchor.radiusDeg;
   return records.filter((record) => {
@@ -380,8 +383,21 @@ export async function loadMilanSpeedSegments(
     timeWindow: "08:00-09:00",
     metricRows,
   });
-  speedCache.set(cacheKey, withCameraJoinStats(dataset));
-  return speedCache.get(cacheKey)!;
+  const filtered = filterMilanSegmentsNearPilot(dataset.records, pilotId);
+  const scoped: MilanSegmentDataset = {
+    ...withCameraJoinStats({
+      ...dataset,
+      records: filtered,
+      stats: {
+        ...dataset.stats,
+        parsedSegments: filtered.length,
+        pilotScoped: true,
+      },
+      statusMessage: `${source.label} clipped to ${pilotId} intervention zone (${filtered.length} segments).`,
+    }),
+  };
+  speedCache.set(cacheKey, scoped);
+  return scoped;
 }
 
 export async function loadMilanEnvironmentSegments(
@@ -409,7 +425,7 @@ export async function loadMilanEnvironmentSegments(
     timeWindow: window,
   });
   let scoped = dataset;
-  if (pilotId) {
+  if (pilotId && pilotId !== "mil-p3") {
     const filtered = filterMilanSegmentsNearPilot(dataset.records, pilotId);
     scoped = {
       ...dataset,
@@ -420,6 +436,12 @@ export async function loadMilanEnvironmentSegments(
         pilotScoped: true,
       },
       statusMessage: `RETE segments clipped to ${pilotId} buffer (~${filtered.length} links). Environmental proxy from traffic composition; camera joins where available.`,
+    };
+  } else if (pilotId === "mil-p3") {
+    scoped = {
+      ...dataset,
+      statusMessage:
+        "Probabilistic CO₂/noise network for Pilot 3 — full RETE context, not P1/P2 corridor clipping.",
     };
   } else {
     scoped.statusMessage =

@@ -16,6 +16,7 @@ import { getVisualizationType, isSegmentVisualization, isPointVisualization, isA
 import { generateIsochrones, generateGridAreas, generateEmissionZones, type MapArea } from "@/services/areaGenerator";
 import { getKpiDefinition } from "@/config/kpiDefinitions";
 import { getPilotsByCity, getPilotById, SelectedPilot, ViewState } from "@/data/pilotDefinitions";
+import { getCityPilotProfile } from "@/data/cityPilotProfiles";
 import { useLocalCityData } from "@/hooks/use-local-city-data";
 import { useIssyFlowData } from "@/hooks/use-issy-flow-data";
 import { getIssyZoneCentroid, getIssyZoneCentroids } from "@/services/issyFlowData";
@@ -27,6 +28,16 @@ import {
   renderIssyJunctionArms,
   resolveJunctionModeAccent,
 } from "@/lib/renderIssyJunctionArms";
+import {
+  segmentInteractionHandlers,
+  wireCircleMarkerSegment,
+  wirePolylineSegment,
+} from "@/lib/wireMapSegmentInteraction";
+import { filterPointsInPilotZone } from "@/lib/interventionZone";
+import {
+  getCopenhagenCameraIdsForPilot,
+  isCopenhagenCameraKpi,
+} from "@/data/copenhagenCameraSites";
 import {
   ISSY_SEGMENT_KPIS,
   isIssyCity,
@@ -47,6 +58,11 @@ import {
 import type { IssyDayCategory } from "@/services/issyFlowData";
 import { DeckLeafletOverlay } from "@/components/map/DeckLeafletOverlay";
 import { getLocalCityDiagnostics, type LocalCityPoint } from "@/services/localCityData";
+import {
+  HELSINKI_GEO_LAYER_LABELS,
+  loadHelsinkiGeoSample,
+} from "@/lib/helsinkiGeoLayers";
+import type { HelsinkiPilotId } from "@/data/helsinkiPilotProfiles";
 import { infrastructureChartLabelMatchesFeature } from "@/lib/infrastructureChartMapLink";
 import {
   areAllTravelModesSelected,
@@ -56,6 +72,8 @@ import {
   ISSY_OD_CSV_DISCLAIMER,
   ISSY_OD_DIRECTIONAL_NOTE,
 } from "@/lib/issyDataTransparency";
+import type { PilotGeometryRenderSpec } from "@/lib/pilotGeometryRenderer";
+import type { RuntimeLinkage } from "@/lib/pilotGeometryRenderer";
 import { getKpi32TimeSeriesIntensity, resolveKpi32PolygonBaseIntensity } from "@/lib/kpi32YearIntensity";
 import {
   dedupeTrafficBySegmentId,
@@ -133,7 +151,14 @@ interface HeroMapProps {
   selectedJunctionSegmentId?: string | null;
   /** Segment focus — dim non-selected layers. */
   focusMode?: boolean;
-  onSegmentHover?: (detail: { segmentId: string; segmentName: string }) => void;
+  onSegmentHover?: (detail: {
+    segmentId: string;
+    segmentName: string;
+    speed?: number | null;
+    congestion?: number | null;
+  }) => void;
+  pilotGeometrySpec?: PilotGeometryRenderSpec | null;
+  runtimeLinkage?: RuntimeLinkage;
 }
 
 /**
@@ -250,6 +275,8 @@ const HeroMap = ({
   selectedJunctionSegmentId = null,
   focusMode = false,
   onSegmentHover,
+  pilotGeometrySpec = null,
+  runtimeLinkage,
 }: HeroMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapPaneWrapperRef = useRef<HTMLDivElement>(null);
@@ -277,14 +304,29 @@ const HeroMap = ({
   } | null>(null);
   const currentCityData = currentCity ? CITY_DATA.find((c) => c.city === currentCity) || null : null;
   const selectedPilotMeta = getPilotById(currentCity || "", selectedPilotId);
+  const selectedPilotProfile = getCityPilotProfile(selectedPilotId);
   const isKpiSupportedByPilot = selectedPilotMeta
     ? selectedPilotMeta.supportedKpis.includes(selectedKpi)
     : true;
   const lastExternalSelectionRef = useRef<string>("");
   const onJunctionSegmentClickRef = useRef(onJunctionSegmentClick);
+  const onSegmentHoverRef = useRef(onSegmentHover);
+  const onSegmentFocusRef = useRef(onSegmentFocus);
   useEffect(() => {
     onJunctionSegmentClickRef.current = onJunctionSegmentClick;
   }, [onJunctionSegmentClick]);
+  useEffect(() => {
+    onSegmentHoverRef.current = onSegmentHover;
+  }, [onSegmentHover]);
+  useEffect(() => {
+    onSegmentFocusRef.current = onSegmentFocus;
+  }, [onSegmentFocus]);
+
+  const segmentInteractionEnabled =
+    pilotGeometrySpec?.interactionModel !== "network" &&
+    pilotGeometrySpec?.interactionModel !== "dashboard_only";
+  const suppressMapSpatialLayers =
+    pilotGeometrySpec?.interactionModel === "dashboard_only";
 
   const badge = (label: string) => provenanceBadgesHtml([label]);
 
@@ -375,6 +417,12 @@ const HeroMap = ({
       !!(localCityPoints && localCityPoints.length);
 
     if (milanModeShare && localCityPoints?.length) {
+      const scopedMilanPoints = filterPointsInPilotZone(
+        localCityPoints,
+        currentCity || "Milan",
+        selectedPilotId
+      );
+      if (!scopedMilanPoints.length) return [];
       const fillFor = (v: number): [number, number, number, number] => {
         if (v >= 80) return [47, 27, 109, 210];
         if (v >= 60) return [101, 125, 245, 200];
@@ -384,7 +432,7 @@ const HeroMap = ({
       return [
         new ScatterplotLayer<LocalCityPoint>({
           id: "elab-deck-milan-mode-share",
-          data: localCityPoints.slice(0, 2500),
+          data: scopedMilanPoints.slice(0, 800),
           getPosition: (d) => [d.lon, d.lat],
           getFillColor: (d) => fillFor(d.value),
           getRadius: 6,
@@ -431,9 +479,12 @@ const HeroMap = ({
     (cityData: { lat: number; lon: number }, enabled: boolean, skipAtJunction?: boolean) => {
     if (!mapRef.current || !enabled || skipAtJunction) return;
     const layer = L.layerGroup();
+    const focusLat = selectedPilotMeta?.lat ?? cityData.lat;
+    const focusLng = selectedPilotMeta?.lng ?? cityData.lon;
+    const focusRadiusM = selectedPilotMeta?.scale === "street" ? 450 : selectedPilotMeta?.scale === "district" ? 900 : 1400;
     // Single pilot boundary — avoid two stacked filled discs that read as duplicate layers.
-    const interventionBoundary = L.circle([cityData.lat, cityData.lon], {
-      radius: 900,
+    const interventionBoundary = L.circle([focusLat, focusLng], {
+      radius: focusRadiusM,
       color: "#a78bfa",
       weight: 2,
       dashArray: "6 8",
@@ -441,9 +492,54 @@ const HeroMap = ({
       fillOpacity: 0.06,
     });
     layer.addLayer(interventionBoundary);
+    if (selectedPilotProfile?.interventionMarkers?.length) {
+      selectedPilotProfile.interventionMarkers.forEach((marker) => {
+        const markerLayer = L.circleMarker([marker.lat, marker.lng], {
+          radius: marker.isPlaceholder ? 8 : 7,
+          color: marker.isPlaceholder ? "#f59e0b" : "#a78bfa",
+          weight: 2,
+          fillColor: marker.isPlaceholder ? "#fbbf24" : "#c4b5fd",
+          fillOpacity: marker.isPlaceholder ? 0.55 : 0.9,
+        });
+        markerLayer.bindPopup(`
+          <div style="font-family:'DM Sans',sans-serif;min-width:260px;padding:8px 10px;">
+            <p style="margin:0 0 4px;font-size:12px;font-weight:700;color:#2f1b6d;">${marker.title}</p>
+            <p style="margin:0 0 6px;font-size:10px;color:#5b4d84;">${marker.interventionType}</p>
+            <p style="margin:0 0 4px;font-size:10px;color:#2f1b6d;">Coordinates: ${marker.lat.toFixed(6)}, ${marker.lng.toFixed(6)}</p>
+            <p style="margin:0 0 2px;font-size:10px;color:#2f1b6d;">Data availability: ${marker.dataAvailability}</p>
+            <p style="margin:0 0 2px;font-size:10px;color:#2f1b6d;">Baseline: ${marker.baselineStatus}</p>
+            <p style="margin:0;font-size:10px;color:#2f1b6d;">Post-intervention: ${marker.postStatus}</p>
+          </div>
+        `);
+        layer.addLayer(markerLayer);
+      });
+    }
+    const pilotId = selectedPilotId as HelsinkiPilotId | null;
+    if (pilotId && (pilotId === "hel-p1" || pilotId === "hel-p2")) {
+      void loadHelsinkiGeoSample(pilotId, pilotId === "hel-p1" ? 80 : 40).then((points) => {
+        if (!mapRef.current || interventionLayerRef.current !== layer) return;
+        const layerLabel = HELSINKI_GEO_LAYER_LABELS[pilotId] || "Observed Helsinki layer";
+        points.forEach((point, index) => {
+          const markerLayer = L.circleMarker([point.lat, point.lng], {
+            radius: 4,
+            color: "#7c3aed",
+            weight: 1,
+            fillColor: "#ddd6fe",
+            fillOpacity: 0.75,
+          });
+          markerLayer.bindPopup(`
+            <div style="font-family:'DM Sans',sans-serif;min-width:220px;padding:8px 10px;">
+              <p style="margin:0 0 4px;font-size:11px;font-weight:700;color:#2f1b6d;">${point.title}</p>
+              <p style="margin:0;font-size:10px;color:#5b4d84;">${layerLabel} · point ${index + 1}</p>
+            </div>
+          `);
+          layer.addLayer(markerLayer);
+        });
+      });
+    }
     layer.addTo(mapRef.current);
     interventionLayerRef.current = layer;
-  }, []);
+  }, [currentCity, selectedPilotId, selectedPilotMeta?.lat, selectedPilotMeta?.lng, selectedPilotMeta?.scale, selectedPilotProfile]);
 
   // Add city boundary polygon
   const addCityBoundary = useCallback((cityData: { lat: number; lon: number; city: string }) => {
@@ -548,6 +644,16 @@ const HeroMap = ({
       const cityData = CITY_DATA.find((c) => c.city === cityName);
       if (!cityData) return;
 
+      const segmentHandlers = segmentInteractionHandlers(
+        (detail) => onSegmentHoverRef.current?.(detail),
+        (ctx) => onSegmentFocusRef.current?.(ctx),
+        (detail) => onJunctionSegmentClickRef.current?.(detail)
+      );
+
+      const isMilanInterventionPilot =
+        cityName.toLowerCase() === "milan" &&
+        (milanPilotId === "mil-p1" || milanPilotId === "mil-p2");
+
       const attachPilotStoryPins = () => {
         if (!mapRef.current || !selectedPilotId) return;
         const pins = getStoryPointsForPilot(cityName, selectedPilotId);
@@ -602,6 +708,24 @@ const HeroMap = ({
       // Add city boundary
       addCityBoundary(cityData);
 
+      if (suppressMapSpatialLayers) {
+        const dashboardNotice = L.marker([cityData.lat, cityData.lon], {
+          icon: L.divIcon({
+            className: "dashboard-only-notice",
+            html: `
+              <div style="padding:10px 12px;border-radius:10px;background:rgba(20,20,35,0.92);color:#e2e8f0;border:1px solid rgba(148,163,184,0.5);max-width:260px;font-size:11px;line-height:1.35;font-family:'DM Sans',sans-serif;">
+                <strong>Dashboard-only pilot</strong><br/>
+                ${pilotGeometrySpec?.legendHint ?? "Survey context — map spatial features suppressed."}
+              </div>
+            `,
+            iconSize: [260, 72],
+            iconAnchor: [130, 36],
+          }),
+        }).addTo(mapRef.current!);
+        markersRef.current.push(dashboardNotice);
+        return;
+      }
+
       const visualizationType = getVisualizationType(selectedKpi);
       const isIssy = isIssyCity(cityName);
       const shouldRenderIssySegments = shouldRenderIssyTrafficSegments(cityName, selectedKpi);
@@ -624,6 +748,7 @@ const HeroMap = ({
         junctionStudy: issyJunctionStudy,
         pilotId: selectedPilotId,
         scenario,
+        runtimeLinkage,
       });
       const renderIntent = resolveRenderIntent(cityName, selectedKpi, {
         junctionStudy: issyJunctionStudy,
@@ -641,8 +766,13 @@ const HeroMap = ({
             p.properties?.type !== "mock" &&
             p.properties?.dataOrigin !== "mock"
         ).length;
-        const minRequired = cityKey.includes("copenhagen") ? sourcePoints.length : minCount;
-        if (sourcePoints.length >= minRequired) return sourcePoints;
+        const usesObservedOnly =
+          cityKey.includes("copenhagen") || cityKey.includes("zaragoza") || cityKey.includes("trikala");
+        const minRequired = usesObservedOnly ? Math.max(sourcePoints.length, 1) : minCount;
+        if (sourcePoints.length >= minRequired && (usesObservedOnly || observedCount >= minCount)) {
+          return sourcePoints;
+        }
+        if (usesObservedOnly && sourcePoints.length > 0) return sourcePoints;
         const anchorValue =
           sourcePoints.length > 0
             ? sourcePoints.reduce((sum, point) => sum + point.value, 0) / sourcePoints.length
@@ -1084,6 +1214,15 @@ const HeroMap = ({
           }).addTo(mapRef.current!);
 
           const props = segment.properties || {};
+          const segmentName = String(props.streetName || segment.id);
+          const avgSpeed = Number(props.avgSpeed || 0);
+          const baseStyle = {
+            color: highlight.color,
+            weight: highlight.weight,
+            opacity: highlight.opacity,
+            lineJoin: "round" as const,
+            lineCap: "round" as const,
+          };
           line.bindPopup(`
             <div style="font-family: 'DM Sans', sans-serif; padding: 8px; min-width: 170px;">
               <p style="font-size: 10px; color: #2F1B6D; margin: 0 0 3px 0; font-weight: 700;">Data Quality</p>
@@ -1092,8 +1231,8 @@ const HeroMap = ({
               <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">City: Milan</p>
               <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Pilot: ${milanPilotId.toUpperCase()}</p>
               <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">KPI: KPI2.1 Road User Safety</p>
-              <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Street: ${String(props.streetName || "n/a")}</p>
-              <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Avg speed: ${Number(props.avgSpeed || 0).toFixed(1)} km/h</p>
+              <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Street: ${segmentName}</p>
+              <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Avg speed: ${avgSpeed.toFixed(1)} km/h</p>
               <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">P85 speed: ${Number(props.p85Speed || 0).toFixed(1)} km/h</p>
               <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Observations: ${Math.round(Number(props.hits || 0))}</p>
               <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Band: ${highlight.band}</p>
@@ -1105,20 +1244,23 @@ const HeroMap = ({
               <p style="font-size: 9px; color: #96C2EF; margin-top: 2px;">Confidence: ${milanSpeedSegments.dataConfidence}</p>
             </div>
           `);
-          line.on("click", () => {
-            const avgSpeed = Number(props.avgSpeed || 0);
-            onSegmentFocus?.({
-              segmentName: String(props.streetName || segment.id),
-              speed: avgSpeed,
-              congestion: null,
-            });
-            onJunctionSegmentClickRef.current?.({
-              segmentId: segment.id,
-              segmentName: String(props.streetName || segment.id),
-              speed: avgSpeed,
-              congestion: null,
-            });
-          });
+          if (segmentInteractionEnabled) {
+            wirePolylineSegment(
+              line,
+              {
+                segmentId: segment.id,
+                segmentName,
+                speed: avgSpeed,
+                congestion: Math.min(1, segment.value / 100),
+              },
+              segmentHandlers,
+              {
+                baseStyle,
+                selectedSegmentId: selectedJunctionSegmentId,
+                focusDim: 0.28,
+              }
+            );
+          }
           polylinesRef.current.push(line);
           renderedCount += 1;
         });
@@ -1190,6 +1332,31 @@ const HeroMap = ({
               <p style="font-size: 9px; color: #96C2EF; margin-top: 2px;">Confidence: ${milanEnvironmentSegments.dataConfidence}</p>
             </div>
           `);
+          const segmentName = String(props.streetName || segment.id);
+          const baseStyle = {
+            color: highlight.color,
+            weight: highlight.weight,
+            opacity: highlight.opacity,
+            lineJoin: "round" as const,
+            lineCap: "round" as const,
+          };
+          if (segmentInteractionEnabled) {
+            wirePolylineSegment(
+              line,
+              {
+                segmentId: segment.id,
+                segmentName,
+                speed: null,
+                congestion: scaledValue / 100,
+              },
+              segmentHandlers,
+              {
+                baseStyle,
+                selectedSegmentId: selectedJunctionSegmentId,
+                focusDim: 0.28,
+              }
+            );
+          }
           polylinesRef.current.push(line);
           renderedCount += 1;
         });
@@ -1268,28 +1435,29 @@ const HeroMap = ({
           `;
           
           polyline.bindPopup(popupContent);
-          polyline.on("mouseover", () => {
-            polyline.setStyle({ weight: 7, opacity: 0.95 });
-            onSegmentFocus?.({
-              segmentName: `Road ${segment.id}`,
+          const segName = `Road ${segment.id}`;
+          const baseStyle = {
+            color: highlight.color,
+            weight: highlight.weight,
+            opacity: highlight.opacity,
+            lineJoin: "round" as const,
+            lineCap: "round" as const,
+          };
+          wirePolylineSegment(
+            polyline,
+            {
+              segmentId: segment.id,
+              segmentName: segName,
               speed: props.vitesse_km_h ?? null,
               congestion: props.indice_de_congestion ?? null,
-            });
-            polyline.bindTooltip(
-              `Segment: ${segment.id}<br/>Speed: ${(props.vitesse_km_h ?? 0).toFixed(1)} km/h<br/>Congestion index: ${(props.indice_de_congestion ?? 0).toFixed(2)}`,
-              { sticky: true, direction: "top", opacity: 0.9 }
-            ).openTooltip();
-          });
-          polyline.on("mouseout", () => {
-            polyline.setStyle({ weight: highlight.weight, opacity: highlight.opacity });
-          });
-          polyline.on("click", () => {
-            onSegmentFocus?.({
-              segmentName: `Road ${segment.id}`,
-              speed: props.vitesse_km_h ?? null,
-              congestion: props.indice_de_congestion ?? null,
-            });
-          });
+            },
+            segmentHandlers,
+            { baseStyle, selectedSegmentId: selectedJunctionSegmentId }
+          );
+          polyline.bindTooltip(
+            `Segment: ${segment.id}<br/>Speed: ${(props.vitesse_km_h ?? 0).toFixed(1)} km/h<br/>Congestion index: ${(props.indice_de_congestion ?? 0).toFixed(2)}`,
+            { sticky: true, direction: "top", opacity: 0.9 }
+          );
           polylinesRef.current.push(polyline);
           renderedCount++;
         });
@@ -1320,11 +1488,12 @@ const HeroMap = ({
         (!trafficData?.results || trafficData.results.length === 0);
 
       const isCopenhagenCity = currentCity.toLowerCase().includes("copenhagen");
-      if (isCopenhagenCity && selectedKpi !== "kpi1.2") {
+      if (isCopenhagenCity && !isCopenhagenCameraKpi(selectedKpi)) {
         addInterventionLayer(cityData, showInterventionLayer);
         return;
       }
-      if (isCopenhagenCity && selectedKpi === "kpi1.2") {
+      if (isCopenhagenCity && isCopenhagenCameraKpi(selectedKpi)) {
+        const pilotCameraIds = getCopenhagenCameraIdsForPilot(selectedPilotId);
         const observedPoints = (localCityPoints || []).filter(
           (p) => p.properties?.dataOrigin === "local-city-dataset"
         );
@@ -1476,16 +1645,16 @@ const HeroMap = ({
             </div>
           `;
           marker.bindPopup(popup);
-          marker.on("click", () => {
-            const segmentName = `${String(props.streetName ?? "Camera")} · ${direction}`;
-            onSegmentFocus?.({ segmentName, speed: null, congestion: null });
-            onJunctionSegmentClickRef.current?.({
-              segmentId,
-              segmentName,
-              speed: null,
-              congestion: null,
-            });
-          });
+          const segmentName = `${String(props.streetName ?? "Camera")} · ${direction}`;
+          wireCircleMarkerSegment(
+            marker,
+            { segmentId, segmentName, speed: null, congestion: null },
+            segmentHandlers,
+            {
+              baseRadius: isSelected ? 8.8 : 7,
+              selectedSegmentId: selectedJunctionSegmentId,
+            }
+          );
           circlesRef.current.push(marker);
 
           const arrow = L.marker([point.lat, point.lon], {
@@ -1503,9 +1672,10 @@ const HeroMap = ({
 
         if (copenhagenStreetGeoJson?.features?.length) {
           copenhagenStreetGeoJson.features.forEach((feature) => {
+            const cameraId = feature.properties?.cameraId ?? "unknown";
+            if (pilotCameraIds && !pilotCameraIds.has(cameraId)) return;
             const coords = feature.geometry?.coordinates;
             if (!coords || coords.length < 2) return;
-            const cameraId = feature.properties?.cameraId ?? "unknown";
             const vals = cameraValueById.get(cameraId) ?? [];
             const avg = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 50;
             const isSelected = corridorMatchesSelection(
@@ -1530,16 +1700,28 @@ const HeroMap = ({
                   <p style="font-size: 9px; color: #96C2EF; margin-top: 4px;">Source: OpenTrafficCam observed dataset + OSM street centerline</p>
               </div>
             `);
-            line.on("click", () => {
-              const segmentName = `${feature.properties?.street ?? "Street corridor"} · ${feature.properties?.siteName ?? cameraId}`;
-              onSegmentFocus?.({ segmentName, speed: null, congestion: null });
-              onJunctionSegmentClickRef.current?.({
-                segmentId: `corridor:${cameraId}`,
-                segmentName,
+            const corridorSegId = `corridor:${cameraId}`;
+            const corridorName = `${feature.properties?.street ?? "Street corridor"} · ${feature.properties?.siteName ?? cameraId}`;
+            wirePolylineSegment(
+              line,
+              {
+                segmentId: corridorSegId,
+                segmentName: corridorName,
                 speed: null,
-                congestion: null,
-              });
-            });
+                congestion: avg / 100,
+              },
+              segmentHandlers,
+              {
+                baseStyle: {
+                  color: isSelected ? "#ffffff" : getValueColor(avg, false),
+                  weight: isSelected ? 6.5 : 4.2,
+                  opacity: isSelected ? 0.95 : 0.34,
+                  lineCap: "round",
+                  lineJoin: "round",
+                },
+                selectedSegmentId: selectedJunctionSegmentId,
+              }
+            );
             polylinesRef.current.push(line);
           });
         }
@@ -1552,6 +1734,7 @@ const HeroMap = ({
       // Issy normally expects segment geometry from the traffic API; when it is empty, hotspots + scaled grid fallback read as real "data" rather than an empty map.
       if (
         selectedKpi === "kpi2.1" &&
+        !isCopenhagenCity &&
         (renderIntent === "point" || (issySafetySegmentDataMissing && !isIssy))
       ) {
         let safetyPoints =
@@ -1692,7 +1875,12 @@ const HeroMap = ({
         }
 
         if (!points && localCityPoints && localCityPoints.length > 0) {
-          points = localCityPoints.map((point) => ({
+          const scoped = filterPointsInPilotZone(
+            localCityPoints,
+            cityName,
+            selectedPilotId
+          );
+          points = scoped.map((point) => ({
             ...point,
             properties: {
               ...(point.properties || {}),
@@ -1700,22 +1888,29 @@ const HeroMap = ({
             },
           }));
         }
-        
+
         if (!points) {
           const isCopenhagenKpi42 =
             currentCity.toLowerCase().includes("copenhagen") && selectedKpi === "kpi4.2";
-          if (isCopenhagenKpi42) {
+          if (isCopenhagenKpi42 || isMilanInterventionPilot) {
             points = [];
           } else {
             // Generate synthetic points
             points = generateHexbinData(cityData, selectedKpi, 200);
           }
         }
-        points = ensureCityCoverage(points, 55, 220);
+        if (isMilanInterventionPilot) {
+          points = filterPointsInPilotZone(points, cityName, milanPilotId);
+        }
+        if (!isMilanInterventionPilot) {
+          points = ensureCityCoverage(points, 55, 220);
+        }
 
+        const isCopenhagenCity = currentCity.toLowerCase().includes("copenhagen");
         if (selectedKpi === "kpi1.2") {
-          const isCopenhagen = currentCity.toLowerCase().includes("copenhagen");
+          const isCopenhagen = isCopenhagenCity;
           if (isCopenhagen) {
+            const pilotCameraIds = getCopenhagenCameraIdsForPilot(selectedPilotId);
             const modeSelected = selectedModeTypes?.length ? selectedModeTypes : [];
             const selectFromBreakdown = (breakdown: any): number => {
               const total = Number(breakdown?.total ?? 0);
@@ -1836,9 +2031,10 @@ const HeroMap = ({
 
             if (copenhagenStreetGeoJson?.features?.length) {
               copenhagenStreetGeoJson.features.forEach((feature) => {
+                const cameraId = feature.properties?.cameraId ?? "unknown";
+                if (pilotCameraIds && !pilotCameraIds.has(cameraId)) return;
                 const coords = feature.geometry?.coordinates;
                 if (!coords || coords.length < 2) return;
-                const cameraId = feature.properties?.cameraId ?? "unknown";
                 const vals = cameraValueById.get(cameraId) ?? [];
                 const avg = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 50;
                 const streetColor = getValueColor(avg, false);
@@ -1927,7 +2123,6 @@ const HeroMap = ({
           return;
         }
 
-        // Calculate size range based on values
         const values = points.map(p => p.value);
         const minValue = Math.min(...values);
         const maxValue = Math.max(...values);
@@ -2046,11 +2241,32 @@ const HeroMap = ({
           `;
           
           circle.bindPopup(popupContent);
+          if (props.dataOrigin === "local-city-dataset" && !isCph) {
+            const segId = String(props.segmentId ?? point.id);
+            const segName = String(
+              props.streetName ?? props.siteId ?? props.localisation ?? "Intervention site"
+            );
+            wireCircleMarkerSegment(
+              circle,
+              {
+                segmentId: segId,
+                segmentName: segName,
+                speed: null,
+                congestion: point.value / 100,
+              },
+              segmentHandlers,
+              { baseRadius: size }
+            );
+          }
           circlesRef.current.push(circle);
         });
       }
       // AREAS VISUALIZATION (Polygons) - for accessibility/catchment/coverage/emissions
       else if (isAreaVisualization(selectedKpi)) {
+        if (currentCity.toLowerCase().includes("copenhagen") && isCopenhagenCameraKpi(selectedKpi)) {
+          addInterventionLayer(cityData, showInterventionLayer);
+          return;
+        }
         if (currentCity.toLowerCase().includes("copenhagen") && selectedKpi === "kpi4.2") {
           // Copenhagen KPI4.2 has no observed accessibility dataset linked yet.
           addInterventionLayer(cityData, showInterventionLayer);
@@ -2240,14 +2456,25 @@ const HeroMap = ({
       issyJunctionStudy,
       selectedJunctionSegmentId,
       onSegmentHover,
+      pilotGeometrySpec,
+      runtimeLinkage,
+      segmentInteractionEnabled,
+      suppressMapSpatialLayers,
     ]
   );
 
   useEffect(() => {
     if (!pilotFlyToSignal || !mapRef.current || viewLevel !== "PILOT_DATA") return;
-    const zoom = pilotFlyToSignal.zoom ?? Math.max(mapRef.current.getZoom(), 13);
+    const maxZoom = pilotGeometrySpec?.maxZoom ?? 18;
+    const requested = pilotFlyToSignal.zoom ?? Math.max(mapRef.current.getZoom(), 13);
+    const zoom = Math.min(requested, maxZoom);
     mapRef.current.flyTo([pilotFlyToSignal.lat, pilotFlyToSignal.lng], zoom, { duration: 0.85 });
-  }, [pilotFlyToSignal, viewLevel]);
+  }, [pilotFlyToSignal, viewLevel, pilotGeometrySpec?.maxZoom]);
+
+  useEffect(() => {
+    if (!mapRef.current || pilotGeometrySpec?.maxZoom == null) return;
+    mapRef.current.setMaxZoom(pilotGeometrySpec.maxZoom);
+  }, [pilotGeometrySpec?.maxZoom]);
 
   useEffect(() => {
     if (!currentCity || !onDataQualitySummaryChange) return;
@@ -2255,20 +2482,35 @@ const HeroMap = ({
       junctionStudy: issyJunctionStudy,
       pilotId: selectedPilotId,
       scenario,
+      runtimeLinkage,
     });
+    const uncertainty = pilotGeometrySpec?.uncertaintyLevel;
+    const aggregateLabel =
+      pilotGeometrySpec?.labelStyle === "aggregate" ? " · aggregate view" : "";
+    const reductionNote = pilotGeometrySpec?.reductionCaption
+      ? ` · ${pilotGeometrySpec.reductionCaption}`
+      : "";
     if (currentCity.toLowerCase() === "milan" && selectedKpi === "kpi2.1" && milanSpeedSegments) {
       const total = Math.max(1, milanSpeedSegments.stats.parsedSegments);
       const inferredPct = Math.min(100, Math.round((milanSpeedSegments.stats.missingMetricJoins / total) * 100));
       const matchedPct = Math.max(0, 100 - inferredPct);
       const joinPct = milanSpeedSegments.stats.cameraJoinRatePct;
+      const probabilistic = pilotGeometrySpec?.interactionModel === "network";
       onDataQualitySummaryChange({
         recordsLabel: `${milanSpeedSegments.stats.parsedSegments.toLocaleString()} segments`,
-        spatialQuality: `${matchedPct}% metric-matched${joinPct != null ? ` · ${joinPct}% camera-linked` : ""}`,
-        dataType: "observed speed + derived risk index",
+        spatialQuality: probabilistic
+          ? `probabilistic CO₂/noise network${aggregateLabel}${reductionNote}`
+          : `${matchedPct}% metric-matched${joinPct != null ? ` · ${joinPct}% camera-linked` : ""}${aggregateLabel}`,
+        dataType: probabilistic
+          ? "derived environmental network proxy"
+          : "observed speed + derived risk index",
         temporalCoverage: "2024 snapshot",
-        confidence: milanSpeedSegments.dataConfidence === "unavailable" ? "Low" : "High",
-        provenanceType: "observed",
-        geometryLinkage: "matched",
+        confidence:
+          uncertainty === "high" || milanSpeedSegments.dataConfidence === "unavailable"
+            ? "Low"
+            : "High",
+        provenanceType: probabilistic ? "derived" : "observed",
+        geometryLinkage: probabilistic ? "inferred" : "matched",
         spatialSystemHint: spatialPlan.legendHint,
       });
       return;
@@ -2279,10 +2521,13 @@ const HeroMap = ({
         localCityPoints?.some((p) => p.properties?.geometryLinkage === "matched") ? "matched" : "inferred";
       onDataQualitySummaryChange({
         recordsLabel: `${total.toLocaleString()} points`,
-        spatialQuality: linkage === "matched" ? "Telraam coordinates when present" : "inferred ring layout",
+        spatialQuality:
+          (linkage === "matched" ? "Telraam coordinates when present" : "inferred ring layout") +
+          aggregateLabel +
+          reductionNote,
         dataType: selectedKpi === "kpi1.2" ? "observed Telraam counts" : "derived Telraam proxy",
         temporalCoverage: "before-after",
-        confidence: linkage === "matched" ? "Medium" : "Low",
+        confidence: uncertainty === "high" || linkage === "inferred" ? "Low" : "Medium",
         provenanceType: selectedKpi === "kpi1.2" ? "observed" : "derived",
         geometryLinkage: linkage,
         spatialSystemHint: spatialPlan.legendHint,
@@ -2291,7 +2536,7 @@ const HeroMap = ({
     }
     if (currentCity.toLowerCase().includes("copenhagen")) {
       const total = localCityPoints?.length || 0;
-      const kpiUnavailable = selectedKpi !== "kpi1.2";
+      const kpiUnavailable = !isCopenhagenCameraKpi(selectedKpi);
       const cphDiagnostics = getLocalCityDiagnostics("Copenhagen", selectedKpi, selectedPilotId);
       const recordsLabel = kpiUnavailable
         ? "KPI preview only — not available yet"
@@ -2355,8 +2600,9 @@ const HeroMap = ({
     issyFlows,
     onDataQualitySummaryChange,
     issyJunctionStudy,
-    selectedPilotId,
     scenario,
+    pilotGeometrySpec,
+    runtimeLinkage,
   ]);
 
   const addCityMarkers = useCallback(() => {
@@ -2453,7 +2699,7 @@ const HeroMap = ({
               onPilotSelect?.(pilot);
               setViewLevel("PILOT_DATA");
               onCitySelect?.(city.city);
-              mapRef.current!.flyTo([city.lat, city.lon], 12, { duration: 0.9 });
+              mapRef.current!.flyTo([pilot.lat ?? city.lat, pilot.lng ?? city.lon], 14, { duration: 0.9 });
               setTimeout(() => {
                 clearLayers();
                 addHexbinData(city.city, selectedModeTypes);
@@ -2502,7 +2748,11 @@ const HeroMap = ({
         if (selectedPilot) {
           setCurrentPilot(selectedPilot);
           setViewLevel("PILOT_DATA");
-          mapRef.current.flyTo([cityData.lat, cityData.lon], 12, { duration: 1.2 });
+          mapRef.current.flyTo(
+            [selectedPilot.lat ?? cityData.lat, selectedPilot.lng ?? cityData.lon],
+            14,
+            { duration: 1.2 }
+          );
           setTimeout(() => {
             if (!mapRef.current) return;
             clearLayers();
@@ -2533,7 +2783,11 @@ const HeroMap = ({
                 setCurrentPilot(pilot);
                 onPilotSelect?.(pilot);
                 setViewLevel("PILOT_DATA");
-                mapRef.current!.flyTo([cityData.lat, cityData.lon], 12, { duration: 0.9 });
+                mapRef.current!.flyTo(
+                  [pilot.lat ?? cityData.lat, pilot.lng ?? cityData.lon],
+                  14,
+                  { duration: 0.9 }
+                );
                 setTimeout(() => {
                   clearLayers();
                   addHexbinData(selectedCity, selectedModeTypes);
@@ -2608,6 +2862,13 @@ const HeroMap = ({
         }
       `}</style>
       <div className="absolute inset-0 pointer-events-none z-10 bg-gradient-to-b from-background/30 via-transparent to-background/20" />
+      {viewLevel === "PILOT_DATA" && (
+        <div
+          className="absolute inset-0 pointer-events-none z-[11]"
+          style={{ background: "rgba(8, 6, 24, 0.18)" }}
+          aria-hidden
+        />
+      )}
       {focusMode && selectedJunctionSegmentId && (
         <div
           className="absolute inset-0 pointer-events-none z-[12] transition-opacity duration-200"

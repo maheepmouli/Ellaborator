@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { SHAREPOINT_CITY_DATASETS } from "@/data/sharepointDatasets";
+import { SHAREPOINT_CITY_DATASETS, fetchSharepointManifest } from "@/data/sharepointDatasets";
 import {
   getTrafficApiUrl,
   getBicycleCountingApiUrl,
@@ -80,6 +80,15 @@ export function useWorkflowHealth() {
             : result.detail,
         });
       }
+
+      const manifest = await fetchSharepointManifest();
+      checks.push({
+        name: "SharePoint extract manifest",
+        status: manifest && (manifest.errors ?? 0) === 0 ? "working" : "not-working",
+        detail: manifest
+          ? `Manifest ${manifest.generatedAt ?? "unknown"} · ${manifest.extracted ?? 0} files · ${manifest.errors ?? 0} errors`
+          : "Run npm run extract-sharepoint to generate public/sharepoint-data/_manifest.json",
+      });
 
       checks.push({
         name: "Real-data map rendering for non-Issy cities",

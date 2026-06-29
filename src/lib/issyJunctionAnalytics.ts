@@ -56,9 +56,17 @@ export interface JunctionStudyView {
   dataConfidence: number;
   baseline: JunctionPeriodView;
   intervention: JunctionPeriodView;
-  timeline: { date: string; event: string; status: "done" | "upcoming" }[];
+  timeline: { date: string; event: string; status: "done" | "upcoming" | "active" }[];
   observedAt?: string;
   distanceMetres?: number;
+  /** Mock registry vs live API-derived metrics. */
+  dataSource?: "mock" | "observed";
+  /** City shell: observed / derived / modelled / mock classification. */
+  dataClass?: "observed" | "derived" | "modelled" | "mock";
+  /** Primary provenance label for footer and overview. */
+  sourceLabel?: string;
+  streetNS?: string;
+  streetEW?: string;
 }
 
 function armFromSegment(segment: TrafficSegment): (typeof ISSY_JUNCTION_ARMS)[number] | undefined {
@@ -199,6 +207,7 @@ export function buildJunctionStudyView(
       trendCar: buildTrend(interventionCo2 / 3, -20),
     },
     timeline: pilotTimeline(pilotId as IssyPilotId | undefined),
+    dataSource: "observed",
   };
 }
 

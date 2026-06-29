@@ -31,6 +31,7 @@ import { formatKpiFigure } from "@/lib/formatKpiFigure";
 import { useIssyFlowData } from "@/hooks/use-issy-flow-data";
 import { useLocalCityData } from "@/hooks/use-local-city-data";
 import { buildIssyModeShareKpiSlices } from "@/lib/issyFlowAggregates";
+import { isCopenhagenCameraKpi } from "@/data/copenhagenCameraSites";
 import { areAllTravelModesSelected } from "@/lib/travelModeMapLink";
 import type { ChartDrillPayload } from "@/types/chartMapInteraction";
 import { getKpi32TimeSeriesIntensity } from "@/lib/kpi32YearIntensity";
@@ -42,6 +43,9 @@ import {
   getKpiMissingDataNotice,
 } from "@/lib/kpiMissingDataMessage";
 import { dataSourceTrustLabel, kpiPrimaryIssySource } from "@/lib/issyDataTransparency";
+import { getCityPilotProfile } from "@/data/cityPilotProfiles";
+import { getPrimaryJunctionConfig, hasJunctionConfig } from "@/data/junctionConfigs";
+import { getCityReadinessSummary } from "@/data/kpiReadinessMatrix";
 import {
   Accordion,
   AccordionContent,
@@ -135,6 +139,20 @@ const InsightPanel = ({
   );
   const supportedKpisForPilot = selectedPilot?.supportedKpis || ELABORATOR_KPIS.map((kpi) => kpi.id);
   const availableKpis = ELABORATOR_KPIS.filter((kpi) => supportedKpisForPilot.includes(kpi.id));
+  const selectedPilotProfile = useMemo(
+    () => getCityPilotProfile(selectedPilot?.id),
+    [selectedPilot?.id]
+  );
+  const primaryJunction = useMemo(
+    () => getPrimaryJunctionConfig(selectedPilotId),
+    [selectedPilotId]
+  );
+  const showObservatory =
+    !!onOpenObservatory && !!selectedPilotId && hasJunctionConfig(selectedPilotId);
+  const cityReadinessSummary = useMemo(
+    () => getCityReadinessSummary(selectedCity),
+    [selectedCity]
+  );
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [chartRadarFocus, setChartRadarFocus] = useState<string | null>(null);
   const [chartA11yFocus, setChartA11yFocus] = useState<string | null>(null);
@@ -146,8 +164,6 @@ const InsightPanel = ({
 
   const isIssyCity = selectedCity.toLowerCase().includes("issy");
   const isCopenhagenCity = selectedCity === "Copenhagen";
-  const isCopenhagenKpi12 = isCopenhagenCity && selectedKpi === "kpi1.2";
-  const isCopenhagenPreviewKpi = isCopenhagenCity && selectedKpi !== "kpi1.2";
   const issyFlowsQueryEnabled = isIssyCity && selectedKpi === "kpi1.2";
   const { data: issyFlowFeatures } = useIssyFlowData(issyFlowDayCategory, issyFlowsQueryEnabled);
   const issyModeShareFromCsv = useMemo(
@@ -160,7 +176,7 @@ const InsightPanel = ({
   const usingIssyObservedModeShare = !!issyModeShareFromCsv;
   const copenhagenCenter = cityData ? { lat: cityData.lat, lon: cityData.lon } : null;
   const shouldUseCopenhagenObserved =
-    selectedCity === "Copenhagen" && selectedKpi === "kpi1.2";
+    selectedCity === "Copenhagen" && isCopenhagenCameraKpi(selectedKpi);
   const { data: copenhagenLocalPoints } = useLocalCityData(
     "Copenhagen",
     selectedKpi,
@@ -170,6 +186,36 @@ const InsightPanel = ({
   );
   const copenhagenObservedModeShare = useMemo(() => {
     if (!shouldUseCopenhagenObserved || !copenhagenLocalPoints?.length) return null;
+    const observed = copenhagenLocalPoints.filter(
+      (p) => p.properties?.dataOrigin === "local-city-dataset"
+    );
+    if (!observed.length) return null;
+
+    if (selectedKpi !== "kpi1.2") {
+      let baselineSum = 0;
+      let interventionSum = 0;
+      let count = 0;
+      observed.forEach((point) => {
+        const baseline = Number(point.properties?.baselineValue);
+        const intervention = Number(point.properties?.interventionValue ?? point.value);
+        if (!Number.isFinite(baseline) || !Number.isFinite(intervention)) return;
+        baselineSum += baseline;
+        interventionSum += intervention;
+        count += 1;
+      });
+      if (!count) return null;
+      const baselineMain = baselineSum / count;
+      const interventionMain = interventionSum / count;
+      return {
+        baselineMain,
+        interventionMain,
+        change: interventionMain - baselineMain,
+        breakdownBaseline: {},
+        breakdownIntervention: {},
+        hasSelectedRecords: true,
+      };
+    }
+
     const strictModeFilterActive =
       selectedModeTypes.length > 0 && !areAllTravelModesSelected(selectedModeTypes);
     const sumBySelection = (
@@ -251,7 +297,7 @@ const InsightPanel = ({
       },
       hasSelectedRecords: postSelected > 0 || preSelected > 0,
     };
-  }, [shouldUseCopenhagenObserved, copenhagenLocalPoints, selectedModeTypes]);
+  }, [shouldUseCopenhagenObserved, copenhagenLocalPoints, selectedModeTypes, selectedKpi]);
 
   const chartExplorerKeys = useMemo(() => {
     if (selectedKpi === "kpi1.2") return selectedModeTypes;
@@ -556,6 +602,9 @@ const InsightPanel = ({
           </div>
 
           <Select value={selectedKpi} onValueChange={onKpiChange}>
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-primary-foreground/75">
+              Section C · KPI explorer
+            </p>
             <SelectTrigger className="w-full h-auto px-3 py-2.5 border border-primary-foreground/35 bg-primary-foreground/15 rounded-full text-intel-label font-bold text-primary-foreground hover:bg-primary-foreground/25 intel-transition">
               <span>
                 {kpiDef.ref} - {(kpiFramework?.displayName || kpiDef.shortName).toUpperCase()}
@@ -565,46 +614,47 @@ const InsightPanel = ({
               {availableKpis.map((kpi) => (
                 <SelectItem key={kpi.id} value={kpi.id} className="text-sm py-2.5 hover:bg-violet/10 focus:bg-violet/10">
                   {kpi.ref} - {getKpiFrameworkConfig(kpi.id)?.displayName || kpi.shortName}
-                  {isCopenhagenCity && kpi.id !== "kpi1.2" ? " (Not available yet)" : ""}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
 
-          {isCopenhagenPreviewKpi && (
-            <div className="mt-3 rounded-xl border border-amber-400/35 bg-amber-500/10 px-3 py-2">
-              <p className="text-[11px] font-semibold text-amber-100">Copenhagen preview KPI</p>
-              <p className="text-[10px] mt-1 leading-relaxed text-amber-100/85">
-                KPI1.2 is the production-ready Copenhagen layer for this demo. Other KPIs stay visible for roadmap context and may show limited or not-available data.
+          <div className="mt-3 rounded-xl border border-primary-foreground/30 bg-primary-foreground/12 px-3 py-3 space-y-3">
+            <div className="space-y-1">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-primary-foreground/70">
+                Section A · Intervention Overview
+              </p>
+              <p className="text-intel-label font-bold text-primary-foreground">
+                {`${kpiDef.ref} — ${kpiFramework?.displayName || kpiDef.shortName}`}
+              </p>
+              <p className="text-intel-body text-primary-foreground/95 leading-relaxed">
+                {kpiDefinition?.interpretation || kpiFramework?.summary || kpiDef.question}
               </p>
             </div>
-          )}
-
-          <div className="mt-3 rounded-xl border border-primary-foreground/30 bg-primary-foreground/12 px-3 py-3 space-y-2">
-            <p className="text-intel-label font-bold text-primary-foreground">
-              {isCopenhagenKpi12
-                ? "Observed directional mobility counts"
-                : `${kpiDef.ref} — ${kpiFramework?.displayName || kpiDef.shortName}`}
-            </p>
-            <p className="text-intel-body text-primary-foreground/95 leading-relaxed">
-              {isCopenhagenKpi12
-                ? "OpenTrafficCam pre/post directional observations supporting KPI1.2"
-                : (kpiDefinition?.interpretation || kpiFramework?.summary || kpiDef.question)}
-            </p>
-            {isCopenhagenKpi12 && (
-              <div className="rounded-lg border border-white/20 bg-white/8 px-2.5 py-2 text-[10px] text-white/90 leading-relaxed space-y-1">
-                <p><span className="font-semibold text-white">Data type:</span> OBSERVED · DIRECTIONAL COUNTS · CAMERA-BASED</p>
-                <p><span className="font-semibold text-white">Method:</span> Observed counts by camera direction and movement category</p>
-                <p>
-                  <span className="font-semibold text-white">Limitation:</span> This is not a full city-wide modal share indicator. Values represent observed directional counts at monitored camera locations.
-                </p>
-              </div>
-            )}
+            <div className="space-y-1.5 rounded-lg border border-white/20 bg-white/8 px-2.5 py-2 text-[10px] text-white/90 leading-relaxed">
+              <p className="font-semibold text-white">Section B · Intervention context</p>
+              <p>
+                <span className="font-semibold text-white">Summary:</span>{" "}
+                {selectedPilotProfile?.interventionSummary || selectedPilot?.description || "Intervention summary pending."}
+              </p>
+              <p>
+                <span className="font-semibold text-white">Objectives:</span>{" "}
+                {selectedPilotProfile?.objectives?.join(" · ") || selectedPilot?.goal || "Objectives pending."}
+              </p>
+              <p>
+                <span className="font-semibold text-white">Expected impacts:</span>{" "}
+                {selectedPilotProfile?.expectedImpacts?.join(" · ") || "Impact expectations pending partner validation."}
+              </p>
+            </div>
             {selectedPilot && (
               <p className="text-intel-body font-semibold text-primary-foreground/95 leading-snug">
                 {selectedPilot.name}: {selectedPilot.title}
               </p>
             )}
+            <p className="text-[10px] text-primary-foreground/80 leading-snug">
+              <span className="font-semibold text-white">Section E · Data availability:</span>{" "}
+              {selectedPilotProfile?.dataAvailability || "Pilot data availability follows KPI readiness and trust indicators below."}
+            </p>
           </div>
 
           {stakeholderSummary && (
@@ -658,12 +708,12 @@ const InsightPanel = ({
               <div className="flex items-baseline gap-2">
                 <span className="text-intel-meta text-white/80 w-14 shrink-0">Before</span>
                 <span className="text-3xl font-bold text-white tabular-nums">{formatKpiFigure(baselineMainValue)}</span>
-                <span className="text-intel-kpi-label font-semibold text-violet">{kpiValue.unit}</span>
+                <span className="text-intel-kpi-label font-semibold text-cyan-200">{kpiValue.unit}</span>
               </div>
               <div className="flex items-baseline gap-2">
                 <span className="text-intel-meta text-white/80 w-14 shrink-0">After</span>
-                <span className="text-3xl font-bold text-violet tabular-nums">{formatKpiFigure(interventionMainValue)}</span>
-                <span className="text-intel-kpi-label font-semibold text-violet">{kpiValue.unit}</span>
+                <span className="text-3xl font-bold text-white tabular-nums">{formatKpiFigure(interventionMainValue)}</span>
+                <span className="text-intel-kpi-label font-semibold text-cyan-200">{kpiValue.unit}</span>
                 {showTrendPill && (
                   <div
                     className={`ml-auto flex items-center gap-1 px-2 py-1 rounded-lg ${isPositiveChange ? "bg-green/20" : "bg-red-500/20"} ${changeColor}`}
@@ -680,11 +730,11 @@ const InsightPanel = ({
             </div>
           ) : (
             <div className="mt-4 flex items-baseline gap-2 flex-wrap">
-              <span className="text-4xl font-bold text-violet tabular-nums tracking-tight">
+              <span className="text-4xl font-bold text-white tabular-nums tracking-tight">
                 {formatKpiFigure(currentMainValue)}
               </span>
               {kpiValue.unit && (
-                <span className="text-2xl font-bold text-violet leading-none">{kpiValue.unit}</span>
+                <span className="text-2xl font-bold text-cyan-200 leading-none">{kpiValue.unit}</span>
               )}
               {isModeShare && (
                 <span className="w-full text-intel-meta text-white/75 -mt-1">Share of sustainable modes</span>
@@ -715,14 +765,19 @@ const InsightPanel = ({
         {/* Plot — always visible, directly under metrics (reference layout) */}
         <div className="mx-4 mt-3 mb-2 insight-chart-panel rounded-xl p-3 min-h-[200px] backdrop-blur-md">
           <div className="flex items-center justify-between gap-2 mb-1">
-            <span className="text-intel-label font-bold text-violet">Segment focus</span>
-            {onOpenObservatory && (
+            <span className="text-intel-label font-bold text-primary-foreground">Segment focus</span>
+            {showObservatory && (
               <button
                 type="button"
                 onClick={onOpenObservatory}
-                className="text-intel-meta font-bold text-violet hover:underline shrink-0"
+                className="text-intel-meta font-bold text-cyan-200 hover:underline shrink-0 text-right"
               >
-                Open observatory
+                Segment Observatory
+                {primaryJunction ? (
+                  <span className="block text-[10px] font-medium text-white/70">
+                    {primaryJunction.shortName} ›
+                  </span>
+                ) : null}
               </button>
             )}
           </div>
@@ -732,9 +787,11 @@ const InsightPanel = ({
             </p>
           )}
           <p className="text-intel-meta font-medium text-white/82 mb-3 leading-snug">
-            {isIssyCity && isModeShare
-              ? "Monitored intervention corridor: observed traficissy segment context. Mode share KPI uses OD CSV in city view."
-              : "Chart and map stay linked to the selected monitored intervention corridor."}
+            {showObservatory
+              ? "Before/after analytics · sensor schematic · modal shift story"
+              : isIssyCity && isModeShare
+                ? "Monitored intervention corridor: observed traficissy segment context. Mode share KPI uses OD CSV in city view."
+                : "Chart and map stay linked to the selected monitored intervention corridor."}
           </p>
           <KPIChart
             kpiId={selectedKpi}
@@ -753,7 +810,7 @@ const InsightPanel = ({
 
         {mapContext && (
           <div className="mx-4 mb-3 rounded-lg border border-violet/45 bg-violet/25 p-3 text-intel-meta">
-            <p className="font-semibold text-violet mb-1">Map focus</p>
+            <p className="font-semibold text-primary-foreground mb-1">Map focus</p>
             <p className="text-white/90">{mapContext.segmentName}</p>
             <p className="text-white/80">
               Speed: {mapContext.speed !== null ? `${mapContext.speed.toFixed(1)} km/h` : "n/a"} · Congestion:{" "}
@@ -765,7 +822,7 @@ const InsightPanel = ({
         <Accordion type="multiple" defaultValue={[]} className="px-4 pb-3">
           <AccordionItem value="trust-filters" className="border-white/15 border-t">
             <AccordionTrigger className="text-intel-label font-bold text-white/92 py-3 hover:no-underline">
-              Data trust & filters
+              Section D · Data trust / provenance
             </AccordionTrigger>
             <AccordionContent className="space-y-3 pb-4">
               {selectedPilot && (
@@ -778,6 +835,15 @@ const InsightPanel = ({
                   dataQualitySummary={dataQualitySummary}
                 />
               )}
+        <div className="rounded-lg border border-white/15 bg-white/[0.06] px-3 py-2">
+          <p className="text-intel-meta font-bold text-white/85 mb-1.5">Data availability summary</p>
+          <p className="text-[10px] text-white/80 leading-snug">
+            Ready: {cityReadinessSummary.ready} · Partial: {cityReadinessSummary.partial} · Missing: {cityReadinessSummary.missing}
+          </p>
+          <p className="text-[10px] text-white/68 mt-1 leading-snug">
+            {selectedPilotProfile?.methodologyNotes || "Use intervention geometry first; missing datasets are surfaced explicitly by KPI."}
+          </p>
+        </div>
         {dataQualitySummary && (
           <div className="rounded-lg border border-white/15 bg-white/[0.06] px-3 py-2">
               <p className="text-intel-meta font-bold text-white/85 mb-1.5">Data trust</p>
@@ -869,7 +935,7 @@ const InsightPanel = ({
                     />
                     <div className="flex-1 flex items-center justify-between gap-2">
                       <span className="text-xs font-semibold">{modeType}</span>
-                      <span className="text-xs font-bold text-violet tabular-nums">{displayValue}</span>
+                      <span className="text-xs font-bold text-cyan-200 tabular-nums">{displayValue}</span>
                     </div>
                   </div>
                 );
@@ -880,7 +946,7 @@ const InsightPanel = ({
             <button
               type="button"
               onClick={onOpenDataSummary}
-              className="text-intel-meta font-bold text-violet hover:underline"
+              className="text-intel-meta font-bold text-cyan-200 hover:underline"
             >
               Open data summary
             </button>

@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, Camera, ArrowRight, Activity, BarChart3, Database } from "lucide-react";
 import { ResponsiveContainer, LineChart, Line, Tooltip as RechTooltip, XAxis, YAxis } from "recharts";
@@ -7,6 +7,7 @@ import { getLocalCityDiagnostics } from "@/services/localCityData";
 import { CITY_DATA } from "@/data/kpiDefinitions";
 import type { MapScenario } from "@/context/MapIntelligenceContext";
 import { areAllTravelModesSelected } from "@/lib/travelModeMapLink";
+import { getObservatoryConfig, type ObservatoryTabId } from "@/lib/observatoryRegistry";
 
 type ModeBreakdown = {
   pre: { bike: number; pedestrian: number; motorised: number; ptw: number; total: number };
@@ -81,8 +82,13 @@ export default function CopenhagenObservatoryPanel({
   onSelectDirectionId,
   selectedPilotId,
 }: Props) {
+  const [activeTab, setActiveTab] = useState<ObservatoryTabId>("overview");
   const isEnvironmental = selectedKpi === "kpi3.2";
   const isMobility = selectedKpi === "kpi1.2";
+  const observatoryConfig = useMemo(
+    () => getObservatoryConfig(selectedKpi, "Copenhagen", selectedPilotId),
+    [selectedKpi, selectedPilotId]
+  );
   const center = CITY_DATA.Copenhagen
     ? { lat: CITY_DATA.Copenhagen.lat, lon: CITY_DATA.Copenhagen.lon }
     : null;
@@ -179,6 +185,22 @@ export default function CopenhagenObservatoryPanel({
               <X className="h-4 w-4" />
             </button>
           </div>
+          <div className="mb-3 flex flex-wrap gap-1.5">
+            {observatoryConfig.tabs.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={`rounded-full border px-2 py-0.5 text-[10px] ${
+                  activeTab === tab.id
+                    ? "border-violet/50 bg-violet/30 text-white"
+                    : "border-white/20 bg-white/5 text-white/75"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
 
           {selectedKpi === "kpi4.2" ? (
             <div className="rounded-xl border p-3 text-[12px] leading-relaxed" style={{ borderColor: C.border, background: C.glass }}>
@@ -229,14 +251,16 @@ export default function CopenhagenObservatoryPanel({
             </div>
           ) : (
             <>
-              <div className="mb-3 flex flex-wrap gap-1.5">
-                {badge(isEnvironmental ? "Derived" : "OBSERVED")}
-                {badge("PRE/POST DIRECTIONAL COMPARISON")}
-                {badge(isEnvironmental ? "Modelled field" : "DIRECTIONAL COUNTS")}
-                {badge(isEnvironmental ? "Environmental intensity" : "CAMERA-BASED")}
-              </div>
+              {(activeTab === "data" || activeTab === "overview") && (
+                <div className="mb-3 flex flex-wrap gap-1.5">
+                  {badge(isEnvironmental ? "Derived" : "OBSERVED")}
+                  {badge("PRE/POST DIRECTIONAL COMPARISON")}
+                  {badge(isEnvironmental ? "Modelled field" : "DIRECTIONAL COUNTS")}
+                  {badge(isEnvironmental ? "Environmental intensity" : "CAMERA-BASED")}
+                </div>
+              )}
 
-              {selected ? (
+              {(activeTab === "overview" || activeTab === "beforeAfter") && selected ? (
                 <div className="mb-3 rounded-xl border p-3" style={{ borderColor: C.border, background: C.glass }}>
                   <div className="mb-2 flex items-center gap-2 text-white">
                     <Camera className="h-4 w-4" />
@@ -287,41 +311,65 @@ export default function CopenhagenObservatoryPanel({
                     <p>Geometry: exact sensor location / linked street geometry</p>
                   </div>
                 </div>
-              ) : (
+              ) : activeTab === "overview" || activeTab === "beforeAfter" ? (
                 <div className="mb-3 rounded-xl border p-3 text-[12px] text-white/65" style={{ borderColor: C.border, background: C.glass }}>
                   No observed directional mobility records for the selected configuration.
                 </div>
+              ) : null}
+
+              {activeTab === "kpiAnalysis" && (
+                <div className="max-h-[38vh] space-y-2 overflow-auto pr-1">
+                  {rows.map((row) => {
+                    const isSelected = selectedDirectionId ? selectedDirectionId === row.id : selected?.id === row.id;
+                    return (
+                      <button
+                        key={row.id}
+                        onClick={() => onSelectDirectionId?.(row.id)}
+                        className={`w-full rounded-xl border p-2 text-left transition ${
+                          isSelected ? "border-cyan-300/50 bg-cyan-400/10" : "border-white/10 bg-white/[0.04] hover:bg-white/[0.08]"
+                        }`}
+                      >
+                        <div className="mb-1 flex items-center justify-between gap-2">
+                          <p className="text-[12px] font-medium text-white">{row.site}</p>
+                          <span className="text-[10px] text-white/55">{row.direction}</span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 text-[10px] text-white/70">
+                          <span className="inline-flex items-center gap-1"><Activity className="h-3 w-3" />{isEnvironmental ? "Before pressure" : "Pre"} {row.baselinePct.toFixed(1)}%</span>
+                          <span className="inline-flex items-center gap-1"><BarChart3 className="h-3 w-3" />{isEnvironmental ? "Post pressure" : "Post"} {row.interventionPct.toFixed(1)}%</span>
+                          <span className={row.delta >= 0 ? "text-lime-300" : "text-violet-300"}>{row.delta >= 0 ? "+" : ""}{row.delta.toFixed(1)} pp</span>
+                        </div>
+                        <div className="mt-1 text-[10px] text-white/55">
+                          {isEnvironmental
+                            ? `Modelled from observed mobility mix: bike ${row.mb.post.bike}, pedestrian ${row.mb.post.pedestrian}, motorised ${row.mb.post.motorised}, PTW ${row.mb.post.ptw}`
+                            : `Mode counts (post): bike ${row.mb.post.bike}, pedestrian ${row.mb.post.pedestrian}, motorised ${row.mb.post.motorised}, PTW ${row.mb.post.ptw}`}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
               )}
 
-              <div className="max-h-[38vh] space-y-2 overflow-auto pr-1">
-                {rows.map((row) => {
-                  const isSelected = selectedDirectionId ? selectedDirectionId === row.id : selected?.id === row.id;
-                  return (
-                    <button
-                      key={row.id}
-                      onClick={() => onSelectDirectionId?.(row.id)}
-                      className={`w-full rounded-xl border p-2 text-left transition ${
-                        isSelected ? "border-cyan-300/50 bg-cyan-400/10" : "border-white/10 bg-white/[0.04] hover:bg-white/[0.08]"
-                      }`}
-                    >
-                      <div className="mb-1 flex items-center justify-between gap-2">
-                        <p className="text-[12px] font-medium text-white">{row.site}</p>
-                        <span className="text-[10px] text-white/55">{row.direction}</span>
-                      </div>
-                      <div className="grid grid-cols-3 gap-2 text-[10px] text-white/70">
-                        <span className="inline-flex items-center gap-1"><Activity className="h-3 w-3" />{isEnvironmental ? "Before pressure" : "Pre"} {row.baselinePct.toFixed(1)}%</span>
-                        <span className="inline-flex items-center gap-1"><BarChart3 className="h-3 w-3" />{isEnvironmental ? "Post pressure" : "Post"} {row.interventionPct.toFixed(1)}%</span>
-                        <span className={row.delta >= 0 ? "text-lime-300" : "text-violet-300"}>{row.delta >= 0 ? "+" : ""}{row.delta.toFixed(1)} pp</span>
-                      </div>
-                      <div className="mt-1 text-[10px] text-white/55">
-                        {isEnvironmental
-                          ? `Modelled from observed mobility mix: bike ${row.mb.post.bike}, pedestrian ${row.mb.post.pedestrian}, motorised ${row.mb.post.motorised}, PTW ${row.mb.post.ptw}`
-                          : `Mode counts (post): bike ${row.mb.post.bike}, pedestrian ${row.mb.post.pedestrian}, motorised ${row.mb.post.motorised}, PTW ${row.mb.post.ptw}`}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
+              {activeTab === "data" && (
+                <div className="rounded-xl border p-3 text-[11px] leading-relaxed" style={{ borderColor: C.border, background: C.glass }}>
+                  <p className="font-semibold text-white/90 mb-1">Data source and trust</p>
+                  <p className="text-white/70">OpenTrafficCam directional pre/post observed counts (camera-direction level).</p>
+                  <p className="text-white/70">Spatial linkage: exact camera coordinates and local street geometry clips.</p>
+                  <p className="text-white/70">Temporal coverage: pre and post intervention worksheets per camera.</p>
+                </div>
+              )}
+
+              {activeTab === "methodology" && (
+                <div className="rounded-xl border p-3 text-[11px] leading-relaxed" style={{ borderColor: C.border, background: C.glass }}>
+                  <p className="font-semibold text-white/90 mb-1">Methodology</p>
+                  <p className="text-white/70">
+                    KPI1.2 uses observed directional mobility counts supporting the KPI at monitored camera locations.
+                    It is not presented as full city-wide modal share.
+                  </p>
+                  <p className="text-white/70 mt-1">
+                    KPI3.2 is derived/modelled from observed mobility intensity and should not be interpreted as directly measured emissions.
+                  </p>
+                </div>
+              )}
             </>
           )}
         </motion.aside>

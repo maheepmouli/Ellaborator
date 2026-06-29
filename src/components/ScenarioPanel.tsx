@@ -5,6 +5,7 @@ import { getKpiFrameworkConfig } from "@/config/kpiFramework";
 import { getKpiDefinition } from "@/config/kpiDefinitions";
 import { getPilotById } from "@/data/pilotDefinitions";
 import { useLocalCityData } from "@/hooks/use-local-city-data";
+import type { PilotGeometryRenderSpec } from "@/lib/pilotGeometryRenderer";
 
 interface ScenarioPanelProps {
   scenario: "baseline" | "intervention" | "comparison";
@@ -12,6 +13,7 @@ interface ScenarioPanelProps {
   selectedKpi: string;
   selectedPilotName?: string;
   selectedPilotId?: string | null;
+  pilotGeometrySpec?: PilotGeometryRenderSpec | null;
   onClose: () => void;
 }
 
@@ -21,6 +23,7 @@ const ScenarioPanel = ({
   selectedKpi,
   selectedPilotName,
   selectedPilotId,
+  pilotGeometrySpec = null,
   onClose,
 }: ScenarioPanelProps) => {
   const cityData = CITY_DATA.find((c) => c.city === selectedCity);
@@ -89,7 +92,19 @@ const ScenarioPanel = ({
       ? "observed"
     : typeLabel;
   const temporalLabel = isHelsinkiObservedBeforeAfter || isCopenhagenObservedBeforeAfter ? "before-after" : "single-period";
-  const spatialLabel = selectedCity === "Milan" ? "matched" : selectedCity === "Helsinki" ? "inferred" : "exact";
+  const spatialLabel =
+    pilotGeometrySpec?.uncertaintyLevel === "high"
+      ? "inferred"
+      : pilotGeometrySpec?.labelStyle === "aggregate"
+        ? "aggregate"
+        : pilotGeometrySpec?.interactionModel === "dashboard_only"
+          ? "contextual"
+          : "exact";
+  const spatialDetail =
+    pilotGeometrySpec?.reductionCaption ??
+    (pilotGeometrySpec?.uncertaintyLevel === "high"
+      ? "Location inferred or network-level — not street-precise"
+      : undefined);
 
   return (
     <AnimatePresence>
@@ -128,7 +143,17 @@ const ScenarioPanel = ({
           </button>
         </div>
         <div className="relative px-6 pb-3 flex flex-wrap gap-1.5 text-[10px] text-white/90 border-b border-white/10">
-          <span className="px-2 py-0.5 rounded-full bg-white/10 border border-white/20">Spatial: {selectedCity === "Milan" ? "matched" : selectedCity === "Helsinki" ? "inferred" : "exact"}</span>
+          <span className="px-2 py-0.5 rounded-full bg-white/10 border border-white/20">Spatial: {spatialLabel}</span>
+          {pilotGeometrySpec?.labelStyle === "aggregate" && (
+            <span className="px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-400/30 text-amber-100">
+              Aggregate view
+            </span>
+          )}
+          {pilotGeometrySpec?.uncertaintyLevel === "high" && (
+            <span className="px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-400/30 text-amber-100">
+              Spatial uncertainty
+            </span>
+          )}
           <span className="px-2 py-0.5 rounded-full bg-white/10 border border-white/20">Method: {isHelsinkiObservedBeforeAfter ? "derived proxy" : isCopenhagenObservedBeforeAfter ? "Observed counts by camera direction and movement category" : dataTypeLabel}</span>
           <span className="px-2 py-0.5 rounded-full bg-white/10 border border-white/20">Temporal: {temporalLabel}</span>
           <span className="px-2 py-0.5 rounded-full bg-white/10 border border-white/20">Source: {isHelsinkiObservedBeforeAfter ? "Local" : isCopenhagenObservedBeforeAfter ? "OpenTrafficCam Excel" : "API/Local"}</span>
@@ -176,7 +201,8 @@ const ScenarioPanel = ({
               <p><span className="text-white font-semibold">Spatial:</span> {spatialLabel}</p>
               <p><span className="text-white font-semibold">Temporal:</span> {temporalLabel}</p>
               <p><span className="text-white font-semibold">Method:</span> {isHelsinkiObservedBeforeAfter ? "Derived from Telraam flows" : isCopenhagenObservedBeforeAfter ? "Observed counts by camera direction and movement category" : methodLabel}</p>
-              {spatialLabel === "inferred" && <p><span className="text-white font-semibold">Note:</span> Location inferred from network segment</p>}
+              {spatialDetail && <p><span className="text-white font-semibold">Note:</span> {spatialDetail}</p>}
+              {spatialLabel === "inferred" && !spatialDetail && <p><span className="text-white font-semibold">Note:</span> Location inferred from network segment</p>}
               {isCopenhagenObservedBeforeAfter && (
                 <p><span className="text-white font-semibold">Limitation:</span> This is not a full city-wide modal share indicator. Values represent observed directional counts at monitored camera locations.</p>
               )}

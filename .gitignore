@@ -27,4 +27,6 @@ dist-ssr
 
 # Local SharePoint dumps — too large for Git; host separately if needed for production.
 public/sharepoint-data/
+public/Sharepoint_Datasets_06_2026/
 Sharepoint data-*.zip
+.claude/

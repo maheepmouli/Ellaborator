@@ -5,6 +5,8 @@
 
 import { isIssyStudyPilot } from "@/lib/issyPilot2Junction";
 import { isIssyCity } from "@/lib/issyMapRouting";
+import { getPilotGeometryRecord, type GeometryRegime } from "@/lib/pilotGeometryContract";
+import { resolvePilotGeometryRender } from "@/lib/pilotGeometryRenderer";
 
 export type SpatialSystem =
   | "flows"
@@ -40,6 +42,7 @@ export type SpatialRendererId =
 export interface SpatialResolveOptions {
   junctionStudy?: boolean;
   scenario?: "baseline" | "intervention" | "comparison";
+  runtimeLinkage?: "exact" | "matched" | "inferred";
 }
 
 export interface SpatialRenderPlan {
@@ -129,12 +132,62 @@ export function resolveSpatialSystem(
   return KPI_SPATIAL_DEFAULT[kpiId] ?? "points";
 }
 
+function resolveRendererForRegimeAndKpi(
+  pilotId: string,
+  regime: GeometryRegime,
+  kpiId: string,
+  baseVisualization: SpatialRendererId
+): SpatialRendererId {
+  if (regime === "segment") {
+    if (pilotId === "mil-p3") return "milan-environment-segments";
+    if (kpiId === "kpi3.2") return "milan-environment-segments";
+    if (kpiId === "kpi2.1") return "milan-speed-segments";
+    if (kpiId === "kpi1.2") return "milan-mode-share-deck";
+    return baseVisualization;
+  }
+  if (regime === "camera_directional") return baseVisualization;
+  if (regime === "corridor" && kpiId === "kpi1.2") return "issy-junction-arms";
+  return baseVisualization;
+}
+
 /** Map rendering dispatch id for HeroMap early-return routing. */
 export function resolveSpatialRenderPlan(
   city: string,
   kpiId: string,
   options?: SpatialResolveOptions & { pilotId?: string | null }
 ): SpatialRenderPlan {
+  const pilotRecord = getPilotGeometryRecord(options?.pilotId ?? null);
+  if (pilotRecord) {
+    const geometrySpec = resolvePilotGeometryRender({
+      pilot: pilotRecord,
+      runtimeLinkage: options?.runtimeLinkage,
+    });
+    if (geometrySpec.interactionModel === "dashboard_only") {
+      return {
+        spatialSystem: "points",
+        geometryKind: "point",
+        rendererId: "generic-points",
+        legendHint: geometrySpec.legendHint,
+      };
+    }
+    const rendererId = resolveRendererForRegimeAndKpi(
+      pilotRecord.pilotId,
+      pilotRecord.regime,
+      kpiId,
+      geometrySpec.visualizationMode
+    );
+    const spatial = resolveSpatialSystem(city, kpiId, {
+      ...options,
+      pilotId: pilotRecord.pilotId,
+    });
+    return {
+      spatialSystem: spatial,
+      geometryKind: geometryForSystem(spatial),
+      rendererId,
+      legendHint: geometrySpec.reductionCaption ?? geometrySpec.legendHint,
+    };
+  }
+
   const cityKey = city.toLowerCase();
   const junctionStudy =
     options?.junctionStudy ??

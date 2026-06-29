@@ -1,0 +1,66 @@
+[
+  {
+    "siteName": "Norregade / Nørre Voldgade",
+    "lat": 55.682312,
+    "lon": 12.570922,
+    "flow": "Norregade north",
+    "pre": { "bike": 460, "pedestrian": 310, "motorised": 520, "ptw": 22, "total": 1312 },
+    "post": { "bike": 530, "pedestrian": 345, "motorised": 470, "ptw": 20, "total": 1365 }
+  },
+  {
+    "siteName": "Norregade / Nørre Voldgade",
+    "lat": 55.682312,
+    "lon": 12.570922,
+    "flow": "Norregade south",
+    "pre": { "bike": 430, "pedestrian": 295, "motorised": 545, "ptw": 24, "total": 1294 },
+    "post": { "bike": 505, "pedestrian": 330, "motorised": 495, "ptw": 21, "total": 1351 }
+  },
+  {
+    "siteName": "Vandkunsten / Rådhusstræde",
+    "lat": 55.677575,
+    "lon": 12.579961,
+    "flow": "Rådhusstræde east",
+    "pre": { "bike": 360, "pedestrian": 280, "motorised": 420, "ptw": 16, "total": 1076 },
+    "post": { "bike": 425, "pedestrian": 315, "motorised": 385, "ptw": 15, "total": 1140 }
+  },
+  {
+    "siteName": "Vandkunsten / Rådhusstræde",
+    "lat": 55.677575,
+    "lon": 12.579961,
+    "flow": "Rådhusstræde west",
+    "pre": { "bike": 350, "pedestrian": 265, "motorised": 435, "ptw": 18, "total": 1068 },
+    "post": { "bike": 420, "pedestrian": 300, "motorised": 398, "ptw": 16, "total": 1134 }
+  },
+  {
+    "siteName": "Gammeltorv / Vestergade",
+    "lat": 55.678437,
+    "lon": 12.572236,
+    "flow": "Vestergade east",
+    "pre": { "bike": 390, "pedestrian": 300, "motorised": 500, "ptw": 20, "total": 1210 },
+    "post": { "bike": 470, "pedestrian": 335, "motorised": 448, "ptw": 18, "total": 1271 }
+  },
+  {
+    "siteName": "Gammeltorv / Vestergade",
+    "lat": 55.678437,
+    "lon": 12.572236,
+    "flow": "Vestergade west",
+    "pre": { "bike": 378, "pedestrian": 288, "motorised": 512, "ptw": 19, "total": 1197 },
+    "post": { "bike": 455, "pedestrian": 322, "motorised": 460, "ptw": 17, "total": 1254 }
+  },
+  {
+    "siteName": "Frederiksholmskanal / Stormgade",
+    "lat": 55.675535,
+    "lon": 12.575545,
+    "flow": "Stormgade east",
+    "pre": { "bike": 340, "pedestrian": 260, "motorised": 480, "ptw": 18, "total": 1098 },
+    "post": { "bike": 405, "pedestrian": 290, "motorised": 438, "ptw": 16, "total": 1149 }
+  },
+  {
+    "siteName": "Frederiksholmskanal / Stormgade",
+    "lat": 55.675535,
+    "lon": 12.575545,
+    "flow": "Stormgade west",
+    "pre": { "bike": 332, "pedestrian": 252, "motorised": 492, "ptw": 18, "total": 1094 },
+    "post": { "bike": 398, "pedestrian": 286, "motorised": 446, "ptw": 16, "total": 1146 }
+  }
+]

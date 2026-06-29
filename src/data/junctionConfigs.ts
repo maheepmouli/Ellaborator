@@ -1,0 +1,778 @@
+import type { JunctionPeriodView } from "@/lib/issyJunctionAnalytics";
+import { findPilotByIdGlobally } from "@/data/pilotDefinitions";
+
+export interface JunctionTimelineEvent {
+  date: string;
+  event: string;
+  status: "done" | "upcoming" | "active";
+}
+
+export interface JunctionConfig {
+  id: string;
+  pilotId: string;
+  name: string;
+  shortName: string;
+  pilot: string;
+  interventionType: string;
+  coordinates: [number, number];
+  monitoringPeriod: string;
+  sensors: number;
+  approachesCovered: number;
+  totalApproaches: number;
+  dataConfidence: number;
+  streetNS: string;
+  streetEW: string;
+  segmentApiId: string;
+  baseline: JunctionPeriodView;
+  intervention: JunctionPeriodView;
+  timeline: JunctionTimelineEvent[];
+}
+
+function trend(base: number, drift: number, variance = 3): number[] {
+  return Array.from({ length: 9 }, (_, i) =>
+    Math.round(base * (0.92 + (i / 9) * 0.1) + drift * (i - 4) + (i % 2 === 0 ? variance : -variance))
+  );
+}
+
+function modeShare(opts: {
+  pedestrian: number;
+  cycle: number;
+  pt: number;
+  car: number;
+  ptw?: number;
+}): Record<string, number> {
+  const ptw = opts.ptw ?? Math.max(2, 100 - opts.pedestrian - opts.cycle - opts.pt - opts.car);
+  return {
+    Pedestrian: opts.pedestrian,
+    Cycle: opts.cycle,
+    "Public Transport": opts.pt,
+    Car: opts.car,
+    PTW: ptw,
+  };
+}
+
+function period(
+  label: string,
+  periodLabel: string,
+  modes: Record<string, number>,
+  cycleCount: number,
+  congestion: number,
+  speed: number,
+  co2: number,
+  cycleDrift: number,
+  carDrift: number
+): JunctionPeriodView {
+  return {
+    label,
+    period: periodLabel,
+    modeShare: modes,
+    dailyCycleCount: cycleCount,
+    peakCongestion: congestion,
+    avgSpeedKmh: speed,
+    co2ProxyKgDay: co2,
+    trendCycle: trend(cycleCount, cycleDrift),
+    trendCar: trend(co2 / 3, carDrift),
+  };
+}
+
+function pilotLabel(pilotId: string): string {
+  const found = findPilotByIdGlobally(pilotId);
+  if (!found) return pilotId;
+  const city =
+    found.pilotsKey === "issy-les-moulineaux"
+      ? "Issy-les-Moulineaux"
+      : found.pilotsKey.charAt(0).toUpperCase() + found.pilotsKey.slice(1);
+  return `${city} — ${found.pilot.name}`;
+}
+
+function coords(pilotId: string): [number, number] {
+  const found = findPilotByIdGlobally(pilotId);
+  return [found?.pilot.lat ?? 0, found?.pilot.lng ?? 0];
+}
+
+function interventionType(pilotId: string): string {
+  return findPilotByIdGlobally(pilotId)?.pilot.interventionType ?? "Mobility intervention";
+}
+
+const ISSY_P1: JunctionConfig = {
+  id: "issy-p1-junction",
+  pilotId: "issy-p1",
+  name: "Rue Voltaire × Avenue de la République",
+  shortName: "Voltaire junction",
+  pilot: pilotLabel("issy-p1"),
+  interventionType: interventionType("issy-p1"),
+  coordinates: coords("issy-p1"),
+  monitoringPeriod: "Sep 2024 — ongoing",
+  sensors: 2,
+  approachesCovered: 2,
+  totalApproaches: 4,
+  dataConfidence: 78,
+  streetNS: "Rue Voltaire",
+  streetEW: "Av. de la République",
+  segmentApiId: "mock-issy-p1-corridor",
+  baseline: period(
+    "Baseline",
+    "Sep – Nov 2024",
+    modeShare({ pedestrian: 32, cycle: 8, pt: 22, car: 34 }),
+    142,
+    0.38,
+    22.4,
+    186,
+    -10,
+    35
+  ),
+  intervention: period(
+    "Post-intervention",
+    "Dec 2024 — ongoing",
+    modeShare({ pedestrian: 36, cycle: 11, pt: 21, car: 28 }),
+    168,
+    0.29,
+    24.1,
+    162,
+    12,
+    -28
+  ),
+  timeline: [
+    { date: "Sep 2024", event: "School-zone baseline monitoring", status: "done" },
+    { date: "Nov 2024", event: "Luminous marking installation", status: "done" },
+    { date: "Dec 2024", event: "Post-intervention sensor activation", status: "active" },
+    { date: "Q2 2025", event: "Visibility & conflict evaluation", status: "upcoming" },
+  ],
+};
+
+const ISSY_P2: JunctionConfig = {
+  id: "issy-p2-junction",
+  pilotId: "issy-p2",
+  name: "Pont d'Issy × Quai du Président Roosevelt",
+  shortName: "Stalingrad junction",
+  pilot: pilotLabel("issy-p2"),
+  interventionType: interventionType("issy-p2"),
+  coordinates: coords("issy-p2"),
+  monitoringPeriod: "Jun 2024 — ongoing",
+  sensors: 3,
+  approachesCovered: 4,
+  totalApproaches: 4,
+  dataConfidence: 88,
+  streetNS: "Quai du Président Roosevelt",
+  streetEW: "Pont d'Issy",
+  segmentApiId: "#ILM_92130_5416",
+  baseline: period(
+    "Baseline (derived)",
+    "Jun – Aug 2024",
+    modeShare({ pedestrian: 16, cycle: 10, pt: 20, car: 48 }),
+    198,
+    0.34,
+    21.8,
+    204,
+    -12,
+    42
+  ),
+  intervention: period(
+    "Latest observation",
+    "Live API snapshot",
+    modeShare({ pedestrian: 18, cycle: 12, pt: 19, car: 45 }),
+    224,
+    0.26,
+    23.6,
+    188,
+    10,
+    -22
+  ),
+  timeline: [
+    { date: "Jun 2024", event: "Observatory baseline monitoring", status: "done" },
+    { date: "Nov 2024", event: "OD flow baseline (CSV)", status: "done" },
+    { date: "Nov 2025", event: "OD flow post-intervention (CSV)", status: "done" },
+    { date: "Q2 2025", event: "Decision-support evaluation", status: "upcoming" },
+  ],
+};
+
+const ISSY_P3: JunctionConfig = {
+  id: "issy-p3-junction",
+  pilotId: "issy-p3",
+  name: "Boulevard Gambetta × Rue de l'Égalité",
+  shortName: "Gambetta junction",
+  pilot: pilotLabel("issy-p3"),
+  interventionType: interventionType("issy-p3"),
+  coordinates: coords("issy-p3"),
+  monitoringPeriod: "2024 — ongoing",
+  sensors: 2,
+  approachesCovered: 2,
+  totalApproaches: 4,
+  dataConfidence: 74,
+  streetNS: "Boulevard Gambetta",
+  streetEW: "Rue de l'Égalité",
+  segmentApiId: "mock-issy-p3-corridor",
+  baseline: period(
+    "Baseline",
+    "Jan – Jun 2024",
+    modeShare({ pedestrian: 15, cycle: 9, pt: 21, car: 49 }),
+    176,
+    0.36,
+    20.9,
+    218,
+    -8,
+    38
+  ),
+  intervention: period(
+    "Post-intervention",
+    "Jul 2024 — ongoing",
+    modeShare({ pedestrian: 17, cycle: 11, pt: 20, car: 46 }),
+    192,
+    0.28,
+    22.3,
+    196,
+    9,
+    -30
+  ),
+  timeline: [
+    { date: "2024", event: "GecoAir app pilot launch", status: "done" },
+    { date: "2024", event: "Mobility observatory integration", status: "done" },
+    { date: "Nov 2025", event: "Post-intervention traffic snapshot", status: "done" },
+    { date: "2025", event: "Citizen engagement evaluation", status: "upcoming" },
+  ],
+};
+
+const CPH_P1: JunctionConfig = {
+  id: "cph-p1-junction",
+  pilotId: "cph-p1",
+  name: "Norregade / Nørre Voldgade",
+  shortName: "Norreport camera",
+  pilot: pilotLabel("cph-p1"),
+  interventionType: interventionType("cph-p1"),
+  coordinates: [55.682312, 12.570922],
+  monitoringPeriod: "OpenTrafficCam · directional pre/post",
+  sensors: 1,
+  approachesCovered: 2,
+  totalApproaches: 2,
+  dataConfidence: 88,
+  streetNS: "Nørregade",
+  streetEW: "Nørre Voldgade",
+  segmentApiId: "norreport",
+  baseline: period(
+    "Baseline",
+    "Mar – May 2024",
+    modeShare({ pedestrian: 24, cycle: 22, pt: 18, car: 32 }),
+    412,
+    0.28,
+    26.4,
+    142,
+    -14,
+    32
+  ),
+  intervention: period(
+    "Post-intervention",
+    "Jun 2024 — ongoing",
+    modeShare({ pedestrian: 26, cycle: 30, pt: 17, car: 24 }),
+    468,
+    0.19,
+    28.8,
+    118,
+    16,
+    -26
+  ),
+  timeline: [
+    { date: "Mar 2024", event: "Parking relocation baseline", status: "done" },
+    { date: "Jun 2024", event: "Corridor reallocation deployed", status: "done" },
+    { date: "Sep 2024", event: "Directional camera monitoring", status: "active" },
+    { date: "Q1 2025", event: "Intervention evaluation report", status: "upcoming" },
+  ],
+};
+
+const CPH_P2: JunctionConfig = {
+  id: "cph-p2-junction",
+  pilotId: "cph-p2",
+  name: "Vandkunsten / Rådhusstræde",
+  shortName: "Vandkunsten camera",
+  pilot: pilotLabel("cph-p2"),
+  interventionType: interventionType("cph-p2"),
+  coordinates: [55.677575, 12.579961],
+  monitoringPeriod: "OpenTrafficCam · directional pre/post",
+  sensors: 1,
+  approachesCovered: 2,
+  totalApproaches: 2,
+  dataConfidence: 86,
+  streetNS: "Rådhusstræde",
+  streetEW: "Vandkunsten",
+  segmentApiId: "vandkunsten",
+  baseline: period(
+    "Baseline",
+    "Apr – Jun 2024",
+    modeShare({ pedestrian: 22, cycle: 21, pt: 19, car: 34 }),
+    388,
+    0.31,
+    24.2,
+    156,
+    -12,
+    36
+  ),
+  intervention: period(
+    "Post-intervention",
+    "Jul 2024 — ongoing",
+    modeShare({ pedestrian: 24, cycle: 29, pt: 18, car: 26 }),
+    442,
+    0.21,
+    26.6,
+    128,
+    14,
+    -24
+  ),
+  timeline: [
+    { date: "Apr 2024", event: "Bike parking baseline counts", status: "done" },
+    { date: "Jul 2024", event: "Enhanced parking nodes installed", status: "done" },
+    { date: "Oct 2024", event: "Directional monitoring active", status: "active" },
+    { date: "Q2 2025", event: "Accessibility evaluation", status: "upcoming" },
+  ],
+};
+
+const CPH_P3: JunctionConfig = {
+  id: "cph-p3-junction",
+  pilotId: "cph-p3",
+  name: "Gammeltorv & Stormgade cameras",
+  shortName: "City centre flow",
+  pilot: pilotLabel("cph-p3"),
+  interventionType: interventionType("cph-p3"),
+  coordinates: [55.676986, 12.573891],
+  monitoringPeriod: "OpenTrafficCam · directional pre/post",
+  sensors: 2,
+  approachesCovered: 4,
+  totalApproaches: 4,
+  dataConfidence: 85,
+  streetNS: "Gammeltorv / Vestergade",
+  streetEW: "Frederiksholmskanal / Stormgade",
+  segmentApiId: "gammeltorv",
+  baseline: period(
+    "Baseline",
+    "May – Jul 2024",
+    modeShare({ pedestrian: 20, cycle: 23, pt: 20, car: 33 }),
+    356,
+    0.35,
+    22.8,
+    168,
+    -10,
+    40
+  ),
+  intervention: period(
+    "Post-intervention",
+    "Aug 2024 — ongoing",
+    modeShare({ pedestrian: 22, cycle: 28, pt: 19, car: 28 }),
+    398,
+    0.24,
+    25.4,
+    144,
+    12,
+    -28
+  ),
+  timeline: [
+    { date: "May 2024", event: "Flow pressure baseline", status: "done" },
+    { date: "Aug 2024", event: "Near-encounter monitoring live", status: "done" },
+    { date: "Nov 2024", event: "Calmer street design trial", status: "active" },
+    { date: "Q3 2025", event: "Safety evaluation report", status: "upcoming" },
+  ],
+};
+
+const HEL_P1: JunctionConfig = {
+  id: "hel-p1-junction",
+  pilotId: "hel-p1",
+  name: "Mannerheimintie × Runeberginkatu",
+  shortName: "Mannerheimintie corridor",
+  pilot: pilotLabel("hel-p1"),
+  interventionType: interventionType("hel-p1"),
+  coordinates: coords("hel-p1"),
+  monitoringPeriod: "Feb 2024 — ongoing",
+  sensors: 2,
+  approachesCovered: 2,
+  totalApproaches: 4,
+  dataConfidence: 76,
+  streetNS: "Runeberginkatu",
+  streetEW: "Mannerheimintie",
+  segmentApiId: "mock-hel-p1-telraam",
+  baseline: period(
+    "Baseline",
+    "Feb – Apr 2024",
+    modeShare({ pedestrian: 28, cycle: 12, pt: 24, car: 32 }),
+    186,
+    0.32,
+    24.6,
+    172,
+    -8,
+    34
+  ),
+  intervention: period(
+    "Post-intervention",
+    "May 2024 — ongoing",
+    modeShare({ pedestrian: 30, cycle: 17, pt: 23, car: 27 }),
+    218,
+    0.22,
+    26.8,
+    148,
+    11,
+    -26
+  ),
+  timeline: [
+    { date: "Feb 2024", event: "Telraam baseline deployment", status: "done" },
+    { date: "May 2024", event: "Sensor corridor activation", status: "done" },
+    { date: "Aug 2024", event: "Post-intervention monitoring", status: "active" },
+    { date: "Q1 2025", event: "Corridor evaluation report", status: "upcoming" },
+  ],
+};
+
+const HEL_P2: JunctionConfig = {
+  id: "hel-p2-junction",
+  pilotId: "hel-p2",
+  name: "Itäkeskustie × Itäväylä",
+  shortName: "Itäkeskus hub",
+  pilot: pilotLabel("hel-p2"),
+  interventionType: interventionType("hel-p2"),
+  coordinates: coords("hel-p2"),
+  monitoringPeriod: "Mar 2024 — ongoing",
+  sensors: 2,
+  approachesCovered: 2,
+  totalApproaches: 4,
+  dataConfidence: 74,
+  streetNS: "Itäväylä",
+  streetEW: "Itäkeskustie",
+  segmentApiId: "mock-hel-p2-telraam",
+  baseline: period(
+    "Baseline",
+    "Mar – May 2024",
+    modeShare({ pedestrian: 26, cycle: 11, pt: 25, car: 34 }),
+    164,
+    0.34,
+    23.2,
+    178,
+    -9,
+    36
+  ),
+  intervention: period(
+    "Post-intervention",
+    "Jun 2024 — ongoing",
+    modeShare({ pedestrian: 28, cycle: 16, pt: 24, car: 29 }),
+    196,
+    0.23,
+    25.6,
+    152,
+    10,
+    -24
+  ),
+  timeline: [
+    { date: "Mar 2024", event: "eScooter baseline survey", status: "done" },
+    { date: "Jun 2024", event: "Micromobility hub pilot", status: "done" },
+    { date: "Sep 2024", event: "Accessibility monitoring", status: "active" },
+    { date: "Q2 2025", event: "Access evaluation report", status: "upcoming" },
+  ],
+};
+
+const HEL_P3: JunctionConfig = {
+  id: "hel-p3-junction",
+  pilotId: "hel-p3",
+  name: "Hämeentie × Fleminginkatu",
+  shortName: "Hämeentie active mobility",
+  pilot: pilotLabel("hel-p3"),
+  interventionType: interventionType("hel-p3"),
+  coordinates: coords("hel-p3"),
+  monitoringPeriod: "Jan 2024 — ongoing",
+  sensors: 3,
+  approachesCovered: 3,
+  totalApproaches: 4,
+  dataConfidence: 77,
+  streetNS: "Fleminginkatu",
+  streetEW: "Hämeentie",
+  segmentApiId: "mock-hel-p3-telraam",
+  baseline: period(
+    "Baseline",
+    "Jan – Mar 2024",
+    modeShare({ pedestrian: 27, cycle: 12, pt: 23, car: 34 }),
+    172,
+    0.33,
+    23.8,
+    174,
+    -7,
+    32
+  ),
+  intervention: period(
+    "Post-intervention",
+    "Apr 2024 — ongoing",
+    modeShare({ pedestrian: 29, cycle: 19, pt: 22, car: 27 }),
+    208,
+    0.21,
+    26.2,
+    146,
+    12,
+    -22
+  ),
+  timeline: [
+    { date: "Jan 2024", event: "Citywide behaviour baseline", status: "done" },
+    { date: "Apr 2024", event: "Active mobility sensors live", status: "done" },
+    { date: "Jul 2024", event: "Intervention-area monitoring", status: "active" },
+    { date: "Q4 2025", event: "Behaviour shift evaluation", status: "upcoming" },
+  ],
+};
+
+const MIL_P1: JunctionConfig = {
+  id: "mil-p1-junction",
+  pilotId: "mil-p1",
+  name: "Via Novara × Via Vespri Siciliani",
+  shortName: "Novara LTZ",
+  pilot: pilotLabel("mil-p1"),
+  interventionType: interventionType("mil-p1"),
+  coordinates: coords("mil-p1"),
+  monitoringPeriod: "Apr 2024 — ongoing",
+  sensors: 2,
+  approachesCovered: 2,
+  totalApproaches: 4,
+  dataConfidence: 81,
+  streetNS: "Via Vespri Siciliani",
+  streetEW: "Via Novara",
+  segmentApiId: "mock-mil-p1-amat",
+  baseline: period(
+    "Baseline",
+    "Apr – Jun 2024",
+    modeShare({ pedestrian: 18, cycle: 8, pt: 14, car: 58 }),
+    124,
+    0.42,
+    18.6,
+    248,
+    -6,
+    44
+  ),
+  intervention: period(
+    "Post-intervention",
+    "Jul 2024 — ongoing",
+    modeShare({ pedestrian: 20, cycle: 10, pt: 16, car: 52 }),
+    138,
+    0.32,
+    20.4,
+    218,
+    8,
+    -32
+  ),
+  timeline: [
+    { date: "Apr 2024", event: "LTZ baseline AMAT counts", status: "done" },
+    { date: "Jul 2024", event: "Low-traffic zone deployed", status: "done" },
+    { date: "Oct 2024", event: "Speed & CO2 monitoring", status: "active" },
+    { date: "Q1 2025", event: "Neighbourhood evaluation", status: "upcoming" },
+  ],
+};
+
+const MIL_P2: JunctionConfig = {
+  id: "mil-p2-junction",
+  pilotId: "mil-p2",
+  name: "Via Torino × Via Santa Croce",
+  shortName: "Torino cycle corridor",
+  pilot: pilotLabel("mil-p2"),
+  interventionType: interventionType("mil-p2"),
+  coordinates: coords("mil-p2"),
+  monitoringPeriod: "May 2024 — ongoing",
+  sensors: 2,
+  approachesCovered: 2,
+  totalApproaches: 4,
+  dataConfidence: 83,
+  streetNS: "Via Santa Croce",
+  streetEW: "Via Torino",
+  segmentApiId: "mock-mil-p2-amat",
+  baseline: period(
+    "Baseline",
+    "May – Jul 2024",
+    modeShare({ pedestrian: 16, cycle: 9, pt: 15, car: 57 }),
+    132,
+    0.40,
+    19.2,
+    236,
+    -5,
+    40
+  ),
+  intervention: period(
+    "Post-intervention",
+    "Aug 2024 — ongoing",
+    modeShare({ pedestrian: 18, cycle: 14, pt: 14, car: 51 }),
+    158,
+    0.30,
+    21.6,
+    206,
+    9,
+    -28
+  ),
+  timeline: [
+    { date: "May 2024", event: "Protected lane baseline", status: "done" },
+    { date: "Aug 2024", event: "Cycle corridor opened", status: "done" },
+    { date: "Nov 2024", event: "AMAT speed monitoring", status: "active" },
+    { date: "Q2 2025", event: "Cycling share evaluation", status: "upcoming" },
+  ],
+};
+
+const MIL_P3: JunctionConfig = {
+  id: "mil-p3-junction",
+  pilotId: "mil-p3",
+  name: "Corso Buenos Aires × Via Plinio",
+  shortName: "Buenos Aires transit",
+  pilot: pilotLabel("mil-p3"),
+  interventionType: interventionType("mil-p3"),
+  coordinates: coords("mil-p3"),
+  monitoringPeriod: "Jun 2024 — ongoing",
+  sensors: 3,
+  approachesCovered: 3,
+  totalApproaches: 4,
+  dataConfidence: 80,
+  streetNS: "Via Plinio",
+  streetEW: "Corso Buenos Aires",
+  segmentApiId: "mock-mil-p3-amat",
+  baseline: period(
+    "Baseline",
+    "Jun – Aug 2024",
+    modeShare({ pedestrian: 17, cycle: 7, pt: 16, car: 59 }),
+    118,
+    0.44,
+    17.8,
+    254,
+    -4,
+    46
+  ),
+  intervention: period(
+    "Post-intervention",
+    "Sep 2024 — ongoing",
+    modeShare({ pedestrian: 19, cycle: 8, pt: 22, car: 49 }),
+    128,
+    0.34,
+    19.6,
+    224,
+    7,
+    -30
+  ),
+  timeline: [
+    { date: "Jun 2024", event: "Transit priority baseline", status: "done" },
+    { date: "Sep 2024", event: "Signal priority deployed", status: "done" },
+    { date: "Dec 2024", event: "Bus delay monitoring", status: "active" },
+    { date: "Q3 2025", event: "Transit reliability report", status: "upcoming" },
+  ],
+};
+
+const ZAR_P1: JunctionConfig = {
+  id: "zar-p1-junction",
+  pilotId: "zar-p1",
+  name: "Paseo Independencia × Calle Alfonso I",
+  shortName: "Independencia corridor",
+  pilot: pilotLabel("zar-p1"),
+  interventionType: interventionType("zar-p1"),
+  coordinates: coords("zar-p1"),
+  monitoringPeriod: "Mar 2024 — ongoing",
+  sensors: 2,
+  approachesCovered: 2,
+  totalApproaches: 4,
+  dataConfidence: 72,
+  streetNS: "Calle Alfonso I",
+  streetEW: "Paseo Independencia",
+  segmentApiId: "mock-zar-p1-corridor",
+  baseline: period(
+    "Baseline",
+    "Mar – May 2024",
+    modeShare({ pedestrian: 26, cycle: 15, pt: 20, car: 36 }),
+    198,
+    0.36,
+    22.4,
+    192,
+    -8,
+    36
+  ),
+  intervention: period(
+    "Post-intervention",
+    "Jun 2024 — ongoing",
+    modeShare({ pedestrian: 28, cycle: 22, pt: 19, car: 28 }),
+    236,
+    0.24,
+    25.2,
+    164,
+    12,
+    -26
+  ),
+  timeline: [
+    { date: "Mar 2024", event: "Corridor baseline indicators", status: "done" },
+    { date: "Jun 2024", event: "Active mobility upgrade", status: "done" },
+    { date: "Sep 2024", event: "Post-intervention monitoring", status: "active" },
+    { date: "Q2 2025", event: "Corridor evaluation report", status: "upcoming" },
+  ],
+};
+
+const TRI_P1: JunctionConfig = {
+  id: "tri-p1-junction",
+  pilotId: "tri-p1",
+  name: "Asklipiou × Stratigou Sarafi",
+  shortName: "Central mobility area",
+  pilot: pilotLabel("tri-p1"),
+  interventionType: interventionType("tri-p1"),
+  coordinates: coords("tri-p1"),
+  monitoringPeriod: "Apr 2024 — ongoing",
+  sensors: 2,
+  approachesCovered: 2,
+  totalApproaches: 4,
+  dataConfidence: 68,
+  streetNS: "Stratigou Sarafi",
+  streetEW: "Asklipiou",
+  segmentApiId: "mock-tri-p1-area",
+  baseline: period(
+    "Baseline",
+    "Apr – Jun 2024",
+    modeShare({ pedestrian: 24, cycle: 11, pt: 18, car: 42 }),
+    142,
+    0.38,
+    21.6,
+    198,
+    -7,
+    38
+  ),
+  intervention: period(
+    "Post-intervention",
+    "Jul 2024 — ongoing",
+    modeShare({ pedestrian: 27, cycle: 16, pt: 17, car: 36 }),
+    168,
+    0.27,
+    24.0,
+    172,
+    10,
+    -24
+  ),
+  timeline: [
+    { date: "Apr 2024", event: "Area intervention baseline", status: "done" },
+    { date: "Jul 2024", event: "Smart mobility routing live", status: "done" },
+    { date: "Oct 2024", event: "Digital monitoring workflow", status: "active" },
+    { date: "Q1 2025", event: "Area performance evaluation", status: "upcoming" },
+  ],
+};
+
+const ALL_CONFIGS: JunctionConfig[] = [
+  ISSY_P1,
+  ISSY_P2,
+  ISSY_P3,
+  CPH_P1,
+  CPH_P2,
+  CPH_P3,
+  HEL_P1,
+  HEL_P2,
+  HEL_P3,
+  MIL_P1,
+  MIL_P2,
+  MIL_P3,
+  ZAR_P1,
+  TRI_P1,
+];
+
+export const JUNCTION_REGISTRY: Record<string, JunctionConfig[]> = ALL_CONFIGS.reduce(
+  (acc, config) => {
+    if (!acc[config.pilotId]) acc[config.pilotId] = [];
+    acc[config.pilotId].push(config);
+    return acc;
+  },
+  {} as Record<string, JunctionConfig[]>
+);
+
+export function getJunctionConfigsForPilot(pilotId: string): JunctionConfig[] {
+  return JUNCTION_REGISTRY[pilotId] ?? [];
+}
+
+export function hasJunctionConfig(pilotId: string | null | undefined): boolean {
+  return !!pilotId && pilotId in JUNCTION_REGISTRY;
+}
+
+export function getPrimaryJunctionConfig(pilotId: string | null | undefined): JunctionConfig | null {
+  if (!pilotId) return null;
+  return JUNCTION_REGISTRY[pilotId]?.[0] ?? null;
+}

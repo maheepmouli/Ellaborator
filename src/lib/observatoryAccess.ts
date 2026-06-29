@@ -1,5 +1,6 @@
 import { isIssyStudyPilot } from "@/lib/issyPilot2Junction";
 import { isIssyCity } from "@/lib/issyMapRouting";
+import { hasJunctionConfig } from "@/data/junctionConfigs";
 
 /** Whether the segment intelligence panel can open for this city/pilot/KPI combo. */
 export function canOpenObservatory(
@@ -7,6 +8,9 @@ export function canOpenObservatory(
   pilotId: string | null | undefined,
   kpiId: string
 ): boolean {
+  if (pilotId && hasJunctionConfig(pilotId)) {
+    return true;
+  }
   if (
     isIssyCity(city) &&
     isIssyStudyPilot(pilotId) &&
@@ -17,10 +21,7 @@ export function canOpenObservatory(
   if (city === "Milan" && kpiId === "kpi2.1") {
     return true;
   }
-  if (
-    city === "Copenhagen" &&
-    ["kpi1.2"].includes(kpiId)
-  ) {
+  if (["Copenhagen", "Helsinki", "Milan", "Zaragoza", "Trikala"].includes(city)) {
     return true;
   }
   return false;

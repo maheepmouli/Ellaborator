@@ -1,4 +1,5 @@
 ﻿import { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronDown,
@@ -17,6 +18,9 @@ import {
 } from "lucide-react";
 import Header from "@/components/Header";
 import IssyKpiMethodologySection from "@/components/IssyKpiMethodologySection";
+import CityKpiMethodologySection from "@/components/CityKpiMethodologySection";
+import { SharePointIntegrationSection } from "@/components/SharePointIntegrationSection";
+import { InterventionGeometrySection } from "@/components/InterventionGeometrySection";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -54,6 +58,14 @@ import {
   type KpiReadiness,
 } from "@/data/kpiReadinessMatrix";
 import { ELABORATOR_KPIS } from "@/data/kpiDefinitions";
+import { fetchSharepointManifestFull } from "@/data/sharepointDatasets";
+import {
+  CITY_INTEGRATION_ROWS,
+  DROP_PIPELINE_ROWS,
+  KPI_SOURCE_MATRIX,
+  SHAREPOINT_LIGHTHOUSE_INTEGRATED_COUNT,
+} from "@/data/sharepointIntegrationAudit";
+import { PILOT_GEOMETRY_ROWS, CITY_DASHBOARD_FIRST_SUMMARY } from "@/data/interventionGeometryAudit";
 import { useWorkflowHealth } from "@/hooks/use-workflow-health";
 
 // ─── Badge helpers ────────────────────────────────────────────────────────────
@@ -675,6 +687,13 @@ const DataCatalogue = () => {
     parserStatus: FILTER_ALL,
   });
 
+  const { data: sharepointManifest } = useQuery({
+    queryKey: ["sharepoint-manifest-full"],
+    queryFn: fetchSharepointManifestFull,
+    staleTime: 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+
   const filtered = useMemo(() => {
     return DATASET_REGISTRY.filter((d) => {
       if (filters.city !== FILTER_ALL && d.city !== filters.city) return false;
@@ -715,7 +734,7 @@ const DataCatalogue = () => {
               <h1 className="text-3xl font-bold text-white mb-1.5">Data Catalogue</h1>
               <p className="text-[14px] text-white/45 max-w-xl">
                 Transparent metadata for city datasets — sources, geometry quality, KPI linkage,
-                parser status, and map integration (including Issy junction observatory layers).
+                parser status, SharePoint June 2026 integration, and per-pilot intervention geometry.
               </p>
             </div>
             <Button
@@ -727,6 +746,16 @@ const DataCatalogue = () => {
                   exportedAt: new Date().toISOString(),
                   datasets: DATASET_REGISTRY,
                   kpiReadiness: KPI_READINESS_MATRIX,
+                  sharepointIntegration: {
+                    cities: CITY_INTEGRATION_ROWS,
+                    kpiSources: KPI_SOURCE_MATRIX,
+                    dropPipeline: DROP_PIPELINE_ROWS,
+                    manifest: sharepointManifest,
+                  },
+                  interventionGeometry: {
+                    pilots: PILOT_GEOMETRY_ROWS,
+                    cityDashboardFirst: CITY_DASHBOARD_FIRST_SUMMARY,
+                  },
                 };
                 const blob = new Blob([JSON.stringify(payload, null, 2)], {
                   type: "application/json;charset=utf-8",
@@ -745,12 +774,39 @@ const DataCatalogue = () => {
           </div>
 
           {/* ── Summary cards ── */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
-            <StatCard value={totalDatasets} label="Datasets registered" sub="across all 5 cities" />
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8">
+            <StatCard
+              value={totalDatasets}
+              label="Datasets registered"
+              sub={`across ${ALL_CITIES.length} lighthouse cities`}
+            />
             <StatCard value={activeDatasets} label="Active real data" sub="live or static file" />
             <StatCard value={readyParsers} label="Parsers ready" sub="feeding map layers" />
             <StatCard value={withGeometry} label="Spatially linked" sub="point / segment / polygon" />
+            <StatCard
+              value={`${SHAREPOINT_LIGHTHOUSE_INTEGRATED_COUNT}/6`}
+              label="SharePoint lighthouse"
+              sub="integrated (Milan external)"
+            />
           </div>
+
+          <GlassCard id="sharepoint-integration" className="p-6 mb-6 scroll-mt-24">
+            <SectionTitle
+              icon={<Database className="h-4 w-4" />}
+              title="SharePoint June 2026 — Data Integration Reference"
+              sub="Authoritative traceability from drop → extract → parser → map / observatory"
+            />
+            <SharePointIntegrationSection manifest={sharepointManifest} />
+          </GlassCard>
+
+          <GlassCard id="intervention-geometry" className="p-6 mb-6 scroll-mt-24">
+            <SectionTitle
+              icon={<MapPin className="h-4 w-4" />}
+              title="Intervention geometry reference"
+              sub="Smallest meaningful monitoring geometry per pilot — grounded in datasets, not Issy defaults"
+            />
+            <InterventionGeometrySection />
+          </GlassCard>
 
           {/* ── KPI Readiness Matrix ── */}
           <GlassCard className="p-6 mb-6">
@@ -770,6 +826,22 @@ const DataCatalogue = () => {
               sub="How each ELABORATOR KPI is computed for Issy today: data sources, steps, and formulas"
             />
             <IssyKpiMethodologySection />
+          </GlassCard>
+
+          <GlassCard id="city-kpi-methodology" className="p-6 mb-6 scroll-mt-24">
+            <SectionTitle
+              icon={<FileText className="h-4 w-4" />}
+              title="Cross-city KPI explanation standard"
+              sub="Meaning, calculation, limitations, and sources per city using a shared Issy-style methodology contract"
+            />
+            <div className="space-y-5">
+              {ALL_CITIES.filter((city) => city !== "Issy-les-Moulineaux").map((city) => (
+                <section key={city} className="space-y-2">
+                  <h3 className="text-[13px] font-semibold text-white">{city}</h3>
+                  <CityKpiMethodologySection city={city} />
+                </section>
+              ))}
+            </div>
           </GlassCard>
 
           {/* ── Dataset Registry ── */}
