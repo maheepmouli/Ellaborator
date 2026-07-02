@@ -45,5 +45,10 @@ export interface NormalizedCityRecord {
   segmentId?: string;
   streetName?: string;
   spatialNote?: string;
+  methodologyWarnings?: string[];
   parserStatus?: "ready" | "partial" | "planned";
+  datasetKind?: string;
+  category?: string;
+  likertLabel?: string;
+  facilityCategory?: string;
 }

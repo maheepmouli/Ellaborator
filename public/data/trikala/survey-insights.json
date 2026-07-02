@@ -1,0 +1,16 @@
+{
+  "generatedAt": "2026-07-01T13:38:31.423Z",
+  "womenMobility": {
+    "n": 117,
+    "daySafetyAvg": 3.017094017094017,
+    "nightSafetyAvg": 2.5128205128205128,
+    "harassmentPct": 42.73504273504273,
+    "routeAvoidancePct": 61.53846153846154
+  },
+  "bikeLaneBaseline": {
+    "n": 310,
+    "laneSafetyAvg": 2.3483870967741933,
+    "laneConditionAvg": 0,
+    "nightSafetyAvg": 2.4512987012987013
+  }
+}

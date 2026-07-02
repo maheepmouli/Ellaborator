@@ -1,0 +1,74 @@
+[
+  {
+    "siteKey": "frederiksholms kanal",
+    "siteName": "Frederiksholms Kanal",
+    "lat": 55.6758,
+    "lon": 12.5759,
+    "pilotId": "cph-p3",
+    "pre": {
+      "pedestrian": 187,
+      "bike": 172,
+      "motor": 479,
+      "ptw": 9,
+      "total": 847,
+      "motorPressure": 57.6151121605667
+    },
+    "post": {
+      "pedestrian": 196,
+      "bike": 196,
+      "motor": 514,
+      "ptw": 1,
+      "total": 907,
+      "motorPressure": 56.780595369349506
+    },
+    "safetyDelta": -0.8345167912171974
+  },
+  {
+    "siteKey": "løngangsstræde",
+    "siteName": "Løngangsstræde",
+    "lat": 55.6769,
+    "lon": 12.5778,
+    "pilotId": "cph-p3",
+    "pre": {
+      "pedestrian": 40,
+      "bike": 17,
+      "motor": 199,
+      "ptw": 1,
+      "total": 257,
+      "motorPressure": 77.82101167315176
+    },
+    "post": {
+      "pedestrian": 48,
+      "bike": 19,
+      "motor": 161,
+      "ptw": 0,
+      "total": 228,
+      "motorPressure": 70.6140350877193
+    },
+    "safetyDelta": -7.206976585432457
+  },
+  {
+    "siteKey": "lavendelstræde",
+    "siteName": "Lavendelstræde",
+    "lat": 55.6774,
+    "lon": 12.5749,
+    "pilotId": "cph-p3",
+    "pre": {
+      "pedestrian": 63,
+      "bike": 13,
+      "motor": 202,
+      "ptw": 1,
+      "total": 279,
+      "motorPressure": 72.75985663082437
+    },
+    "post": {
+      "pedestrian": 49,
+      "bike": 19,
+      "motor": 151,
+      "ptw": 0,
+      "total": 219,
+      "motorPressure": 68.94977168949772
+    },
+    "safetyDelta": -3.81008494132665
+  }
+]

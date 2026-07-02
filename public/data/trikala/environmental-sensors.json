@@ -1,0 +1,322 @@
+{
+  "generatedAt": "2026-07-01T13:38:31.449Z",
+  "sourceFile": "smart_citizen_kit_environmental_metrics.xlsx",
+  "sensorCount": 19,
+  "outdoorCount": 15,
+  "outdoorOnlineCount": 8,
+  "outdoorFleetCoveragePct": 53,
+  "sensors": [
+    {
+      "sensorId": 17606,
+      "inOutdoor": "Indoor",
+      "status": "Online",
+      "capabilities": [
+        "O3",
+        "NO2",
+        "PM1",
+        "PM2.5",
+        "PM4",
+        "PM10",
+        "Noise"
+      ],
+      "capabilityScore": 0.7777777777777778,
+      "startingDate": 45492,
+      "endingDate": ""
+    },
+    {
+      "sensorId": 17037,
+      "inOutdoor": "Indoor",
+      "status": "Online",
+      "capabilities": [
+        "CO2",
+        "eCO2",
+        "PM1",
+        "PM2.5",
+        "PM10",
+        "Noise"
+      ],
+      "capabilityScore": 0.6666666666666666,
+      "startingDate": 45314,
+      "endingDate": ""
+    },
+    {
+      "sensorId": 17600,
+      "inOutdoor": "Indoor",
+      "status": "Online",
+      "capabilities": [
+        "CO2",
+        "PM1",
+        "PM2.5",
+        "PM4",
+        "PM10",
+        "Noise"
+      ],
+      "capabilityScore": 0.6666666666666666,
+      "startingDate": 45532,
+      "endingDate": ""
+    },
+    {
+      "sensorId": 17604,
+      "inOutdoor": "Indoor",
+      "status": "Online",
+      "capabilities": [
+        "O3",
+        "NO2",
+        "PM1",
+        "PM2.5",
+        "PM4",
+        "PM10",
+        "Noise"
+      ],
+      "capabilityScore": 0.7777777777777778,
+      "startingDate": 45686,
+      "endingDate": ""
+    },
+    {
+      "sensorId": 18544,
+      "inOutdoor": "Outdoor",
+      "status": "Online",
+      "capabilities": [
+        "PM1",
+        "PM2.5",
+        "PM4",
+        "PM10",
+        "Noise"
+      ],
+      "capabilityScore": 0.5555555555555556,
+      "startingDate": 45713,
+      "endingDate": ""
+    },
+    {
+      "sensorId": 18531,
+      "inOutdoor": "Outdoor",
+      "status": "Online",
+      "capabilities": [
+        "PM1",
+        "PM2.5",
+        "PM4",
+        "PM10",
+        "Noise"
+      ],
+      "capabilityScore": 0.5555555555555556,
+      "startingDate": 45713,
+      "endingDate": ""
+    },
+    {
+      "sensorId": 18543,
+      "inOutdoor": "Outdoor",
+      "status": "Online",
+      "capabilities": [
+        "PM1",
+        "PM2.5",
+        "PM4",
+        "PM10",
+        "Noise"
+      ],
+      "capabilityScore": 0.5555555555555556,
+      "startingDate": 45949,
+      "endingDate": ""
+    },
+    {
+      "sensorId": 18617,
+      "inOutdoor": "Outdoor",
+      "status": "Online",
+      "capabilities": [
+        "PM1",
+        "PM2.5",
+        "PM4",
+        "PM10",
+        "Noise"
+      ],
+      "capabilityScore": 0.5555555555555556,
+      "startingDate": 45780,
+      "endingDate": ""
+    },
+    {
+      "sensorId": 18337,
+      "inOutdoor": "Outdoor",
+      "status": "Online",
+      "capabilities": [
+        "O3",
+        "NO2",
+        "PM1",
+        "PM2.5",
+        "PM4",
+        "PM10",
+        "Noise"
+      ],
+      "capabilityScore": 0.7777777777777778,
+      "startingDate": 45646,
+      "endingDate": ""
+    },
+    {
+      "sensorId": 18313,
+      "inOutdoor": "Outdoor",
+      "status": "Online",
+      "capabilities": [
+        "O3",
+        "NO2",
+        "PM1",
+        "PM2.5",
+        "PM4",
+        "PM10",
+        "Noise"
+      ],
+      "capabilityScore": 0.7777777777777778,
+      "startingDate": 45902,
+      "endingDate": ""
+    },
+    {
+      "sensorId": 18317,
+      "inOutdoor": "Outdoor",
+      "status": "Online",
+      "capabilities": [
+        "O3",
+        "NO2",
+        "PM1",
+        "PM2.5",
+        "PM4",
+        "PM10",
+        "Noise"
+      ],
+      "capabilityScore": 0.7777777777777778,
+      "startingDate": 45950,
+      "endingDate": ""
+    },
+    {
+      "sensorId": 18316,
+      "inOutdoor": "Outdoor",
+      "status": "Online",
+      "capabilities": [
+        "O3",
+        "NO2",
+        "PM1",
+        "PM2.5",
+        "PM4",
+        "PM10",
+        "Noise"
+      ],
+      "capabilityScore": 0.7777777777777778,
+      "startingDate": 45950,
+      "endingDate": ""
+    },
+    {
+      "sensorId": 18409,
+      "inOutdoor": "Outdoor",
+      "status": "Offline",
+      "capabilities": [
+        "O3",
+        "NO2",
+        "PM1",
+        "PM2.5",
+        "PM4",
+        "PM10",
+        "Noise"
+      ],
+      "capabilityScore": 0.7777777777777778,
+      "startingDate": 45725,
+      "endingDate": 45802
+    },
+    {
+      "sensorId": 18330,
+      "inOutdoor": "Outdoor",
+      "status": "Offline",
+      "capabilities": [
+        "O3",
+        "NO2",
+        "PM1",
+        "PM2.5",
+        "PM4",
+        "PM10",
+        "Noise"
+      ],
+      "capabilityScore": 0.7777777777777778,
+      "startingDate": 45644,
+      "endingDate": 45644
+    },
+    {
+      "sensorId": 18339,
+      "inOutdoor": "Outdoor",
+      "status": "Offline",
+      "capabilities": [
+        "O3",
+        "NO2",
+        "PM1",
+        "PM2.5",
+        "PM4",
+        "PM10",
+        "Noise"
+      ],
+      "capabilityScore": 0.7777777777777778,
+      "startingDate": 45646,
+      "endingDate": 45950
+    },
+    {
+      "sensorId": 18346,
+      "inOutdoor": "Outdoor",
+      "status": "Offline",
+      "capabilities": [
+        "O3",
+        "NO2",
+        "PM1",
+        "PM2.5",
+        "PM4",
+        "PM10",
+        "Noise"
+      ],
+      "capabilityScore": 0.7777777777777778,
+      "startingDate": 45649,
+      "endingDate": 45805
+    },
+    {
+      "sensorId": 18345,
+      "inOutdoor": "Outdoor",
+      "status": "Offline",
+      "capabilities": [
+        "CO2",
+        "PM1",
+        "PM2.5",
+        "PM4",
+        "PM10",
+        "Noise"
+      ],
+      "capabilityScore": 0.6666666666666666,
+      "startingDate": 45649,
+      "endingDate": 45805
+    },
+    {
+      "sensorId": 18344,
+      "inOutdoor": "Outdoor",
+      "status": "Offline",
+      "capabilities": [
+        "O3",
+        "NO2",
+        "PM1",
+        "PM2.5",
+        "PM4",
+        "PM10",
+        "Noise"
+      ],
+      "capabilityScore": 0.7777777777777778,
+      "startingDate": 45649,
+      "endingDate": 45805
+    },
+    {
+      "sensorId": 18348,
+      "inOutdoor": "Outdoor",
+      "status": "Offline",
+      "capabilities": [
+        "CO2",
+        "PM1",
+        "PM2.5",
+        "PM4",
+        "PM10",
+        "Noise"
+      ],
+      "capabilityScore": 0.6666666666666666,
+      "startingDate": 45649,
+      "endingDate": 45805
+    }
+  ],
+  "note": "Coordinates column empty in source workbook — map positions are inferred near pilot anchor."
+}

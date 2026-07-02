@@ -64,9 +64,13 @@ type PilotGraphicOverride = Partial<
 const PILOT_GRAPHIC_OVERRIDES: Record<string, PilotGraphicOverride> = {
   "cph-p1": {
     header: { "kpi1.2": "cameraCorridorSchematic", "kpi2.1": "cameraCorridorSchematic", "kpi3.2": "cameraCorridorSchematic" },
+    overview: { "kpi1.2": "telraamModeBars" },
+    kpiAnalysis: { "kpi1.2": "telraamModeBars", "kpi4.1": "sentimentGauge", "kpi4.2": "accessibilityBars" },
   },
   "cph-p2": {
     header: { "kpi1.2": "cameraCorridorSchematic", "kpi2.1": "cameraCorridorSchematic", "kpi3.2": "cameraCorridorSchematic" },
+    overview: { "kpi3.1": "facilityInventory", "kpi4.2": "accessibilityBars" },
+    kpiAnalysis: { "kpi3.1": "facilityInventory", "kpi4.2": "accessibilityBars" },
   },
   "cph-p3": {
     header: {
@@ -74,12 +78,16 @@ const PILOT_GRAPHIC_OVERRIDES: Record<string, PilotGraphicOverride> = {
       "kpi2.1": "cameraCorridorSchematic",
       "kpi3.2": "cameraCorridorSchematic",
     },
+    kpiAnalysis: { "kpi4.1": "likertRadar", "kpi2.1": "flowPressure", "kpi4.2": "accessibilityBars" },
   },
   "hel-p1": { header: { "kpi2.1": "interventionPointsSchematic" } },
   "hel-p2": { header: { "kpi3.1": "interventionPointsSchematic" } },
   "mil-p2": { header: { "kpi2.1": "streetSegmentSchematic" }, kpiAnalysis: { "kpi2.1": "speedProfile" } },
   "zar-p1": { header: { "kpi1.2": "areaPolygonSchematic" } },
-  "tri-p1": { header: { "kpi4.1": "areaPolygonSchematic" }, kpiAnalysis: { "kpi4.1": "likertRadar" } },
+  "tri-p1": {
+    header: { "kpi4.1": "areaPolygonSchematic" },
+    kpiAnalysis: { "kpi4.1": "likertRadar", "kpi2.1": "likertRadar", "kpi4.2": "accessibilityBars" },
+  },
 };
 
 const KPI_STATUS_CAPTIONS: Record<
@@ -229,6 +237,8 @@ const EMPTY_STATE_MESSAGES: Partial<Record<ObservatoryGraphicId, string>> = {
   facilityStrip: "No facility strip data linked for this segment.",
   reteBand: "No RETE / emissions band data linked.",
   proxyDelta: "No environmental proxy data for this intervention area.",
+  accessibilityBars:
+    "No EN 17210 accessibility audit for this pilot. Linked datasets: OpenTrafficCam, Telraam, manual counts, flow cameras, and surveys where applicable.",
 };
 
 const SCHEMATIC_IDS = new Set<string>([

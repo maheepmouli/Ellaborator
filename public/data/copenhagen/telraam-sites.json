@@ -1,0 +1,55 @@
+[
+  {
+    "locationId": "telraam-vognmagergade-8",
+    "street": "Vognmagergade",
+    "lat": 55.67989,
+    "lon": 12.57582,
+    "pilotId": "cph-p1",
+    "motorizedPctChange": -20,
+    "baseline2024": 1791,
+    "intervention2025": 3711,
+    "bicyclePctChange": 107,
+    "period": "Weekdays 07:00–19:00, Mar–Jun 2024 vs Mar–Jun 2025",
+    "source": "Telraam summary workbook"
+  },
+  {
+    "locationId": "telraam-vestergade-5",
+    "street": "Vestergade",
+    "lat": 55.67872,
+    "lon": 12.57301,
+    "pilotId": "cph-p1",
+    "motorizedPctChange": -16,
+    "baseline2024": 3822,
+    "intervention2025": 4356,
+    "bicyclePctChange": 3,
+    "pedestrianPctChange": 14,
+    "period": "Weekdays 07:00–19:00, Mar–Jun 2024 vs Mar–Jun 2025",
+    "source": "Telraam summary workbook"
+  },
+  {
+    "locationId": "telraam-rosenborggade-15",
+    "street": "Rosenborggade",
+    "lat": 55.68102,
+    "lon": 12.57644,
+    "pilotId": "cph-p1",
+    "motorizedPctChange": -15,
+    "baseline2024": 932,
+    "intervention2025": 904,
+    "bicyclePctChange": -3,
+    "period": "Weekdays 07:00–19:00, Mar–Jun 2024 vs Mar–Jun 2025",
+    "source": "Telraam summary workbook"
+  },
+  {
+    "locationId": "telraam-studiestraede-47b",
+    "street": "Studiestræde",
+    "lat": 55.67955,
+    "lon": 12.57235,
+    "pilotId": "cph-p1",
+    "motorizedPctChange": -10,
+    "baseline2024": 1595,
+    "intervention2025": 1671,
+    "bicyclePctChange": 5,
+    "period": "Weekdays 07:00–19:00, Mar–Jun 2024 vs Mar–Jun 2025",
+    "source": "Telraam summary workbook"
+  }
+]

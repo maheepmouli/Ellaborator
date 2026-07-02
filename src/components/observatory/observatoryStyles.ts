@@ -7,6 +7,7 @@ export const OBS_C = {
   rose: "#f43f5e",
   muted: "rgba(255,255,255,0.40)",
   panel: "rgba(8,7,22,0.97)",
+  schematicBg: "#131a30",
   glass: "rgba(255,255,255,0.055)",
   border: "rgba(255,255,255,0.11)",
 };

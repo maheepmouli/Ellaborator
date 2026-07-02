@@ -1,0 +1,96 @@
+{
+  "pilotId": "cph-p2",
+  "baselineCategories": [
+    {
+      "label": "Almindelig",
+      "value": 764
+    },
+    {
+      "label": "Besøgsplads",
+      "value": 67
+    },
+    {
+      "label": "Ambassade",
+      "value": 14
+    },
+    {
+      "label": "Delebil",
+      "value": 4
+    },
+    {
+      "label": "El-bil",
+      "value": 24
+    },
+    {
+      "label": "Erhverv",
+      "value": 119
+    },
+    {
+      "label": "Handicapplads",
+      "value": 16
+    },
+    {
+      "label": "Taxi",
+      "value": 29
+    },
+    {
+      "label": "Læssezone",
+      "value": 24
+    },
+    {
+      "label": "Særlig plads",
+      "value": 2
+    },
+    {
+      "label": "Other",
+      "value": 1063
+    }
+  ],
+  "interventionCategories": [
+    {
+      "label": "Almindelig",
+      "value": 196
+    },
+    {
+      "label": "Ambassade",
+      "value": 17
+    },
+    {
+      "label": "Besøgsplads",
+      "value": 54
+    },
+    {
+      "label": "El-bil",
+      "value": 16
+    },
+    {
+      "label": "Erhverv",
+      "value": 122
+    },
+    {
+      "label": "Handicapplads",
+      "value": 18
+    },
+    {
+      "label": "Taxi",
+      "value": 25
+    },
+    {
+      "label": "Delebil",
+      "value": 9
+    },
+    {
+      "label": "Særlig plads",
+      "value": 2
+    }
+  ],
+  "netBikeBays": 0,
+  "netCarBaysRemoved": 582,
+  "cargoBikeBays": 80,
+  "partnerCrossCheck": {
+    "bikeSpaces": 1080,
+    "cargoSpaces": 80,
+    "footprintSqM": 1250
+  },
+  "source": "I100275_P-pladser_Oversigt.xlsx (Eksisterende forhold vs Udført)"
+}

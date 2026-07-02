@@ -15,6 +15,16 @@ import type { JunctionStudyView } from "@/lib/issyJunctionAnalytics";
 import type { MapScenario } from "@/context/MapIntelligenceContext";
 import { getKpiDefinition } from "@/config/kpiDefinitions";
 import { ObservatoryGraphicSlot } from "@/components/observatory/ObservatoryGraphicSlot";
+import { getCopenhagenPilotRecord } from "@/data/copenhagenPilotRegistry";
+import {
+  COPENHAGEN_METHODOLOGY_RULES,
+  resolveMethodologyConstraint,
+  type MethodologyConstraint,
+} from "@/data/copenhagenLocationRegistry";
+import { parseCopenhagenMapSelection, getCopenhagenLocationFromSelection } from "@/lib/copenhagenMapSelection";
+import { TelraamSummaryCard } from "@/components/observatory/TelraamSummaryCard";
+import { CopenhagenEvidencePanel } from "@/components/CopenhagenEvidencePanel";
+import { TrikalaEvidencePanel } from "@/components/TrikalaEvidencePanel";
 
 const C = {
   border: "rgba(255,255,255,0.11)",
@@ -33,6 +43,7 @@ function GraphicSlot({
   selectedModeTypes,
   selectedDirectionId,
   onSelectDirectionId,
+  selectedSegmentId,
 }: {
   zone: "overview" | "beforeAfter" | "kpiAnalysis";
   cityName: string;
@@ -43,6 +54,7 @@ function GraphicSlot({
   selectedModeTypes?: string[];
   selectedDirectionId?: string | null;
   onSelectDirectionId?: (id: string) => void;
+  selectedSegmentId?: string | null;
 }) {
   return (
     <ObservatoryGraphicSlot
@@ -55,6 +67,7 @@ function GraphicSlot({
       selectedModeTypes={selectedModeTypes}
       selectedDirectionId={selectedDirectionId}
       onSelectDirectionId={onSelectDirectionId}
+      selectedSegmentId={selectedSegmentId}
     />
   );
 }
@@ -82,6 +95,41 @@ function SourceTag({ label }: { label: string }) {
   );
 }
 
+function MethodologyCaveatsBox({
+  ruleSet,
+  ruleKey,
+}: {
+  ruleSet: MethodologyConstraint;
+  ruleKey?: string;
+}) {
+  const appliedControls: string[] = [];
+  if (ruleSet.excludePedestrians) appliedControls.push("Pedestrian counts excluded from evaluation");
+  if (ruleSet.excludeBicycles) appliedControls.push("Bicycle counts excluded from evaluation");
+  ruleSet.directionalExclusions?.forEach((entry) => {
+    appliedControls.push(`${entry.direction} · ${entry.modes.join(" + ")} excluded`);
+  });
+
+  return (
+    <GlassCard className="border-amber-400/35 bg-amber-500/10">
+      {ruleKey ? (
+        <p className="text-[11px] font-semibold text-amber-100/95 capitalize">{ruleKey.replace(/-/g, " ")}</p>
+      ) : null}
+      {appliedControls.length > 0 && (
+        <ul className={`list-disc pl-4 text-[11px] text-amber-100/80 space-y-0.5 ${ruleKey ? "mt-2" : ""}`}>
+          {appliedControls.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      )}
+      {ruleSet.warnings?.map((warning) => (
+        <p key={warning} className="mt-2 text-[10px] text-amber-200/75 leading-relaxed">
+          {warning}
+        </p>
+      ))}
+    </GlassCard>
+  );
+}
+
 interface CityObservatoryTabContentProps {
   tabId: string;
   cityName: string;
@@ -93,6 +141,7 @@ interface CityObservatoryTabContentProps {
   selectedModeTypes?: string[];
   selectedDirectionId?: string | null;
   onSelectDirectionId?: (id: string) => void;
+  selectedSegmentId?: string | null;
 }
 
 export function CityObservatoryTabContent({
@@ -106,7 +155,29 @@ export function CityObservatoryTabContent({
   selectedModeTypes = [],
   selectedDirectionId,
   onSelectDirectionId,
+  selectedSegmentId,
 }: CityObservatoryTabContentProps) {
+  const isCopenhagen = cityName.toLowerCase().includes("copenhagen");
+  const isTrikala = cityName.toLowerCase().includes("trikala");
+  const cphPilot = isCopenhagen ? getCopenhagenPilotRecord(selectedPilotId) : null;
+  const methodologyRule = isCopenhagen
+    ? resolveMethodologyConstraint({
+        selectionId: selectedSegmentId,
+        siteName: view.name,
+      })
+    : undefined;
+  const methodologyRuleKey = useMemo(() => {
+    if (!isCopenhagen || !methodologyRule) return undefined;
+    const parsed = parseCopenhagenMapSelection(selectedSegmentId);
+    if (parsed.kind === "site" && parsed.workbookKey) return parsed.workbookKey;
+    return Object.entries(COPENHAGEN_METHODOLOGY_RULES).find(([, rule]) => rule === methodologyRule)?.[0];
+  }, [isCopenhagen, methodologyRule, selectedSegmentId]);
+  const selectedTelraamLocation = useMemo(() => {
+    if (!isCopenhagen) return null;
+    const loc = getCopenhagenLocationFromSelection(selectedSegmentId);
+    if (loc?.kind === "telraam_counter") return loc;
+    return null;
+  }, [isCopenhagen, selectedSegmentId]);
   const profile = getCityPilotProfile(selectedPilotId);
   const pilot = getPilotById(cityName, selectedPilotId);
   const methodology = getObservatoryMethodology(cityName, selectedKpi);
@@ -151,13 +222,17 @@ export function CityObservatoryTabContent({
     view,
     scenario,
     selectedModeTypes,
-    selectedDirectionId,
-    onSelectDirectionId,
-  };
+  selectedDirectionId,
+  onSelectDirectionId,
+  selectedSegmentId,
+};
 
   if (tabId === "overview") {
     return (
       <div className="space-y-3">
+        {selectedTelraamLocation ? (
+          <TelraamSummaryCard locationId={selectedTelraamLocation.id} />
+        ) : null}
         <GraphicSlot zone="overview" {...graphicProps} />
         <GlassCard>
           <p className="text-[11px] font-semibold text-white/88">Pilot overview</p>
@@ -171,23 +246,45 @@ export function CityObservatoryTabContent({
         <GlassCard>
           <p className="text-[11px] font-semibold text-white/88">Objectives</p>
           <ul className="mt-1 list-disc pl-4 text-[11px] text-white/72 space-y-0.5">
-            {(profile?.objectives || ["Track intervention performance with explicit data readiness."]).map(
-              (item) => (
-                <li key={item}>{item}</li>
-              )
-            )}
+            {(cphPilot
+              ? [cphPilot.objective.primary, ...cphPilot.objective.secondary]
+              : profile?.objectives || ["Track intervention performance with explicit data readiness."]
+            ).map((item) => (
+              <li key={item}>{item}</li>
+            ))}
           </ul>
         </GlassCard>
+        {cphPilot && (
+          <GlassCard>
+            <p className="text-[11px] font-semibold text-white/88">Evaluation focus</p>
+            <p className="mt-1 text-[11px] text-white/72 leading-relaxed capitalize">
+              {cphPilot.evaluation.focus} · {cphPilot.evaluation.methods.join(" · ")}
+            </p>
+            {cphPilot.evaluation.caveats.length > 0 && (
+              <ul className="mt-2 list-disc pl-4 text-[11px] text-white/65 space-y-0.5">
+                {cphPilot.evaluation.caveats.map((caveat) => (
+                  <li key={caveat}>{caveat}</li>
+                ))}
+              </ul>
+            )}
+          </GlassCard>
+        )}
         <GlassCard>
           <p className="text-[11px] font-semibold text-white/88">Expected impacts</p>
           <ul className="mt-1 list-disc pl-4 text-[11px] text-white/72 space-y-0.5">
-            {(profile?.expectedImpacts || ["Transparent pilot-level evidence for stakeholders."]).map(
-              (item) => (
-                <li key={item}>{item}</li>
-              )
-            )}
+            {(cphPilot?.evaluation.expectedOutcome
+              ? [cphPilot.evaluation.expectedOutcome]
+              : profile?.expectedImpacts || ["Transparent pilot-level evidence for stakeholders."]
+            ).concat(
+              cphPilot?.intervention.spatialMetrics ? [cphPilot.intervention.spatialMetrics] : []
+            ).map((item) => (
+              <li key={item}>{item}</li>
+            ))}
           </ul>
         </GlassCard>
+        {methodologyRule ? (
+          <MethodologyCaveatsBox ruleSet={methodologyRule} ruleKey={methodologyRuleKey} />
+        ) : null}
         {observedPoints.length === 0 && missingNotice && (
           <GlassCard className="border-amber-400/35 bg-amber-500/10">
             <p className="text-[11px] text-amber-100/90 leading-relaxed">{missingNotice}</p>
@@ -250,13 +347,17 @@ export function CityObservatoryTabContent({
   }
 
   if (tabId === "kpiAnalysis") {
-    if (selectedKpi === "kpi4.2" && cityName === "Copenhagen") {
+    if (selectedKpi === "kpi4.2" && cityName === "Copenhagen" && pilotId !== "cph-p2") {
       return (
-        <GlassCard className="border-amber-400/35 bg-amber-500/10">
-          <p className="text-[11px] text-amber-100/90 leading-relaxed">
-            KPI 4.2 is not supported by Copenhagen directional camera counts. Use Helsinki accessibility datasets or partner audit feeds for equal-access analysis.
-          </p>
-        </GlassCard>
+        <div className="space-y-3">
+          <GraphicSlot zone="kpiAnalysis" {...graphicProps} />
+          <GlassCard className="border-amber-400/35 bg-amber-500/10">
+            <p className="text-[11px] text-amber-100/90 leading-relaxed">
+              No EN 17210 accessibility audit for this pilot. The observatory lists linked observed datasets;
+              CPHK2 (Vandkunsten) shows a derived infrastructure proxy from parking inventory before/after.
+            </p>
+          </GlassCard>
+        </div>
       );
     }
     return (
@@ -282,8 +383,39 @@ export function CityObservatoryTabContent({
   }
 
   if (tabId === "methodology") {
+    const selectionKind = parseCopenhagenMapSelection(selectedSegmentId).kind;
     return (
       <div className="space-y-3">
+        {methodologyRule ? (
+          <MethodologyCaveatsBox ruleSet={methodologyRule} ruleKey={methodologyRuleKey} />
+        ) : null}
+        {isCopenhagen && (
+          <GlassCard>
+            <p className="text-[11px] font-semibold text-white/88">Maria Risom workbook rules</p>
+            <p className="mt-1 text-[11px] text-white/72 leading-relaxed">
+              Partner methodology constraints applied when aggregating OpenTrafficCam directional counts.
+              {selectionKind ? ` Active selection: ${selectionKind}.` : ""}
+            </p>
+            <ul className="mt-2 space-y-2">
+              {Object.entries(COPENHAGEN_METHODOLOGY_RULES).map(([key, rule]) => (
+                <li key={key} className="text-[10px] text-white/65 leading-relaxed">
+                  <span className="font-semibold text-white/80 capitalize">{key.replace(/-/g, " ")}</span>
+                  {rule.warnings[0] ? ` — ${rule.warnings[0]}` : ""}
+                </li>
+              ))}
+            </ul>
+          </GlassCard>
+        )}
+        {isCopenhagen && (
+          <GlassCard>
+            <CopenhagenEvidencePanel pilotId={pilotId} />
+          </GlassCard>
+        )}
+        {isTrikala && (
+          <GlassCard>
+            <TrikalaEvidencePanel pilotId={pilotId} />
+          </GlassCard>
+        )}
         <GlassCard>
           <p className="text-[11px] font-semibold text-white/88 flex items-center gap-1.5">
             <FileText className="h-3.5 w-3.5" /> Methodology

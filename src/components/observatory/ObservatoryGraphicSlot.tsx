@@ -137,6 +137,7 @@ export interface ObservatoryGraphicSlotProps {
   selectedModeTypes?: string[];
   selectedDirectionId?: string | null;
   onSelectDirectionId?: (id: string) => void;
+  selectedSegmentId?: string | null;
   /** Header strip mode — renders schematic only with caption export */
   headerMode?: boolean;
   onCaptionsReady?: (captions: { primary: string; secondary: string; tertiary: string }) => void;
@@ -152,6 +153,7 @@ export function ObservatoryGraphicSlot({
   selectedModeTypes = [],
   selectedDirectionId,
   onSelectDirectionId,
+  selectedSegmentId,
   headerMode,
 }: ObservatoryGraphicSlotProps) {
   const observatoryType = resolveObservatoryType(cityName, pilotId);
@@ -178,6 +180,7 @@ export function ObservatoryGraphicSlot({
             points,
             selectedModeTypes,
             selectedDirectionId,
+            selectedSegmentId,
             spec,
           })
         : null,
@@ -192,6 +195,7 @@ export function ObservatoryGraphicSlot({
       points,
       selectedModeTypes,
       selectedDirectionId,
+      selectedSegmentId,
     ]
   );
 

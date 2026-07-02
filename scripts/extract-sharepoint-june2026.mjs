@@ -4,6 +4,7 @@
  * into public/sharepoint-data/ (gitignored local mirror).
  */
 import fs from "node:fs/promises";
+import { readdirSync } from "node:fs";
 import path from "node:path";
 import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -38,6 +39,103 @@ const EXTRACTIONS = [
     match: /Countings_Stormgade_sortet\.xlsx$/i,
     dest: "Copenhagen/OpenTrafficCam Counts 2024 and 2025/Countings_Stormgade_sortet.xlsx",
     label: "cph-otc-stormgade",
+  },
+  {
+    zip: "Copenhagen Lighthouse-20260625T113853Z-3-001.zip",
+    match: /Countings_Hojbro\.xlsx$/i,
+    dest: "Copenhagen/OpenTrafficCam Counts 2024 and 2025/Countings_Hojbro.xlsx",
+    label: "cph-otc-hojbro",
+  },
+  {
+    zip: "Copenhagen Lighthouse-20260625T113853Z-3-001.zip",
+    match: /Telraam counts Medieval City Copenhagen 2024 and 2025\.xlsx$/i,
+    dest: "Copenhagen/Telraam/Telraam counts Medieval City Copenhagen 2024 and 2025.xlsx",
+    label: "cph-telraam-summary",
+  },
+  {
+    zip: "Copenhagen Lighthouse-20260625T113853Z-3-001.zip",
+    match: /Telraam\/Vestergade SHEET\.xlsx$/i,
+    dest: "Copenhagen/Telraam/Vestergade SHEET.xlsx",
+    label: "cph-telraam-vestergade",
+  },
+  {
+    zip: "Copenhagen Lighthouse-20260625T113853Z-3-001.zip",
+    match: /Telraam\/Vognmagergade SHEET\.xlsx$/i,
+    dest: "Copenhagen/Telraam/Vognmagergade SHEET.xlsx",
+    label: "cph-telraam-vognmagergade",
+  },
+  {
+    zip: "Copenhagen Lighthouse-20260625T113853Z-3-001.zip",
+    match: /Telraam\/Rosenborggade SHEET\.xlsx$/i,
+    dest: "Copenhagen/Telraam/Rosenborggade SHEET.xlsx",
+    label: "cph-telraam-rosenborggade",
+  },
+  {
+    zip: "Copenhagen Lighthouse-20260625T113853Z-3-001.zip",
+    match: /Telraam\/Studiestr.*SHEET\.xlsx$/i,
+    dest: "Copenhagen/Telraam/Studiestrade SHEET.xlsx",
+    label: "cph-telraam-studiestraede",
+    extractDir: "Copenhagen Lighthouse/1. BASELINE Data for Copenhagen/Telraam/",
+  },
+  {
+    zip: "Copenhagen Lighthouse-20260625T113853Z-3-001.zip",
+    match: /manual_counts_geo\.csv$/i,
+    dest: "Copenhagen/manual_counts_geo.csv",
+    label: "cph-manual-counts-geo",
+  },
+  {
+    zip: "Copenhagen Lighthouse-20260625T113853Z-3-001.zip",
+    match: /Tube count bicyclist Medieval City April 2024\.xlsx$/i,
+    dest: "Copenhagen/Tube Counts Bicyclist/Tube count bicyclist Medieval City April 2024.xlsx",
+    label: "cph-tube-counts",
+  },
+  {
+    zip: "Copenhagen Lighthouse-20260625T113853Z-3-001.zip",
+    match: /I100275_P-pladser_Oversigt\.xlsx$/i,
+    dest: "Copenhagen/Technical drawing - Medieval City/I100275_P-pladser_Oversigt.xlsx",
+    label: "cph-parking-overview",
+  },
+  {
+    zip: "Copenhagen Lighthouse-20260625T113853Z-3-001.zip",
+    match: /Acceptability_Intervention1_BEFORE\.xlsx$/i,
+    dest: "Copenhagen/Surveys/Acceptability_Intervention1_BEFORE.xlsx",
+    label: "cph-survey-acceptability-before",
+  },
+  {
+    zip: "Copenhagen Lighthouse-20260625T113853Z-3-001.zip",
+    match: /Acceptability_Intervention1_AFTER\.xlsx$/i,
+    dest: "Copenhagen/Surveys/Acceptability_Intervention1_AFTER.xlsx",
+    label: "cph-survey-acceptability-after",
+  },
+  {
+    zip: "Copenhagen Lighthouse-20260625T113853Z-3-001.zip",
+    match: /Before_After_changes_traffic_safety\.xlsx$/i,
+    dest: "Copenhagen/Surveys/Before_After_changes_traffic_safety.xlsx",
+    label: "cph-survey-safety-perception",
+  },
+  {
+    zip: "Copenhagen Lighthouse-20260625T113853Z-3-001.zip",
+    match: /iRap safety ranking Counts in 2024 and 2025 CPH\.xlsx$/i,
+    dest: "Copenhagen/iRAP/iRap safety ranking Counts in 2024 and 2025 CPH.xlsx",
+    label: "cph-irap-counts",
+  },
+  {
+    zip: "Copenhagen Lighthouse-20260625T113853Z-3-001.zip",
+    match: /Medieval City manual counts traffic_2023_uploaded to ELABORATOR\.xlsx$/i,
+    dest: "Copenhagen/Manual Counts/Medieval City manual counts traffic_2023_uploaded to ELABORATOR.xlsx",
+    label: "cph-manual-zones-2023",
+  },
+  {
+    zip: "Copenhagen Lighthouse-20260625T113853Z-3-001.zip",
+    match: /Middelalderbyen_trafik_ind_2023_rettet_20250402\.xlsx$/i,
+    dest: "Copenhagen/Manual Counts/Middelalderbyen_trafik_ind_2023_rettet_20250402.xlsx",
+    label: "cph-manual-zones-detail",
+  },
+  {
+    zip: "Copenhagen Lighthouse-20260625T113853Z-3-001.zip",
+    match: /platomo_geo\.csv$/i,
+    dest: "Copenhagen/platomo_geo.csv",
+    label: "cph-platomo-geo",
   },
   {
     zip: "Helsinki Lighthouse-20260625T113858Z-3-001.zip",
@@ -147,6 +245,42 @@ const EXTRACTIONS = [
     dest: "Trikala/ELABORATOR_ Women Mobility Questionnaire (Responses).xlsx",
     label: "tri-women-mobility-survey",
   },
+  {
+    zip: "Trikala Lighthouse-20260625T113913Z-3-001.zip",
+    match: /baseline data on bike safety from the on line syrvey_english\.xlsx$/i,
+    dest: "Trikala/baseline data on bike safety from the on line syrvey_english.xlsx",
+    label: "tri-bike-lane-baseline",
+  },
+  {
+    zip: "Trikala Lighthouse-20260625T113913Z-3-001.zip",
+    match: /Post Intervention _ELABORATOR_ Smart crossing_raw data eng\.xlsx$/i,
+    dest: "Trikala/post/Post Intervention _ELABORATOR_ Smart crossing_raw data eng.xlsx",
+    label: "tri-smart-crossing-post",
+  },
+  {
+    zip: "Trikala Lighthouse-20260625T113913Z-3-001.zip",
+    match: /Post Intervention_ELABORATOR_Cycling Safety_Raw dataEnglish_headers\.xlsx$/i,
+    dest: "Trikala/post/Post Intervention_ELABORATOR_Cycling Safety_Raw dataEnglish_headers.xlsx",
+    label: "tri-bike-lane-post",
+  },
+  {
+    zip: "Trikala Lighthouse-20260625T113913Z-3-001.zip",
+    match: /Survey of SMARTA app_row data\.xlsx$/i,
+    dest: "Trikala/post/Survey of SMARTA app_row data.xlsx",
+    label: "tri-smarta-app-post",
+  },
+  {
+    zip: "Trikala Lighthouse-20260625T113913Z-3-001.zip",
+    match: /smart_citizen_kit_environmental_metrics\.xlsx$/i,
+    dest: "Trikala/smart_citizen_kit_environmental_metrics.xlsx",
+    label: "tri-environmental-sensors",
+  },
+  {
+    zip: "Trikala Lighthouse-20260625T113913Z-3-001.zip",
+    match: /Meeting attendance_ETrikala_230525\.xlsx$/i,
+    dest: "Trikala/Meeting attendance_ETrikala_230525.xlsx",
+    label: "tri-meeting-attendance",
+  },
 ];
 
 function listZipMembers(zipPath) {
@@ -154,15 +288,62 @@ function listZipMembers(zipPath) {
   return output.split(/\r?\n/).filter(Boolean);
 }
 
-async function extractMember(zipPath, memberPath, destPath) {
+function findFileMatching(dir, predicate) {
+  const stack = [dir];
+  while (stack.length) {
+    const current = stack.pop();
+    for (const entry of readdirSync(current, { withFileTypes: true })) {
+      const full = path.join(current, entry.name);
+      if (entry.isDirectory()) stack.push(full);
+      else if (predicate(entry.name, full)) return full;
+    }
+  }
+  return null;
+}
+
+function findFileBySuffix(dir, suffix) {
+  return findFileMatching(dir, (name) => name.toLowerCase().endsWith(suffix.toLowerCase()));
+}
+
+async function extractMember(zipPath, memberPath, destPath, options = {}) {
   const tempDir = path.join(OUT_DIR, ".extract-tmp", path.basename(zipPath, ".zip"));
   await fs.mkdir(tempDir, { recursive: true });
-  const quotedMember = memberPath.includes(" ") ? `"${memberPath}"` : memberPath;
-  execSync(`tar -xf "${zipPath}" -C "${tempDir}" ${quotedMember}`, {
-    stdio: "pipe",
-    maxBuffer: 50 * 1024 * 1024,
-  });
-  const extracted = path.join(tempDir, memberPath);
+  if (options.extractDir) {
+    const quotedDir = options.extractDir.includes(" ") ? `"${options.extractDir}"` : options.extractDir;
+    execSync(`tar -xf "${zipPath}" -C "${tempDir}" ${quotedDir}`, {
+      stdio: "pipe",
+      maxBuffer: 50 * 1024 * 1024,
+    });
+  } else {
+    const quotedMember = memberPath.includes(" ") ? `"${memberPath}"` : memberPath;
+    execSync(`tar -xf "${zipPath}" -C "${tempDir}" ${quotedMember}`, {
+      stdio: "pipe",
+      maxBuffer: 50 * 1024 * 1024,
+    });
+  }
+  let extracted = null;
+  if (options.extractDir) {
+    extracted = findFileMatching(
+      tempDir,
+      (name) => /SHEET\.xlsx$/i.test(name) && /studiestr/i.test(name)
+    );
+    if (!extracted) throw new Error(`Extracted member missing under: ${options.extractDir}`);
+  } else {
+    extracted = path.join(tempDir, memberPath);
+    try {
+      await fs.access(extracted);
+    } catch {
+      let fallback = findFileBySuffix(tempDir, path.basename(destPath));
+      if (!fallback) {
+        fallback = findFileMatching(
+          tempDir,
+          (name) => /SHEET\.xlsx$/i.test(name) && /studiestr/i.test(name)
+        );
+      }
+      if (!fallback) throw new Error(`Extracted member missing: ${memberPath}`);
+      extracted = fallback;
+    }
+  }
   await fs.mkdir(path.dirname(destPath), { recursive: true });
   await fs.copyFile(extracted, destPath);
 }
@@ -182,6 +363,220 @@ async function unpackNestedZip(nestedZipPath, outSubdir) {
     await fs.copyFile(src, dest);
   }
   return shpMembers.map((m) => path.join(outSubdir, path.basename(m)));
+}
+
+async function unpackShapefileFromZip(zipPath, memberPattern, outSubdir) {
+  const members = listZipMembers(zipPath);
+  const shpMember = members.find((m) => memberPattern.test(m) && /\.shp$/i.test(m));
+  if (!shpMember) return [];
+  const normShp = shpMember.replace(/\\/g, "/");
+  const dir = normShp.slice(0, normShp.lastIndexOf("/"));
+  const baseName = path.basename(normShp, ".shp");
+  const sidecars = members.filter((m) => {
+    const norm = m.replace(/\\/g, "/");
+    if (!norm.startsWith(`${dir}/`)) return false;
+    const bn = path.basename(norm);
+    return bn.toLowerCase().startsWith(baseName.toLowerCase());
+  });
+  const tempDir = path.join(OUT_DIR, ".extract-tmp", "shp", path.basename(zipPath, ".zip"));
+  await fs.mkdir(tempDir, { recursive: true });
+  for (const member of sidecars) {
+    const quoted = member.includes(" ") ? `"${member}"` : member;
+    execSync(`tar -xf "${zipPath}" -C "${tempDir}" ${quoted}`, { stdio: "pipe", maxBuffer: 50 * 1024 * 1024 });
+  }
+  const written = [];
+  const walk = async (dir) => {
+    for (const entry of await fs.readdir(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) await walk(full);
+      else if (/\.(shp|dbf|shx|prj|cpg|qmd)$/i.test(entry.name)) {
+        const dest = path.join(OUT_DIR, outSubdir, entry.name);
+        await fs.mkdir(path.dirname(dest), { recursive: true });
+        await fs.copyFile(full, dest);
+        written.push(path.join(outSubdir, entry.name));
+      }
+    }
+  };
+  await walk(tempDir);
+  return written;
+}
+
+async function unpackManualCounts2025(zipPath) {
+  const members = listZipMembers(zipPath);
+  const files = members.filter(
+    (m) =>
+      /Manual Counts 2025 Medieval City\//i.test(m) &&
+      /\.xlsx$/i.test(m) &&
+      !m.includes("__MACOSX")
+  );
+  const tempDir = path.join(OUT_DIR, ".extract-tmp", "manual-2025");
+  await fs.mkdir(tempDir, { recursive: true });
+  const written = [];
+  for (const member of files) {
+    const quoted = member.includes(" ") ? `"${member}"` : member;
+    execSync(`tar -xf "${zipPath}" -C "${tempDir}" ${quoted}`, { stdio: "pipe", maxBuffer: 50 * 1024 * 1024 });
+  }
+  const walk = async (dir) => {
+    for (const entry of await fs.readdir(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) await walk(full);
+      else if (/\.xlsx$/i.test(entry.name)) {
+        const dest = path.join(OUT_DIR, "Copenhagen/Manual Counts/2025", entry.name);
+        await fs.mkdir(path.dirname(dest), { recursive: true });
+        await fs.copyFile(full, dest);
+        written.push(`Copenhagen/Manual Counts/2025/${entry.name}`);
+      }
+    }
+  };
+  await walk(tempDir);
+  return written;
+}
+
+async function unpackMediaFromZip(zipPath) {
+  const members = listZipMembers(zipPath);
+  const mediaMembers = members.filter(
+    (m) =>
+      (/2024 Images-Monica\//i.test(m) || /iRap safety ranking system\//i.test(m)) &&
+      /\.(jpg|jpeg|png)$/i.test(m) &&
+      !m.includes("__MACOSX")
+  );
+  const tempDir = path.join(OUT_DIR, ".extract-tmp", "cph-media");
+  await fs.mkdir(tempDir, { recursive: true });
+  const written = [];
+  for (const member of mediaMembers) {
+    const quoted = member.includes(" ") ? `"${member}"` : member;
+    try {
+      execSync(`tar -xf "${zipPath}" -C "${tempDir}" ${quoted}`, { stdio: "pipe", maxBuffer: 50 * 1024 * 1024 });
+    } catch {
+      continue;
+    }
+  }
+  const walk = async (dir) => {
+    for (const entry of await fs.readdir(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) await walk(full);
+      else if (/\.(jpg|jpeg|png)$/i.test(entry.name)) {
+        const safeName = entry.name.replace(/[^a-zA-Z0-9._-]+/g, "_").toLowerCase();
+        const dest = path.join(OUT_DIR, "Copenhagen/media", safeName);
+        await fs.mkdir(path.dirname(dest), { recursive: true });
+        await fs.copyFile(full, dest);
+        written.push(`Copenhagen/media/${safeName}`);
+      }
+    }
+  };
+  await walk(tempDir);
+  return written;
+}
+
+function trikalaSafeFileName(name) {
+  return name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9._-]+/g, "_")
+    .replace(/_+/g, "_")
+    .toLowerCase();
+}
+
+async function unpackTrikalaMedia(zipPath) {
+  const members = listZipMembers(zipPath);
+  const mediaMembers = members.filter(
+    (m) => /\.(jpg|jpeg|png)$/i.test(m) && !m.includes("__MACOSX") && !m.endsWith("/")
+  );
+  const tempDir = path.join(OUT_DIR, ".extract-tmp", "tri-media");
+  await fs.mkdir(tempDir, { recursive: true });
+  const written = [];
+  for (const member of mediaMembers) {
+    const quoted = member.includes(" ") ? `"${member}"` : member;
+    try {
+      execSync(`tar -xf "${zipPath}" -C "${tempDir}" ${quoted}`, { stdio: "pipe", maxBuffer: 50 * 1024 * 1024 });
+    } catch {
+      continue;
+    }
+  }
+  const walk = async (dir) => {
+    for (const entry of await fs.readdir(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) await walk(full);
+      else if (/\.(jpg|jpeg|png)$/i.test(entry.name)) {
+        const safeName = trikalaSafeFileName(entry.name);
+        const dest = path.join(OUT_DIR, "Trikala/media", safeName);
+        await fs.mkdir(path.dirname(dest), { recursive: true });
+        await fs.copyFile(full, dest);
+        written.push(`Trikala/media/${safeName}`);
+      }
+    }
+  };
+  await walk(tempDir);
+  return written;
+}
+
+async function unpackTrikalaDocs(zipPath) {
+  const members = listZipMembers(zipPath);
+  const docMembers = members.filter(
+    (m) => /\.(pdf|docx|pptx)$/i.test(m) && !m.includes("__MACOSX") && !m.endsWith("/")
+  );
+  const tempDir = path.join(OUT_DIR, ".extract-tmp", "tri-docs");
+  await fs.mkdir(tempDir, { recursive: true });
+  const written = [];
+  for (const member of docMembers) {
+    const quoted = member.includes(" ") ? `"${member}"` : member;
+    try {
+      execSync(`tar -xf "${zipPath}" -C "${tempDir}" ${quoted}`, { stdio: "pipe", maxBuffer: 50 * 1024 * 1024 });
+    } catch {
+      continue;
+    }
+  }
+  const walk = async (dir) => {
+    for (const entry of await fs.readdir(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) await walk(full);
+      else if (/\.(pdf|docx|pptx)$/i.test(entry.name)) {
+        const safeName = trikalaSafeFileName(entry.name);
+        const dest = path.join(OUT_DIR, "Trikala/docs", safeName);
+        await fs.mkdir(path.dirname(dest), { recursive: true });
+        await fs.copyFile(full, dest);
+        written.push(`Trikala/docs/${safeName}`);
+      }
+    }
+  };
+  await walk(tempDir);
+  return written;
+}
+
+async function unpackCopenhagenDocs(zipPath) {
+  const members = listZipMembers(zipPath);
+  const docMembers = members.filter(
+    (m) =>
+      (/Evaluering af oml/i.test(m) || /Copenhagen Intervention Evaluation Plan/i.test(m)) &&
+      /\.(pdf|docx)$/i.test(m) &&
+      !m.includes("__MACOSX")
+  );
+  const tempDir = path.join(OUT_DIR, ".extract-tmp", "cph-docs");
+  await fs.mkdir(tempDir, { recursive: true });
+  const written = [];
+  for (const member of docMembers) {
+    const quoted = member.includes(" ") ? `"${member}"` : member;
+    try {
+      execSync(`tar -xf "${zipPath}" -C "${tempDir}" ${quoted}`, { stdio: "pipe", maxBuffer: 50 * 1024 * 1024 });
+    } catch {
+      continue;
+    }
+  }
+  const walk = async (dir) => {
+    for (const entry of await fs.readdir(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) await walk(full);
+      else if (/\.(pdf|docx)$/i.test(entry.name)) {
+        const safeName = entry.name.replace(/[^a-zA-Z0-9._-]+/g, "_").toLowerCase();
+        const dest = path.join(OUT_DIR, "Copenhagen/docs", safeName);
+        await fs.mkdir(path.dirname(dest), { recursive: true });
+        await fs.copyFile(full, dest);
+        written.push(`Copenhagen/docs/${safeName}`);
+      }
+    }
+  };
+  await walk(tempDir);
+  return written;
 }
 
 async function main() {
@@ -218,7 +613,7 @@ async function main() {
 
     const destPath = path.join(OUT_DIR, item.dest);
     try {
-      await extractMember(zipPath, member, destPath);
+      await extractMember(zipPath, member, destPath, item.extractDir ? { extractDir: item.extractDir } : {});
       const stat = await fs.stat(destPath);
       manifest.files.push({
         label: item.label,
@@ -256,6 +651,140 @@ async function main() {
   } catch (err) {
     manifest.errors.push({
       label: "zar-intervention-areas-shapefile",
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+
+  const triZip = path.join(DROP_DIR, "Trikala Lighthouse-20260625T113913Z-3-001.zip");
+  try {
+    await fs.access(triZip);
+    try {
+      const triMedia = await unpackTrikalaMedia(triZip);
+      manifest.files.push({
+        label: "tri-media-gallery",
+        dest: "Trikala/media/*",
+        publicPath: "/sharepoint-data/Trikala/media/",
+        bytes: triMedia.length,
+        status: triMedia.length ? "ok" : "empty",
+        members: triMedia.slice(0, 8),
+        memberCount: triMedia.length,
+      });
+      console.log(`OK  tri-media-gallery (${triMedia.length} images)`);
+    } catch (err) {
+      manifest.errors.push({
+        label: "tri-media-gallery",
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+
+    try {
+      const triDocs = await unpackTrikalaDocs(triZip);
+      manifest.files.push({
+        label: "tri-docs-bundle",
+        dest: "Trikala/docs/*",
+        publicPath: "/sharepoint-data/Trikala/docs/",
+        bytes: triDocs.length,
+        status: triDocs.length ? "ok" : "empty",
+        members: triDocs.slice(0, 8),
+        memberCount: triDocs.length,
+      });
+      console.log(`OK  tri-docs-bundle (${triDocs.length} documents)`);
+    } catch (err) {
+      manifest.errors.push({
+        label: "tri-docs-bundle",
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  } catch (err) {
+    manifest.errors.push({
+      label: "tri-bulk-extract",
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+
+  const cphZip = path.join(DROP_DIR, "Copenhagen Lighthouse-20260625T113853Z-3-001.zip");
+  try {
+    await fs.access(cphZip);
+    try {
+      const parkingShp = await unpackShapefileFromZip(
+        cphZip,
+        /P-pladser_.*\.shp$/i,
+        "Copenhagen/Technical drawing - Medieval City/parking-shp"
+      );
+      manifest.files.push({
+        label: "cph-parking-shapefile",
+        dest: "Copenhagen/Technical drawing - Medieval City/parking-shp/*",
+        publicPath: "/sharepoint-data/Copenhagen/Technical drawing - Medieval City/parking-shp/",
+        bytes: parkingShp.length,
+        status: parkingShp.length ? "ok" : "empty",
+        members: parkingShp,
+      });
+      console.log(`OK  cph-parking-shapefile (${parkingShp.length} sidecar files)`);
+    } catch (err) {
+      manifest.errors.push({
+        label: "cph-parking-shapefile",
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+
+    try {
+      const manual2025 = await unpackManualCounts2025(cphZip);
+      manifest.files.push({
+        label: "cph-manual-counts-2025-bulk",
+        dest: "Copenhagen/Manual Counts/2025/*",
+        publicPath: "/sharepoint-data/Copenhagen/Manual Counts/2025/",
+        bytes: manual2025.length,
+        status: manual2025.length ? "ok" : "empty",
+        members: manual2025.slice(0, 5),
+        memberCount: manual2025.length,
+      });
+      console.log(`OK  cph-manual-counts-2025-bulk (${manual2025.length} workbooks)`);
+    } catch (err) {
+      manifest.errors.push({
+        label: "cph-manual-counts-2025-bulk",
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+
+    try {
+      const media = await unpackMediaFromZip(cphZip);
+      manifest.files.push({
+        label: "cph-media-gallery",
+        dest: "Copenhagen/media/*",
+        publicPath: "/sharepoint-data/Copenhagen/media/",
+        bytes: media.length,
+        status: media.length ? "ok" : "empty",
+        members: media.slice(0, 8),
+        memberCount: media.length,
+      });
+      console.log(`OK  cph-media-gallery (${media.length} images)`);
+    } catch (err) {
+      manifest.errors.push({
+        label: "cph-media-gallery",
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+
+    try {
+      const docs = await unpackCopenhagenDocs(cphZip);
+      manifest.files.push({
+        label: "cph-partner-docs",
+        dest: "Copenhagen/docs/*",
+        publicPath: "/sharepoint-data/Copenhagen/docs/",
+        bytes: docs.length,
+        status: docs.length ? "ok" : "empty",
+        members: docs,
+      });
+      console.log(`OK  cph-partner-docs (${docs.length} files)`);
+    } catch (err) {
+      manifest.errors.push({
+        label: "cph-partner-docs",
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  } catch (err) {
+    manifest.errors.push({
+      label: "cph-bulk-extract",
       error: err instanceof Error ? err.message : String(err),
     });
   }

@@ -1,0 +1,326 @@
+{
+  "generatedAt": "2026-07-01T13:13:41.253Z",
+  "zip": "Trikala Lighthouse-20260625T113913Z-3-001.zip",
+  "totals": {
+    "allFiles": 50,
+    "xlsx": 8,
+    "images": 13,
+    "pdfs": 19
+  },
+  "folderSummary": [
+    {
+      "folder": "1. BASELINE Data from ETrikala/Baseline data",
+      "count": 23
+    },
+    {
+      "folder": "1. BASELINE Data from ETrikala/post intervention data",
+      "count": 18
+    },
+    {
+      "folder": "2. POST IMPLEMENTATION Data from Trikala/",
+      "count": 1
+    },
+    {
+      "folder": "Meeting attendance_ETrikala_230525.xlsx",
+      "count": 1
+    },
+    {
+      "folder": "Meeting Notes_ETrikala_23rd May 2025.docx",
+      "count": 1
+    },
+    {
+      "folder": "Trikala Intervention Evaluation Plan_DRAFT.docx",
+      "count": 1
+    },
+    {
+      "folder": "1. BASELINE Data from ETrikala/ELABORATOR_sensorKit poster.pdf",
+      "count": 1
+    },
+    {
+      "folder": "Transcript_ELABORATOR_  One2One E-Trikala City engagements.docx",
+      "count": 1
+    },
+    {
+      "folder": "smart_citizen_kit_environmental_metrics.xlsx",
+      "count": 1
+    },
+    {
+      "folder": "1. BASELINE Data from ETrikala/Trikala CCC - Commitments.pdf",
+      "count": 1
+    },
+    {
+      "folder": "1. BASELINE Data from ETrikala/Trikala CCC - Action plan.pdf",
+      "count": 1
+    }
+  ],
+  "keyFilesInspected": [
+    {
+      "path": "Meeting attendance_ETrikala_230525.xlsx",
+      "type": "xlsx",
+      "sheetNames": [
+        "One2One city Engagements_May 25"
+      ],
+      "sheets": {
+        "One2One city Engagements_May 25": {
+          "rowCount": 17,
+          "headers": [
+            "ELABORATOR  ",
+            "__EMPTY",
+            "__EMPTY_1",
+            "__EMPTY_2"
+          ],
+          "headerCount": 4
+        }
+      }
+    },
+    {
+      "path": "1. BASELINE Data from ETrikala/Baseline data/baseline data of the smart crossing on line survey_english.xlsx",
+      "type": "xlsx",
+      "sheetNames": [
+        "1 απαντήσεις φόρμας"
+      ],
+      "sheets": {
+        "1 απαντήσεις φόρμας": {
+          "rowCount": 143,
+          "headers": [
+            "Timestamp",
+            "1. How old are you",
+            "2. You are (W= woman & M= male)",
+            "3. You are ",
+            "4. How often do you use this crossing?(daily, several times a week, a few times per month, rarely)",
+            "5. What is your main reason for using it?",
+            "6. How would you rate the current condition of the crossing? (from 1=very bad to 4= excellent)",
+            "7. How safe do you feel when using the crossing? (from 1=not at all safe to 4= completely safe)",
+            " 8. In your opinion, how well maintained is the crossing? (from 1= not at all well to 4= very well)",
+            "9. From your personal experience, have you yourself encountered, or do you know someone who has encountered, a dangerous situation at the crossing (e.g., accidents, dangerous driving by others, etc.)?",
+            "10. Which factors make you feel unsafe when using this particular crossing? (You may select more than one option)",
+            "11. What is your overall impression of the area near the crossing in terms of accessibility? (Are there obstacles such as limited access to benches, ramps, crossings, etc.?) (from 1=very bad to 4=very good)",
+            "  12. How is the area connected to other parts of the city? Is there good access to public transportation? (from 1=very bad to 4=very good)",
+            "13. Are there any bicycle lanes nearby?;",
+            "14. How safe is the road for a cyclist? (from 1=not at all safe to 4=completely safe)",
+            "15. How can the area become more accessible and sustainable for everyone? (e.g., greenery, benches, meeting spaces, ramps, better lighting, etc.)",
+            "16. What are your suggestions for improving safety at the crossing?"
+          ],
+          "headerCount": 17
+        }
+      }
+    },
+    {
+      "path": "1. BASELINE Data from ETrikala/Baseline data/ELABORATOR_ Women Mobility Questionnaire (Responses).xlsx",
+      "type": "xlsx",
+      "sheetNames": [
+        "Form responses 1"
+      ],
+      "sheets": {
+        "Form responses 1": {
+          "rowCount": 117,
+          "headers": [
+            "Timestamp",
+            "1. Πόσο χρονών είσαι;",
+            "2. Φύλο (το συγκεκριμένο ερωτηματολόγιο στοχεύει στη διερεύνηση των αναγκών των γυναικών)",
+            "3. Πού μένεις;",
+            "Αν μένεις σε χωριό κοντά στα Τρίκαλα, παρακαλώ γράψε το όνομα του χωριού",
+            "4. Υπάρχει/ουν άτομο/α στην οικογένειά σου/φιλικό σου περιβάλλον, \r\nτο/τα οποίο/α χρειάζεται να φροντίζεις σε καθημερινή βάση (π.χ. παιδί, άτομο με αναπηρία, άτομο μεγαλύτερης ηλικίας);",
+            "5. Ποιες είναι οι καθημερινές δραστηριότητες που απαιτούν τη μετακίνησή σου;",
+            "6. Πώς επιλέγεις να μετακινείσαι καθημερινά και με τι συχνότητα; [Ποδήλατο]",
+            "6. Πώς επιλέγεις να μετακινείσαι καθημερινά και με τι συχνότητα; [Περπάτημα]",
+            "6. Πώς επιλέγεις να μετακινείσαι καθημερινά και με τι συχνότητα; [Αυτοκίνητο]",
+            "6. Πώς επιλέγεις να μετακινείσαι καθημερινά και με τι συχνότητα; [Μηχανάκι]",
+            "6. Πώς επιλέγεις να μετακινείσαι καθημερινά και με τι συχνότητα; [Λεωφορείο]",
+            "6. Πώς επιλέγεις να μετακινείσαι καθημερινά και με τι συχνότητα; [Άλλο (π.χ. πατίνι)]",
+            "7. Γιατί προτιμάς αυτόν τον τρόπο μετακίνησης έναντι κάποιου άλλου;",
+            "8. Πόσο ασφαλής αισθάνεσαι όταν μετακινείσαι στην πόλη κατά τη διάρκεια της ημέρας; (1. Καθόλου,  2. Λίγο, 3. Αρκετά, 4. Πολύ)",
+            "9. Πόσο ασφαλής αισθάνεσαι όταν μετακινείσαι στην πόλη κατά τη διάρκεια της νύχτας; (1. Καθόλου,  2. Λίγο, 3. Αρκετά, 4. Πολύ)",
+            "10. Έχεις βιώσει ποτέ κάποια μορφή παρενόχλησης κατά την καθημερινή σου μετακίνηση (π.χ. σφυρίγματα, ανεπιθύμητα σχόλια, ανεπιθύμητη σωματική επαφή, παρακολούθηση);",
+            "11. Υπάρχουν διαδρομές/δρόμοι/περιοχές που αποφεύγεις όταν μετακινείσαι εντός, από/προς την πόλη των Τρικάλων (κατά τη διάρκεια της μέρας ή/και της νύχτας);",
+            "Αν ναι, γιατί;",
+            "12. Τι αλλαγές θα ήθελες να δεις στο δίκτυο κινητικότητας ώστε να νιώθεις πιο άνετα και ασφαλής να μετακινείσαι με πιο βιώσιμους τρόπους μετακίνησης (π.χ. δημόσια συγκοινωνία, ποδήλατο, περπάτημα) εντός της πόλης των Τρικάλων αλλά και από/προς τα Τρίκαλα;"
+          ],
+          "headerCount": 21
+        }
+      }
+    },
+    {
+      "path": "1. BASELINE Data from ETrikala/Baseline data/baseline data on bike safety from the on line syrvey_english.xlsx",
+      "type": "xlsx",
+      "sheetNames": [
+        "1 απαντήσεις φόρμας",
+        "Φύλλο1"
+      ],
+      "sheets": {
+        "1 απαντήσεις φόρμας": {
+          "rowCount": 310,
+          "headers": [
+            "Timestamp",
+            "1. How old are you",
+            "2. You are",
+            "3. Where do you live",
+            "What mode of transport do you use most often in your daily life?",
+            "5. How often do you use a bicycle during the week? (never, 1-2, 4-5, almost daily)",
+            "6. What is the main use of your bicycle? You can choose more than one",
+            "7. When you are cycling, how often do you use the bike lane? (never, a little, all the time)",
+            "8. How safe do you feel when using the bike lane? (from 1= not at all safe to 4=very safe)",
+            "9. How would you evaluate the condition of the bike lane? (excellent, good, moderate, bad)",
+            "10. Which factors make you feel unsafe on the bike lane? (you can choose more than one)",
+            "11. Have you ever encountered dangerous situations on the bike lane (e.g., accidents, dangerous driving by others)?",
+            "12. How safe do you generally feel when cycling?",
+            "13. Are there specific safety issues that arise when cycling in the city?",
+            "14. If yes, which are they?",
+            "15. How safe do you feel when cycling at night? (from 1=not at all safe to 5= very safe) ",
+            "16. How would you describe the level of noise and traffic congestion in the city? (from 1=very bad to 4=very good)",
+            "17. Overall, how would you describe the level of accessibility in the city?(from 1=very low to 4=very high)",
+            "18. Do you have any suggestions on what should be done so that you feel safer as a cyclist?"
+          ],
+          "headerCount": 19
+        },
+        "Φύλλο1": {
+          "rowCount": 308,
+          "headers": [
+            "44"
+          ],
+          "headerCount": 1
+        }
+      }
+    },
+    {
+      "path": "1. BASELINE Data from ETrikala/post intervention data/1st Intervention_Smart crossing/Post Intervention _ELABORATOR_ Smart crossing_raw data eng.xlsx",
+      "type": "xlsx",
+      "sheetNames": [
+        "1 απαντήσεις φόρμας"
+      ],
+      "sheets": {
+        "1 απαντήσεις φόρμας": {
+          "rowCount": 65,
+          "headers": [
+            "Timestamp",
+            "1. How old are you?",
+            "2. Are you?",
+            "3. Are you?",
+            "4. How often do you use this particular crossing?",
+            "5.What is the main reason you use it?",
+            "6. How would you evaluate the current condition of the crossing?",
+            "7. How safe do you feel each time you use the crossing?",
+            "8. In your opinion, how well is the crossing maintained? ",
+            "9. From your personal experience, have you yourself encountered, or do you know someone who has encountered, a dangerous situation at the crossing (e.g., accidents, reckless driving by others, etc.)?",
+            "10. Which factors make you feel unsafe when using this particular crossing? (You may select more than one option.)",
+            "11. What is your overall impression of the area near the crossing in terms of accessibility? (Are there obstacles, e.g., limited access to benches, ramps, crossings, etc.)?",
+            "12. How is the area connected to other parts of the city? Is there good access to public transportation?",
+            "13. Are there any bike lanes nearby?",
+            "14.  How safe is the road for a cyclist?",
+            "15. How can the area become more accessible and sustainable for everyone? (e.g., greenery, benches, meeting spaces, ramps, better lighting, etc.). Please give a brief answer.",
+            "16. What are your suggestions for improving safety at the crossing? Please give a brief answer."
+          ],
+          "headerCount": 17
+        }
+      }
+    },
+    {
+      "path": "smart_citizen_kit_environmental_metrics.xlsx",
+      "type": "xlsx",
+      "sheetNames": [
+        "Feuil1"
+      ],
+      "sheets": {
+        "Feuil1": {
+          "rowCount": 20,
+          "headers": [
+            "Sensor",
+            "CO2",
+            "eCO2",
+            "O3",
+            "NO2",
+            "PM1",
+            "PM2.5",
+            "PM4",
+            "PM10",
+            "Typical particule size",
+            "Noise",
+            "In/outdoor",
+            "Status",
+            "Starting date",
+            "Ending date",
+            "Coordinates"
+          ],
+          "headerCount": 16
+        }
+      }
+    },
+    {
+      "path": "1. BASELINE Data from ETrikala/post intervention data/4 Intervention_SMARTA app/Survey of SMARTA app_row data.xlsx",
+      "type": "xlsx",
+      "sheetNames": [
+        "Sheet1"
+      ],
+      "sheets": {
+        "Sheet1": {
+          "rowCount": 118,
+          "headers": [
+            "Timestamp",
+            "1. The application is well organized and user-friendly",
+            "2. .Navigation within the application is simple and understandable",
+            "3. The information provided is clear and informative",
+            "4. The application meets my mobility needs in Trikala",
+            "5. The application supports the use of sustainable mobility infrastructure",
+            "6. The application provides reliable information about bus routes and stops",
+            "7. The application helps me locate shared bike stations",
+            "8. The application helps me locate parking spaces",
+            "9.The application performs well (speed and technical reliability)",
+            "10. The application is reliable in real-life transport condition",
+            "11.The application is accessible for vulnerable groups (e.g. elderly, people with disabilities)",
+            "12. The information provided by the application (buses, shared bicycles, parking, cycling lanes) adequately covers the mobility needs of vulnerable social groups in the city of Trikala.",
+            "13.The application is user-friendly and accessible for migrants living in the city of Trikala (e.g. language support, clear symbols)",
+            "14. The application takes into account the mobility needs of women in the city of Trikala (e.g. sense of safety, well-lit routes, accessibility).",
+            "15.The overall user experience of the application was satisfactory.",
+            "16. I would recommend the application to other residents of my city.",
+            "17. Do you have any additional comments, observations, or suggestions for improving the application?"
+          ],
+          "headerCount": 18
+        }
+      }
+    },
+    {
+      "path": "1. BASELINE Data from ETrikala/post intervention data/3rd Intervention_ Redesign bike lanes/Post Intervention_ELABORATOR_Cycling Safety_Raw dataEnglish_headers.xlsx",
+      "type": "xlsx",
+      "sheetNames": [
+        "1 απαντήσεις φόρμας"
+      ],
+      "sheets": {
+        "1 απαντήσεις φόρμας": {
+          "rowCount": 277,
+          "headers": [
+            "Timestamp",
+            "1. How old are you?",
+            "2. Gender ",
+            "3. Where do you live?",
+            "4. What mode of transport do you use most frequently in your daily life?",
+            "5. How often do you use a bicycle during the week?",
+            "6. What is the primary purpose of your bicycle use?",
+            "7. When riding a bicycle, how often do you use the bicycle lane?",
+            "8. How safe do you feel when using the bicycle lane? (1=not at all safe to 4= very safe)",
+            "9. How would you rate the condition of the bicycle lane",
+            "10. Which factors make you feel unsafe when using the bicycle lane?",
+            "11. Have you ever experienced dangerous situations while using the bicycle lane (e.g. accidents or unsafe behaviour by other road users)?",
+            "12. How safe do you generally feel when travelling by bicycle? (from 1=not at all safe to 4= completely safe)",
+            "13. Are there any specific safety issues that arise when cycling in the city",
+            "14. If yes, which ones?",
+            "15.How safe do you feel when cycling at night? (from 1=not at all safe to 5= completely safe)",
+            "16. How would you describe the level of noise and traffic congestion in the city? (from 1=very bad to 4=very good)",
+            "17. How would you describe the overall level of accessibility in the city (from 1=very low to 4=very high)",
+            "18. Suggestions to improve cyclist safety"
+          ],
+          "headerCount": 19
+        }
+      }
+    }
+  ],
+  "allXlsxPaths": [
+    "Meeting attendance_ETrikala_230525.xlsx",
+    "1. BASELINE Data from ETrikala/Baseline data/baseline data of the smart crossing on line survey_english.xlsx",
+    "1. BASELINE Data from ETrikala/Baseline data/ELABORATOR_ Women Mobility Questionnaire (Responses).xlsx",
+    "1. BASELINE Data from ETrikala/Baseline data/baseline data on bike safety from the on line syrvey_english.xlsx",
+    "1. BASELINE Data from ETrikala/post intervention data/1st Intervention_Smart crossing/Post Intervention _ELABORATOR_ Smart crossing_raw data eng.xlsx",
+    "smart_citizen_kit_environmental_metrics.xlsx",
+    "1. BASELINE Data from ETrikala/post intervention data/4 Intervention_SMARTA app/Survey of SMARTA app_row data.xlsx",
+    "1. BASELINE Data from ETrikala/post intervention data/3rd Intervention_ Redesign bike lanes/Post Intervention_ELABORATOR_Cycling Safety_Raw dataEnglish_headers.xlsx"
+  ]
+}

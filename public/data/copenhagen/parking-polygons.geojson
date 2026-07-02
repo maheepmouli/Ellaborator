@@ -1,0 +1,5320 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 183,
+        "Vejkode": 5144,
+        "Vejnavn": "Ny Vestergade",
+        "Husnummer": "13",
+        "OmrÃ¥de": 2,
+        "Parkering": "BesÃ¸gsplads",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": "BesÃ¸gsplads",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651898.0968554899,
+            1172469.7524862029
+          ],
+          [
+            651893.0287332642,
+            1172466.358992704
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 182,
+        "Vejkode": 5144,
+        "Vejnavn": "Ny Vestergade",
+        "Husnummer": "Overfor nr. 11",
+        "OmrÃ¥de": 2,
+        "Parkering": "BesÃ¸gsplads",
+        "Antal_plad": 2,
+        "Restriktio": null,
+        "Vejside": null,
+        "P_ordning": "BesÃ¸gsplads",
+        "BemÃ¦rknin": "2 vogne"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651910.9295825979,
+            1172488.263327052
+          ],
+          [
+            651922.6540365834,
+            1172496.0945047396
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 181,
+        "Vejkode": 5144,
+        "Vejnavn": "Ny Vestergade",
+        "Husnummer": "Overfor nr. 1",
+        "OmrÃ¥de": 2,
+        "Parkering": "Handicapplads",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": null,
+        "P_ordning": "Handicapparkering",
+        "BemÃ¦rknin": "JF 23 812"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651970.4463785671,
+            1172528.0037927278
+          ],
+          [
+            651975.1177804379,
+            1172531.1227256237
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 180,
+        "Vejkode": 5116,
+        "Vejnavn": "Ny Kongensgade",
+        "Husnummer": "4",
+        "OmrÃ¥de": 2,
+        "Parkering": "Almindelig",
+        "Antal_plad": 2,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652035.2678681377,
+            1172461.8298658244
+          ],
+          [
+            652024.1844775532,
+            1172454.2454506755
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 179,
+        "Vejkode": 5116,
+        "Vejnavn": "Ny Kongensgade",
+        "Husnummer": "10",
+        "OmrÃ¥de": 2,
+        "Parkering": "Almindelig",
+        "Antal_plad": 6,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651984.2980249732,
+            1172426.9558700428
+          ],
+          [
+            651955.4696549575,
+            1172407.2320270543
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 178,
+        "Vejkode": 1956,
+        "Vejnavn": "Frederiksholms Kanal",
+        "Husnummer": "24",
+        "OmrÃ¥de": 7,
+        "Parkering": "Almindelig",
+        "Antal_plad": 2,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-17 Reserveret til erhvervskÃ¸retÃ¸jer pÃ¥ gule nummerplader - Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652058.0229744018,
+            1172447.334336458
+          ],
+          [
+            652061.1292439979,
+            1172442.9307628602
+          ],
+          [
+            652065.6662864047,
+            1172436.4988677728
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 177,
+        "Vejkode": 1956,
+        "Vejnavn": "Frederiksholms Kanal",
+        "Husnummer": "24",
+        "OmrÃ¥de": 7,
+        "Parkering": "Almindelig",
+        "Antal_plad": 2,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-17 Reserveret til erhvervskÃ¸retÃ¸jer pÃ¥ gule nummerplader - Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652079.1112661083,
+            1172417.4387199616
+          ],
+          [
+            652068.9086550636,
+            1172431.9023546316
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 176,
+        "Vejkode": 1956,
+        "Vejnavn": "Frederiksholms Kanal",
+        "Husnummer": "26",
+        "OmrÃ¥de": 7,
+        "Parkering": "Almindelig",
+        "Antal_plad": 2,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652082.6348487143,
+            1172412.4162632357
+          ],
+          [
+            652088.8529876356,
+            1172403.5126488935
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 175,
+        "Vejkode": 1956,
+        "Vejnavn": "Frederiksholms Kanal",
+        "Husnummer": "28",
+        "OmrÃ¥de": 7,
+        "Parkering": "Almindelig",
+        "Antal_plad": 4,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652091.8453928385,
+            1172399.2272937736
+          ],
+          [
+            652105.7948237576,
+            1172379.2811418383
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 174,
+        "Vejkode": 1956,
+        "Vejnavn": "Frederiksholms Kanal",
+        "Husnummer": "28",
+        "OmrÃ¥de": 7,
+        "Parkering": "Almindelig",
+        "Antal_plad": 4,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652114.9062206225,
+            1172366.2528464715
+          ],
+          [
+            652127.8871002599,
+            1172347.6916163391
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 173,
+        "Vejkode": 1956,
+        "Vejnavn": "Frederiksholms Kanal",
+        "Husnummer": "28",
+        "OmrÃ¥de": 7,
+        "Parkering": "Almindelig",
+        "Antal_plad": 4,
+        "Restriktio": "TidsbegrÃ¦nsning",
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "30 min 7-9 15-17"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652131.7449834625,
+            1172342.1752676829
+          ],
+          [
+            652137.1310983036,
+            1172334.4737158716
+          ],
+          [
+            652144.5997794986,
+            1172323.794323233
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 172,
+        "Vejkode": 1956,
+        "Vejnavn": "Frederiksholms Kanal",
+        "Husnummer": "12",
+        "OmrÃ¥de": 7,
+        "Parkering": "Handicapplads",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": "Handicapparkering",
+        "BemÃ¦rknin": "EB 30 607"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651974.2186967318,
+            1172566.2066455036
+          ],
+          [
+            651977.1624061761,
+            1172562.0419644415
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 171,
+        "Vejkode": 1956,
+        "Vejnavn": "Frederiksholms Kanal",
+        "Husnummer": "12",
+        "OmrÃ¥de": 7,
+        "Parkering": "Erhverv",
+        "Antal_plad": 2,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-17 Reserveret til erhvervskÃ¸retÃ¸jer pÃ¥ gule nummerplader - Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651949.0270104224,
+            1172601.8329467126
+          ],
+          [
+            651955.5804116642,
+            1172592.5660468985
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 170,
+        "Vejkode": 1388,
+        "Vejnavn": "Dybensgade",
+        "Husnummer": "5",
+        "OmrÃ¥de": 9,
+        "Parkering": "Almindelig",
+        "Antal_plad": 2,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652459.4091717657,
+            1172930.7809184135
+          ],
+          [
+            652449.0479959962,
+            1172925.7916220988
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 169,
+        "Vejkode": 264,
+        "Vejnavn": "Asylgade",
+        "Husnummer": "7",
+        "OmrÃ¥de": 9,
+        "Parkering": "Almindelig",
+        "Antal_plad": 3,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652486.7190883199,
+            1172920.734113036
+          ],
+          [
+            652479.1704439217,
+            1172934.6142416133
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 168,
+        "Vejkode": 4092,
+        "Vejnavn": "Laksegade",
+        "Husnummer": "20",
+        "OmrÃ¥de": 9,
+        "Parkering": "Almindelig",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652432.3683697568,
+            1172883.5613159842
+          ],
+          [
+            652427.8885855735,
+            1172881.3406103146
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 167,
+        "Vejkode": 4092,
+        "Vejnavn": "Laksegade",
+        "Husnummer": "20",
+        "OmrÃ¥de": 9,
+        "Parkering": "Almindelig",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652422.0892181211,
+            1172878.4657646406
+          ],
+          [
+            652416.7133119686,
+            1172875.8008359782
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 166,
+        "Vejkode": 4092,
+        "Vejnavn": "Laksegade",
+        "Husnummer": "28",
+        "OmrÃ¥de": 9,
+        "Parkering": "Erhverv",
+        "Antal_plad": 3,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-17 Reserveret til erhvervskÃ¸retÃ¸jer pÃ¥ gule nummerplader - Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652394.1514037461,
+            1172864.8684724467
+          ],
+          [
+            652378.0017190623,
+            1172856.9196064856
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 165,
+        "Vejkode": 28,
+        "Vejnavn": "Admiralgade",
+        "Husnummer": "29",
+        "OmrÃ¥de": 9,
+        "Parkering": "BesÃ¸gsplads",
+        "Antal_plad": 2,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": "BesÃ¸gsplads",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652380.7074430293,
+            1172820.8001830238
+          ],
+          [
+            652385.478406577,
+            1172812.0107721519
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 164,
+        "Vejkode": 684,
+        "Vejnavn": "Boldhusgade",
+        "Husnummer": "1",
+        "OmrÃ¥de": 9,
+        "Parkering": "Taxi",
+        "Antal_plad": 2,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": "Taxiparkering",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652353.2233342335,
+            1172838.0628079225
+          ],
+          [
+            652344.7152420317,
+            1172831.121346856
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 163,
+        "Vejkode": 684,
+        "Vejnavn": "Boldhusgade",
+        "Husnummer": "8",
+        "OmrÃ¥de": 9,
+        "Parkering": "Ambassade",
+        "Antal_plad": 2,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "Kun kÃ¸retÃ¸jer med Ã¦rinde til Nordisk MinisterrÃ¥d Sekretariat 7-17 (10-15) 2 pladser"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652339.8571265041,
+            1172827.144912223
+          ],
+          [
+            652330.3585826562,
+            1172819.8115865947
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 162,
+        "Vejkode": 4988,
+        "Vejnavn": "Nikolajgade",
+        "Husnummer": "22",
+        "OmrÃ¥de": 9,
+        "Parkering": "Erhverv",
+        "Antal_plad": 1,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-17 Reserveret til erhvervskÃ¸retÃ¸jer pÃ¥ gule nummerplader - Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652386.913121331,
+            1172889.78717845
+          ],
+          [
+            652390.6174648495,
+            1172885.0672378682
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 161,
+        "Vejkode": 1388,
+        "Vejnavn": "Dybensgade",
+        "Husnummer": "16",
+        "OmrÃ¥de": 9,
+        "Parkering": "Erhverv",
+        "Antal_plad": 3,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-17 Reserveret til erhvervskÃ¸retÃ¸jer pÃ¥ gule nummerplader - Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652403.1578952245,
+            1172904.0009997087
+          ],
+          [
+            652417.834586789,
+            1172911.092172018
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 160,
+        "Vejkode": 1388,
+        "Vejnavn": "Dybensgade",
+        "Husnummer": "19",
+        "OmrÃ¥de": 9,
+        "Parkering": "Almindelig",
+        "Antal_plad": 3,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652375.6761728552,
+            1172891.085591262
+          ],
+          [
+            652357.641508664,
+            1172882.4397325006
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 159,
+        "Vejkode": 4988,
+        "Vejnavn": "Nikolajgade",
+        "Husnummer": "18",
+        "OmrÃ¥de": 9,
+        "Parkering": "BesÃ¸gsplads",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": "BesÃ¸gsplads",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652368.3820817551,
+            1172923.547013583
+          ],
+          [
+            652370.4749440687,
+            1172918.9620896645
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 158,
+        "Vejkode": 4992,
+        "Vejnavn": "Nikolaj Plads",
+        "Husnummer": "23",
+        "OmrÃ¥de": 9,
+        "Parkering": "Taxi",
+        "Antal_plad": 2,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": "Taxiparkering",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652350.7181635655,
+            1172944.741829772
+          ],
+          [
+            652339.4327560621,
+            1172940.6626659448
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 157,
+        "Vejkode": 4992,
+        "Vejnavn": "Nikolaj Plads",
+        "Husnummer": "12",
+        "OmrÃ¥de": 9,
+        "Parkering": "Erhverv",
+        "Antal_plad": 3,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-17 Reserveret til erhvervskÃ¸retÃ¸jer pÃ¥ gule nummerplader - Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652346.6601149271,
+            1172950.558119218
+          ],
+          [
+            652329.5785874099,
+            1172945.5519812177
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 156,
+        "Vejkode": 4992,
+        "Vejnavn": "Nikolaj Plads",
+        "Husnummer": "12",
+        "OmrÃ¥de": 9,
+        "Parkering": "BesÃ¸gsplads",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": "BesÃ¸gsplads",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652318.1639223315,
+            1172942.2172577383
+          ],
+          [
+            652312.3098902898,
+            1172940.501597811
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 155,
+        "Vejkode": 4992,
+        "Vejnavn": "Nikolaj Plads",
+        "Husnummer": "27",
+        "OmrÃ¥de": 9,
+        "Parkering": "Handicapplads",
+        "Antal_plad": 2,
+        "Restriktio": "TidsbegrÃ¦nsning",
+        "Vejside": "Ulige husnumre",
+        "P_ordning": "Handicapparkering",
+        "BemÃ¦rknin": "VD 51 107, Mandag-fredag, 7-17"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652332.1473036779,
+            1172938.0898161612
+          ],
+          [
+            652327.402909406,
+            1172936.360719957
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 154,
+        "Vejkode": 4284,
+        "Vejnavn": "Lille KirkestrÃ¦de",
+        "Husnummer": "5",
+        "OmrÃ¥de": 9,
+        "Parkering": "Almindelig",
+        "Antal_plad": 2,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-17 Reserveret til erhvervskÃ¸retÃ¸jer pÃ¥ gule nummerplader - Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652232.60042199,
+            1172942.0649166834
+          ],
+          [
+            652242.0602616487,
+            1172945.3070508002
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 153,
+        "Vejkode": 8384,
+        "Vejnavn": "VingÃ¥rdstrÃ¦de",
+        "Husnummer": "11",
+        "OmrÃ¥de": 9,
+        "Parkering": "Erhverv",
+        "Antal_plad": 3,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-17 Reserveret til erhvervskÃ¸retÃ¸jer pÃ¥ gule nummerplader - Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652433.6257692494,
+            1172967.3393234375
+          ],
+          [
+            652450.8918318618,
+            1172973.9742033144
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 152,
+        "Vejkode": 8384,
+        "Vejnavn": "VingÃ¥rdstrÃ¦de",
+        "Husnummer": "8",
+        "OmrÃ¥de": 9,
+        "Parkering": "Almindelig",
+        "Antal_plad": 4,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652447.5699606658,
+            1172981.5484994072
+          ],
+          [
+            652425.9990705211,
+            1172975.1495386816
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 151,
+        "Vejkode": 8384,
+        "Vejnavn": "VingÃ¥rdstrÃ¦de",
+        "Husnummer": "1",
+        "OmrÃ¥de": 9,
+        "Parkering": "Erhverv",
+        "Antal_plad": 1,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-17 Reserveret til erhvervskÃ¸retÃ¸jer pÃ¥ gule nummerplader - Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652475.9752228395,
+            1172978.0655435731
+          ],
+          [
+            652484.7569073194,
+            1172979.5119249672
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 150,
+        "Vejkode": 8384,
+        "Vejnavn": "VingÃ¥rdstrÃ¦de",
+        "Husnummer": "3",
+        "OmrÃ¥de": 9,
+        "Parkering": "Ambassade",
+        "Antal_plad": 2,
+        "Restriktio": "Ja",
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "Kun kÃ¸retÃ¸jer med Ã¦rinde til Columbias ambassade - 2 pladser"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652502.7869684696,
+            1172984.231321428
+          ],
+          [
+            652514.6157856245,
+            1172986.2510411397
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 149,
+        "Vejkode": 5916,
+        "Vejnavn": "Rosenborggade",
+        "Husnummer": "19",
+        "OmrÃ¥de": 6,
+        "Parkering": "Ambassade",
+        "Antal_plad": 2,
+        "Restriktio": "Ja",
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "Kun kÃ¸retÃ¸jer med Ã¦rinde til Europa Kommisionen og Europa Parlamentet"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651885.5154992428,
+            1173576.18999615
+          ],
+          [
+            651878.4550867002,
+            1173567.2522610056
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 148,
+        "Vejkode": 5916,
+        "Vejnavn": "Rosenborggade",
+        "Husnummer": "17",
+        "OmrÃ¥de": 6,
+        "Parkering": "Erhverv",
+        "Antal_plad": 3,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-17 Reserveret til erhvervskÃ¸retÃ¸jer pÃ¥ gule nummerplader - Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651878.4550867002,
+            1173567.2522610056
+          ],
+          [
+            651867.1851344713,
+            1173552.9868981724
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 147,
+        "Vejkode": 6236,
+        "Vejnavn": "Sankt Gertruds StrÃ¦de",
+        "Husnummer": "Overfor nr. 10",
+        "OmrÃ¥de": 6,
+        "Parkering": "SÃ¦rlig plads",
+        "Antal_plad": 2,
+        "Restriktio": "Ja",
+        "Vejside": null,
+        "P_ordning": null,
+        "BemÃ¦rknin": "Kun kÃ¸retÃ¸jer med Politiets godkendelse 2 vogne"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651842.3052272463,
+            1173479.680298906
+          ],
+          [
+            651838.2948312545,
+            1173489.9339238256
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 146,
+        "Vejkode": 8628,
+        "Vejnavn": "Ã…benrÃ¥",
+        "Husnummer": "Overfor nr. 33",
+        "OmrÃ¥de": 6,
+        "Parkering": "BesÃ¸gsplads",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": null,
+        "P_ordning": "BesÃ¸gsplads",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651898.0531922808,
+            1173523.3231462352
+          ],
+          [
+            651892.5808496292,
+            1173526.0854651635
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 145,
+        "Vejkode": 2676,
+        "Vejnavn": "Hausergade",
+        "Husnummer": "3",
+        "OmrÃ¥de": 6,
+        "Parkering": "BesÃ¸gsplads",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": "BesÃ¸gsplads",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651899.8795153154,
+            1173438.1500955934
+          ],
+          [
+            651895.2721910564,
+            1173436.2077868707
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 144,
+        "Vejkode": 2676,
+        "Vejnavn": "Hausergade",
+        "Husnummer": "3",
+        "OmrÃ¥de": 6,
+        "Parkering": "BesÃ¸gsplads",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": "BesÃ¸gsplads",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651895.2721910563,
+            1173436.207786871
+          ],
+          [
+            651890.6808419056,
+            1173434.2280108798
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 143,
+        "Vejkode": 4100,
+        "Vejnavn": "LandemÃ¦rket",
+        "Husnummer": "23",
+        "OmrÃ¥de": 6,
+        "Parkering": "BesÃ¸gsplads",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": "BesÃ¸gsplads",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652006.6964446869,
+            1173379.3613940116
+          ],
+          [
+            652002.738714498,
+            1173374.86407124
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 142,
+        "Vejkode": 5520,
+        "Vejnavn": "PilestrÃ¦de",
+        "Husnummer": "67",
+        "OmrÃ¥de": 6,
+        "Parkering": "BesÃ¸gsplads",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": "BesÃ¸gsplads",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652002.6053513944,
+            1173355.0753403204
+          ],
+          [
+            652007.2832911815,
+            1173350.975915984
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 141,
+        "Vejkode": 4100,
+        "Vejnavn": "LandemÃ¦rket",
+        "Husnummer": "5",
+        "OmrÃ¥de": 6,
+        "Parkering": "BesÃ¸gsplads",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": "BesÃ¸gsplads",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651960.5632168505,
+            1173312.4135215934
+          ],
+          [
+            651956.8490518753,
+            1173308.9250443596
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 140,
+        "Vejkode": 5520,
+        "Vejnavn": "PilestrÃ¦de",
+        "Husnummer": "64",
+        "OmrÃ¥de": 6,
+        "Parkering": "BesÃ¸gsplads",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": "BesÃ¸gsplads",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652032.9743596711,
+            1173328.4665524936
+          ],
+          [
+            652037.1295757213,
+            1173324.8479506122
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 139,
+        "Vejkode": 4100,
+        "Vejnavn": "LandemÃ¦rket",
+        "Husnummer": "10",
+        "OmrÃ¥de": 6,
+        "Parkering": "Erhverv",
+        "Antal_plad": 2,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-17 Reserveret til erhvervskÃ¸retÃ¸jer pÃ¥ gule nummerplader. Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652024.8300943836,
+            1173384.5358127428
+          ],
+          [
+            652034.9356905189,
+            1173395.7492263
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 138,
+        "Vejkode": 8412,
+        "Vejnavn": "Vognmagergade",
+        "Husnummer": "9",
+        "OmrÃ¥de": 6,
+        "Parkering": "Erhverv",
+        "Antal_plad": 2,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-17 Reserveret til erhvervskÃ¸retÃ¸jer pÃ¥ gule nummerplader - Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652076.6982099132,
+            1173414.905645696
+          ],
+          [
+            652067.243829059,
+            1173421.45275824
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 137,
+        "Vejkode": 8412,
+        "Vejnavn": "Vognmagergade",
+        "Husnummer": "10",
+        "OmrÃ¥de": 6,
+        "Parkering": "BesÃ¸gsplads",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": "BesÃ¸gsplads",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652083.431691648,
+            1173423.6062762914
+          ],
+          [
+            652088.5124594242,
+            1173420.1376929928
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 136,
+        "Vejkode": 4552,
+        "Vejnavn": "LÃ¸nporten",
+        "Husnummer": "2",
+        "OmrÃ¥de": 6,
+        "Parkering": "Erhverv",
+        "Antal_plad": 4,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-17 Reserveret til erhvervskÃ¸retÃ¸jer pÃ¥ gule nummerplader - Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652112.5493123559,
+            1173413.6573031135
+          ],
+          [
+            652125.1615298766,
+            1173431.3526377871
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 135,
+        "Vejkode": 4552,
+        "Vejnavn": "LÃ¸nporten",
+        "Husnummer": "2",
+        "OmrÃ¥de": 6,
+        "Parkering": "BesÃ¸gsplads",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": "BesÃ¸gsplads",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652132.7566338796,
+            1173442.0622002021
+          ],
+          [
+            652136.260293535,
+            1173446.9326954854
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 134,
+        "Vejkode": 8412,
+        "Vejnavn": "Vognmagergade",
+        "Husnummer": "8",
+        "OmrÃ¥de": 6,
+        "Parkering": "BesÃ¸gsplads",
+        "Antal_plad": 2,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": "BesÃ¸gsplads",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652125.58645039,
+            1173394.5753520029
+          ],
+          [
+            652117.3109143571,
+            1173400.2247682
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 133,
+        "Vejkode": 6404,
+        "Vejnavn": "SjÃ¦leboderne",
+        "Husnummer": "2",
+        "OmrÃ¥de": 6,
+        "Parkering": "Erhverv",
+        "Antal_plad": 3,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-17 Reserveret til erhvervskÃ¸retÃ¸jer pÃ¥ gule nummerplader - Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652163.8994370394,
+            1173379.6758505981
+          ],
+          [
+            652173.2739280815,
+            1173392.0201437941
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 132,
+        "Vejkode": 6404,
+        "Vejnavn": "SjÃ¦leboderne",
+        "Husnummer": "1",
+        "OmrÃ¥de": 6,
+        "Parkering": "Almindelig",
+        "Antal_plad": 5,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652176.9655278205,
+            1173409.631768581
+          ],
+          [
+            652194.3819464819,
+            1173432.706786685
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 131,
+        "Vejkode": 4904,
+        "Vejnavn": "MÃ¸ntergade",
+        "Husnummer": "5",
+        "OmrÃ¥de": 8,
+        "Parkering": "Almindelig",
+        "Antal_plad": 2,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652176.1703120994,
+            1173332.0930034406
+          ],
+          [
+            652170.0820235646,
+            1173324.046833997
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 130,
+        "Vejkode": 4904,
+        "Vejnavn": "MÃ¸ntergade",
+        "Husnummer": "4",
+        "OmrÃ¥de": 8,
+        "Parkering": "Almindelig",
+        "Antal_plad": 3,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652157.3249573208,
+            1173294.808470533
+          ],
+          [
+            652147.2069255745,
+            1173281.1847289917
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 129,
+        "Vejkode": 2104,
+        "Vejnavn": "Gammel MÃ¸nt",
+        "Husnummer": "35",
+        "OmrÃ¥de": 8,
+        "Parkering": "Erhverv",
+        "Antal_plad": 8,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-17 Reserveret til erhvervskÃ¸retÃ¸jer pÃ¥ gule nummerplader. Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652207.4621413611,
+            1173326.1005605415
+          ],
+          [
+            652243.4170715357,
+            1173299.0405716994
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 128,
+        "Vejkode": 2104,
+        "Vejnavn": "Gammel MÃ¸nt",
+        "Husnummer": "12",
+        "OmrÃ¥de": 8,
+        "Parkering": "Taxi",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": "Taxiparkering",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652224.2188887512,
+            1173326.3217830725
+          ],
+          [
+            652228.2810449007,
+            1173323.288008622
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 127,
+        "Vejkode": 2104,
+        "Vejnavn": "Gammel MÃ¸nt",
+        "Husnummer": "12",
+        "OmrÃ¥de": 8,
+        "Parkering": "Taxi",
+        "Antal_plad": 3,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": "Taxiparkering",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652259.875482079,
+            1173299.67239276
+          ],
+          [
+            652244.8085832323,
+            1173310.944607315
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 126,
+        "Vejkode": 2104,
+        "Vejnavn": "Gammel MÃ¸nt",
+        "Husnummer": "12",
+        "OmrÃ¥de": 8,
+        "Parkering": "Taxi",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": "Taxiparkering",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652238.4954270901,
+            1173315.6625647503
+          ],
+          [
+            652243.2834102676,
+            1173312.083665146
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 125,
+        "Vejkode": 1112,
+        "Vejnavn": "Christian IX's Gade",
+        "Husnummer": "34",
+        "OmrÃ¥de": 8,
+        "Parkering": "Almindelig",
+        "Antal_plad": 5,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652267.8667850379,
+            1173362.37172582
+          ],
+          [
+            652262.324163811,
+            1173398.4424167196
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 124,
+        "Vejkode": 5148,
+        "Vejnavn": "Ny Ã˜stergade",
+        "Husnummer": "23",
+        "OmrÃ¥de": 8,
+        "Parkering": "Erhverv",
+        "Antal_plad": 7,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-17 Reserveret til erhvervskÃ¸retÃ¸jer pÃ¥ gule nummerplader - Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652281.8737595582,
+            1173348.4159866497
+          ],
+          [
+            652316.4097204377,
+            1173329.1760600475
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 123,
+        "Vejkode": 5148,
+        "Vejnavn": "Ny Ã˜stergade",
+        "Husnummer": "32",
+        "OmrÃ¥de": 8,
+        "Parkering": "Almindelig",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652289.7077358523,
+            1173353.4210497774
+          ],
+          [
+            652294.9031794935,
+            1173350.5211072466
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 122,
+        "Vejkode": 5148,
+        "Vejnavn": "Ny Ã˜stergade",
+        "Husnummer": "30",
+        "OmrÃ¥de": 8,
+        "Parkering": "Almindelig",
+        "Antal_plad": 5,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652316.4404370078,
+            1173338.5069189135
+          ],
+          [
+            652342.1199756679,
+            1173324.30479514
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 121,
+        "Vejkode": 6956,
+        "Vejnavn": "Store Regnegade",
+        "Husnummer": "3",
+        "OmrÃ¥de": 8,
+        "Parkering": "Taxi",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": "Taxiparkering",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652307.0497800705,
+            1173285.4469988958
+          ],
+          [
+            652302.8733633561,
+            1173282.697832645
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 120,
+        "Vejkode": 7204,
+        "Vejnavn": "SvÃ¦rtegade",
+        "Husnummer": "5",
+        "OmrÃ¥de": 8,
+        "Parkering": "Erhverv",
+        "Antal_plad": 4,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-17 Reserveret til erhvervskÃ¸retÃ¸jer pÃ¥ gule nummerplader - Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652277.0615275016,
+            1173262.1694298587
+          ],
+          [
+            652256.4690531191,
+            1173250.0976901825
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 119,
+        "Vejkode": 5520,
+        "Vejnavn": "PilestrÃ¦de",
+        "Husnummer": "42",
+        "OmrÃ¥de": 8,
+        "Parkering": "Almindelig",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "(slutningen af afmÃ¦rkningen kan man ikke se men mÃ¥lte til 5.54 fÃ¸r der er en metalplade som blokerer)"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652206.570670753,
+            1173237.1245866017
+          ],
+          [
+            652200.7065895728,
+            1173240.3270235953
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 118,
+        "Vejkode": 3724,
+        "Vejnavn": "Klareboderne",
+        "Husnummer": "16",
+        "OmrÃ¥de": 8,
+        "Parkering": "Erhverv",
+        "Antal_plad": 3,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-17 Reserveret til erhvervskÃ¸retÃ¸jer pÃ¥ gule nummerplader - Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652131.9503210784,
+            1173254.732941896
+          ],
+          [
+            652121.4233287842,
+            1173242.1314009887
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 117,
+        "Vejkode": 3992,
+        "Vejnavn": "Kronprinsensgade",
+        "Husnummer": "14",
+        "OmrÃ¥de": 8,
+        "Parkering": "Handicapplads",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": "Handicapparkering",
+        "BemÃ¦rknin": "HF 22 703"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652195.1419930115,
+            1173212.3493239428
+          ],
+          [
+            652189.845495749,
+            1173209.7272604904
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 116,
+        "Vejkode": 3992,
+        "Vejnavn": "Kronprinsensgade",
+        "Husnummer": "12",
+        "OmrÃ¥de": 8,
+        "Parkering": "Erhverv",
+        "Antal_plad": 3,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-17 Reserveret til erhvervskÃ¸retÃ¸jer pÃ¥ gule nummerplader - Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652189.845495749,
+            1173209.7272604904
+          ],
+          [
+            652174.3287132218,
+            1173201.8760465712
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 115,
+        "Vejkode": 5520,
+        "Vejnavn": "PilestrÃ¦de",
+        "Husnummer": "34",
+        "OmrÃ¥de": 8,
+        "Parkering": "El-bil",
+        "Antal_plad": 2,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": "Elbilparkering",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652232.2123507924,
+            1173211.390473576
+          ],
+          [
+            652238.5379775857,
+            1173200.1476344306
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 114,
+        "Vejkode": 192,
+        "Vejnavn": "Antonigade",
+        "Husnummer": "3",
+        "OmrÃ¥de": 8,
+        "Parkering": "Almindelig",
+        "Antal_plad": 2,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652266.1718604594,
+            1173157.280310709
+          ],
+          [
+            652275.7005403362,
+            1173162.4902876576
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 113,
+        "Vejkode": 2104,
+        "Vejnavn": "Gammel MÃ¸nt",
+        "Husnummer": "7",
+        "OmrÃ¥de": 8,
+        "Parkering": "Almindelig",
+        "Antal_plad": 4,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652305.2769197031,
+            1173233.99377808
+          ],
+          [
+            652292.4176113628,
+            1173254.2014854925
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 112,
+        "Vejkode": 2348,
+        "Vejnavn": "GrÃ¸nnegade",
+        "Husnummer": "1",
+        "OmrÃ¥de": 8,
+        "Parkering": "Erhverv",
+        "Antal_plad": 2,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-17 Reserveret til erhvervskÃ¸retÃ¸jer pÃ¥ gule nummerplader - Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652337.5645303342,
+            1173225.6343158635
+          ],
+          [
+            652349.451523895,
+            1173233.0227474328
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 111,
+        "Vejkode": 2348,
+        "Vejnavn": "GrÃ¸nnegade",
+        "Husnummer": "3",
+        "OmrÃ¥de": 8,
+        "Parkering": "Erhverv",
+        "Antal_plad": 2,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-17 Reserveret til erhvervskÃ¸retÃ¸jer pÃ¥ gule nummerplader - Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652354.3907691855,
+            1173236.0927647287
+          ],
+          [
+            652367.221917972,
+            1173244.0536569539
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 110,
+        "Vejkode": 5148,
+        "Vejnavn": "Ny Ã˜stergade",
+        "Husnummer": "14",
+        "OmrÃ¥de": 8,
+        "Parkering": "Almindelig",
+        "Antal_plad": 5,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652386.93071302,
+            1173267.69486497
+          ],
+          [
+            652370.533058705,
+            1173292.1569229509
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 109,
+        "Vejkode": 5080,
+        "Vejnavn": "Ny Adelgade",
+        "Husnummer": "9",
+        "OmrÃ¥de": 8,
+        "Parkering": "Erhverv",
+        "Antal_plad": 1,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-17 Reserveret til erhvervskÃ¸retÃ¸jer pÃ¥ gule nummerplader - Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652426.1592033826,
+            1173276.27528668
+          ],
+          [
+            652431.1734504713,
+            1173273.8730114808
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 108,
+        "Vejkode": 3048,
+        "Vejnavn": "Hovedvagtsgade",
+        "Husnummer": "3",
+        "OmrÃ¥de": 8,
+        "Parkering": "BesÃ¸gsplads",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": "BesÃ¸gsplads",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652482.9820206837,
+            1173212.7793170763
+          ],
+          [
+            652478.2460549213,
+            1173211.1759991734
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 107,
+        "Vejkode": 3048,
+        "Vejnavn": "Hovedvagtsgade",
+        "Husnummer": "3",
+        "OmrÃ¥de": 8,
+        "Parkering": "BesÃ¸gsplads",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": "BesÃ¸gsplads",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652457.0144220111,
+            1173203.9882239867
+          ],
+          [
+            652452.2824039371,
+            1173202.3862425347
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 106,
+        "Vejkode": 3048,
+        "Vejnavn": "Hovedvagtsgade",
+        "Husnummer": "3",
+        "OmrÃ¥de": 8,
+        "Parkering": "Almindelig",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "D'angleterre"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652462.3737071279,
+            1173205.802560958
+          ],
+          [
+            652467.1096728897,
+            1173207.4058788626
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 105,
+        "Vejkode": 3048,
+        "Vejnavn": "Hovedvagtsgade",
+        "Husnummer": "3",
+        "OmrÃ¥de": 8,
+        "Parkering": "BesÃ¸gsplads",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": "BesÃ¸gsplads",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652434.5293555878,
+            1173196.3761103444
+          ],
+          [
+            652429.793389826,
+            1173194.77279244
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 104,
+        "Vejkode": 5148,
+        "Vejnavn": "Ny Ã˜stergade",
+        "Husnummer": "7",
+        "OmrÃ¥de": 8,
+        "Parkering": "Almindelig",
+        "Antal_plad": 3,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652404.0035199897,
+            1173197.593726317
+          ],
+          [
+            652408.0808325642,
+            1173180.4828051727
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 103,
+        "Vejkode": 5148,
+        "Vejnavn": "Ny Ã˜stergade",
+        "Husnummer": "7",
+        "OmrÃ¥de": 8,
+        "Parkering": "BesÃ¸gsplads",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": "BesÃ¸gsplads",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652408.4503628487,
+            1173179.0444946727
+          ],
+          [
+            652409.8482389319,
+            1173174.2438756956
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 102,
+        "Vejkode": 5148,
+        "Vejnavn": "Ny Ã˜stergade",
+        "Husnummer": "9",
+        "OmrÃ¥de": 8,
+        "Parkering": "Almindelig",
+        "Antal_plad": 2,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652395.1449785695,
+            1173232.182133475
+          ],
+          [
+            652398.3215000364,
+            1173221.0448909746
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 101,
+        "Vejkode": 3956,
+        "Vejnavn": "Kristen Bernikows Gade",
+        "Husnummer": "11",
+        "OmrÃ¥de": 8,
+        "Parkering": "Erhverv",
+        "Antal_plad": 11,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-17 Reserveret til erhvervskÃ¸retÃ¸jer pÃ¥ gule nummerplader - Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652335.3761687666,
+            1173170.7046728986
+          ],
+          [
+            652354.0280207992,
+            1173114.444956123
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 100,
+        "Vejkode": 4288,
+        "Vejnavn": "Lille Kongensgade",
+        "Husnummer": "6",
+        "OmrÃ¥de": 9,
+        "Parkering": "Almindelig",
+        "Antal_plad": 3,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652485.0345104593,
+            1173089.4931430286
+          ],
+          [
+            652465.9721998947,
+            1173083.4458306334
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 99,
+        "Vejkode": 4288,
+        "Vejnavn": "Lille Kongensgade",
+        "Husnummer": "14",
+        "OmrÃ¥de": 9,
+        "Parkering": "Almindelig",
+        "Antal_plad": 9,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652446.3770429372,
+            1173076.7821367835
+          ],
+          [
+            652399.3668077703,
+            1173059.751640914
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 98,
+        "Vejkode": 832,
+        "Vejnavn": "Bremerholm",
+        "Husnummer": "29",
+        "OmrÃ¥de": 9,
+        "Parkering": "BesÃ¸gsplads",
+        "Antal_plad": 1,
+        "Restriktio": "TidsbegrÃ¦nsning",
+        "Vejside": "Ulige husnumre",
+        "P_ordning": "BesÃ¸gsplads",
+        "BemÃ¦rknin": "aug-18"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652421.1751334516,
+            1172953.969907416
+          ],
+          [
+            652423.5892367432,
+            1172948.8675939539
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 97,
+        "Vejkode": 832,
+        "Vejnavn": "Bremerholm",
+        "Husnummer": "29",
+        "OmrÃ¥de": 9,
+        "Parkering": "Erhverv",
+        "Antal_plad": 3,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-17 Reserveret til erhvervskÃ¸retÃ¸jer pÃ¥ gule nummerplader - Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652423.5892367432,
+            1172948.8675939539
+          ],
+          [
+            652430.4945037381,
+            1172934.0411448341
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 96,
+        "Vejkode": 7944,
+        "Vejnavn": "Valkendorfsgade",
+        "Husnummer": "Overfor nr. 16",
+        "OmrÃ¥de": 5,
+        "Parkering": "BesÃ¸gsplads",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": null,
+        "P_ordning": "BesÃ¸gsplads",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652027.301266889,
+            1173069.22280404
+          ],
+          [
+            652022.110698968,
+            1173065.8136832358
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 95,
+        "Vejkode": 7944,
+        "Vejnavn": "Valkendorfsgade",
+        "Husnummer": "23",
+        "OmrÃ¥de": 5,
+        "Parkering": "Almindelig",
+        "Antal_plad": 4,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651989.2974237289,
+            1173044.3245067697
+          ],
+          [
+            652008.3831196714,
+            1173056.797526067
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 94,
+        "Vejkode": 3776,
+        "Vejnavn": "KlosterstrÃ¦de",
+        "Husnummer": "25",
+        "OmrÃ¥de": 5,
+        "Parkering": "Erhverv",
+        "Antal_plad": 3,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-17 Reserveret til erhvervskÃ¸retÃ¸jer pÃ¥ gule nummerplader - Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651892.3946462484,
+            1173055.292868371
+          ],
+          [
+            651879.9915304935,
+            1173069.2474955448
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 93,
+        "Vejkode": 4280,
+        "Vejnavn": "Lille KannikestrÃ¦de",
+        "Husnummer": "4",
+        "OmrÃ¥de": 3,
+        "Parkering": "Erhverv",
+        "Antal_plad": 2,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-17 Reserveret til erhvervskÃ¸retÃ¸jer pÃ¥ gule nummerplader - Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651883.7232007725,
+            1173124.105733266
+          ],
+          [
+            651876.5037208389,
+            1173135.0727752324
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 92,
+        "Vejkode": 4280,
+        "Vejnavn": "Lille KannikestrÃ¦de",
+        "Husnummer": "4",
+        "OmrÃ¥de": 3,
+        "Parkering": "Erhverv",
+        "Antal_plad": 2,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-17 Reserveret til erhvervskÃ¸retÃ¸jer pÃ¥ gule nummerplader - Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651870.7777581289,
+            1173143.7633059556
+          ],
+          [
+            651865.2647361165,
+            1173152.142296843
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 91,
+        "Vejkode": 6460,
+        "Vejnavn": "Skindergade",
+        "Husnummer": "20",
+        "OmrÃ¥de": 5,
+        "Parkering": "Ambassade",
+        "Antal_plad": 2,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "8-18, Kun kÃ¸retÃ¸jer med Ã¦rinde til Tunesiens konsulat - 2 pladser"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651891.5838788138,
+            1173120.6318093436
+          ],
+          [
+            651898.8062791263,
+            1173130.5880553238
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 90,
+        "Vejkode": 6460,
+        "Vejnavn": "Skindergade",
+        "Husnummer": "27",
+        "OmrÃ¥de": 5,
+        "Parkering": "Handicapplads",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": "Handicapparkering",
+        "BemÃ¦rknin": "DR 96 812"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651863.1244369698,
+            1173061.5031269959
+          ],
+          [
+            651859.7845350163,
+            1173055.8686301291
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 89,
+        "Vejkode": 8216,
+        "Vejnavn": "Vestergade",
+        "Husnummer": "Overfor nr. 10",
+        "OmrÃ¥de": 2,
+        "Parkering": "Taxi",
+        "Antal_plad": 3,
+        "Restriktio": null,
+        "Vejside": null,
+        "P_ordning": "Taxiparkering",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651718.4446369379,
+            1172929.09041912
+          ],
+          [
+            651701.8326684723,
+            1172918.8780489888
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 88,
+        "Vejkode": 8216,
+        "Vejnavn": "Vestergade",
+        "Husnummer": "1",
+        "OmrÃ¥de": 2,
+        "Parkering": "BesÃ¸gsplads",
+        "Antal_plad": 2,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": "BesÃ¸gsplads",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651671.272465984,
+            1172901.7230687272
+          ],
+          [
+            651661.3599480998,
+            1172896.4879860452
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 87,
+        "Vejkode": 3612,
+        "Vejnavn": "Kattesundet",
+        "Husnummer": "2",
+        "OmrÃ¥de": 2,
+        "Parkering": "Erhverv",
+        "Antal_plad": 3,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-17 Reserveret til erhvervskÃ¸retÃ¸jer pÃ¥ gule nummerplader - Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651603.8872804632,
+            1172848.5794968863
+          ],
+          [
+            651617.3002379324,
+            1172839.0906891671
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 86,
+        "Vejkode": 3612,
+        "Vejnavn": "Kattesundet",
+        "Husnummer": "2",
+        "OmrÃ¥de": 2,
+        "Parkering": "Erhverv",
+        "Antal_plad": 3,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-17 Reserveret til erhvervskÃ¸retÃ¸jer pÃ¥ gule nummerplader - Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651622.7068042043,
+            1172835.2525040354
+          ],
+          [
+            651639.050529617,
+            1172823.6903658407
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 85,
+        "Vejkode": 4196,
+        "Vejnavn": "LavendelstrÃ¦de",
+        "Husnummer": "19",
+        "OmrÃ¥de": 2,
+        "Parkering": "BesÃ¸gsplads",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": "BesÃ¸gsplads",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651656.2351847745,
+            1172668.3168785805
+          ],
+          [
+            651659.8971284739,
+            1172672.5536424802
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 84,
+        "Vejkode": 4196,
+        "Vejnavn": "LavendelstrÃ¦de",
+        "Husnummer": "17",
+        "OmrÃ¥de": 2,
+        "Parkering": "Almindelig",
+        "Antal_plad": 6,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "Standsningsforbud onsdag 7-12, Af- og pÃ¥lÃ¦sning tilladt"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651671.7765027775,
+            1172686.191674085
+          ],
+          [
+            651693.9987295617,
+            1172710.0528856274
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 83,
+        "Vejkode": 4196,
+        "Vejnavn": "LavendelstrÃ¦de",
+        "Husnummer": "7",
+        "OmrÃ¥de": 2,
+        "Parkering": "Erhverv",
+        "Antal_plad": 5,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-17 Reserveret til erhvervskÃ¸retÃ¸jer pÃ¥ gule nummerplader - Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651707.8555114679,
+            1172724.0486371997
+          ],
+          [
+            651726.7142473857,
+            1172743.5938074363
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 82,
+        "Vejkode": 5140,
+        "Vejnavn": "Nytorv",
+        "Husnummer": "17",
+        "OmrÃ¥de": 2,
+        "Parkering": "Erhverv",
+        "Antal_plad": 1,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-17 Reserveret til erhvervskÃ¸retÃ¸jer pÃ¥ gule nummerplader - Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651796.4345290777,
+            1172808.4655014419
+          ],
+          [
+            651791.1345278131,
+            1172803.923432905
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 81,
+        "Vejkode": 5140,
+        "Vejnavn": "Nytorv",
+        "Husnummer": "17",
+        "OmrÃ¥de": 2,
+        "Parkering": "BesÃ¸gsplads",
+        "Antal_plad": 2,
+        "Restriktio": "TidsbegrÃ¦nsning",
+        "Vejside": "Ulige husnumre",
+        "P_ordning": "BesÃ¸gsplads",
+        "BemÃ¦rknin": "man-fre, 2 timer, 8-17"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651796.4345289721,
+            1172808.4655013515
+          ],
+          [
+            651807.3834161129,
+            1172817.8186756994
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 80,
+        "Vejkode": 2880,
+        "Vejnavn": "HestemÃ¸llestrÃ¦de",
+        "Husnummer": "5",
+        "OmrÃ¥de": 2,
+        "Parkering": "Erhverv",
+        "Antal_plad": 2,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-17 Reserveret til erhvervskÃ¸retÃ¸jer pÃ¥ gule nummerplader - Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651784.0080446175,
+            1172716.0670144148
+          ],
+          [
+            651774.6914826003,
+            1172723.7092750927
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 79,
+        "Vejkode": 2880,
+        "Vejnavn": "HestemÃ¸llestrÃ¦de",
+        "Husnummer": "3",
+        "OmrÃ¥de": 2,
+        "Parkering": "BesÃ¸gsplads",
+        "Antal_plad": 2,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": "BesÃ¸gsplads",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651769.9447887372,
+            1172727.4957690644
+          ],
+          [
+            651762.004056145,
+            1172733.817735997
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 78,
+        "Vejkode": 2496,
+        "Vejnavn": "GÃ¥segade",
+        "Husnummer": "1",
+        "OmrÃ¥de": 2,
+        "Parkering": "BesÃ¸gsplads",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": "BesÃ¸gsplads",
+        "BemÃ¦rknin": "Skiltning med angivelse af handicapplads mangler. Der er kun afmÃ¦rkning pÃ¥ asfalten."
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651815.442655359,
+            1172684.2924362766
+          ],
+          [
+            651819.7743570328,
+            1172679.676674085
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 77,
+        "Vejkode": 1728,
+        "Vejnavn": "Farvergade",
+        "Husnummer": "15",
+        "OmrÃ¥de": 2,
+        "Parkering": "Erhverv",
+        "Antal_plad": 4,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-17 Reserveret til erhvervskÃ¸retÃ¸jer pÃ¥ gule nummerplader - Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651775.6778255003,
+            1172684.0352696853
+          ],
+          [
+            651758.1540344658,
+            1172671.2656024473
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 76,
+        "Vejkode": 1728,
+        "Vejnavn": "Farvergade",
+        "Husnummer": "17",
+        "OmrÃ¥de": 2,
+        "Parkering": "Erhverv",
+        "Antal_plad": 2,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-17 Reserveret til erhvervskÃ¸retÃ¸jer pÃ¥ gule nummerplader - Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651752.8284620114,
+            1172667.9895902476
+          ],
+          [
+            651742.0897108506,
+            1172661.3225963307
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 75,
+        "Vejkode": 1728,
+        "Vejnavn": "Farvergade",
+        "Husnummer": "17",
+        "OmrÃ¥de": 2,
+        "Parkering": "BesÃ¸gsplads",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": "BesÃ¸gsplads",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651742.0897108506,
+            1172661.3225963307
+          ],
+          [
+            651737.822866455,
+            1172658.5645979345
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 74,
+        "Vejkode": 4548,
+        "Vejnavn": "LÃ¸ngangstrÃ¦de",
+        "Husnummer": "16",
+        "OmrÃ¥de": 2,
+        "Parkering": "BesÃ¸gsplads",
+        "Antal_plad": 2,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": "BesÃ¸gsplads",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651819.7230287066,
+            1172659.479315623
+          ],
+          [
+            651808.4699272239,
+            1172651.8420578025
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 73,
+        "Vejkode": 4548,
+        "Vejnavn": "LÃ¸ngangstrÃ¦de",
+        "Husnummer": "16",
+        "OmrÃ¥de": 2,
+        "Parkering": "Ambassade",
+        "Antal_plad": 2,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "2 pladser, 8-17, Kun kÃ¸retÃ¸jer med Ã¦rinde til Kosovos Konsulat, Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651802.7546599619,
+            1172647.918724815
+          ],
+          [
+            651791.537765271,
+            1172640.0181125922
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 72,
+        "Vejkode": 4548,
+        "Vejnavn": "LÃ¸ngangstrÃ¦de",
+        "Husnummer": "18",
+        "OmrÃ¥de": 2,
+        "Parkering": "Almindelig",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651791.537765271,
+            1172640.0181125922
+          ],
+          [
+            651787.8014949518,
+            1172637.386538139
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 71,
+        "Vejkode": 6656,
+        "Vejnavn": "Snaregade",
+        "Husnummer": "12",
+        "OmrÃ¥de": 4,
+        "Parkering": "Ambassade",
+        "Antal_plad": 2,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "8-17, Kun kÃ¸retÃ¸jer med Ã¦rinde til Jordans Konsulat 2 pladser. Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651989.246872359,
+            1172784.5529943255
+          ],
+          [
+            651995.9950076983,
+            1172792.2549596173
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 70,
+        "Vejkode": 6656,
+        "Vejnavn": "Snaregade",
+        "Husnummer": "6",
+        "OmrÃ¥de": 4,
+        "Parkering": "Handicapplads",
+        "Antal_plad": 1,
+        "Restriktio": "TidsbegrÃ¦nsning",
+        "Vejside": "Lige husnumre",
+        "P_ordning": "Handicapparkering",
+        "BemÃ¦rknin": "DM 31 000, 7.30-16.00"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652011.5831969893,
+            1172807.371093821
+          ],
+          [
+            652015.4400289491,
+            1172810.505698618
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 69,
+        "Vejkode": 4928,
+        "Vejnavn": "NabolÃ¸s",
+        "Husnummer": "6",
+        "OmrÃ¥de": 7,
+        "Parkering": "BesÃ¸gsplads",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": "BesÃ¸gsplads",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652033.4068314028,
+            1172835.5029236989
+          ],
+          [
+            652030.7541187488,
+            1172841.0626414835
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 68,
+        "Vejkode": 3156,
+        "Vejnavn": "HyskenstrÃ¦de",
+        "Husnummer": "35",
+        "OmrÃ¥de": 7,
+        "Parkering": "Handicapplads",
+        "Antal_plad": 1,
+        "Restriktio": "TidsbegrÃ¦nsning",
+        "Vejside": "Ulige husnumre",
+        "P_ordning": "Handicapparkering",
+        "BemÃ¦rknin": "7-17, BX 89 948"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652011.5621922115,
+            1172895.8740185276
+          ],
+          [
+            652008.4257926022,
+            1172901.198997165
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 67,
+        "Vejkode": 304,
+        "Vejnavn": "BadstuestrÃ¦de",
+        "Husnummer": "16",
+        "OmrÃ¥de": 4,
+        "Parkering": "Handicapplads",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": "Handicapparkering",
+        "BemÃ¦rknin": "CB 78 891"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651931.7976568765,
+            1172883.530985373
+          ],
+          [
+            651935.9608409763,
+            1172879.8155717826
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 66,
+        "Vejkode": 3796,
+        "Vejnavn": "KnabrostrÃ¦de",
+        "Husnummer": "3",
+        "OmrÃ¥de": 4,
+        "Parkering": "Almindelig",
+        "Antal_plad": 2,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651854.1107532266,
+            1172905.7512960192
+          ],
+          [
+            651847.6022753216,
+            1172917.6907129716
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 65,
+        "Vejkode": 872,
+        "Vejnavn": "BrolÃ¦ggerstrÃ¦de",
+        "Husnummer": "13",
+        "OmrÃ¥de": 4,
+        "Parkering": "Erhverv",
+        "Antal_plad": 2,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-17 Reserveret til erhvervskÃ¸retÃ¸jer pÃ¥ gule nummerplader - Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651846.9113586424,
+            1172825.869449286
+          ],
+          [
+            651857.211724257,
+            1172833.501935157
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 64,
+        "Vejkode": 872,
+        "Vejnavn": "BrolÃ¦ggerstrÃ¦de",
+        "Husnummer": "13",
+        "OmrÃ¥de": 4,
+        "Parkering": "Handicapplads",
+        "Antal_plad": 2,
+        "Restriktio": "TidsbegrÃ¦nsning",
+        "Vejside": "Ulige husnumre",
+        "P_ordning": "Handicapparkering",
+        "BemÃ¦rknin": "DV 28 173, 06.30-15.00"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651846.9113586424,
+            1172825.869449286
+          ],
+          [
+            651842.3401540603,
+            1172822.678099467
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 63,
+        "Vejkode": 3796,
+        "Vejnavn": "KnabrostrÃ¦de",
+        "Husnummer": "16",
+        "OmrÃ¥de": 4,
+        "Parkering": "Handicapplads",
+        "Antal_plad": 2,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": "Handicapparkering",
+        "BemÃ¦rknin": "CT 44 997"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651892.2482259009,
+            1172836.0462905504
+          ],
+          [
+            651896.1848423702,
+            1172831.3976978997
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 62,
+        "Vejkode": 3796,
+        "Vejnavn": "KnabrostrÃ¦de",
+        "Husnummer": "16",
+        "OmrÃ¥de": 4,
+        "Parkering": "Erhverv",
+        "Antal_plad": 1,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-17 Reserveret til erhvervskÃ¸retÃ¸jer pÃ¥ gule nummerplader - Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651896.1848423702,
+            1172831.3976978997
+          ],
+          [
+            651900.2295498578,
+            1172826.6855390165
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 61,
+        "Vejkode": 5448,
+        "Vejnavn": "Peder Hvitfeldts StrÃ¦de",
+        "Husnummer": "10",
+        "OmrÃ¥de": 3,
+        "Parkering": "BesÃ¸gsplads",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": "BesÃ¸gsplads",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651832.1284231311,
+            1173300.5350417667
+          ],
+          [
+            651829.8802215804,
+            1173305.9774624824
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 60,
+        "Vejkode": 5448,
+        "Vejnavn": "Peder Hvitfeldts StrÃ¦de",
+        "Husnummer": "12",
+        "OmrÃ¥de": 3,
+        "Parkering": "Erhverv",
+        "Antal_plad": 3,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-17 Reserveret til erhvervskÃ¸retÃ¸jer pÃ¥ gule nummerplader - Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651829.8802215804,
+            1173305.9774624824
+          ],
+          [
+            651822.7501938186,
+            1173322.4043043517
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 59,
+        "Vejkode": 5448,
+        "Vejnavn": "Peder Hvitfeldts StrÃ¦de",
+        "Husnummer": "14",
+        "OmrÃ¥de": 3,
+        "Parkering": "BesÃ¸gsplads",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": "BesÃ¸gsplads",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651822.750193801,
+            1173322.4043043915
+          ],
+          [
+            651820.5064328485,
+            1173327.5023860687
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 58,
+        "Vejkode": 5204,
+        "Vejnavn": "NÃ¸rregade",
+        "Husnummer": "31",
+        "OmrÃ¥de": 3,
+        "Parkering": "BesÃ¸gsplads",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": "BesÃ¸gsplads",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651651.2624694055,
+            1173215.8197352556
+          ],
+          [
+            651651.1949153856,
+            1173222.2493803822
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 57,
+        "Vejkode": 2001,
+        "Vejnavn": "Frue Plads",
+        "Husnummer": "0",
+        "OmrÃ¥de": 3,
+        "Parkering": "BesÃ¸gsplads",
+        "Antal_plad": 4,
+        "Restriktio": null,
+        "Vejside": null,
+        "P_ordning": "BesÃ¸gsplads",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651708.46976415,
+            1173057.71069866
+          ],
+          [
+            651730.2598590909,
+            1173065.9900623108
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 56,
+        "Vejkode": 2001,
+        "Vejnavn": "Frue Plads",
+        "Husnummer": "7",
+        "OmrÃ¥de": 3,
+        "Parkering": "Almindelig",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651751.1153168458,
+            1173007.2645808617
+          ],
+          [
+            651745.5240621684,
+            1173006.1564873941
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 55,
+        "Vejkode": 2001,
+        "Vejnavn": "Frue Plads",
+        "Husnummer": "0",
+        "OmrÃ¥de": 3,
+        "Parkering": "El-bil",
+        "Antal_plad": 10,
+        "Restriktio": null,
+        "Vejside": null,
+        "P_ordning": "Elbilparkering",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651758.9367863489,
+            1173026.55864124
+          ],
+          [
+            651781.824502282,
+            1173035.078447318
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 54,
+        "Vejkode": 2001,
+        "Vejnavn": "Frue Plads",
+        "Husnummer": "3",
+        "OmrÃ¥de": 3,
+        "Parkering": "Delebil",
+        "Antal_plad": 2,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": "Delebil",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651773.4340999766,
+            1173013.3980196458
+          ],
+          [
+            651777.8960143593,
+            1173015.1675732736
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 53,
+        "Vejkode": 4016,
+        "Vejnavn": "Krystalgade",
+        "Husnummer": "18",
+        "OmrÃ¥de": 3,
+        "Parkering": "BesÃ¸gsplads",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": "BesÃ¸gsplads",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651745.0214594344,
+            1173201.846767404
+          ],
+          [
+            651739.7924609168,
+            1173199.9277899412
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 52,
+        "Vejkode": 28,
+        "Vejnavn": "Admiralgade",
+        "Husnummer": "31",
+        "OmrÃ¥de": 9,
+        "Parkering": "Erhverv",
+        "Antal_plad": 1,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-17 Reserveret til erhvervskÃ¸retÃ¸jer pÃ¥ gule nummerplader - Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652390.6994452997,
+            1172802.344996233
+          ],
+          [
+            652394.2694316303,
+            1172795.7491492366
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 51,
+        "Vejkode": 8628,
+        "Vejnavn": "Ã…benrÃ¥",
+        "Husnummer": "20",
+        "OmrÃ¥de": 6,
+        "Parkering": "Handicapplads",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": "Handicapparkering",
+        "BemÃ¦rknin": "UtilgÃ¦ngelig grundet asfaltarbejder. Der forventes etableret 1 handicapplads."
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651984.3494361278,
+            1173479.2812525393
+          ],
+          [
+            651978.3417682268,
+            1173482.5168695173
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 50,
+        "Vejkode": 8628,
+        "Vejnavn": "Ã…benrÃ¥",
+        "Husnummer": "20",
+        "OmrÃ¥de": 6,
+        "Parkering": "Handicapplads",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Lige numre",
+        "P_ordning": "Handicapparkering",
+        "BemÃ¦rknin": "UtilgÃ¦ngelig grundet asfaltarbejder. Der forventes etableret 1 handicapplads."
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651990.3571040286,
+            1173476.0456355612
+          ],
+          [
+            651984.3494361278,
+            1173479.2812525393
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 49,
+        "Vejkode": 8628,
+        "Vejnavn": "Ã…benrÃ¥",
+        "Husnummer": "18",
+        "OmrÃ¥de": 6,
+        "Parkering": "Handicapplads",
+        "Antal_plad": 0,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": "Handicapparkering",
+        "BemÃ¦rknin": "UtilgÃ¦ngelig grundet asfaltarbejder. Der forventes etableret 1 handicapplads."
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651995.1529856162,
+            1173473.462663908
+          ],
+          [
+            652002.0338014493,
+            1173469.75678587
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 48,
+        "Vejkode": 8628,
+        "Vejnavn": "Ã…benrÃ¥",
+        "Husnummer": "5",
+        "OmrÃ¥de": 6,
+        "Parkering": "Handicapplads",
+        "Antal_plad": 0,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": "Handicapparkering",
+        "BemÃ¦rknin": "UtilgÃ¦ngelig grundet asfaltarbejder. Der forventes etableret 1 handicapplads."
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651982.22976515,
+            1173468.4817379
+          ],
+          [
+            651990.4387937265,
+            1173464.1154157233
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 47,
+        "Vejkode": 8628,
+        "Vejnavn": "Ã…benrÃ¥",
+        "Husnummer": "5",
+        "OmrÃ¥de": 6,
+        "Parkering": "BesÃ¸gsplads",
+        "Antal_plad": 0,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": "BesÃ¸gsplads",
+        "BemÃ¦rknin": "UtilgÃ¦ngelig grundet asfaltarbejder. Der forventes etableret 1 besÃ¸gsplads."
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651997.961292771,
+            1173460.0935991933
+          ],
+          [
+            651990.4387937265,
+            1173464.1154157233
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 46,
+        "Vejkode": 8628,
+        "Vejnavn": "Ã…benrÃ¥",
+        "Husnummer": "5",
+        "OmrÃ¥de": 6,
+        "Parkering": "Handicapplads",
+        "Antal_plad": 0,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": "Handicapparkering",
+        "BemÃ¦rknin": "UtilgÃ¦ngelig grundet asfaltarbejder. Der forventes etableret 1 handicapplads."
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651997.95192113,
+            1173460.0760702582
+          ],
+          [
+            652004.6184986428,
+            1173456.5118622102
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 45,
+        "Vejkode": 8628,
+        "Vejnavn": "Ã…benrÃ¥",
+        "Husnummer": "3",
+        "OmrÃ¥de": 6,
+        "Parkering": "Erhverv",
+        "Antal_plad": 0,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "UtilgÃ¦ngelig grundet asfaltarbejder. Der forventes etableret 4 erhvervspladser."
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652015.1964238721,
+            1173450.8564976454
+          ],
+          [
+            652036.987340375,
+            1173439.2062378488
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 44,
+        "Vejkode": 4100,
+        "Vejnavn": "LandemÃ¦rket",
+        "Husnummer": "21",
+        "OmrÃ¥de": 6,
+        "Parkering": "Handicapplads",
+        "Antal_plad": 1,
+        "Restriktio": "TidsbegrÃ¦nsning",
+        "Vejside": "Ulige numre",
+        "P_ordning": "Handicapparkering",
+        "BemÃ¦rknin": "AB 47 155, 8-16"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652006.6964446869,
+            1173379.3613940116
+          ],
+          [
+            652010.774829792,
+            1173383.9937031823
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 43,
+        "Vejkode": 4100,
+        "Vejnavn": "LandemÃ¦rket",
+        "Husnummer": "7",
+        "OmrÃ¥de": 6,
+        "Parkering": "BesÃ¸gsplads",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": "BesÃ¸gsplads",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651956.1194156362,
+            1173308.398953584
+          ],
+          [
+            651952.3759584615,
+            1173304.9788167388
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 42,
+        "Vejkode": 2104,
+        "Vejnavn": "Gammel MÃ¸nt",
+        "Husnummer": "4",
+        "OmrÃ¥de": 8,
+        "Parkering": "LÃ¦ssezone",
+        "Antal_plad": 0,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "IndgÃ¥r ikke som parkeringspladser. Der er ingen afmÃ¦rkning, da det delvist anvendes som lÃ¦ssezone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652301.1636901075,
+            1173258.8705324614
+          ],
+          [
+            652317.4555654727,
+            1173233.0044365753
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 41,
+        "Vejkode": 192,
+        "Vejnavn": "Antonigade",
+        "Husnummer": "7A",
+        "OmrÃ¥de": 8,
+        "Parkering": "Ingen",
+        "Antal_plad": 0,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "Der holder biler, men der er ingen afmÃ¦rkning. Kun en lille plet tilbage. Det er inde i p-zonen."
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652292.5490972671,
+            1173171.7025389199
+          ],
+          [
+            652282.5228871537,
+            1173166.2205283747
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 40,
+        "Vejkode": 6392,
+        "Vejnavn": "Silkegade",
+        "Husnummer": "7",
+        "OmrÃ¥de": 8,
+        "Parkering": "Almindelig",
+        "Antal_plad": 0,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "Der er ingen afmÃ¦rkning, fordi strÃ¦kningen ikke vil kunne fungere som dobbeltrettet strÃ¦kning. Skiltningen kan mÃ¥ske vÃ¦re forvirren"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652200.9002093162,
+            1173114.7865309436
+          ],
+          [
+            652233.3157523777,
+            1173130.9794009042
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 39,
+        "Vejkode": 832,
+        "Vejnavn": "Bremerholm",
+        "Husnummer": "1",
+        "OmrÃ¥de": 8,
+        "Parkering": "Ambassade",
+        "Antal_plad": 3,
+        "Restriktio": "Ja",
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "Kun kÃ¸retÃ¸jer med Ã¦rinde til Canadas ambassade"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652354.126407953,
+            1173114.1615482438
+          ],
+          [
+            652360.2712410026,
+            1173096.1377158593
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 38,
+        "Vejkode": 4992,
+        "Vejnavn": "Nikolaj Plads",
+        "Husnummer": "10",
+        "OmrÃ¥de": 9,
+        "Parkering": "Handicapplads",
+        "Antal_plad": 0,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": "Handicapparkering",
+        "BemÃ¦rknin": "Skurby pÃ¥ vejareal. Der forventes etableret 1 handicapplads."
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652281.0299285246,
+            1173002.968521879
+          ],
+          [
+            652286.779262436,
+            1173004.7923686216
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 37,
+        "Vejkode": 4992,
+        "Vejnavn": "Nikolaj Plads",
+        "Husnummer": "10",
+        "OmrÃ¥de": 9,
+        "Parkering": "LÃ¦ssezone",
+        "Antal_plad": 0,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "Skurby pÃ¥ vejareal. Der forventes opsat skiltning der angiver lÃ¦ssezone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652286.7780105353,
+            1173004.7961953022
+          ],
+          [
+            652315.406310356,
+            1173015.8025869038
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 36,
+        "Vejkode": 4992,
+        "Vejnavn": "Nikolaj Plads",
+        "Husnummer": "27",
+        "OmrÃ¥de": 9,
+        "Parkering": "BesÃ¸gsplads",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": "BesÃ¸gsplads",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652327.4029091876,
+            1172936.3607198773
+          ],
+          [
+            652322.6148034204,
+            1172934.6045761502
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 35,
+        "Vejkode": 8384,
+        "Vejnavn": "VingÃ¥rdstrÃ¦de",
+        "Husnummer": "3",
+        "OmrÃ¥de": 9,
+        "Parkering": "Almindelig",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652496.869167154,
+            1172983.2414676063
+          ],
+          [
+            652502.7847066441,
+            1172984.244658784
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 34,
+        "Vejkode": 4092,
+        "Vejnavn": "Laksegade",
+        "Husnummer": "8",
+        "OmrÃ¥de": 9,
+        "Parkering": null,
+        "Antal_plad": 0,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "Lukket port, men der er parkering derinde. Der forventes etableret 3 erhvervspladser"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652517.6297841928,
+            1172925.0854869469
+          ],
+          [
+            652500.4433097028,
+            1172916.6126383971
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 33,
+        "Vejkode": 4092,
+        "Vejnavn": "Laksegade",
+        "Husnummer": "14",
+        "OmrÃ¥de": 9,
+        "Parkering": null,
+        "Antal_plad": 0,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "Ingen parkering. Ensrettet vej, grundet byggeplads. Der forventes etableret 3 erhvervspladser."
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652477.6899059874,
+            1172905.774304562
+          ],
+          [
+            652462.980053637,
+            1172898.5770197343
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 32,
+        "Vejkode": 832,
+        "Vejnavn": "Bremerholm",
+        "Husnummer": "31",
+        "OmrÃ¥de": 9,
+        "Parkering": "Erhverv",
+        "Antal_plad": 2,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-17 Reserveret til erhvervskÃ¸retÃ¸jer pÃ¥ gule nummerplader. Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652446.2205194883,
+            1172900.7189331348
+          ],
+          [
+            652440.2760852638,
+            1172913.3078204007
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 31,
+        "Vejkode": 1388,
+        "Vejnavn": "Dybensgade",
+        "Husnummer": "20D",
+        "OmrÃ¥de": 9,
+        "Parkering": null,
+        "Antal_plad": 0,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "Ingen handicapparkering. Der var forventet 1 handicapplads."
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652403.1578952245,
+            1172904.0009997087
+          ],
+          [
+            652397.053297632,
+            1172901.0515098174
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 30,
+        "Vejkode": 684,
+        "Vejnavn": "Boldhusgade",
+        "Husnummer": "8",
+        "OmrÃ¥de": 9,
+        "Parkering": "BesÃ¸gsplads",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": "BesÃ¸gsplads",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652339.8571265041,
+            1172827.144912223
+          ],
+          [
+            652344.7192367465,
+            1172831.1164210893
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 29,
+        "Vejkode": 4988,
+        "Vejnavn": "Nikolajgade",
+        "Husnummer": "26",
+        "OmrÃ¥de": 9,
+        "Parkering": "Erhverv",
+        "Antal_plad": 0,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "Vejarbejde. Der forventes etableret 5 erhvervspladser."
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652414.807293891,
+            1172844.85497891
+          ],
+          [
+            652419.0545637298,
+            1172839.0495458755
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 28,
+        "Vejkode": 4988,
+        "Vejnavn": "Nikolajgade",
+        "Husnummer": "26",
+        "OmrÃ¥de": 9,
+        "Parkering": "BesÃ¸gsplads",
+        "Antal_plad": 0,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "Vejarbejde. Der forventes etableret 1 besÃ¸gsplads."
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652419.0545637298,
+            1172839.0495458755
+          ],
+          [
+            652427.3200833471,
+            1172827.5589517476
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 27,
+        "Vejkode": 3184,
+        "Vejnavn": "HÃ¸jbro Plads",
+        "Husnummer": "10",
+        "OmrÃ¥de": 9,
+        "Parkering": "BesÃ¸gsplads",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": "BesÃ¸gsplads",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652191.3210075685,
+            1172907.866104397
+          ],
+          [
+            652190.3092303495,
+            1172912.9152929145
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 26,
+        "Vejkode": 4976,
+        "Vejnavn": "Niels Hemmingsens Gade",
+        "Husnummer": "10",
+        "OmrÃ¥de": 5,
+        "Parkering": "LÃ¦ssezone",
+        "Antal_plad": 0,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "Der er ingen afmÃ¦rkning, da det er en lÃ¦ssezone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652045.991416615,
+            1173054.83323168
+          ],
+          [
+            652055.6586064704,
+            1173040.8016031382
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 25,
+        "Vejkode": 3796,
+        "Vejnavn": "KnabrostrÃ¦de",
+        "Husnummer": "16",
+        "OmrÃ¥de": 4,
+        "Parkering": "Handicapplads",
+        "Antal_plad": 1,
+        "Restriktio": "TidsbegrÃ¦nsning",
+        "Vejside": "Lige husnumre",
+        "P_ordning": "Handicapparkering",
+        "BemÃ¦rknin": "CH 59 561, 8-14"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651892.2482259009,
+            1172836.0462905504
+          ],
+          [
+            651888.3649650591,
+            1172840.6188415173
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 24,
+        "Vejkode": 5096,
+        "Vejnavn": "Nybrogade",
+        "Husnummer": "12",
+        "OmrÃ¥de": 7,
+        "Parkering": "Almindelig",
+        "Antal_plad": 2,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "1 time, 8-15, (8-15), Ã¸vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652013.081694051,
+            1172747.19015798
+          ],
+          [
+            652005.921765904,
+            1172738.21890759
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 23,
+        "Vejkode": 5096,
+        "Vejnavn": "Nybrogade",
+        "Husnummer": "16",
+        "OmrÃ¥de": 7,
+        "Parkering": "Erhverv",
+        "Antal_plad": 2,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-17 Reserveret til erhvervskÃ¸retÃ¸jer pÃ¥ gule nummerplader. Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651990.0560673015,
+            1172719.647345284
+          ],
+          [
+            651981.6743402613,
+            1172710.387391111
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 22,
+        "Vejkode": 5096,
+        "Vejnavn": "Nybrogade",
+        "Husnummer": "26",
+        "OmrÃ¥de": 7,
+        "Parkering": "Almindelig",
+        "Antal_plad": 1,
+        "Restriktio": "TidsbegrÃ¦nsning",
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "15 min"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651950.8855669305,
+            1172674.3444324548
+          ],
+          [
+            651947.0840062276,
+            1172669.8848651955
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 21,
+        "Vejkode": 5096,
+        "Vejnavn": "Nybrogade",
+        "Husnummer": "28",
+        "OmrÃ¥de": 7,
+        "Parkering": "Ambassade",
+        "Antal_plad": 2,
+        "Restriktio": "Ja",
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "Kun kÃ¸retÃ¸jer med Ã¦rinde til Albaniens ambassade"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651947.0840062276,
+            1172669.8848651955
+          ],
+          [
+            651939.951472511,
+            1172661.51068089
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 20,
+        "Vejkode": 8216,
+        "Vejnavn": "Vestergade",
+        "Husnummer": "37",
+        "OmrÃ¥de": 2,
+        "Parkering": "Almindelig",
+        "Antal_plad": 6,
+        "Restriktio": "TidsbegrÃ¦nsning",
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "15 min"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651507.5183047205,
+            1172758.916471645
+          ],
+          [
+            651531.946641714,
+            1172783.10176101
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 19,
+        "Vejkode": 8216,
+        "Vejnavn": "Vestergade",
+        "Husnummer": "27",
+        "OmrÃ¥de": 2,
+        "Parkering": "Almindelig",
+        "Antal_plad": 0,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "Det ligner at brostensrÃ¦kken er blevet fjernet."
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651547.33253761,
+            1172798.91078032
+          ],
+          [
+            651562.663165714,
+            1172818.244037725
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 18,
+        "Vejkode": 8252,
+        "Vejnavn": "Vester Voldgade",
+        "Husnummer": "72",
+        "OmrÃ¥de": 2,
+        "Parkering": "El-bil",
+        "Antal_plad": 4,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": "Elbilparkering",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651546.955279434,
+            1172697.4917868148
+          ],
+          [
+            651563.7178640321,
+            1172683.0588329386
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 17,
+        "Vejkode": 8252,
+        "Vejnavn": "Vester Voldgade",
+        "Husnummer": "72",
+        "OmrÃ¥de": 2,
+        "Parkering": "Taxi",
+        "Antal_plad": 4,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": "Taxiparkering",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651563.7178640321,
+            1172683.0588329386
+          ],
+          [
+            651580.5882408272,
+            1172668.3532290137
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 16,
+        "Vejkode": 8252,
+        "Vejnavn": "Vester Voldgade",
+        "Husnummer": "72",
+        "OmrÃ¥de": 2,
+        "Parkering": "Taxi",
+        "Antal_plad": 6,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": "Taxiparkering",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651587.0826060416,
+            1172662.6917399259
+          ],
+          [
+            651614.57055504,
+            1172638.51107079
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 15,
+        "Vejkode": 1728,
+        "Vejnavn": "Farvergade",
+        "Husnummer": "27L",
+        "OmrÃ¥de": 2,
+        "Parkering": "Almindelig",
+        "Antal_plad": 5,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651671.7949970263,
+            1172613.3439842092
+          ],
+          [
+            651694.8560906863,
+            1172629.6091114436
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 14,
+        "Vejkode": 8252,
+        "Vejnavn": "Vester Voldgade",
+        "Husnummer": "74",
+        "OmrÃ¥de": 2,
+        "Parkering": "Almindelig",
+        "Antal_plad": 5,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-18, (7-18), 7-18, GÃ¦lder ikke KÃ¸benhavns Sightseeingbusser, Reserviert Kopenhagen Rundfahrt"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651659.6014178881,
+            1172599.5370481121
+          ],
+          [
+            651683.168936094,
+            1172579.21621866
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 13,
+        "Vejkode": 8252,
+        "Vejnavn": "Vester Voldgade",
+        "Husnummer": "80",
+        "OmrÃ¥de": 2,
+        "Parkering": "BesÃ¸gsplads",
+        "Antal_plad": 2,
+        "Restriktio": null,
+        "Vejside": "Lige husnumre",
+        "P_ordning": "BesÃ¸gsplads",
+        "BemÃ¦rknin": "2 pladser"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651712.7514127081,
+            1172551.2973072936
+          ],
+          [
+            651720.415270904,
+            1172544.7035731294
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 12,
+        "Vejkode": 8252,
+        "Vejnavn": "Vester Voldgade",
+        "Husnummer": "82",
+        "OmrÃ¥de": 2,
+        "Parkering": "Erhverv",
+        "Antal_plad": 4,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": "Lige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-17 Reserveret til erhvervskÃ¸retÃ¸jer pÃ¥ gule nummerplader - Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651726.4367770498,
+            1172539.4882170344
+          ],
+          [
+            651744.1902191842,
+            1172524.1830253538
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 11,
+        "Vejkode": 1396,
+        "Vejnavn": "DyrkÃ¸b",
+        "Husnummer": "1",
+        "OmrÃ¥de": 3,
+        "Parkering": "El-bil",
+        "Antal_plad": 0,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": "Elbilparkering",
+        "BemÃ¦rknin": "Der er byggeplads"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651794.577350814,
+            1173022.8555982905
+          ],
+          [
+            651777.8960143593,
+            1173015.1675732736
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 10,
+        "Vejkode": 1956,
+        "Vejnavn": "Frederiksholms Kanal",
+        "Husnummer": "25A",
+        "OmrÃ¥de": 7,
+        "Parkering": "Almindelig",
+        "Antal_plad": 50,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": null,
+        "BemÃ¦rknin": "ingen afmÃ¦rkning"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652100.2553061052,
+            1172456.6142441637
+          ],
+          [
+            652189.8547382535,
+            1172327.9858573563
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 9,
+        "Vejkode": 1956,
+        "Vejnavn": "Frederiksholms Kanal",
+        "Husnummer": "0",
+        "OmrÃ¥de": 7,
+        "Parkering": "Almindelig",
+        "Antal_plad": 12,
+        "Restriktio": null,
+        "Vejside": null,
+        "P_ordning": null,
+        "BemÃ¦rknin": "ingen afmÃ¦rkning"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652196.6780489393,
+            1172319.0718635477
+          ],
+          [
+            652217.8204394286,
+            1172295.4642996544
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 8,
+        "Vejkode": 7756,
+        "Vejnavn": "TÃ¸jhusgade",
+        "Husnummer": "0",
+        "OmrÃ¥de": 7,
+        "Parkering": "Erhverv",
+        "Antal_plad": 6,
+        "Restriktio": "Flere restriktioner",
+        "Vejside": null,
+        "P_ordning": null,
+        "BemÃ¦rknin": "7-17 Reserveret til erhvervskÃ¸retÃ¸jer pÃ¥ gule nummerplader. Ã˜vrig tid P-betalingszone"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652099.8095085117,
+            1172494.8723155695
+          ],
+          [
+            652129.1183518132,
+            1172514.3667174412
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 7,
+        "Vejkode": 7756,
+        "Vejnavn": "TÃ¸jhusgade",
+        "Husnummer": "0",
+        "OmrÃ¥de": 7,
+        "Parkering": "Almindelig",
+        "Antal_plad": 7,
+        "Restriktio": null,
+        "Vejside": null,
+        "P_ordning": null,
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652129.1183518132,
+            1172514.3667174412
+          ],
+          [
+            652161.2511252327,
+            1172535.6642931553
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 6,
+        "Vejkode": 7756,
+        "Vejnavn": "TÃ¸jhusgade",
+        "Husnummer": "0",
+        "OmrÃ¥de": 7,
+        "Parkering": "BesÃ¸gsplads",
+        "Antal_plad": 1,
+        "Restriktio": null,
+        "Vejside": null,
+        "P_ordning": "BesÃ¸gsplads",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652161.2511253289,
+            1172535.6642932193
+          ],
+          [
+            652165.6143410703,
+            1172538.5266019967
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 5,
+        "Vejkode": 7756,
+        "Vejnavn": "TÃ¸jhusgade",
+        "Husnummer": "0",
+        "OmrÃ¥de": 7,
+        "Parkering": "Taxi",
+        "Antal_plad": 2,
+        "Restriktio": null,
+        "Vejside": null,
+        "P_ordning": "Taxiparkering",
+        "BemÃ¦rknin": "2 vogne"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652165.6143410703,
+            1172538.5266019967
+          ],
+          [
+            652175.095738748,
+            1172544.7474285273
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 4,
+        "Vejkode": 7756,
+        "Vejnavn": "TÃ¸jhusgade",
+        "Husnummer": "0",
+        "OmrÃ¥de": 7,
+        "Parkering": "BesÃ¸gsplads",
+        "Antal_plad": 3,
+        "Restriktio": null,
+        "Vejside": null,
+        "P_ordning": "BesÃ¸gsplads",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652185.5294589626,
+            1172551.692217747
+          ],
+          [
+            652205.4963060177,
+            1172565.0894738806
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 3,
+        "Vejkode": 1956,
+        "Vejnavn": "Frederiksholms Kanal",
+        "Husnummer": "21A",
+        "OmrÃ¥de": 7,
+        "Parkering": "Delebil",
+        "Antal_plad": 5,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": "Delebil",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652100.2553061028,
+            1172456.6142441672
+          ],
+          [
+            652092.425727102,
+            1172467.7635377892
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 2,
+        "Vejkode": 1956,
+        "Vejnavn": "Frederiksholms Kanal",
+        "Husnummer": "21A",
+        "OmrÃ¥de": 7,
+        "Parkering": "Delebil",
+        "Antal_plad": 2,
+        "Restriktio": null,
+        "Vejside": "Ulige husnumre",
+        "P_ordning": "Delebil",
+        "BemÃ¦rknin": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            652087.9902578876,
+            1172473.9236556797
+          ],
+          [
+            652083.486010749,
+            1172480.49366319
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "I100275": 1,
+        "Vejkode": 872,
+        "Vejnavn": "BrolÃ¦ggerstrÃ¦de",
+        "Husnummer": "13",
+        "OmrÃ¥de": 4,
+        "Parkering": "Handicapplads",
+        "Antal_plad": 1,
+        "Restriktio": "TidsbegrÃ¦nsning",
+        "Vejside": "Ulige husnumre",
+        "P_ordning": "Handicapparkering",
+        "BemÃ¦rknin": "DM 78 856, 06.30-15.30"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            651842.3401540603,
+            1172822.678099467
+          ],
+          [
+            651837.9170652188,
+            1172819.5896331612
+          ]
+        ]
+      }
+    }
+  ]
+}

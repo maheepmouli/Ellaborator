@@ -77,6 +77,7 @@ import {
   observatoryShellTitle,
 } from "@/lib/observatoryCityContent";
 import { isIssyCity } from "@/lib/issyMapRouting";
+import { getCityPilotProfile } from "@/data/cityPilotProfiles";
 import { ObservatoryGraphicSlot } from "@/components/observatory/ObservatoryGraphicSlot";
 import type { ObservatoryGraphicZone } from "@/lib/observatoryGraphicTypes";
 import { intelAccentValue, intelPanelHeader, intelSectionLabel } from "@/styles/intelPanels";
@@ -1094,6 +1095,7 @@ function ObservatoryTabContent({
   selectedModeTypes = [],
   selectedDirectionId,
   onSelectDirectionId,
+  selectedSegmentId,
 }: {
   tabId: ObservatoryTabId;
   selectedKpi: string;
@@ -1107,6 +1109,7 @@ function ObservatoryTabContent({
   selectedModeTypes?: string[];
   selectedDirectionId?: string | null;
   onSelectDirectionId?: (id: string) => void;
+  selectedSegmentId?: string | null;
 }) {
   const resolvedCity = cityName || "Issy-les-Moulineaux";
 
@@ -1121,6 +1124,7 @@ function ObservatoryTabContent({
       selectedModeTypes={selectedModeTypes}
       selectedDirectionId={selectedDirectionId}
       onSelectDirectionId={onSelectDirectionId}
+      selectedSegmentId={selectedSegmentId}
     />
   );
 
@@ -1145,6 +1149,7 @@ function ObservatoryTabContent({
           selectedModeTypes={selectedModeTypes}
           selectedDirectionId={selectedDirectionId}
           onSelectDirectionId={onSelectDirectionId}
+          selectedSegmentId={selectedSegmentId}
         />
       );
     }
@@ -1545,13 +1550,32 @@ export default function SegmentIntelligencePanel({
   const confidence = confidenceFromDataClass(dataClass, view?.dataConfidence ?? 0.6);
   const shellTitle = observatoryShellTitle(resolvedCity, pilotId);
   const corridorLabel = observatoryCorridorLabel(resolvedCity, pilotId);
-  const perfImprovement =
-    view && view.intervention && view.baseline
-      ? Math.round(
-          ((1 - view.intervention.peakCongestion) / Math.max(0.01, 1 - view.baseline.peakCongestion) - 1) *
-            100
-        )
-      : 18;
+  const perfImprovement = useMemo(() => {
+    if (!view?.intervention || !view?.baseline) return 18;
+    const profile = getCityPilotProfile(pilotId);
+    if (view.dataClass === "observed" && selectedKpi === "kpi1.2") {
+      const preActive =
+        (view.baseline.modeShare.Cycle ?? 0) + (view.baseline.modeShare.Pedestrian ?? 0);
+      const postActive =
+        (view.intervention.modeShare.Cycle ?? 0) + (view.intervention.modeShare.Pedestrian ?? 0);
+      return Math.round(postActive - preActive);
+    }
+    if (profile?.observatoryType === "camera" && view.dataClass === "observed") {
+      const preMotor =
+        (view.baseline.modeShare.Car ?? 0) +
+        (view.baseline.modeShare.PTW ?? 0) +
+        (view.baseline.modeShare["Public Transport"] ?? 0);
+      const postMotor =
+        (view.intervention.modeShare.Car ?? 0) +
+        (view.intervention.modeShare.PTW ?? 0) +
+        (view.intervention.modeShare["Public Transport"] ?? 0);
+      return Math.round(preMotor - postMotor);
+    }
+    return Math.round(
+      ((1 - view.intervention.peakCongestion) / Math.max(0.01, 1 - view.baseline.peakCongestion) - 1) *
+        100
+    );
+  }, [view, selectedKpi, pilotId]);
 
   useEffect(() => {
     if (isOpen) {
@@ -1807,6 +1831,7 @@ export default function SegmentIntelligencePanel({
                 selectedModeTypes={selectedModeTypes}
                 selectedDirectionId={selectedDirectionId}
                 onSelectDirectionId={onSelectDirectionId}
+                selectedSegmentId={selectedSegmentId}
               />
             </div>
 
@@ -1864,6 +1889,7 @@ export default function SegmentIntelligencePanel({
                     selectedModeTypes={selectedModeTypes}
                     selectedDirectionId={selectedDirectionId}
                     onSelectDirectionId={onSelectDirectionId}
+                    selectedSegmentId={selectedSegmentId}
                   />
                 </motion.div>
               </AnimatePresence>
@@ -1878,7 +1904,10 @@ export default function SegmentIntelligencePanel({
                 <div className="flex items-center gap-2">
                   <GitBranch className="h-3 w-3 shrink-0" />
                   <span>
-                    ELABORATOR · {pilotLabel ?? "Issy"} · {dataSourceTrustLabel(kpiPrimaryIssySource(selectedKpi))}
+                    ELABORATOR · {pilotLabel ?? "Issy"} ·{" "}
+                    {isIssyCity(resolvedCity)
+                      ? dataSourceTrustLabel(kpiPrimaryIssySource(selectedKpi))
+                      : view.sourceLabel || observatoryKpiDef?.dataLabel || "Linked dataset"}
                   </span>
                 </div>
                 <span className="pl-5 font-semibold text-white/65">

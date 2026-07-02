@@ -1,5 +1,21 @@
 import * as XLSX from "xlsx";
+import {
+  inferOtcWorkbookKey,
+  otcRecordMatchesPilotScope,
+  copenhagenRecordMatchesPilotScope,
+  COPENHAGEN_LOCATIONS,
+  getOtcEvaluationRulesForWorkbook,
+} from "@/data/copenhagenLocationRegistry";
+import {
+  applyMethodologyToAgg,
+  getMethodologyConstraintForWorkbook,
+  shouldExcludeCphClassification,
+  shouldExcludeCphRowByEvaluationRules,
+  inferTrafficDirectionFromFlow,
+} from "@/lib/copenhagenMethodology";
 import type { NormalizedCityRecord, ScenarioType } from "@/types/normalized-city-data";
+import { parseCopenhagenExtendedRecords } from "@/services/copenhagenExtendedParsers";
+import { buildTrikalaRecords } from "@/services/trikalaSurveyParser";
 
 export interface LocalCityPoint {
   lat: number;
@@ -18,6 +34,7 @@ const COPENHAGEN_CAMERA_FILES = [
   "/sharepoint-data/Copenhagen/OpenTrafficCam Counts 2024 and 2025/Countings_Vandkunsten_sortet.xlsx",
   "/sharepoint-data/Copenhagen/OpenTrafficCam Counts 2024 and 2025/Countings_Gammeltorv_sortet.xlsx",
   "/sharepoint-data/Copenhagen/OpenTrafficCam Counts 2024 and 2025/Countings_Stormgade_sortet.xlsx",
+  "/sharepoint-data/Copenhagen/OpenTrafficCam Counts 2024 and 2025/Countings_Hojbro.xlsx",
 ];
 
 const HELSINKI_TELRAAM_FILES = [
@@ -35,12 +52,6 @@ const ZARAGOSA_MANUAL_COUNTING =
 const ZARAGOSA_INTERVENTION_CENTROIDS =
   "/sharepoint-data/Zaragoza/intervention-areas-centroids.geojson";
 
-const TRIKALA_SMART_CROSSING_SURVEY =
-  "/sharepoint-data/Trikala/baseline data of the smart crossing on line survey_english.xlsx";
-const TRIKALA_WOMEN_MOBILITY_SURVEY =
-  "/sharepoint-data/Trikala/ELABORATOR_ Women Mobility Questionnaire (Responses).xlsx";
-
-const TRIKALA_PILOT_ANCHOR = { lat: 39.555, lng: 21.767 };
 const ZARAGOSA_PILOT_ANCHOR = { lat: 41.652, lng: -0.878 };
 
 interface CphJsonDirectionRow {
@@ -97,11 +108,12 @@ function hashString(value: string): number {
   return Math.abs(hash);
 }
 
-function inferCopenhagenPilot(site: string): string {
-  const value = site.toLowerCase();
-  if (value.includes("norreport") || value.includes("norregade")) return "cph-p1";
-  if (value.includes("vandkunsten")) return "cph-p2";
-  return "cph-p3";
+function getCopenhagenWorkbookEvaluationNotes(workbookKey: string | null): string | undefined {
+  if (!workbookKey) return undefined;
+  const site = COPENHAGEN_LOCATIONS.find(
+    (loc) => loc.kind === "otc_workbook_site" && loc.otcWorkbookKey === workbookKey
+  );
+  return site?.notes;
 }
 
 function isPlaceholderCell(value: unknown): boolean {
@@ -184,28 +196,32 @@ function resolveZaragozaCoords(
 }
 
 async function parseCopenhagenFromJsonFallback(kpiId: string): Promise<NormalizedCityRecord[]> {
-  if (kpiId === "kpi4.2") return [];
   try {
     const response = await fetch(COPENHAGEN_JSON_FALLBACK);
     if (!response.ok) return [];
     const rows = (await response.json()) as CphJsonDirectionRow[];
     return rows.map((row) => {
-      const baselineAgg: CphFlowAgg = {
+      const workbookKey = inferOtcWorkbookKey(row.siteName);
+      const rule = getMethodologyConstraintForWorkbook(workbookKey);
+      const applyRule = (agg: CphFlowAgg): CphFlowAgg =>
+        rule ? applyMethodologyToAgg(agg, rule) : agg;
+
+      const baselineAgg = applyRule({
         flow: row.flow,
         total: row.pre.total,
         bike: row.pre.bike,
         pedestrian: row.pre.pedestrian,
         motorized: row.pre.motorised,
         ptw: row.pre.ptw,
-      };
-      const interventionAgg: CphFlowAgg = {
+      });
+      const interventionAgg = applyRule({
         flow: row.flow,
         total: row.post.total,
         bike: row.post.bike,
         pedestrian: row.post.pedestrian,
         motorized: row.post.motorised,
         ptw: row.post.ptw,
-      };
+      });
       const baselineValue = cphSiteMetric(baselineAgg, kpiId);
       const interventionValue = cphSiteMetric(interventionAgg, kpiId);
       const siteId = row.siteName.toLowerCase().replace(/[^a-z0-9]+/g, "-");
@@ -214,7 +230,7 @@ async function parseCopenhagenFromJsonFallback(kpiId: string): Promise<Normalize
         id: `copenhagen-${kpiId}-${siteId}-${flowId}-json`,
         city: "Copenhagen",
         cityId: "copenhagen",
-        interventionId: inferCopenhagenPilot(row.siteName),
+        interventionId: inferOtcWorkbookKey(row.siteName) ?? "copenhagen",
         kpiId,
         sourceFile: COPENHAGEN_JSON_FALLBACK,
         geometryType: kpiId === "kpi3.2" ? "hex" : "point",
@@ -252,7 +268,10 @@ async function parseCopenhagenFromJsonFallback(kpiId: string): Promise<Normalize
         locationMethod: "coordinates",
         segmentId: `${siteId}-${flowId}`,
         streetName: row.siteName,
-        spatialNote: `${row.siteName} · ${row.flow} · bundled fallback`,
+        spatialNote: `${row.siteName} · ${row.flow} · bundled fallback${
+          rule?.warnings.length ? ` · ${rule.warnings[0]}` : ""
+        }`,
+        methodologyWarnings: rule?.warnings,
         parserStatus: "ready",
       } satisfies NormalizedCityRecord;
     });
@@ -330,12 +349,24 @@ export function getLocalCityDiagnostics(
   );
 }
 
-function aggregateCphRows(rows: Record<string, unknown>[]): Map<string, CphFlowAgg> {
+function aggregateCphRows(
+  rows: Record<string, unknown>[],
+  workbookKey: string | null
+): Map<string, CphFlowAgg> {
+  const rule = getMethodologyConstraintForWorkbook(workbookKey);
+  const evaluationRules = getOtcEvaluationRulesForWorkbook(workbookKey);
   const byFlow = new Map<string, CphFlowAgg>();
   rows.forEach((row) => {
+    if (shouldExcludeCphRowByEvaluationRules(row, evaluationRules)) return;
     const cls = String(row.classification || "").toLowerCase();
     const flow = String(row.flow || "").trim();
     if (!flow) return;
+    if (
+      rule &&
+      shouldExcludeCphClassification(rule, inferTrafficDirectionFromFlow(flow), cls)
+    ) {
+      return;
+    }
     const count = parseNumber(row.count);
     if (!count) return;
     const agg =
@@ -390,10 +421,20 @@ function cphSiteMetric(agg: CphFlowAgg, kpiId: string): number {
   }
 }
 
-async function parseCopenhagenRecords(kpiId: string): Promise<NormalizedCityRecord[]> {
-  if (kpiId === "kpi4.2") {
-    return [];
+function dedupeCopenhagenRecordsBySegmentId(
+  records: NormalizedCityRecord[]
+): NormalizedCityRecord[] {
+  const bySegment = new Map<string, NormalizedCityRecord>();
+  for (const record of records) {
+    const key = record.segmentId || record.id;
+    if (!bySegment.has(key)) {
+      bySegment.set(key, record);
+    }
   }
+  return [...bySegment.values()];
+}
+
+async function parseCopenhagenRecords(kpiId: string): Promise<NormalizedCityRecord[]> {
   const cacheKey = `copenhagen-${kpiId}`;
   const cached = normalizedRecordCache.get(cacheKey);
   if (cached) return cached;
@@ -452,22 +493,28 @@ async function parseCopenhagenRecords(kpiId: string): Promise<NormalizedCityReco
           })
         : [];
 
-      const preByFlow = aggregateCphRows(preRows);
-      const postByFlow = aggregateCphRows(postRows);
+      const workbookKey = inferOtcWorkbookKey(siteName);
+      const methodologyRule = getMethodologyConstraintForWorkbook(workbookKey);
+      const preByFlow = aggregateCphRows(preRows, workbookKey);
+      const postByFlow = aggregateCphRows(postRows, workbookKey);
       const allFlows = new Set<string>([...preByFlow.keys(), ...postByFlow.keys()]);
       if (allFlows.size === 0) continue;
 
       const siteId = siteName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-      const intervention = inferCopenhagenPilot(siteName);
+      const evaluationNotes = getCopenhagenWorkbookEvaluationNotes(workbookKey);
       const tempCoverage: NormalizedCityRecord["temporalCoverage"] =
         preByFlow.size > 0 && postByFlow.size > 0 ? "before-after" : "single-period";
 
       allFlows.forEach((flow) => {
         const pre = preByFlow.get(flow);
         const post = postByFlow.get(flow);
-        const baselineAgg = pre ?? { flow, total: 0, bike: 0, pedestrian: 0, motorized: 0, ptw: 0 };
-        const interventionAgg =
+        let baselineAgg = pre ?? { flow, total: 0, bike: 0, pedestrian: 0, motorized: 0, ptw: 0 };
+        let interventionAgg =
           post ?? { flow, total: 0, bike: 0, pedestrian: 0, motorized: 0, ptw: 0 };
+        if (methodologyRule) {
+          baselineAgg = applyMethodologyToAgg(baselineAgg, methodologyRule);
+          interventionAgg = applyMethodologyToAgg(interventionAgg, methodologyRule);
+        }
         const baselineValue = cphSiteMetric(baselineAgg, kpiId);
         const interventionValue = cphSiteMetric(interventionAgg, kpiId);
         const flowId = flow.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -475,7 +522,7 @@ async function parseCopenhagenRecords(kpiId: string): Promise<NormalizedCityReco
           id: `copenhagen-${kpiId}-${siteId}-${flowId}`,
           city: "Copenhagen",
           cityId: "copenhagen",
-          interventionId: intervention,
+          interventionId: workbookKey ?? "copenhagen",
           kpiId,
           sourceFile: filePath,
           geometryType: kpiId === "kpi3.2" ? "hex" : "point",
@@ -516,7 +563,10 @@ async function parseCopenhagenRecords(kpiId: string): Promise<NormalizedCityReco
           streetName: siteName,
           spatialNote: `${siteName} · direction: ${flow}${
             datePreRow ? ` · pre: ${String(datePreRow[1] ?? "").split(",")[0]}` : ""
-          }${datePostRow ? ` · post: ${String(datePostRow[1] ?? "").split(",")[0]}` : ""}`,
+          }${datePostRow ? ` · post: ${String(datePostRow[1] ?? "").split(",")[0]}` : ""}${
+            evaluationNotes ? ` · ${evaluationNotes}` : ""
+          }`,
+          methodologyWarnings: methodologyRule?.warnings,
           parserStatus: "ready",
         });
       });
@@ -525,9 +575,11 @@ async function parseCopenhagenRecords(kpiId: string): Promise<NormalizedCityReco
     }
   }
 
-  if (records.length === 0) {
+  let otcRecords = records;
+  if (otcRecords.length === 0) {
     const fallbackRecords = await parseCopenhagenFromJsonFallback(kpiId);
     if (fallbackRecords.length > 0) {
+      otcRecords = fallbackRecords;
       copenhagenParseDiagnostics.set(kpiId, {
         status: "ok",
         message:
@@ -535,42 +587,54 @@ async function parseCopenhagenRecords(kpiId: string): Promise<NormalizedCityReco
         missingFiles,
         loadedFiles,
       });
-      normalizedRecordCache.set(cacheKey, fallbackRecords);
-      return fallbackRecords;
     }
   }
 
-  if (missingFiles.length > 0 || loadedFiles.length !== COPENHAGEN_CAMERA_FILES.length) {
-    copenhagenParseDiagnostics.set(kpiId, {
-      status: "files-unavailable",
-      message:
-        "Observed directional source files are unavailable and bundled JSON fallback could not be loaded.",
-      missingFiles,
-      loadedFiles,
-    });
+  const extended = await parseCopenhagenExtendedRecords(kpiId);
+  const merged = dedupeCopenhagenRecordsBySegmentId([...otcRecords, ...extended]);
+
+  if (merged.length === 0) {
+    if (missingFiles.length > 0 || loadedFiles.length !== COPENHAGEN_CAMERA_FILES.length) {
+      copenhagenParseDiagnostics.set(kpiId, {
+        status: "files-unavailable",
+        message:
+          "Observed directional source files are unavailable and bundled JSON fallback could not be loaded.",
+        missingFiles,
+        loadedFiles,
+      });
+    } else {
+      copenhagenParseDiagnostics.set(kpiId, {
+        status: "no-records",
+        message: "No Copenhagen records parsed for the selected KPI.",
+        missingFiles: [],
+        loadedFiles,
+      });
+    }
     normalizedRecordCache.set(cacheKey, []);
     return [];
   }
 
-  if (records.length === 0) {
-    copenhagenParseDiagnostics.set(kpiId, {
-      status: "no-records",
-      message:
-        "All four directional source files loaded, but no directional pre/post rows were parsed for the selected KPI.",
-      missingFiles: [],
-      loadedFiles,
-    });
-  } else {
+  if (otcRecords.length > 0) {
     copenhagenParseDiagnostics.set(kpiId, {
       status: "ok",
-      message: "Directional observed counts loaded from all four per-site OpenTrafficCam files.",
-      missingFiles: [],
+      message:
+        extended.length > 0
+          ? `OTC directional counts plus ${extended.length} extended dataset records.`
+          : "Directional observed counts loaded from OpenTrafficCam workbooks.",
+      missingFiles: missingFiles.length ? missingFiles : [],
+      loadedFiles,
+    });
+  } else if (!copenhagenParseDiagnostics.has(kpiId)) {
+    copenhagenParseDiagnostics.set(kpiId, {
+      status: "ok",
+      message: `Loaded ${extended.length} records from Copenhagen extended datasets.`,
+      missingFiles,
       loadedFiles,
     });
   }
 
-  normalizedRecordCache.set(cacheKey, records);
-  return records;
+  normalizedRecordCache.set(cacheKey, merged);
+  return merged;
 }
 
 async function parseHelsinkiRecords(kpiId: string): Promise<NormalizedCityRecord[]> {
@@ -989,182 +1053,7 @@ async function parseZaragozaRecords(kpiId: string): Promise<NormalizedCityRecord
 }
 
 async function parseTrikalaRecords(kpiId: string): Promise<NormalizedCityRecord[]> {
-  const cacheKey = `trikala-${kpiId}`;
-  const cached = normalizedRecordCache.get(cacheKey);
-  if (cached) return cached;
-
-  const records: NormalizedCityRecord[] = [];
-  let smartRows: Record<string, unknown>[] = [];
-  let womenRows: Record<string, unknown>[] = [];
-
-  try {
-    const smartResponse = await fetch(encodeURI(TRIKALA_SMART_CROSSING_SURVEY));
-    if (smartResponse.ok) {
-      const workbook = XLSX.read(await smartResponse.arrayBuffer(), { type: "array" });
-      smartRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(
-        workbook.Sheets[workbook.SheetNames[0]],
-        { defval: null }
-      );
-    }
-  } catch {
-    // optional survey
-  }
-
-  try {
-    const womenResponse = await fetch(encodeURI(TRIKALA_WOMEN_MOBILITY_SURVEY));
-    if (womenResponse.ok) {
-      const workbook = XLSX.read(await womenResponse.arrayBuffer(), { type: "array" });
-      womenRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(
-        workbook.Sheets[workbook.SheetNames[0]],
-        { defval: null }
-      );
-    }
-  } catch {
-    // optional survey
-  }
-
-  if (smartRows.length === 0 && womenRows.length === 0) {
-    normalizedRecordCache.set(cacheKey, []);
-    return [];
-  }
-
-  const pushSurveyRecord = (
-    idSuffix: string,
-    value: number,
-    baselineValue: number,
-    source: string,
-    method: string,
-    linkedKpi: string
-  ) => {
-    if (linkedKpi !== kpiId || value <= 0) return;
-    records.push({
-      id: `trikala-${kpiId}-${idSuffix}`,
-      city: "Trikala",
-      cityId: "trikala",
-      interventionId: "tri-p1",
-      kpiId,
-      sourceFile: TRIKALA_SMART_CROSSING_SURVEY,
-      geometryType: "point",
-      lat: TRIKALA_PILOT_ANCHOR.lat,
-      lng: TRIKALA_PILOT_ANCHOR.lng,
-      geometry: [[TRIKALA_PILOT_ANCHOR.lat, TRIKALA_PILOT_ANCHOR.lng]],
-      value,
-      baselineValue,
-      interventionValue: value,
-      comparisonValue: value - baselineValue,
-      source,
-      method,
-      type: "derived",
-      spatialQuality: "inferred",
-      geometryLinkage: "inferred",
-      temporalCoverage: "single-period",
-      locationMethod: "pilot_area_inference",
-      segmentId: "tri-p1-smart-crossing",
-      streetName: "Smart crossing corridor",
-      spatialNote: "Survey aggregate at pilot anchor (no reliable coordinates in SharePoint drop).",
-      parserStatus: "partial",
-    });
-  };
-
-  if (smartRows.length > 0) {
-    const safetyAvg = averageLikert(smartRows, /how safe do you feel/i);
-    const cyclistSafetyAvg = averageLikert(smartRows, /how safe is the road for a cyclist/i);
-    const conditionAvg = averageLikert(smartRows, /rate the current condition/i);
-    const accessibilityAvg = averageLikert(smartRows, /overall impression.*accessibility/i);
-    const connectivityAvg = averageLikert(smartRows, /connected to other parts/i);
-
-    pushSurveyRecord(
-      "smart-crossing-safety",
-      likertToPercent(safetyAvg),
-      likertToPercent(Math.max(1, safetyAvg - 0.3)),
-      "Smart crossing on-line survey",
-      `Mean perceived safety score from ${smartRows.length} responses (Likert 1–4).`,
-      "kpi2.1"
-    );
-    pushSurveyRecord(
-      "smart-crossing-cyclist-safety",
-      likertToPercent(cyclistSafetyAvg),
-      likertToPercent(Math.max(1, cyclistSafetyAvg - 0.25)),
-      "Smart crossing on-line survey",
-      `Mean cyclist safety perception from ${smartRows.length} responses.`,
-      "kpi2.1"
-    );
-    pushSurveyRecord(
-      "smart-crossing-condition",
-      likertToPercent(conditionAvg),
-      likertToPercent(Math.max(1, conditionAvg - 0.2)),
-      "Smart crossing on-line survey",
-      `Mean crossing condition score from ${smartRows.length} responses.`,
-      "kpi4.2"
-    );
-    pushSurveyRecord(
-      "smart-crossing-accessibility",
-      likertToPercent(accessibilityAvg),
-      likertToPercent(Math.max(1, accessibilityAvg - 0.2)),
-      "Smart crossing on-line survey",
-      `Mean corridor accessibility impression from ${smartRows.length} responses.`,
-      "kpi4.1"
-    );
-    pushSurveyRecord(
-      "smart-crossing-connectivity",
-      likertToPercent(connectivityAvg),
-      likertToPercent(Math.max(1, connectivityAvg - 0.15)),
-      "Smart crossing on-line survey",
-      `Mean area connectivity score from ${smartRows.length} responses.`,
-      "kpi4.2"
-    );
-  }
-
-  if (womenRows.length > 0 && (kpiId === "kpi2.1" || kpiId === "kpi4.1" || kpiId === "kpi4.2")) {
-    const daySafety = averageLikert(womenRows, /ασφαλής.*μέρα/i);
-    const nightSafety = averageLikert(womenRows, /ασφαλής.*νύχτα/i);
-    if (kpiId === "kpi2.1") {
-      pushSurveyRecord(
-        "women-mobility-day-safety",
-        likertToPercent(daySafety),
-        likertToPercent(Math.max(1, daySafety - 0.35)),
-        "Women mobility questionnaire",
-        `Mean daytime safety perception from ${womenRows.length} responses.`,
-        "kpi2.1"
-      );
-      pushSurveyRecord(
-        "women-mobility-night-safety",
-        likertToPercent(nightSafety),
-        likertToPercent(Math.max(1, nightSafety - 0.4)),
-        "Women mobility questionnaire",
-        `Mean nighttime safety perception from ${womenRows.length} responses.`,
-        "kpi2.1"
-      );
-    }
-  }
-
-  if (kpiId === "kpi1.2" && womenRows.length > 0) {
-    let activeTrips = 0;
-    let totalTrips = 0;
-    womenRows.forEach((row) => {
-      const modes = ["Ποδήλατο", "Περπάτημα", "Αυτοκίνητο", "Μηχανάκι", "Λεωφορείο", "Άλλο"];
-      modes.forEach((mode) => {
-        const key = Object.keys(row).find((k) => k.includes(mode));
-        if (!key) return;
-        const freq = String(row[key] || "").toLowerCase();
-        if (!freq || freq === "καθόλου") return;
-        totalTrips += 1;
-        if (mode === "Ποδήλατο" || mode === "Περπάτημα") activeTrips += 1;
-      });
-    });
-    const share = totalTrips > 0 ? (activeTrips / totalTrips) * 100 : 0;
-    pushSurveyRecord(
-      "women-mobility-active-share",
-      clampPercent(share),
-      clampPercent(share * 0.92),
-      "Women mobility questionnaire",
-      "Share of reported trip modes that are walking or cycling.",
-      "kpi1.2"
-    );
-  }
-
-  normalizedRecordCache.set(cacheKey, records);
-  return records;
+  return buildTrikalaRecords(kpiId);
 }
 
 async function getNormalizedCityRecords(cityName: string, kpiId: string): Promise<NormalizedCityRecord[]> {
@@ -1186,7 +1075,12 @@ export async function loadLocalCityPoints(
 ): Promise<LocalCityPoint[]> {
   const records = await getNormalizedCityRecords(cityName, kpiId);
   const filtered = selectedPilotId
-    ? records.filter((record) => record.interventionId === selectedPilotId)
+    ? records.filter((record) => {
+        if (normalizeCityKey(cityName) === "copenhagen") {
+          return copenhagenRecordMatchesPilotScope(record, selectedPilotId);
+        }
+        return record.interventionId === selectedPilotId;
+      })
     : records;
   const diagnosticsKey = localCityDiagnosticsKey(cityName, kpiId, selectedPilotId);
 
@@ -1227,10 +1121,25 @@ export async function loadLocalCityPoints(
           scenario,
           interventionId: record.interventionId,
           temporalCoverage: record.temporalCoverage || "single-period",
+          otcWorkbookKey:
+            normalizeCityKey(cityName) === "copenhagen"
+              ? inferOtcWorkbookKey(String(record.streetName ?? ""))
+              : undefined,
+          evaluationNotes:
+            normalizeCityKey(cityName) === "copenhagen"
+              ? getCopenhagenWorkbookEvaluationNotes(
+                  inferOtcWorkbookKey(String(record.streetName ?? ""))
+                )
+              : undefined,
           locationMethod: record.locationMethod || "pilot_area_inference",
           segmentId: record.segmentId,
           spatialNote: record.spatialNote,
+          methodologyWarnings: record.methodologyWarnings,
           parserStatus: record.parserStatus || "partial",
+          datasetKind: record.datasetKind,
+          category: record.category,
+          likertLabel: record.likertLabel,
+          facilityCategory: record.facilityCategory,
         },
       }));
   }

@@ -190,9 +190,14 @@
 
   /* Insight sidebar — brighter chart / filter panels */
   .insight-chart-panel {
-    background: linear-gradient(165deg, rgba(30, 26, 56, 0.98) 0%, rgba(21, 17, 48, 1) 100%);
+    background: linear-gradient(165deg, rgba(19, 26, 48, 0.98) 0%, rgba(19, 26, 48, 1) 100%);
     border: 1px solid rgba(255, 255, 255, 0.22);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  }
+
+  .insight-chart-panel .recharts-wrapper,
+  .insight-chart-panel .recharts-surface {
+    background: transparent !important;
   }
 
   .insight-chart-panel .recharts-cartesian-axis-tick-value,
@@ -206,6 +211,13 @@
     color: #faf8ff !important;
     font-weight: 600;
     font-size: var(--text-chart);
+  }
+
+  .insight-chart-panel .recharts-label,
+  .insight-chart-panel .recharts-bar-label text {
+    fill: #f4f1ff !important;
+    stroke: none !important;
+    paint-order: normal;
   }
 
   .insight-filter-row {
@@ -348,4 +360,237 @@
   border-radius: 50%;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
   z-index: 1;
+}
+
+/* Copenhagen map sensor markers */
+.cph-sensor-icon {
+  background: transparent !important;
+  border: none !important;
+}
+
+.cph-camera-marker {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cph-camera-ring {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 0 0 1px rgba(99, 204, 255, 0.45);
+}
+
+.cph-camera-core {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #64748b;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+
+.cph-camera-marker.is-selected .cph-camera-ring {
+  border-color: #00ffff;
+  box-shadow: 0 0 8px rgba(0, 255, 255, 0.55);
+}
+
+.cph-camera-marker.is-selected .cph-camera-core {
+  background: #00ffff;
+}
+
+.cph-telraam-marker {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cph-telraam-ping {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(56, 189, 248, 0.28);
+  animation: cph-telraam-ping 2.4s ease-out infinite;
+}
+
+.cph-telraam-core {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #38bdf8;
+  border: 2px solid #ffffff;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
+  z-index: 1;
+}
+
+.cph-telraam-marker.is-selected .cph-telraam-core {
+  background: #00ffff;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.65);
+}
+
+.cph-workbook-ring {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px dashed rgba(196, 181, 253, 0.75);
+}
+
+.cph-workbook-ring.is-selected {
+  border-color: #00ffff;
+  box-shadow: 0 0 8px rgba(0, 255, 255, 0.45);
+}
+
+@keyframes cph-telraam-ping {
+  0% {
+    transform: scale(0.65);
+    opacity: 0.75;
+  }
+  70% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+}
+
+.leaflet-overlay-pane svg path.cph-flow-arm-animated {
+  stroke-dasharray: 10 8;
+  animation: cph-flow-dash 1.1s linear infinite;
+}
+
+@keyframes cph-flow-dash {
+  to {
+    stroke-dashoffset: -18;
+  }
+}
+
+/* Trikala survey observatory map layers */
+.leaflet-overlay-pane svg path.trikala-survey-pulse-glow {
+  animation: trikala-pulse-glow 2.8s ease-in-out infinite;
+}
+
+@keyframes trikala-pulse-glow {
+  0%,
+  100% {
+    fill-opacity: 0.08;
+    stroke-opacity: 0.25;
+  }
+  50% {
+    fill-opacity: 0.22;
+    stroke-opacity: 0.55;
+  }
+}
+
+.leaflet-overlay-pane svg path.tri-crossing-dash-animated {
+  stroke-dasharray: 8 8;
+  animation: tri-crossing-dash 1.2s linear infinite;
+}
+
+@keyframes tri-crossing-dash {
+  to {
+    stroke-dashoffset: -16;
+  }
+}
+
+.tri-survey-icon {
+  background: transparent !important;
+  border: none !important;
+}
+
+.tri-survey-marker {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tri-survey-halo {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  animation: tri-survey-halo-ping 2.6s ease-out infinite;
+}
+
+.tri-survey-ring {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 0 6px rgba(0, 255, 255, 0.35);
+}
+
+.tri-survey-core {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  z-index: 1;
+}
+
+.tri-survey-marker.is-selected .tri-survey-ring {
+  border-color: #00ffff;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.65);
+}
+
+.tri-survey-marker.is-environmental .tri-survey-ring {
+  border-style: dashed;
+}
+
+.leaflet-tooltip.tri-segment-tooltip {
+  background: rgba(19, 26, 48, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  padding: 4px 8px;
+  font-family: "DM Sans", sans-serif;
+  font-size: 10px;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.leaflet-tooltip.tri-segment-tooltip::before {
+  border-top-color: rgba(19, 26, 48, 0.94);
+}
+
+.tri-segment-tooltip-inner {
+  display: block;
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.tri-segment-tooltip-metric {
+  display: block;
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.62);
+  margin-top: 1px;
+}
+
+@keyframes tri-survey-halo-ping {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.55;
+  }
+  70% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
 }

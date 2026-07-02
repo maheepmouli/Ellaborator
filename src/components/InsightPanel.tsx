@@ -32,7 +32,11 @@ import { useIssyFlowData } from "@/hooks/use-issy-flow-data";
 import { useLocalCityData } from "@/hooks/use-local-city-data";
 import { buildIssyModeShareKpiSlices } from "@/lib/issyFlowAggregates";
 import { isCopenhagenCameraKpi } from "@/data/copenhagenCameraSites";
-import { areAllTravelModesSelected } from "@/lib/travelModeMapLink";
+import { filterCopenhagenObservatoryPoints } from "@/lib/copenhagenObservatoryView";
+import {
+  aggregateCopenhagenObservedKpi,
+  resolveCopenhagenKpiDisplayUnit,
+} from "@/lib/copenhagenKpiDisplay";
 import type { ChartDrillPayload } from "@/types/chartMapInteraction";
 import { getKpi32TimeSeriesIntensity } from "@/lib/kpi32YearIntensity";
 import { LayerTrustStrip, type LayerTrustSummary } from "@/components/LayerTrustStrip";
@@ -76,6 +80,8 @@ interface InsightPanelProps {
   } | null;
   dataQualitySummary?: LayerTrustSummary | null;
   mapSelection?: MapSelectionState;
+  /** Copenhagen map hover — scopes segment-focus charts without persisting selection. */
+  hoveredSegmentId?: string | null;
   /** Milan KPI 3.2 RETE load window (paired with HeroMap parsers). */
   milanEnvironmentWindow?: "08-09" | "18-19";
   onMilanEnvironmentWindowChange?: (window: "08-09" | "18-19") => void;
@@ -115,6 +121,7 @@ const InsightPanel = ({
   mapContext,
   dataQualitySummary,
   mapSelection,
+  hoveredSegmentId = null,
   milanEnvironmentWindow = "08-09",
   onMilanEnvironmentWindowChange,
   issyFlowDayCategory = "all",
@@ -175,6 +182,7 @@ const InsightPanel = ({
   );
   const usingIssyObservedModeShare = !!issyModeShareFromCsv;
   const copenhagenCenter = cityData ? { lat: cityData.lat, lon: cityData.lon } : null;
+  const segmentFocusId = hoveredSegmentId ?? mapSelection?.segmentId ?? null;
   const shouldUseCopenhagenObserved =
     selectedCity === "Copenhagen" && isCopenhagenCameraKpi(selectedKpi);
   const { data: copenhagenLocalPoints } = useLocalCityData(
@@ -182,7 +190,7 @@ const InsightPanel = ({
     selectedKpi,
     shouldUseCopenhagenObserved ? copenhagenCenter : null,
     selectedPilotId || null,
-    "intervention"
+    scenario
   );
   const copenhagenObservedModeShare = useMemo(() => {
     if (!shouldUseCopenhagenObserved || !copenhagenLocalPoints?.length) return null;
@@ -191,113 +199,20 @@ const InsightPanel = ({
     );
     if (!observed.length) return null;
 
-    if (selectedKpi !== "kpi1.2") {
-      let baselineSum = 0;
-      let interventionSum = 0;
-      let count = 0;
-      observed.forEach((point) => {
-        const baseline = Number(point.properties?.baselineValue);
-        const intervention = Number(point.properties?.interventionValue ?? point.value);
-        if (!Number.isFinite(baseline) || !Number.isFinite(intervention)) return;
-        baselineSum += baseline;
-        interventionSum += intervention;
-        count += 1;
-      });
-      if (!count) return null;
-      const baselineMain = baselineSum / count;
-      const interventionMain = interventionSum / count;
-      return {
-        baselineMain,
-        interventionMain,
-        change: interventionMain - baselineMain,
-        breakdownBaseline: {},
-        breakdownIntervention: {},
-        hasSelectedRecords: true,
-      };
-    }
+    const scopedPoints = segmentFocusId
+      ? filterCopenhagenObservatoryPoints(observed, segmentFocusId)
+      : observed;
+    const pointsForAgg = scopedPoints.length ? scopedPoints : observed;
 
-    const strictModeFilterActive =
-      selectedModeTypes.length > 0 && !areAllTravelModesSelected(selectedModeTypes);
-    const sumBySelection = (
-      b?: { bike?: number; pedestrian?: number; motorised?: number; ptw?: number; total?: number }
-    ) => {
-      const bike = Number(b?.bike ?? 0);
-      const pedestrian = Number(b?.pedestrian ?? 0);
-      const motorised = Number(b?.motorised ?? 0);
-      const ptw = Number(b?.ptw ?? 0);
-      if (!strictModeFilterActive) return bike + pedestrian;
-      let selected = 0;
-      if (selectedModeTypes.includes("Cycle")) selected += bike;
-      if (selectedModeTypes.includes("Pedestrian")) selected += pedestrian;
-      if (selectedModeTypes.includes("Private Car") || selectedModeTypes.includes("Public Transport")) {
-        selected += motorised;
-      }
-      if (selectedModeTypes.includes("PTW")) selected += ptw;
-      return selected;
-    };
+    return aggregateCopenhagenObservedKpi(pointsForAgg, selectedKpi, selectedModeTypes);
+  }, [shouldUseCopenhagenObserved, copenhagenLocalPoints, selectedModeTypes, selectedKpi, segmentFocusId]);
 
-    let preSelected = 0;
-    let postSelected = 0;
-    let preTotal = 0;
-    let postTotal = 0;
-    let preBike = 0;
-    let postBike = 0;
-    let prePed = 0;
-    let postPed = 0;
-    let preMotor = 0;
-    let postMotor = 0;
-    let prePtw = 0;
-    let postPtw = 0;
-
-    copenhagenLocalPoints
-      .filter((p) => p.properties?.dataOrigin === "local-city-dataset")
-      .forEach((point) => {
-        const modeBreakdown = point.properties?.modeBreakdown as
-          | {
-              pre: { bike: number; pedestrian: number; motorised: number; ptw: number; total: number };
-              post: { bike: number; pedestrian: number; motorised: number; ptw: number; total: number };
-            }
-          | undefined;
-        if (!modeBreakdown) return;
-        preSelected += sumBySelection(modeBreakdown.pre);
-        postSelected += sumBySelection(modeBreakdown.post);
-        preTotal += Number(modeBreakdown.pre.total ?? 0);
-        postTotal += Number(modeBreakdown.post.total ?? 0);
-        preBike += Number(modeBreakdown.pre.bike ?? 0);
-        postBike += Number(modeBreakdown.post.bike ?? 0);
-        prePed += Number(modeBreakdown.pre.pedestrian ?? 0);
-        postPed += Number(modeBreakdown.post.pedestrian ?? 0);
-        preMotor += Number(modeBreakdown.pre.motorised ?? 0);
-        postMotor += Number(modeBreakdown.post.motorised ?? 0);
-        prePtw += Number(modeBreakdown.pre.ptw ?? 0);
-        postPtw += Number(modeBreakdown.post.ptw ?? 0);
-      });
-
-    const baselineMain = preTotal > 0 ? (preSelected / preTotal) * 100 : 0;
-    const interventionMain = postTotal > 0 ? (postSelected / postTotal) * 100 : 0;
-    const toPct = (n: number, d: number) => (d > 0 ? (n / d) * 100 : 0);
-
-    return {
-      baselineMain,
-      interventionMain,
-      change: interventionMain - baselineMain,
-      breakdownBaseline: {
-        Pedestrian: toPct(prePed, preTotal),
-        Cycle: toPct(preBike, preTotal),
-        "Public Transport": toPct(preMotor, preTotal),
-        "Private Car": toPct(preMotor, preTotal),
-        PTW: toPct(prePtw, preTotal),
-      },
-      breakdownIntervention: {
-        Pedestrian: toPct(postPed, postTotal),
-        Cycle: toPct(postBike, postTotal),
-        "Public Transport": toPct(postMotor, postTotal),
-        "Private Car": toPct(postMotor, postTotal),
-        PTW: toPct(postPtw, postTotal),
-      },
-      hasSelectedRecords: postSelected > 0 || preSelected > 0,
-    };
-  }, [shouldUseCopenhagenObserved, copenhagenLocalPoints, selectedModeTypes, selectedKpi]);
+  const displayUnit = useMemo(() => {
+    if (!kpiValue) return "";
+    return isCopenhagenCity && copenhagenObservedModeShare
+      ? resolveCopenhagenKpiDisplayUnit(selectedKpi)
+      : kpiValue.unit;
+  }, [isCopenhagenCity, copenhagenObservedModeShare, selectedKpi, kpiValue]);
 
   const chartExplorerKeys = useMemo(() => {
     if (selectedKpi === "kpi1.2") return selectedModeTypes;
@@ -371,7 +286,6 @@ const InsightPanel = ({
     onModeTypesChange?.(newSelected);
   };
 
-  const segmentFocusId = mapSelection?.segmentId ?? null;
 
   const isModeShare = selectedKpi === "kpi1.2";
   const modeTypes = isModeShare && kpiValue?.breakdown
@@ -412,6 +326,99 @@ const InsightPanel = ({
       if (fallbackKpi) onKpiChange(fallbackKpi);
     }
   }, [kpiDef, kpiValue, selectedKpi, supportedKpisForPilot, onKpiChange]);
+
+  const missingDataNotice = useMemo(
+    () => getKpiMissingDataNotice(selectedCity, selectedKpi, selectedPilot),
+    [selectedCity, selectedKpi, selectedPilot]
+  );
+
+  const confidenceLine = useMemo(() => {
+    const sourceHint = isIssyCity
+      ? dataSourceTrustLabel(kpiPrimaryIssySource(selectedKpi))
+      : dataQualitySummary?.dataType;
+    return formatConfidenceLine(
+      kpiDefinition?.dataLabel ?? dataQualitySummary?.provenanceType ?? "Derived",
+      dataQualitySummary?.confidence,
+      sourceHint
+    );
+  }, [isIssyCity, selectedKpi, kpiDefinition, dataQualitySummary]);
+
+  const stakeholderSummary = useMemo(() => {
+    if (!kpiDef || !kpiValue || !selectedPilot) return null;
+    const fwEarly = getKpiFrameworkConfig(selectedKpi);
+    const baselineMainValue = issyModeShareFromCsv
+      ? issyModeShareFromCsv.baseline.mainValue
+      : copenhagenObservedModeShare
+        ? copenhagenObservedModeShare.baselineMain
+        : computeBaselineMainValue(kpiValue);
+    const interventionMainValue = issyModeShareFromCsv
+      ? issyModeShareFromCsv.intervention.mainValue
+      : copenhagenObservedModeShare
+        ? copenhagenObservedModeShare.interventionMain
+        : Number(kpiValue.mainValue);
+    const headlineChange =
+      issyModeShareFromCsv?.intervention.change ??
+      copenhagenObservedModeShare?.change ??
+      kpiValue.change;
+    const helsinkiBA =
+      selectedCity === "Helsinki" && (selectedKpi === "kpi1.2" || selectedKpi === "kpi2.1");
+    const disc = resolveImpactDisclaimer({
+      kpiId: selectedKpi,
+      isMockFramework: !!fwEarly?.isMock,
+      isHelsinkiObservedBeforeAfter: helsinkiBA,
+      hasSegmentContext: !!mapContext,
+    });
+    const liveContextLine = dataQualitySummary
+      ? `Active layer: ${dataQualitySummary.recordsLabel}; ${dataQualitySummary.spatialQuality}; ${dataQualitySummary.temporalCoverage}.`
+      : undefined;
+    const issyProfile = getIssyPilotProfile(selectedPilot.id);
+    let focusNote: string | undefined;
+    if (issyProfile && issyProfile.defaultKpi !== selectedKpi) {
+      const defaultFw = getKpiFrameworkConfig(issyProfile.defaultKpi);
+      focusNote = `Primary analytical lens for this pilot is ${defaultFw?.displayName || issyProfile.defaultKpi} — you are viewing ${fwEarly?.displayName || selectedKpi} in the explorer.`;
+    }
+    const issyOdNote =
+      isIssyCity && selectedKpi === "kpi1.2" ? ISSY_OD_CSV_DISCLAIMER : undefined;
+
+    return buildStakeholderPrintSummary({
+      selectedCity,
+      pilot: {
+        name: selectedPilot.name,
+        title: selectedPilot.title,
+        description: selectedPilot.description,
+        interventionType: selectedPilot.interventionType,
+        goal: selectedPilot.goal,
+        datasets: selectedPilot.datasets,
+        focusNote,
+      },
+      kpiRef: kpiDef.ref,
+      kpiDisplayName: kpiFramework?.displayName || kpiDef.shortName,
+      kpiPlainLanguage:
+        getPlainLanguageSummary(selectedKpi) || kpiFramework?.question || kpiDef.question,
+      scenario,
+      unit: displayUnit,
+      baselineMainValue,
+      interventionMainValue,
+      headlineChange,
+      disclaimerLine: disc.line,
+      liveContextLine,
+      issyOdNote,
+    });
+  }, [
+    selectedPilot,
+    selectedKpi,
+    selectedCity,
+    scenario,
+    mapContext,
+    dataQualitySummary,
+    isIssyCity,
+    kpiDef,
+    kpiFramework,
+    kpiValue,
+    issyModeShareFromCsv,
+    copenhagenObservedModeShare,
+    displayUnit,
+  ]);
 
   if (!kpiDef || !kpiValue) return null;
 
@@ -459,87 +466,8 @@ const InsightPanel = ({
   const TrendIcon = isPositiveChange ? TrendingUp : TrendingDown;
   const showTrendPill = scenario === "intervention" || scenario === "comparison";
 
-  const stakeholderSummary = useMemo(() => {
-    const fwEarly = getKpiFrameworkConfig(selectedKpi);
-    if (!selectedPilot) return null;
-    const helsinkiBA =
-      selectedCity === "Helsinki" && (selectedKpi === "kpi1.2" || selectedKpi === "kpi2.1");
-    const disc = resolveImpactDisclaimer({
-      kpiId: selectedKpi,
-      isMockFramework: !!fwEarly?.isMock,
-      isHelsinkiObservedBeforeAfter: helsinkiBA,
-      hasSegmentContext: !!mapContext,
-    });
-    const liveContextLine = dataQualitySummary
-      ? `Active layer: ${dataQualitySummary.recordsLabel}; ${dataQualitySummary.spatialQuality}; ${dataQualitySummary.temporalCoverage}.`
-      : undefined;
-    const issyProfile = getIssyPilotProfile(selectedPilot.id);
-    let focusNote: string | undefined;
-    if (issyProfile && issyProfile.defaultKpi !== selectedKpi) {
-      const defaultFw = getKpiFrameworkConfig(issyProfile.defaultKpi);
-      focusNote = `Primary analytical lens for this pilot is ${defaultFw?.displayName || issyProfile.defaultKpi} — you are viewing ${fwEarly?.displayName || selectedKpi} in the explorer.`;
-    }
-    const issyOdNote =
-      isIssyCity && selectedKpi === "kpi1.2" ? ISSY_OD_CSV_DISCLAIMER : undefined;
-
-    return buildStakeholderPrintSummary({
-      selectedCity,
-      pilot: {
-        name: selectedPilot.name,
-        title: selectedPilot.title,
-        description: selectedPilot.description,
-        interventionType: selectedPilot.interventionType,
-        goal: selectedPilot.goal,
-        datasets: selectedPilot.datasets,
-        focusNote,
-      },
-      kpiRef: kpiDef.ref,
-      kpiDisplayName: kpiFramework?.displayName || kpiDef.shortName,
-      kpiPlainLanguage:
-        getPlainLanguageSummary(selectedKpi) || kpiFramework?.question || kpiDef.question,
-      scenario,
-      unit: kpiValue.unit,
-      baselineMainValue,
-      interventionMainValue,
-      headlineChange,
-      disclaimerLine: disc.line,
-      liveContextLine,
-      issyOdNote,
-    });
-  }, [
-    selectedPilot,
-    selectedKpi,
-    selectedCity,
-    scenario,
-    mapContext,
-    dataQualitySummary,
-    isIssyCity,
-    kpiDef,
-    kpiFramework,
-    kpiValue.unit,
-    baselineMainValue,
-    interventionMainValue,
-    headlineChange,
-  ]);
-
   const summaryHasBreakdown =
     !!baselineKvSlice.breakdown && Object.keys(baselineKvSlice.breakdown).length > 0;
-
-  const missingDataNotice = useMemo(
-    () => getKpiMissingDataNotice(selectedCity, selectedKpi, selectedPilot),
-    [selectedCity, selectedKpi, selectedPilot]
-  );
-
-  const confidenceLine = useMemo(() => {
-    const sourceHint = isIssyCity
-      ? dataSourceTrustLabel(kpiPrimaryIssySource(selectedKpi))
-      : dataQualitySummary?.dataType;
-    return formatConfidenceLine(
-      kpiDefinition?.dataLabel ?? dataQualitySummary?.provenanceType ?? "Derived",
-      dataQualitySummary?.confidence,
-      sourceHint
-    );
-  }, [isIssyCity, selectedKpi, kpiDefinition, dataQualitySummary]);
 
   return (
     <div className="insight-sidebar absolute top-20 left-4 z-30 flex w-[320px] max-h-[calc(100vh-6.5rem)] flex-col overflow-hidden bg-[linear-gradient(165deg,rgba(22,18,48,0.94)_0%,rgba(12,10,32,0.98)_100%)] rounded-2xl shadow-[0_10px_40px_rgba(10,10,45,0.35)] text-white border border-white/35 leading-intel tracking-intel intel-ui">
@@ -554,7 +482,7 @@ const InsightPanel = ({
           kpiRef={kpiDef.ref}
           kpiDisplayName={kpiFramework?.displayName || kpiDef.shortName}
           scenario={scenario}
-          unit={kpiValue.unit}
+          unit={displayUnit}
           baselineMainValue={baselineMainValue}
           interventionMainValue={interventionMainValue}
           headlineChange={headlineChange}
@@ -708,12 +636,12 @@ const InsightPanel = ({
               <div className="flex items-baseline gap-2">
                 <span className="text-intel-meta text-white/80 w-14 shrink-0">Before</span>
                 <span className="text-3xl font-bold text-white tabular-nums">{formatKpiFigure(baselineMainValue)}</span>
-                <span className="text-intel-kpi-label font-semibold text-cyan-200">{kpiValue.unit}</span>
+                <span className="text-intel-kpi-label font-semibold text-cyan-200">{displayUnit}</span>
               </div>
               <div className="flex items-baseline gap-2">
                 <span className="text-intel-meta text-white/80 w-14 shrink-0">After</span>
                 <span className="text-3xl font-bold text-white tabular-nums">{formatKpiFigure(interventionMainValue)}</span>
-                <span className="text-intel-kpi-label font-semibold text-cyan-200">{kpiValue.unit}</span>
+                <span className="text-intel-kpi-label font-semibold text-cyan-200">{displayUnit}</span>
                 {showTrendPill && (
                   <div
                     className={`ml-auto flex items-center gap-1 px-2 py-1 rounded-lg ${isPositiveChange ? "bg-green/20" : "bg-red-500/20"} ${changeColor}`}
@@ -733,8 +661,8 @@ const InsightPanel = ({
               <span className="text-4xl font-bold text-white tabular-nums tracking-tight">
                 {formatKpiFigure(currentMainValue)}
               </span>
-              {kpiValue.unit && (
-                <span className="text-2xl font-bold text-cyan-200 leading-none">{kpiValue.unit}</span>
+              {displayUnit && (
+                <span className="text-2xl font-bold text-cyan-200 leading-none">{displayUnit}</span>
               )}
               {isModeShare && (
                 <span className="w-full text-intel-meta text-white/75 -mt-1">Share of sustainable modes</span>

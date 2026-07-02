@@ -4,6 +4,7 @@ import {
   getPilotGeometryRecord,
   type PilotGeometryRecord,
 } from "@/lib/pilotGeometryContract";
+import { trikalaMapZoom } from "@/lib/trikalaMapConfig";
 
 export type RuntimeLinkage = "exact" | "matched" | "inferred";
 
@@ -24,6 +25,7 @@ export interface PilotGeometryRenderSpec {
     | "camera"
     | "dashboard_only";
   flyToAllowed: boolean;
+  minZoom?: number;
   maxZoom: number;
   labelStyle: "precise" | "aggregate";
   uncertaintyLevel: "none" | "low" | "high";
@@ -216,15 +218,19 @@ export function resolvePilotGeometryRender(input: {
   const { pilot, runtimeLinkage } = input;
 
   if (pilot.renderEligibility === "dashboard_only") {
+    const lockedZoom = pilot.pilotId === "tri-p1" ? trikalaMapZoom() : 14;
+    const bounds = boundsFromFocus(pilot, lockedZoom);
+    const trikalaLocked = pilot.pilotId === "tri-p1";
     return {
-      bounds: null,
+      bounds: bounds ? { ...bounds, zoom: lockedZoom } : null,
       visualizationMode: "generic-points",
       interactionModel: "dashboard_only",
-      flyToAllowed: false,
-      maxZoom: 11,
+      flyToAllowed: !!bounds,
+      minZoom: trikalaLocked ? lockedZoom : undefined,
+      maxZoom: trikalaLocked ? lockedZoom : 14,
       labelStyle: "aggregate",
       uncertaintyLevel: "high",
-      legendHint: "Survey context — not a mapped intervention geometry.",
+      legendHint: "Survey observatory cluster — inferred anchor geometry.",
       reductionCaption: reductionCaption(pilot),
     };
   }

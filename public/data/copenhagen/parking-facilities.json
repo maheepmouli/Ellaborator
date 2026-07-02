@@ -1,0 +1,1336 @@
+{
+  "facilities": [
+    {
+      "street": "Vester Voldgade",
+      "bays": 5,
+      "type": "Almindelig",
+      "area": "2",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Farvergade",
+      "bays": 5,
+      "type": "Almindelig",
+      "area": "2",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Vestergade",
+      "bays": 0,
+      "type": "Almindelig",
+      "area": "2",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Vestergade",
+      "bays": 6,
+      "type": "Almindelig",
+      "area": "2",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Løngangstræde",
+      "bays": 1,
+      "type": "Almindelig",
+      "area": "2",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Lavendelstræde",
+      "bays": 6,
+      "type": "Almindelig",
+      "area": "2",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Ny Kongensgade",
+      "bays": 6,
+      "type": "Almindelig",
+      "area": "2",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Ny Kongensgade",
+      "bays": 2,
+      "type": "Almindelig",
+      "area": "2",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Løngangstræde",
+      "bays": 2,
+      "type": "Ambassade",
+      "area": "2",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Vester Voldgade",
+      "bays": 2,
+      "type": "Besøgsplads",
+      "area": "2",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Løngangstræde",
+      "bays": 2,
+      "type": "Besøgsplads",
+      "area": "2",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Farvergade",
+      "bays": 1,
+      "type": "Besøgsplads",
+      "area": "2",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Gåsegade",
+      "bays": 1,
+      "type": "Besøgsplads",
+      "area": "2",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Hestemøllestræde",
+      "bays": 2,
+      "type": "Besøgsplads",
+      "area": "2",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Nytorv",
+      "bays": 2,
+      "type": "Besøgsplads",
+      "area": "2",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Lavendelstræde",
+      "bays": 1,
+      "type": "Besøgsplads",
+      "area": "2",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Vestergade",
+      "bays": 2,
+      "type": "Besøgsplads",
+      "area": "2",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Ny Vestergade",
+      "bays": 2,
+      "type": "Besøgsplads",
+      "area": "2",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Ny Vestergade",
+      "bays": 1,
+      "type": "Besøgsplads",
+      "area": "2",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Vester Voldgade",
+      "bays": 4,
+      "type": "El-bil",
+      "area": "2",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Vester Voldgade",
+      "bays": 4,
+      "type": "Erhverv",
+      "area": "2",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Farvergade",
+      "bays": 2,
+      "type": "Erhverv",
+      "area": "2",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Farvergade",
+      "bays": 4,
+      "type": "Erhverv",
+      "area": "2",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Hestemøllestræde",
+      "bays": 2,
+      "type": "Erhverv",
+      "area": "2",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Nytorv",
+      "bays": 1,
+      "type": "Erhverv",
+      "area": "2",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Lavendelstræde",
+      "bays": 5,
+      "type": "Erhverv",
+      "area": "2",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Kattesundet",
+      "bays": 3,
+      "type": "Erhverv",
+      "area": "2",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Kattesundet",
+      "bays": 3,
+      "type": "Erhverv",
+      "area": "2",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Ny Vestergade",
+      "bays": 1,
+      "type": "Handicapplads",
+      "area": "2",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Vester Voldgade",
+      "bays": 6,
+      "type": "Taxi",
+      "area": "2",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Vester Voldgade",
+      "bays": 4,
+      "type": "Taxi",
+      "area": "2",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Vestergade",
+      "bays": 3,
+      "type": "Taxi",
+      "area": "2",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Frue Plads",
+      "bays": 1,
+      "type": "Almindelig",
+      "area": "3",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Krystalgade",
+      "bays": 1,
+      "type": "Besøgsplads",
+      "area": "3",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Frue Plads",
+      "bays": 4,
+      "type": "Besøgsplads",
+      "area": "3",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Nørregade",
+      "bays": 1,
+      "type": "Besøgsplads",
+      "area": "3",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Peder Hvitfeldts Stræde",
+      "bays": 1,
+      "type": "Besøgsplads",
+      "area": "3",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Peder Hvitfeldts Stræde",
+      "bays": 1,
+      "type": "Besøgsplads",
+      "area": "3",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Frue Plads",
+      "bays": 2,
+      "type": "Delebil",
+      "area": "3",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Dyrkøb",
+      "bays": 0,
+      "type": "El-bil",
+      "area": "3",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Frue Plads",
+      "bays": 10,
+      "type": "El-bil",
+      "area": "3",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Peder Hvitfeldts Stræde",
+      "bays": 3,
+      "type": "Erhverv",
+      "area": "3",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Lille Kannikestræde",
+      "bays": 2,
+      "type": "Erhverv",
+      "area": "3",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Lille Kannikestræde",
+      "bays": 2,
+      "type": "Erhverv",
+      "area": "3",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Knabrostræde",
+      "bays": 2,
+      "type": "Almindelig",
+      "area": "4",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Snaregade",
+      "bays": 2,
+      "type": "Ambassade",
+      "area": "4",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Knabrostræde",
+      "bays": 1,
+      "type": "Erhverv",
+      "area": "4",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Brolæggerstræde",
+      "bays": 2,
+      "type": "Erhverv",
+      "area": "4",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Brolæggerstræde",
+      "bays": 1,
+      "type": "Handicapplads",
+      "area": "4",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Knabrostræde",
+      "bays": 1,
+      "type": "Handicapplads",
+      "area": "4",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Knabrostræde",
+      "bays": 2,
+      "type": "Handicapplads",
+      "area": "4",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Brolæggerstræde",
+      "bays": 2,
+      "type": "Handicapplads",
+      "area": "4",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Badstuestræde",
+      "bays": 1,
+      "type": "Handicapplads",
+      "area": "4",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Snaregade",
+      "bays": 1,
+      "type": "Handicapplads",
+      "area": "4",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Valkendorfsgade",
+      "bays": 4,
+      "type": "Almindelig",
+      "area": "5",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Skindergade",
+      "bays": 2,
+      "type": "Ambassade",
+      "area": "5",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Valkendorfsgade",
+      "bays": 1,
+      "type": "Besøgsplads",
+      "area": "5",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Klosterstræde",
+      "bays": 3,
+      "type": "Erhverv",
+      "area": "5",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Skindergade",
+      "bays": 1,
+      "type": "Handicapplads",
+      "area": "5",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Niels Hemmingsens Gade",
+      "bays": 0,
+      "type": "Læssezone",
+      "area": "5",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Sjæleboderne",
+      "bays": 5,
+      "type": "Almindelig",
+      "area": "6",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Rosenborggade",
+      "bays": 2,
+      "type": "Ambassade",
+      "area": "6",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Landemærket",
+      "bays": 1,
+      "type": "Besøgsplads",
+      "area": "6",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Åbenrå",
+      "bays": 0,
+      "type": "Besøgsplads",
+      "area": "6",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Vognmagergade",
+      "bays": 2,
+      "type": "Besøgsplads",
+      "area": "6",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Lønporten",
+      "bays": 1,
+      "type": "Besøgsplads",
+      "area": "6",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Vognmagergade",
+      "bays": 1,
+      "type": "Besøgsplads",
+      "area": "6",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Pilestræde",
+      "bays": 1,
+      "type": "Besøgsplads",
+      "area": "6",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Landemærket",
+      "bays": 1,
+      "type": "Besøgsplads",
+      "area": "6",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Pilestræde",
+      "bays": 1,
+      "type": "Besøgsplads",
+      "area": "6",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Landemærket",
+      "bays": 1,
+      "type": "Besøgsplads",
+      "area": "6",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Hausergade",
+      "bays": 1,
+      "type": "Besøgsplads",
+      "area": "6",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Hausergade",
+      "bays": 1,
+      "type": "Besøgsplads",
+      "area": "6",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Åbenrå",
+      "bays": 1,
+      "type": "Besøgsplads",
+      "area": "6",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Åbenrå",
+      "bays": 0,
+      "type": "Erhverv",
+      "area": "6",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Sjæleboderne",
+      "bays": 3,
+      "type": "Erhverv",
+      "area": "6",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Lønporten",
+      "bays": 4,
+      "type": "Erhverv",
+      "area": "6",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Vognmagergade",
+      "bays": 2,
+      "type": "Erhverv",
+      "area": "6",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Landemærket",
+      "bays": 2,
+      "type": "Erhverv",
+      "area": "6",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Rosenborggade",
+      "bays": 3,
+      "type": "Erhverv",
+      "area": "6",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Landemærket",
+      "bays": 1,
+      "type": "Handicapplads",
+      "area": "6",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Åbenrå",
+      "bays": 0,
+      "type": "Handicapplads",
+      "area": "6",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Åbenrå",
+      "bays": 0,
+      "type": "Handicapplads",
+      "area": "6",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Åbenrå",
+      "bays": 0,
+      "type": "Handicapplads",
+      "area": "6",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Åbenrå",
+      "bays": 1,
+      "type": "Handicapplads",
+      "area": "6",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Åbenrå",
+      "bays": 1,
+      "type": "Handicapplads",
+      "area": "6",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Sankt Gertruds Stræde",
+      "bays": 2,
+      "type": "Særlig plads",
+      "area": "6",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Tøjhusgade",
+      "bays": 7,
+      "type": "Almindelig",
+      "area": "7",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Frederiksholms Kanal",
+      "bays": 12,
+      "type": "Almindelig",
+      "area": "7",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Frederiksholms Kanal",
+      "bays": 50,
+      "type": "Almindelig",
+      "area": "7",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Nybrogade",
+      "bays": 1,
+      "type": "Almindelig",
+      "area": "7",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Nybrogade",
+      "bays": 2,
+      "type": "Almindelig",
+      "area": "7",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Frederiksholms Kanal",
+      "bays": 4,
+      "type": "Almindelig",
+      "area": "7",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Frederiksholms Kanal",
+      "bays": 4,
+      "type": "Almindelig",
+      "area": "7",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Frederiksholms Kanal",
+      "bays": 4,
+      "type": "Almindelig",
+      "area": "7",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Frederiksholms Kanal",
+      "bays": 2,
+      "type": "Almindelig",
+      "area": "7",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Frederiksholms Kanal",
+      "bays": 2,
+      "type": "Almindelig",
+      "area": "7",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Frederiksholms Kanal",
+      "bays": 2,
+      "type": "Almindelig",
+      "area": "7",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Nybrogade",
+      "bays": 2,
+      "type": "Ambassade",
+      "area": "7",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Tøjhusgade",
+      "bays": 3,
+      "type": "Besøgsplads",
+      "area": "7",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Tøjhusgade",
+      "bays": 1,
+      "type": "Besøgsplads",
+      "area": "7",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Naboløs",
+      "bays": 1,
+      "type": "Besøgsplads",
+      "area": "7",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Frederiksholms Kanal",
+      "bays": 2,
+      "type": "Delebil",
+      "area": "7",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Frederiksholms Kanal",
+      "bays": 5,
+      "type": "Delebil",
+      "area": "7",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Tøjhusgade",
+      "bays": 6,
+      "type": "Erhverv",
+      "area": "7",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Nybrogade",
+      "bays": 2,
+      "type": "Erhverv",
+      "area": "7",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Frederiksholms Kanal",
+      "bays": 2,
+      "type": "Erhverv",
+      "area": "7",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Hyskenstræde",
+      "bays": 1,
+      "type": "Handicapplads",
+      "area": "7",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Frederiksholms Kanal",
+      "bays": 1,
+      "type": "Handicapplads",
+      "area": "7",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Tøjhusgade",
+      "bays": 2,
+      "type": "Taxi",
+      "area": "7",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Silkegade",
+      "bays": 0,
+      "type": "Almindelig",
+      "area": "8",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Ny Østergade",
+      "bays": 2,
+      "type": "Almindelig",
+      "area": "8",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Ny Østergade",
+      "bays": 3,
+      "type": "Almindelig",
+      "area": "8",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Hovedvagtsgade",
+      "bays": 1,
+      "type": "Almindelig",
+      "area": "8",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Ny Østergade",
+      "bays": 5,
+      "type": "Almindelig",
+      "area": "8",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Gammel Mønt",
+      "bays": 4,
+      "type": "Almindelig",
+      "area": "8",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Antonigade",
+      "bays": 2,
+      "type": "Almindelig",
+      "area": "8",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Pilestræde",
+      "bays": 1,
+      "type": "Almindelig",
+      "area": "8",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Ny Østergade",
+      "bays": 5,
+      "type": "Almindelig",
+      "area": "8",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Ny Østergade",
+      "bays": 1,
+      "type": "Almindelig",
+      "area": "8",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Christian IX's Gade",
+      "bays": 5,
+      "type": "Almindelig",
+      "area": "8",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Møntergade",
+      "bays": 3,
+      "type": "Almindelig",
+      "area": "8",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Møntergade",
+      "bays": 2,
+      "type": "Almindelig",
+      "area": "8",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Bremerholm",
+      "bays": 3,
+      "type": "Ambassade",
+      "area": "8",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Ny Østergade",
+      "bays": 1,
+      "type": "Besøgsplads",
+      "area": "8",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Hovedvagtsgade",
+      "bays": 1,
+      "type": "Besøgsplads",
+      "area": "8",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Hovedvagtsgade",
+      "bays": 1,
+      "type": "Besøgsplads",
+      "area": "8",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Hovedvagtsgade",
+      "bays": 1,
+      "type": "Besøgsplads",
+      "area": "8",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Pilestræde",
+      "bays": 2,
+      "type": "El-bil",
+      "area": "8",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Kristen Bernikows Gade",
+      "bays": 11,
+      "type": "Erhverv",
+      "area": "8",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Ny Adelgade",
+      "bays": 1,
+      "type": "Erhverv",
+      "area": "8",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Grønnegade",
+      "bays": 2,
+      "type": "Erhverv",
+      "area": "8",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Grønnegade",
+      "bays": 2,
+      "type": "Erhverv",
+      "area": "8",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Kronprinsensgade",
+      "bays": 3,
+      "type": "Erhverv",
+      "area": "8",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Klareboderne",
+      "bays": 3,
+      "type": "Erhverv",
+      "area": "8",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Sværtegade",
+      "bays": 4,
+      "type": "Erhverv",
+      "area": "8",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Ny Østergade",
+      "bays": 7,
+      "type": "Erhverv",
+      "area": "8",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Gammel Mønt",
+      "bays": 8,
+      "type": "Erhverv",
+      "area": "8",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Kronprinsensgade",
+      "bays": 1,
+      "type": "Handicapplads",
+      "area": "8",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Antonigade",
+      "bays": 0,
+      "type": "Ingen",
+      "area": "8",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Gammel Mønt",
+      "bays": 0,
+      "type": "Læssezone",
+      "area": "8",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Store Regnegade",
+      "bays": 1,
+      "type": "Taxi",
+      "area": "8",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Gammel Mønt",
+      "bays": 1,
+      "type": "Taxi",
+      "area": "8",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Gammel Mønt",
+      "bays": 3,
+      "type": "Taxi",
+      "area": "8",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Gammel Mønt",
+      "bays": 1,
+      "type": "Taxi",
+      "area": "8",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Vingårdstræde",
+      "bays": 1,
+      "type": "Almindelig",
+      "area": "9",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Lille Kongensgade",
+      "bays": 9,
+      "type": "Almindelig",
+      "area": "9",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Lille Kongensgade",
+      "bays": 3,
+      "type": "Almindelig",
+      "area": "9",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Vingårdstræde",
+      "bays": 4,
+      "type": "Almindelig",
+      "area": "9",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Lille Kirkestræde",
+      "bays": 2,
+      "type": "Almindelig",
+      "area": "9",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Dybensgade",
+      "bays": 3,
+      "type": "Almindelig",
+      "area": "9",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Laksegade",
+      "bays": 1,
+      "type": "Almindelig",
+      "area": "9",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Laksegade",
+      "bays": 1,
+      "type": "Almindelig",
+      "area": "9",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Asylgade",
+      "bays": 3,
+      "type": "Almindelig",
+      "area": "9",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Dybensgade",
+      "bays": 2,
+      "type": "Almindelig",
+      "area": "9",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Vingårdstræde",
+      "bays": 2,
+      "type": "Ambassade",
+      "area": "9",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Boldhusgade",
+      "bays": 2,
+      "type": "Ambassade",
+      "area": "9",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Højbro Plads",
+      "bays": 1,
+      "type": "Besøgsplads",
+      "area": "9",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Nikolajgade",
+      "bays": 0,
+      "type": "Besøgsplads",
+      "area": "9",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Boldhusgade",
+      "bays": 1,
+      "type": "Besøgsplads",
+      "area": "9",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Nikolaj Plads",
+      "bays": 1,
+      "type": "Besøgsplads",
+      "area": "9",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Bremerholm",
+      "bays": 1,
+      "type": "Besøgsplads",
+      "area": "9",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Nikolaj Plads",
+      "bays": 1,
+      "type": "Besøgsplads",
+      "area": "9",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Nikolajgade",
+      "bays": 1,
+      "type": "Besøgsplads",
+      "area": "9",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Admiralgade",
+      "bays": 2,
+      "type": "Besøgsplads",
+      "area": "9",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Nikolajgade",
+      "bays": 0,
+      "type": "Erhverv",
+      "area": "9",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Bremerholm",
+      "bays": 2,
+      "type": "Erhverv",
+      "area": "9",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Admiralgade",
+      "bays": 1,
+      "type": "Erhverv",
+      "area": "9",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Bremerholm",
+      "bays": 3,
+      "type": "Erhverv",
+      "area": "9",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Vingårdstræde",
+      "bays": 1,
+      "type": "Erhverv",
+      "area": "9",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Vingårdstræde",
+      "bays": 3,
+      "type": "Erhverv",
+      "area": "9",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Nikolaj Plads",
+      "bays": 3,
+      "type": "Erhverv",
+      "area": "9",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Dybensgade",
+      "bays": 3,
+      "type": "Erhverv",
+      "area": "9",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Nikolajgade",
+      "bays": 1,
+      "type": "Erhverv",
+      "area": "9",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Laksegade",
+      "bays": 3,
+      "type": "Erhverv",
+      "area": "9",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Nikolaj Plads",
+      "bays": 0,
+      "type": "Handicapplads",
+      "area": "9",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Nikolaj Plads",
+      "bays": 2,
+      "type": "Handicapplads",
+      "area": "9",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Nikolaj Plads",
+      "bays": 0,
+      "type": "Læssezone",
+      "area": "9",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Nikolaj Plads",
+      "bays": 2,
+      "type": "Taxi",
+      "area": "9",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Boldhusgade",
+      "bays": 2,
+      "type": "Taxi",
+      "area": "9",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Dybensgade",
+      "bays": 0,
+      "type": "Other",
+      "area": "9",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Laksegade",
+      "bays": 0,
+      "type": "Other",
+      "area": "9",
+      "pilotId": "cph-p2"
+    },
+    {
+      "street": "Laksegade",
+      "bays": 0,
+      "type": "Other",
+      "area": "9",
+      "pilotId": "cph-p2"
+    }
+  ],
+  "categories": [
+    {
+      "label": "Almindelig",
+      "value": 196
+    },
+    {
+      "label": "Ambassade",
+      "value": 17
+    },
+    {
+      "label": "Besøgsplads",
+      "value": 54
+    },
+    {
+      "label": "El-bil",
+      "value": 16
+    },
+    {
+      "label": "Erhverv",
+      "value": 122
+    },
+    {
+      "label": "Handicapplads",
+      "value": 18
+    },
+    {
+      "label": "Taxi",
+      "value": 25
+    },
+    {
+      "label": "Delebil",
+      "value": 9
+    },
+    {
+      "label": "Læssezone",
+      "value": 0
+    },
+    {
+      "label": "Særlig plads",
+      "value": 2
+    },
+    {
+      "label": "Ingen",
+      "value": 0
+    },
+    {
+      "label": "Other",
+      "value": 0
+    }
+  ],
+  "totalBays": 459
+}

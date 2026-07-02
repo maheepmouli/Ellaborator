@@ -1,0 +1,488 @@
+{
+  "sites": [
+    {
+      "id": "survey-FARVERGADE nord for Vester Voldgade (ud for husnr. 17)",
+      "name": "FARVERGADE nord for Vester Voldgade (ud for husnr. 17)",
+      "lat": 55.67593,
+      "lon": 12.572713,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-FREDERIKSBORGGADE 10",
+      "name": "FREDERIKSBORGGADE 10",
+      "lat": 55.683151,
+      "lon": 12.573098,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-NØRREGADE sydøst for Nørre Voldgade",
+      "name": "NØRREGADE sydøst for Nørre Voldgade",
+      "lat": 55.682256,
+      "lon": 12.570781,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-STRØGET VEST (Frederiksberggade 27)",
+      "name": "STRØGET VEST (Frederiksberggade 27)",
+      "lat": 55.676602,
+      "lon": 12.569856,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-VESTERGADE nord for Vester Voldgade (ud for husnr. 37)",
+      "name": "VESTERGADE nord for Vester Voldgade (ud for husnr. 37)",
+      "lat": 55.676798,
+      "lon": 12.568904,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-LØNGANGSTRÆDE nord for Vester Voldgade (ud for husnr. 37)",
+      "name": "LØNGANGSTRÆDE nord for Vester Voldgade (ud for husnr. 37)",
+      "lat": 55.675243,
+      "lon": 12.572428,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-STUDIESTRÆDE øst for Vester Voldgade (ud for husnr. 40)",
+      "name": "STUDIESTRÆDE øst for Vester Voldgade (ud for husnr. 40)",
+      "lat": 55.67801,
+      "lon": 12.567532,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-FIOLSTRÆDE 44",
+      "name": "FIOLSTRÆDE 44",
+      "lat": 55.682607,
+      "lon": 12.571851,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-HØJBRO",
+      "name": "HØJBRO",
+      "lat": 55.6776844,
+      "lon": 12.5799719,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-LANDEMÆRKET",
+      "name": "LANDEMÆRKET",
+      "lat": 55.682807,
+      "lon": 12.5776048,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-HOVEDVAGTSGADE 4",
+      "name": "HOVEDVAGTSGADE 4",
+      "lat": 55.680853,
+      "lon": 12.584115,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-GRØNNEGADE syd for Gothersgade",
+      "name": "GRØNNEGADE syd for Gothersgade",
+      "lat": 55.681818,
+      "lon": 12.583492,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-STORE REGNEGADE syd for Gothersgade",
+      "name": "STORE REGNEGADE syd for Gothersgade",
+      "lat": 55.682094,
+      "lon": 12.582528,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-LARSLEJSSTRÆDE 5",
+      "name": "LARSLEJSSTRÆDE 5",
+      "lat": 55.679738,
+      "lon": 12.569634,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-FREDERIKSHOLMS KANAL 12 sydøst for Stormgade",
+      "name": "FREDERIKSHOLMS KANAL 12 sydøst for Stormgade",
+      "lat": 55.675016,
+      "lon": 12.576016,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-NY KONGENSGADE nord for Vester Voldgade (ud for husnr. 15)",
+      "name": "NY KONGENSGADE nord for Vester Voldgade (ud for husnr. 15)",
+      "lat": 55.673517,
+      "lon": 12.575975,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-STRØGET ØST (Østergade 16)",
+      "name": "STRØGET ØST (Østergade 16)",
+      "lat": 55.680151,
+      "lon": 12.583829,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-RIGSDAGSGÅRDEN 1",
+      "name": "RIGSDAGSGÅRDEN 1",
+      "lat": 55.675611,
+      "lon": 12.581432,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-TEGLGÅRDSTRÆDE 15",
+      "name": "TEGLGÅRDSTRÆDE 15",
+      "lat": 55.679766,
+      "lon": 12.567937,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-NØRREGADE 40",
+      "name": "NØRREGADE 40",
+      "lat": 55.682278,
+      "lon": 12.571108,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-FREDRIKSHOLMS KANAL 29 nordvest for Christians Brygge",
+      "name": "FREDRIKSHOLMS KANAL 29 nordvest for Christians Brygge",
+      "lat": 55.673238,
+      "lon": 12.579503,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-ROSENBORGGADE 19",
+      "name": "ROSENBORGGADE 19",
+      "lat": 55.684086,
+      "lon": 12.57477,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-SJÆLEBODERNE 4",
+      "name": "SJÆLEBODERNE 4",
+      "lat": 55.68262,
+      "lon": 12.579861,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-MØNTERGADE 19",
+      "name": "MØNTERGADE 19",
+      "lat": 55.682207,
+      "lon": 12.579844,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-CHRISTIAN IX's GADE",
+      "name": "CHRISTIAN IX's GADE",
+      "lat": 55.6820492,
+      "lon": 12.5810183,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-NY ADELGADE",
+      "name": "NY ADELGADE",
+      "lat": 55.681236,
+      "lon": 12.584196,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-LILLE KONGENSGADE 4",
+      "name": "LILLE KONGENSGADE 4",
+      "lat": 55.679738,
+      "lon": 12.584526,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-NY VESTERGADE nord for Vester Voldgade (ud for husnr. 17)",
+      "name": "NY VESTERGADE nord for Vester Voldgade (ud for husnr. 17)",
+      "lat": 55.674,
+      "lon": 12.574626,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-SANKT PEDERS STRÆDE 34",
+      "name": "SANKT PEDERS STRÆDE 34",
+      "lat": 55.678827,
+      "lon": 12.567178,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-TORNEBUSKEGADE 7",
+      "name": "TORNEBUSKEGADE 7",
+      "lat": 55.683885,
+      "lon": 12.573778,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-LØNPORTEN 2",
+      "name": "LØNPORTEN 2",
+      "lat": 55.682801,
+      "lon": 12.578848,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-CHRISTIAN IX's GADE 7",
+      "name": "CHRISTIAN IX's GADE 7",
+      "lat": 55.682284,
+      "lon": 12.580682,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-GRØNNEGADE 36",
+      "name": "GRØNNEGADE 36",
+      "lat": 55.681541,
+      "lon": 12.583502,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-BREMERHOLM nord for Holmens Kanal",
+      "name": "BREMERHOLM nord for Holmens Kanal",
+      "lat": 55.677481,
+      "lon": 12.584427,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-BREMERHOLM 39",
+      "name": "BREMERHOLM 39",
+      "lat": 55.677481,
+      "lon": 12.584427,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-BRYGHUSPLADSEN 1",
+      "name": "BRYGHUSPLADSEN 1",
+      "lat": 55.672351,
+      "lon": 12.578205,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-FREDERIKSHOLMS KANAL 6 nordvest for Stormgade",
+      "name": "FREDERIKSHOLMS KANAL 6 nordvest for Stormgade",
+      "lat": 55.6757756,
+      "lon": 12.5755308,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-NIKOLAJGADE 25",
+      "name": "NIKOLAJGADE 25",
+      "lat": 55.677482,
+      "lon": 12.583481,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-VED STRANDEN 2",
+      "name": "VED STRANDEN 2",
+      "lat": 55.676936,
+      "lon": 12.582456,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-LAVENDELSTRÆDE nord for Vester Voldgade (ud for husnr. 16)",
+      "name": "LAVENDELSTRÆDE nord for Vester Voldgade (ud for husnr. 16)",
+      "lat": 55.676115,
+      "lon": 12.571017,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-CHRISTIANSBORG SLOTSPLADS 5 øst for Højbro",
+      "name": "CHRISTIANSBORG SLOTSPLADS 5 øst for Højbro",
+      "lat": 55.67634,
+      "lon": 12.580714,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-STORE REGNEGADE",
+      "name": "STORE REGNEGADE",
+      "lat": 55.6817056,
+      "lon": 12.582115,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-KNABROSTRÆDE 8A",
+      "name": "KNABROSTRÆDE 8A",
+      "lat": 55.677995,
+      "lon": 12.574162,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-ROSENBORGGADE 15",
+      "name": "ROSENBORGGADE 15",
+      "lat": 55.683858,
+      "lon": 12.574384,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-SANKT PEDERS STRÆDE 18",
+      "name": "SANKT PEDERS STRÆDE 18",
+      "lat": 55.679095,
+      "lon": 12.568499,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-STUDIESTRÆDE 47B",
+      "name": "STUDIESTRÆDE 47B",
+      "lat": 55.67781,
+      "lon": 12.567492,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-VESTERGADE 5",
+      "name": "VESTERGADE 5",
+      "lat": 55.677906,
+      "lon": 12.571005,
+      "pilotId": "cph-p1"
+    },
+    {
+      "id": "survey-VOGNMAGERGADE 8",
+      "name": "VOGNMAGERGADE 8",
+      "lat": 55.682486,
+      "lon": 12.57885,
+      "pilotId": "cph-p1"
+    }
+  ],
+  "counts": [
+    {
+      "siteName": "Christian IX s Gade",
+      "motor": 4128,
+      "bike": 21118,
+      "total": 25246,
+      "activeShare": 83.64889487443556,
+      "file": "Christian_IX_s_Gade_20250904.xlsx",
+      "pilotId": "cph-p1"
+    },
+    {
+      "siteName": "Frederiksholms Kanal 6",
+      "motor": 2240,
+      "bike": 6851,
+      "total": 9091,
+      "activeShare": 75.36024639753603,
+      "file": "Frederiksholms_Kanal_6_20250904.xlsx",
+      "pilotId": "cph-p1"
+    },
+    {
+      "siteName": "Højbro",
+      "motor": 3530,
+      "bike": 7942,
+      "total": 11472,
+      "activeShare": 69.22942817294282,
+      "file": "Højbro_20250903.xlsx",
+      "pilotId": "cph-p1"
+    },
+    {
+      "siteName": "Knabrostræde 8A",
+      "motor": 0,
+      "bike": 0,
+      "total": 0,
+      "activeShare": 0,
+      "file": "Knabrostræde_8A_20250916.xlsx",
+      "pilotId": "cph-p1"
+    },
+    {
+      "siteName": "Kristen Bernikows Gade",
+      "motor": 4796,
+      "bike": 30736,
+      "total": 35532,
+      "activeShare": 86.50230777890351,
+      "file": "Kristen_Bernikows_Gade_20250903.xlsx",
+      "pilotId": "cph-p1"
+    },
+    {
+      "siteName": "Landemærket",
+      "motor": 2338,
+      "bike": 3048,
+      "total": 5386,
+      "activeShare": 56.591162272558485,
+      "file": "Landemærket_20250909.xlsx",
+      "pilotId": "cph-p1"
+    },
+    {
+      "siteName": "Løngangstræde",
+      "motor": 0,
+      "bike": 0,
+      "total": 0,
+      "activeShare": 0,
+      "file": "Løngangstræde_20250909.xlsx",
+      "pilotId": "cph-p1"
+    },
+    {
+      "siteName": "Ny Kongensgade",
+      "motor": 923,
+      "bike": 3507,
+      "total": 4430,
+      "activeShare": 79.1647855530474,
+      "file": "Ny_Kongensgade_20250909.xlsx",
+      "pilotId": "cph-p1"
+    },
+    {
+      "siteName": "Nørregade",
+      "motor": 5026,
+      "bike": 18934,
+      "total": 23960,
+      "activeShare": 79.02337228714525,
+      "file": "Nørregade_20250904.xlsx",
+      "pilotId": "cph-p1"
+    },
+    {
+      "siteName": "Rosenborggade 15",
+      "motor": 0,
+      "bike": 0,
+      "total": 0,
+      "activeShare": 0,
+      "file": "Rosenborggade_15_20250916.xlsx",
+      "pilotId": "cph-p1"
+    },
+    {
+      "siteName": "Sankt Peders Stræde",
+      "motor": 0,
+      "bike": 0,
+      "total": 0,
+      "activeShare": 0,
+      "file": "Sankt_Peders_Stræde_20250910.xlsx",
+      "pilotId": "cph-p1"
+    },
+    {
+      "siteName": "Studiestræde 47B",
+      "motor": 0,
+      "bike": 0,
+      "total": 0,
+      "activeShare": 0,
+      "file": "Studiestræde_47B_20250916.xlsx",
+      "pilotId": "cph-p1"
+    },
+    {
+      "siteName": "Vestergade 5",
+      "motor": 0,
+      "bike": 0,
+      "total": 0,
+      "activeShare": 0,
+      "file": "Vestergade_5_20250916.xlsx",
+      "pilotId": "cph-p1"
+    },
+    {
+      "siteName": "Vognmagergade 8",
+      "motor": 0,
+      "bike": 0,
+      "total": 0,
+      "activeShare": 0,
+      "file": "Vognmagergade 8_20250916.xlsx",
+      "pilotId": "cph-p1"
+    }
+  ],
+  "zones2023": [
+    {
+      "zone": "Område A-C",
+      "motor": 36719,
+      "bike": 98209,
+      "pedestrian": 213025,
+      "total": 347953,
+      "sheet": "Område A-C",
+      "year": 2023
+    },
+    {
+      "zone": "Andre tællesteder",
+      "motor": 12073,
+      "bike": 19720,
+      "pedestrian": 3476,
+      "total": 35269,
+      "sheet": "Andre tællesteder",
+      "year": 2023
+    }
+  ]
+}

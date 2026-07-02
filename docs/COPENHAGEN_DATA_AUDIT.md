@@ -2,7 +2,27 @@
 
 **Status:** parser `ready` · readiness `ready` for KPI 1.2 and KPI 2.1
 **Source:** SharePoint folder `Copenhagen/OpenTrafficCam Counts 2024 and 2025/`
-**Last audit:** 2026-05-24 (Valeria feedback)
+**Last audit:** 2026-06-30 (location registry + pilot-scoped consolidation)  
+**Full zip inventory:** `docs/COPENHAGEN_ZIP_INVENTORY.md` · `npm run inventory-copenhagen-zip`
+
+---
+
+## 0. Location registry (Phase A)
+
+Canonical spatial model: `src/data/copenhagenLocationRegistry.ts`
+
+| Kind | Count | Role |
+| --- | --- | --- |
+| `intelligent_camera` | 8 | Physical OTC deployments (incl. 4× Vandkunsten + Højbro) |
+| `otc_workbook_site` | 4 | Parser aggregation endpoints (distinct from hardware coords) |
+| `telraam_counter` | 4 | CPHK1 evaluation counters (Vestergade 5 headline site) |
+| `manual_survey_site` | 48 | Partner survey positions (registry only; hidden from default map) |
+
+Pilot metadata (objective / intervention / evaluation split): `src/data/copenhagenPilotRegistry.ts`
+
+**Map behaviour:** `getLocationsForPilot(pilotId)` — only locations linked to the selected pilot are shown. OTC rows are filtered by `otcRecordMatchesPilotScope()` so shared sites (e.g. Nørreport in CPHK1 and CPHK3) do not bleed across pilots.
+
+**Partner methodology rules** are attached per workbook site (`evaluationRules`, `notes`) and surfaced in observatory methodology + record properties.
 
 ---
 
@@ -20,6 +40,17 @@ Combined-counts files (`OTC Combined counts ELABORATOR.xlsx`,
 `ELABORATOR Counts OTC combined Vandkunsten to WP7.xlsx`) are aggregated outputs and
 are **not** used by the parser; we read the per-site `Countings_*_sortet.xlsx`
 workbooks directly so that direction and 15-min granularity are preserved.
+
+### Verified `flow` labels (from zip inspection 2026-06-30)
+
+| Site | Direction labels |
+| --- | --- |
+| Gammeltorv | `Gammeltorv north`, `Gammeltorv south`, `Vestergade east`, `Vestergade west` (4 arms) |
+| Norreport | `Norregade north`, `Norregade south` |
+| Vandkunsten | `Radhuusstraede North --> Radhuusstraede South`, `Radhuusstraede South --> Radhuusstraede North` |
+| Stormgade | `Frederiksholmskanal South`, `Frederiksholmskanal north`, `Stormgade east`, `Stormgade west` (4 arms) |
+
+Also in zip (not extracted): `Countings_Hojbro.xlsx` → `Hojbro north`, `Hojbro south`.
 
 ## 2. Sheet structure (consistent across all four sites)
 
@@ -158,9 +189,8 @@ matrix.
 
 ### KPI4.2 policy (Copenhagen)
 
-- Accessibility values are **not fabricated** when no observed accessibility
-  dataset is available.
-- Copenhagen KPI4.2 now returns no observed local records and the observatory
-  shows an explicit empty-state explaining:
-  1. which observed datasets are currently available, and
-  2. which additional observed accessibility datasets are required for KPI4.2.
+- KPI 4.2 uses an **infrastructure accessibility proxy** for **CPHK2 (cph-p2)** derived from
+  `I100275_P-pladser_Oversigt.xlsx` sheets *Eksisterende forhold* vs *Udført* (`accessibility-inventory.json`).
+- Records are `type: "derived"` with an explicit method string — **not an EN 17210 audit**.
+- **CPHK1 / CPHK3** show observatory empty states listing linked observed datasets; unstructured partner
+  methods (near encounters, interviews, travel surveys) appear in `evidence-manifest.json` narrative panels only.

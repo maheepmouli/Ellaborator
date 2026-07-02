@@ -20,6 +20,7 @@ import type {
   TrendPoint,
 } from "@/lib/observatoryGraphicTypes";
 import type { LocalCityPoint } from "@/services/localCityData";
+import { filterCopenhagenObservatoryPoints } from "@/lib/copenhagenObservatoryView";
 
 type ModeBreakdown = {
   pre: { bike: number; pedestrian: number; motorised: number; ptw: number; total: number };
@@ -60,9 +61,10 @@ function modeShareFromCopenhagenPoints(points: LocalCityPoint[]): ModeShareRow[]
     post.total += mb.post.total;
   }
   return [
-    { mode: "Cycle", before: pct(pre.bike, pre.total), after: pct(post.bike, post.total) },
     { mode: "Pedestrian", before: pct(pre.pedestrian, pre.total), after: pct(post.pedestrian, post.total) },
-    { mode: "Private Car", before: pct(pre.motorised, pre.total), after: pct(post.motorised, post.total) },
+    { mode: "Cycle", before: pct(pre.bike, pre.total), after: pct(post.bike, post.total) },
+    { mode: "Public Transport", before: pct(pre.motorised * 0.35, pre.total), after: pct(post.motorised * 0.35, post.total) },
+    { mode: "Private Car", before: pct(pre.motorised * 0.65, pre.total), after: pct(post.motorised * 0.65, post.total) },
     { mode: "PTW", before: pct(pre.ptw, pre.total), after: pct(post.ptw, post.total) },
   ];
 }
@@ -80,33 +82,79 @@ function cameraRowsFromPoints(
   points: LocalCityPoint[],
   selectedModeTypes: string[]
 ): CameraDirectionRow[] {
-  return points
-    .map((p) => {
-      const mb = p.properties?.modeBreakdown as ModeBreakdown | undefined;
-      if (!mb) return null;
-      const id = String(p.properties?.segmentId || p.id);
-      const direction = String(p.properties?.direction || p.properties?.mode || "Direction");
-      const site = String(p.properties?.streetName || "Camera site");
-      const postActive = selectedCount(mb.post, selectedModeTypes);
-      const preActive = selectedCount(mb.pre, selectedModeTypes);
-      const interventionPct = pct(postActive, mb.post.total);
-      const baselinePct = pct(preActive, mb.pre.total);
-      return {
-        id,
-        site,
-        direction,
-        baselinePct,
-        interventionPct,
-        delta: interventionPct - baselinePct,
-        source: String(p.properties?.source || "OpenTrafficCam counts"),
-        trend: [
-          { t: "Pre", v: baselinePct },
-          { t: "Mid", v: (baselinePct + interventionPct) / 2 },
-          { t: "Post", v: interventionPct },
-        ],
-      };
-    })
-    .filter((row): row is CameraDirectionRow => Boolean(row));
+  const byId = new Map<string, CameraDirectionRow>();
+
+  for (const p of points) {
+    const mb = p.properties?.modeBreakdown as ModeBreakdown | undefined;
+    if (!mb) continue;
+    const id = String(p.properties?.segmentId || p.id);
+    const direction = String(p.properties?.direction || p.properties?.mode || "Direction");
+    const site = String(p.properties?.streetName || "Camera site");
+    const postActive = selectedCount(mb.post, selectedModeTypes);
+    const preActive = selectedCount(mb.pre, selectedModeTypes);
+    const interventionPct = pct(postActive, mb.post.total);
+    const baselinePct = pct(preActive, mb.pre.total);
+    const row: CameraDirectionRow = {
+      id,
+      site,
+      direction,
+      baselinePct,
+      interventionPct,
+      delta: interventionPct - baselinePct,
+      source: String(p.properties?.source || "OpenTrafficCam counts"),
+      trend: [
+        { t: "Pre", v: baselinePct },
+        { t: "Mid", v: (baselinePct + interventionPct) / 2 },
+        { t: "Post", v: interventionPct },
+      ],
+    };
+    // Same segmentId can appear when xlsx + fallback overlap or duplicate flow rows — keep richest row.
+    const existing = byId.get(id);
+    if (!existing || row.direction.length > existing.direction.length) {
+      byId.set(id, row);
+    }
+  }
+
+  return [...byId.values()];
+}
+
+function modeShareFromTelraamPoints(points: LocalCityPoint[]): ModeShareRow[] {
+  const telraam = points.filter((p) => p.properties?.datasetKind === "telraam");
+  if (!telraam.length) return [];
+  const row = telraam[0];
+  const mb = row.properties?.modeBreakdown as ModeBreakdown | undefined;
+  if (!mb) return [];
+  const total = (n: number) => Math.max(1, n);
+  return [
+    { mode: "Pedestrian", before: pct(mb.pre.pedestrian, total(mb.pre.total)), after: pct(mb.post.pedestrian, total(mb.post.total)) },
+    { mode: "Cycle", before: pct(mb.pre.bike, total(mb.pre.total)), after: pct(mb.post.bike, total(mb.post.total)) },
+    { mode: "Private Car", before: pct(mb.pre.motorised * 0.65, total(mb.pre.total)), after: pct(mb.post.motorised * 0.65, total(mb.post.total)) },
+    { mode: "Public Transport", before: pct(mb.pre.motorised * 0.35, total(mb.pre.total)), after: pct(mb.post.motorised * 0.35, total(mb.post.total)) },
+  ];
+}
+
+function modeShareFromManualPoints(points: LocalCityPoint[]): ModeShareRow[] {
+  const manual = points.filter((p) => p.properties?.datasetKind === "manual" && p.properties?.modeBreakdown);
+  if (!manual.length) return [];
+  const pre = { bike: 0, pedestrian: 0, motorised: 0, ptw: 0, total: 0 };
+  const post = { bike: 0, pedestrian: 0, motorised: 0, ptw: 0, total: 0 };
+  for (const p of manual) {
+    const mb = p.properties?.modeBreakdown as ModeBreakdown;
+    pre.bike += mb.pre.bike;
+    pre.pedestrian += mb.pre.pedestrian;
+    pre.motorised += mb.pre.motorised;
+    pre.ptw += mb.pre.ptw;
+    pre.total += mb.pre.total;
+    post.bike += mb.post.bike;
+    post.pedestrian += mb.post.pedestrian;
+    post.motorised += mb.post.motorised;
+    post.ptw += mb.post.ptw;
+    post.total += mb.post.total;
+  }
+  return [
+    { mode: "Cycle", before: pct(pre.bike, pre.total), after: pct(post.bike, post.total) },
+    { mode: "Motorised", before: pct(pre.motorised, pre.total), after: pct(post.motorised, post.total) },
+  ];
 }
 
 function likertFromPoints(points: LocalCityPoint[]): LikertRow[] {
@@ -171,6 +219,7 @@ export interface BuildGraphicPayloadInput {
   points?: LocalCityPoint[];
   selectedModeTypes?: string[];
   selectedDirectionId?: string | null;
+  selectedSegmentId?: string | null;
   spec?: ObservatoryGraphicSpec | null;
 }
 
@@ -186,6 +235,7 @@ export function buildObservatoryGraphicPayload(
     points = [],
     selectedModeTypes = [],
     selectedDirectionId,
+    selectedSegmentId,
     spec: inputSpec,
   } = input;
 
@@ -207,8 +257,14 @@ export function buildObservatoryGraphicPayload(
       p.properties?.type === "observed" ||
       p.properties?.type === "derived"
   );
+  const scopedObserved =
+    cityName === "Copenhagen" && selectedSegmentId
+      ? filterCopenhagenObservatoryPoints(observedPoints, selectedSegmentId)
+      : observedPoints;
+  const activeObserved = scopedObserved.length ? scopedObserved : observedPoints;
 
-  const cameraDirections = cityName === "Copenhagen" ? cameraRowsFromPoints(observedPoints, selectedModeTypes) : [];
+  const cameraDirections =
+    cityName === "Copenhagen" ? cameraRowsFromPoints(activeObserved, selectedModeTypes) : [];
   const activeDirectionId =
     selectedDirectionId ?? cameraDirections[0]?.id ?? null;
 
@@ -220,24 +276,119 @@ export function buildObservatoryGraphicPayload(
       label: m.title,
     })) ?? [];
 
-  const perfDelta = performanceDeltaFromPoints(observedPoints);
+  const perfDelta = performanceDeltaFromPoints(activeObserved);
+
+  let modeShare =
+    cityName === "Copenhagen" && activeObserved.length > 0
+      ? modeShareFromCopenhagenPoints(activeObserved)
+      : modeShareFromView(view);
+  if (cityName === "Copenhagen" && spec.graphicId === "telraamModeBars") {
+    const telraamShare = modeShareFromTelraamPoints(activeObserved);
+    if (telraamShare.length) modeShare = telraamShare;
+  }
+  if (cityName === "Copenhagen" && spec.graphicId === "manualCountBars") {
+    const manualShare = modeShareFromManualPoints(activeObserved);
+    if (manualShare.length) modeShare = manualShare;
+  }
+
+  let accessibilityLikert: ObservatoryGraphicPayload["likert"];
+  let accessibilityEmptySpec = spec;
+  let tubeSpeedCards: ObservatoryGraphicPayload["statCards"];
+
+  if (cityName === "Copenhagen" && spec.graphicId === "accessibilityBars") {
+    const a11yBars = activeObserved
+      .filter((p) => p.properties?.datasetKind === "accessibility" && p.properties?.facilityCategory)
+      .map((p) => ({
+        label: String(p.properties?.facilityCategory ?? p.properties?.category ?? "Category"),
+        before: Number(p.properties?.baselineValue ?? 0),
+        after: Number(p.properties?.interventionValue ?? p.value ?? 0),
+      }));
+    if (a11yBars.length) {
+      accessibilityLikert = a11yBars.map((b) => ({
+        label: b.label,
+        value: b.after,
+        before: b.before,
+        after: b.after,
+      }));
+    } else if (pilotId === "cph-p1" || pilotId === "cph-p3") {
+      accessibilityEmptySpec = {
+        ...spec,
+        emptyState:
+          "Accessibility audit data pending for this pilot. Linked observed datasets: " +
+          (pilotId === "cph-p1"
+            ? "OpenTrafficCam, Telraam, manual counts, Platomo flow cameras, acceptability survey."
+            : "iRAP counts, OTC flows, safety perception survey."),
+      };
+    }
+  }
+
+  if (cityName === "Copenhagen" && spec.graphicId === "flowPressure" && pilotId === "cph-p3") {
+    const tubeCards = activeObserved
+      .filter((p) => p.properties?.datasetKind === "tube")
+      .map((p) => ({
+        label: String(p.properties?.streetName ?? "Corridor"),
+        value: `${Number(p.properties?.comparisonValue ?? 0).toFixed(1)} km/h`,
+        note: "Tube count avg speed (Apr 2024)",
+        color: "#96c2ef",
+      }));
+    if (tubeCards.length) tubeSpeedCards = tubeCards;
+  }
+
+  const facilityLikert =
+    spec.graphicId === "facilityInventory"
+      ? (() => {
+          const byType = new Map<string, number>();
+          for (const p of activeObserved.filter((pt) => pt.properties?.datasetKind === "parking")) {
+            const t = String(p.properties?.facilityCategory || "Parking");
+            byType.set(t, (byType.get(t) || 0) + Number(p.value || 0));
+          }
+          return [...byType.entries()].map(([label, value]) => ({ label, value }));
+        })()
+      : spec.graphicId === "accessibilityBars" && accessibilityLikert?.length
+        ? accessibilityLikert
+        : cityName === "Copenhagen" &&
+            (spec.graphicId === "likertRadar" || spec.graphicId === "surveyLikert")
+          ? activeObserved
+              .filter((p) => p.properties?.datasetKind === "survey")
+              .map((p) => ({
+                label: String(p.properties?.likertLabel || p.properties?.category || "Response"),
+                value: Number(p.properties?.interventionValue ?? p.value),
+              }))
+          : likertFromPoints(activeObserved);
+
+  const surveyStatCards =
+    cityName === "Copenhagen" && spec.graphicId === "sentimentGauge"
+      ? (() => {
+          const surveyPt = activeObserved.find((p) => p.properties?.datasetKind === "survey");
+          if (!surveyPt) return statCardsFromView(view, selectedKpi);
+          return [
+            {
+              label: String(surveyPt.properties?.likertLabel || "Acceptability"),
+              value: `${Number(surveyPt.properties?.interventionValue ?? surveyPt.value).toFixed(1)}%`,
+              color: "#b0edba",
+            },
+            {
+              label: "Baseline",
+              value: `${Number(surveyPt.properties?.baselineValue ?? 0).toFixed(1)}%`,
+            },
+          ];
+        })()
+      : tubeSpeedCards ?? statCardsFromView(view, selectedKpi);
+
   const payload: ObservatoryGraphicPayload = {
-    spec,
+    spec: accessibilityEmptySpec !== spec ? accessibilityEmptySpec : spec,
     zone,
     kpiId: selectedKpi,
     observatoryType,
     dataClass,
     sourceLabel,
     kpiValue: view.kpiValue,
-    modeShare:
-      cityName === "Copenhagen" && observedPoints.length > 0
-        ? modeShareFromCopenhagenPoints(observedPoints)
-        : modeShareFromView(view),
+    modeShare,
     trend: trendFromView(view),
     cameraDirections,
     activeDirectionId,
-    likert: likertFromPoints(observedPoints),
-    statCards: statCardsFromView(view, selectedKpi),
+    likert: facilityLikert,
+    statCards: surveyStatCards,
     markers,
     segmentGradient: view.intervention.peakCongestion,
     streetNS: view.streetNS,
@@ -258,7 +409,7 @@ export function buildObservatoryGraphicPayload(
     ];
   }
 
-  if (observedPoints.length === 0 && dataClass === "mock" && spec.emptyState) {
+  if (activeObserved.length === 0 && dataClass === "mock" && spec.emptyState) {
     payload.spec = { ...spec, emptyState: spec.emptyState };
   }
 

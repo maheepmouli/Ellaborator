@@ -30,9 +30,9 @@ export function DirectionBreakdownPanel({
       <div className={obsGlassCardClass(compact)} style={obsGlassCardStyle()}>
         <p className="text-[11px] font-semibold text-white/70 mb-2">Camera directions</p>
         <div className="space-y-1.5 max-h-40 overflow-y-auto">
-          {rows.map((row) => (
+          {rows.map((row, index) => (
             <button
-              key={row.id}
+              key={`${row.id}-${index}`}
               type="button"
               onClick={() => onSelectDirection?.(row.id)}
               className={`w-full text-left rounded-lg border px-2 py-1.5 text-[10px] ${

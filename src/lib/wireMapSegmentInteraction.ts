@@ -8,7 +8,7 @@ export type SegmentInteractionDetail = {
 };
 
 export type SegmentInteractionHandlers = {
-  onSegmentHover?: (detail: SegmentInteractionDetail) => void;
+  onSegmentHover?: (detail: SegmentInteractionDetail | null) => void;
   onSegmentFocus?: (ctx: {
     segmentName: string;
     speed: number | null;
@@ -33,6 +33,10 @@ function emitFocus(
 function emitHover(detail: SegmentInteractionDetail, handlers: SegmentInteractionHandlers) {
   handlers.onSegmentHover?.(detail);
   emitFocus(detail, handlers);
+}
+
+function emitHoverEnd(handlers: SegmentInteractionHandlers) {
+  handlers.onSegmentHover?.(null);
 }
 
 /** Wire hover / click on a Leaflet polyline with optional highlight styles. */
@@ -70,6 +74,7 @@ export function wirePolylineSegment(
       restored.opacity = (base.opacity as number) * dim;
     }
     layer.setStyle(restored);
+    emitHoverEnd(handlers);
   });
   layer.on("click", () => {
     handlers.onJunctionSegmentClick?.(detail);
@@ -86,24 +91,35 @@ export function wireCircleMarkerSegment(
     baseRadius?: number;
     highlightRadius?: number;
     selectedSegmentId?: string | null;
+    baseStyle?: L.PathOptions;
+    highlightStyle?: L.PathOptions;
   }
 ) {
   const baseR = options?.baseRadius ?? 7;
   const hiR = options?.highlightRadius ?? baseR + 1.8;
   const isSelected = options?.selectedSegmentId === detail.segmentId;
+  const baseStyle = options?.baseStyle ?? {};
+  const highlightStyle = options?.highlightStyle ?? {
+    weight: 2.2,
+    opacity: 1,
+    fillOpacity: 0.92,
+  };
+  const restoredStyle: L.PathOptions = {
+    weight: isSelected ? 2.1 : 1.2,
+    opacity: isSelected ? 1 : 0.45,
+    fillOpacity: isSelected ? 0.92 : 0.34,
+    ...baseStyle,
+  };
 
   layer.on("mouseover", () => {
     layer.setRadius(isSelected ? hiR : hiR);
-    layer.setStyle({ weight: 2.2, opacity: 1, fillOpacity: 0.92 });
+    layer.setStyle({ ...restoredStyle, ...highlightStyle });
     emitHover(detail, handlers);
   });
   layer.on("mouseout", () => {
     layer.setRadius(isSelected ? baseR + 1.2 : baseR);
-    layer.setStyle({
-      weight: isSelected ? 2.1 : 1.2,
-      opacity: isSelected ? 1 : 0.45,
-      fillOpacity: isSelected ? 0.92 : 0.34,
-    });
+    layer.setStyle(restoredStyle);
+    emitHoverEnd(handlers);
   });
   layer.on("click", () => {
     handlers.onJunctionSegmentClick?.(detail);
@@ -112,7 +128,7 @@ export function wireCircleMarkerSegment(
 }
 
 export function segmentInteractionHandlers(
-  onSegmentHover?: (detail: SegmentInteractionDetail) => void,
+  onSegmentHover?: (detail: SegmentInteractionDetail | null) => void,
   onSegmentFocus?: SegmentInteractionHandlers["onSegmentFocus"],
   onJunctionSegmentClick?: SegmentInteractionHandlers["onJunctionSegmentClick"]
 ): SegmentInteractionHandlers {

@@ -66,6 +66,7 @@ export function resolveMapLegend(
   const isIssy = city.toLowerCase().includes("issy");
   const isMilan = city === "milan";
   const isCopenhagen = city.toLowerCase().includes("copenhagen");
+  const isTrikala = city.toLowerCase().includes("trikala");
   const spatial = resolveSpatialSystem(city, kpiId, {
     junctionStudy: options?.issyJunctionStudy,
   });
@@ -146,9 +147,15 @@ export function resolveMapLegend(
 
   if (isCopenhagen && kpiId === "kpi1.2") {
     return {
-      marker: "point",
-      items: POINT_INTENSITY_ITEMS,
-      hint: "Directional OpenTrafficCam observations: one point per camera direction. Values are pre/post observed counts and selected-mode proportions at sensor-direction level (supporting KPI1.2).",
+      marker: "line",
+      items: [
+        { label: "Favourable change", color: "#22C55E" },
+        { label: "Unfavourable change", color: "#ff6b6b" },
+        { label: "Flow endpoint", color: "#63ccff" },
+        { label: "Camera FOV", color: "#63ccff" },
+        { label: "Telraam counter", color: "#38bdf8" },
+      ],
+      hint: "OpenTrafficCam flows — arms radiate from camera hubs to directional endpoints; cyan wedges show camera field-of-view; soft gray field marks pilot influence zone.",
     };
   }
 
@@ -222,6 +229,19 @@ export function resolveMapLegend(
       marker: "line",
       items: SEGMENT_PRESSURE_ITEMS,
       hint: "Network segments: bands are relative within the loaded RETE window.",
+    };
+  }
+
+  // Trikala survey observatory themes
+  if (isTrikala) {
+    return {
+      marker: "point",
+      items: [
+        { label: "Mobility segments", color: "#00ffff" },
+        { label: "Infrastructure", color: "#22c55e" },
+        { label: "Safety / crossing", color: "#ffb300" },
+      ],
+      hint: "Glowing survey cluster at pilot anchor — rings show demographic segments; markers are Likert aggregates.",
     };
   }
 

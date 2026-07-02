@@ -47,7 +47,7 @@ export const SHAREPOINT_CITY_DATASETS: SharepointDataset[] = [
   {
     city: "Trikala",
     sourceFolder: "/sharepoint-data/Trikala",
-    fileCount: 2,
+    fileCount: 50,
     sampleFile:
       "/sharepoint-data/Trikala/baseline data of the smart crossing on line survey_english.xlsx",
     manifestProbe: "/sharepoint-data/_manifest.json",

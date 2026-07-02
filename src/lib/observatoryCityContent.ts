@@ -8,6 +8,11 @@ import { getSegmentHighlight, segmentMetricKindForKpi } from "@/lib/segmentHighl
 import type { MapScenario } from "@/context/MapIntelligenceContext";
 import type { LocalCityPoint } from "@/services/localCityData";
 import { getCityKpiMethodology } from "@/data/cityKpiMethodology";
+import {
+  buildCopenhagenObservatoryView,
+  filterCopenhagenObservatoryPoints,
+} from "@/lib/copenhagenObservatoryView";
+import { isCopenhagenObservatoryContext } from "@/lib/copenhagenMapSelection";
 
 export type ObservatoryDataClass = "observed" | "derived" | "modelled" | "mock";
 
@@ -129,42 +134,19 @@ export function buildCityObservatoryView(
     profile?.dataAvailability ||
     "Pilot registry with linked dataset readiness";
 
-  const isCopenhagen = isCopenhagenCityName(city);
-  if (isCopenhagen && hasObserved) {
-    const siteNames = [
-      ...new Set(
-        points
-          .map((p) => String(p.properties?.streetName || "").trim())
-          .filter(Boolean)
-      ),
-    ];
-    const primarySite = siteNames[0] || profile?.title || config.name;
-    const displayName = siteNames.length > 1 ? siteNames.join(" · ") : primarySite;
-    const directionCount = points.length;
-
-    return {
-      ...base,
-      name: displayName,
-      shortName: primarySite.length > 24 ? `${primarySite.slice(0, 21)}…` : primarySite,
-      kpiValue: Math.round(kpiValue * 10) / 10,
-      kpiBand: highlight.band,
-      armColor: highlight.color,
-      bandColor: highlight.color,
-      kpiLabel: kpiDef?.name ?? selectedKpi,
-      coordinates: coords,
-      dataSource: "observed",
-      dataConfidence: Math.max(base.dataConfidence, 0.86),
-      interventionType: profile?.interventionSummary || base.interventionType,
-      monitoringPeriod: `OpenTrafficCam · ${directionCount} directional flow${directionCount === 1 ? "" : "s"}`,
-      segmentApiId: String(points[0]?.properties?.segmentId || config.segmentApiId),
-      pilot: pilot ? `${city} — ${pilot.name}` : base.pilot,
-      streetNS: config.streetNS,
-      streetEW: config.streetEW,
-      sourceLabel,
-      dataClass: "observed",
-      approachesCovered: directionCount,
-      totalApproaches: directionCount,
-    };
+  const isCopenhagen = isCopenhagenObservatoryContext(city, pilotId);
+  if (isCopenhagen) {
+    return buildCopenhagenObservatoryView(
+      config,
+      pilotId ?? "cph-p1",
+      selectedKpi,
+      scenario,
+      points,
+      {
+        pilotLabel: pilot ? `${city} — ${pilot.name}` : undefined,
+        selectedModeTypes: [],
+      }
+    );
   }
 
   return {
@@ -239,9 +221,29 @@ export function buildSegmentScopedObservatoryView(
   scenario: MapScenario,
   points: LocalCityPoint[],
   segment: SegmentSelectionMeta,
-  kpi32IntensityScale = 1
+  kpi32IntensityScale = 1,
+  selectedModeTypes: string[] = []
 ): JunctionStudyView {
-  const scopedPoints = pointsForSegment(points, segment.segmentId);
+  const isCopenhagen = isCopenhagenObservatoryContext(city, pilotId);
+  const scopedPoints = isCopenhagen
+    ? filterCopenhagenObservatoryPoints(points, segment.segmentId)
+    : pointsForSegment(points, segment.segmentId);
+
+  if (isCopenhagen) {
+    return buildCopenhagenObservatoryView(
+      config,
+      pilotId ?? "cph-p1",
+      selectedKpi,
+      scenario,
+      scopedPoints.length ? scopedPoints : points,
+      {
+        selectionId: segment.segmentId,
+        segmentName: segment.segmentName,
+        selectedModeTypes,
+      }
+    );
+  }
+
   const base = buildCityObservatoryView(
     config,
     city,

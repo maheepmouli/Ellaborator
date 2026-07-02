@@ -1,0 +1,36 @@
+{
+  "acceptability": {
+    "pilotId": "cph-p1",
+    "beforeMean": 5.236551215917465,
+    "afterMean": 4.792117465224111,
+    "beforePct": 70.6,
+    "afterPct": 63.2,
+    "sampleBefore": 1377,
+    "sampleAfter": 1377,
+    "likert": [
+      {
+        "label": "Overall acceptability",
+        "before": 70.6,
+        "after": 63.2
+      }
+    ]
+  },
+  "safetyPerception": {
+    "pilotId": "cph-p3",
+    "meanScore": 1.4666011787819253,
+    "meanPct": 11.7,
+    "sampleSize": 1018,
+    "likert": [
+      {
+        "label": "Perceived safety change",
+        "before": 1.7,
+        "after": 11.7
+      },
+      {
+        "label": "Traffic calmness",
+        "before": 42,
+        "after": 11.7
+      }
+    ]
+  }
+}

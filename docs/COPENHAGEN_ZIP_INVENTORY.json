@@ -1,0 +1,2552 @@
+{
+  "generatedAt": "2026-06-30T11:56:52.460Z",
+  "zip": "Copenhagen Lighthouse-20260625T113853Z-3-001.zip",
+  "totals": {
+    "allFiles": 171,
+    "xlsx": 100,
+    "csv": 2,
+    "images": 36,
+    "pdfs": 12,
+    "shapefiles": 3
+  },
+  "folderSummary": [
+    {
+      "folder": "1. BASELINE Data for Copenhagen/Manual Counts",
+      "count": 72
+    },
+    {
+      "folder": "1. BASELINE Data for Copenhagen/iRap safety ranking system",
+      "count": 42
+    },
+    {
+      "folder": "1. BASELINE Data for Copenhagen/OpenTrafficCam Counts 2024 and 2025",
+      "count": 12
+    },
+    {
+      "folder": "1. BASELINE Data for Copenhagen/Technical drawing - Medieval City",
+      "count": 8
+    },
+    {
+      "folder": "1. BASELINE Data for Copenhagen/Parking Shapefiles for T5_3 Simulation",
+      "count": 7
+    },
+    {
+      "folder": "1. BASELINE Data for Copenhagen/Telraam",
+      "count": 7
+    },
+    {
+      "folder": "1. BASELINE Data for Copenhagen/2024 Images-Monica",
+      "count": 6
+    },
+    {
+      "folder": "1. BASELINE Data for Copenhagen/platomo_geo.csv",
+      "count": 1
+    },
+    {
+      "folder": "1. BASELINE Data for Copenhagen/manual_counts_geo.csv",
+      "count": 1
+    },
+    {
+      "folder": "1. BASELINE Data for Copenhagen/Intervention site_R�dhusstr�de 3 2024.jpg",
+      "count": 1
+    },
+    {
+      "folder": "1. BASELINE Data for Copenhagen/cph_otc_surveysites.xlsx",
+      "count": 1
+    },
+    {
+      "folder": "1. BASELINE Data for Copenhagen/Tube Counts Bicyclist",
+      "count": 1
+    },
+    {
+      "folder": "1. BASELINE Data for Copenhagen/Survey Acceptability - Satisfaction with Intervention 1 BEFORE",
+      "count": 1
+    },
+    {
+      "folder": "2. POST IMPLEMENTATION Data from Copenhagen/Survey Traffic Safety before-after change",
+      "count": 1
+    },
+    {
+      "folder": "2. POST IMPLEMENTATION Data from Copenhagen/Survey Acceptability - Satisfaction with Intervention 1 AFTER",
+      "count": 1
+    },
+    {
+      "folder": "1. BASELINE Data for Copenhagen/KPI 1.2-3.1-4.1 Copenhagen_Freed up space note.docx",
+      "count": 1
+    },
+    {
+      "folder": "Copenhagen Intervention Evaluation Plan_29052025.docx",
+      "count": 1
+    },
+    {
+      "folder": "KPI table_Baseline & Endline Data_CPH LL .docx",
+      "count": 1
+    },
+    {
+      "folder": "ELAB WP 4&7 combined  One2One questions for cities_CPH LL.docx",
+      "count": 1
+    },
+    {
+      "folder": "1. BASELINE Data for Copenhagen/Paper_ELABORATOR_CPH.pdf",
+      "count": 1
+    },
+    {
+      "folder": "1. BASELINE Data for Copenhagen/Mouratidis el al 2026_On the acceptability of parking policy_CITIES.pdf",
+      "count": 1
+    },
+    {
+      "folder": "1. BASELINE Data for Copenhagen/Ritzau pressemeddelse 17.02.26_Evaluering_ f�rre biler og flere fodg�gere i Middelalderbyen.pdf",
+      "count": 1
+    },
+    {
+      "folder": "1. BASELINE Data for Copenhagen/Marias_ELABORATOR Notes from countings in the Medieval City to CPH LL.docx",
+      "count": 1
+    },
+    {
+      "folder": "1. BASELINE Data for Copenhagen/Evaluering af oml�gningen af cykel- og bilparkering i Middelalderbyen_februar 2026.pdf",
+      "count": 1
+    }
+  ],
+  "keyFilesInspected": [
+    {
+      "path": "1. BASELINE Data for Copenhagen/platomo_geo.csv",
+      "type": "csv",
+      "rowCount": 6,
+      "headers": [
+        "position",
+        "lat",
+        "lon"
+      ]
+    },
+    {
+      "path": "1. BASELINE Data for Copenhagen/manual_counts_geo.csv",
+      "type": "csv",
+      "rowCount": 48,
+      "headers": [
+        "position",
+        "lat",
+        "lon"
+      ]
+    },
+    {
+      "path": "1. BASELINE Data for Copenhagen/cph_otc_surveysites.xlsx",
+      "type": "xlsx",
+      "sheetNames": [
+        "in"
+      ],
+      "sheets": {
+        "in": {
+          "rowCount": 10,
+          "headers": [
+            "Locations of intelligent cameras in Copenhagen",
+            "__EMPTY",
+            "__EMPTY_1"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        }
+      }
+    },
+    {
+      "path": "1. BASELINE Data for Copenhagen/Tube Counts Bicyclist/Tube count bicyclist Medieval City April 2024.xlsx",
+      "type": "xlsx",
+      "sheetNames": [
+        "Ark1"
+      ],
+      "sheets": {
+        "Ark1": {
+          "rowCount": 18,
+          "headers": [
+            "Name of the road",
+            "Average daily traffic",
+            "Average speed",
+            "__EMPTY"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        }
+      }
+    },
+    {
+      "path": "1. BASELINE Data for Copenhagen/Survey Acceptability - Satisfaction with Intervention 1 BEFORE/Acceptability_Intervention1_BEFORE.xlsx",
+      "type": "xlsx",
+      "sheetNames": [
+        "Sheet1"
+      ],
+      "sheets": {
+        "Sheet1": {
+          "rowCount": 1358,
+          "headers": [
+            "SurveyBEFORE_Public_acceptability_intervention",
+            "__EMPTY",
+            "__EMPTY_1",
+            "__EMPTY_2",
+            "__EMPTY_3"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        }
+      }
+    },
+    {
+      "path": "2. POST IMPLEMENTATION Data from Copenhagen/Survey Traffic Safety before-after change/Before_After_changes_traffic_safety.xlsx",
+      "type": "xlsx",
+      "sheetNames": [
+        "Sheet3"
+      ],
+      "sheets": {
+        "Sheet3": {
+          "rowCount": 1332,
+          "headers": [
+            "Before-After_changes_safety_traffic",
+            "__EMPTY",
+            "__EMPTY_1",
+            "__EMPTY_2",
+            "Question:",
+            "Since June",
+            "Asked in AFTER survey"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        }
+      }
+    },
+    {
+      "path": "2. POST IMPLEMENTATION Data from Copenhagen/Survey Acceptability - Satisfaction with Intervention 1 AFTER/Acceptability_Intervention1_AFTER.xlsx",
+      "type": "xlsx",
+      "sheetNames": [
+        "Sheet2"
+      ],
+      "sheets": {
+        "Sheet2": {
+          "rowCount": 1295,
+          "headers": [
+            "SurveyAFTER_public_acceptability_intervention",
+            "__EMPTY",
+            "__EMPTY_1",
+            "__EMPTY_2",
+            "__EMPTY_3"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        }
+      }
+    },
+    {
+      "path": "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/Medieval City manual counts traffic_2023_uploaded to ELABORATOR.xlsx",
+      "type": "xlsx",
+      "sheetNames": [
+        "Område A-C"
+      ],
+      "sheets": {
+        "Område A-C": {
+          "rowCount": 44,
+          "headers": [
+            "Trafik ind i Middelalderbyen i alt kl. 7-19 en junidag i 2023 (efter Byrums- og Trafikplans afgrænsning, se kort)",
+            "__EMPTY",
+            "__EMPTY_1",
+            "__EMPTY_2",
+            "__EMPTY_3",
+            "__EMPTY_4"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        }
+      }
+    },
+    {
+      "path": "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/Middelalderbyen_trafik_ind_2023_rettet_20250402.xlsx",
+      "type": "xlsx",
+      "sheetNames": [
+        "Område A-C",
+        "Andre tællesteder",
+        "Kort"
+      ],
+      "sheets": {
+        "Område A-C": {
+          "rowCount": 38,
+          "headers": [
+            "Trafik ind i Middelalderbyen i alt kl. 7-19 en junidag i 2023 (efter Byrums- og Trafikplans afgrænsning, se kort)",
+            "__EMPTY",
+            "__EMPTY_1",
+            "__EMPTY_2",
+            "__EMPTY_3",
+            "__EMPTY_4",
+            "__EMPTY_5",
+            "__EMPTY_6"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        },
+        "Andre tællesteder": {
+          "rowCount": 5,
+          "headers": [
+            "Andre tællesteder, trafik ind i Middelalderbyen i alt kl. 7-19 en junidag i 2023",
+            "__EMPTY",
+            "__EMPTY_1",
+            "__EMPTY_2",
+            "__EMPTY_3",
+            "__EMPTY_4",
+            "__EMPTY_5",
+            "__EMPTY_6"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        },
+        "Kort": {
+          "rowCount": 0,
+          "headers": [],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        }
+      }
+    },
+    {
+      "path": "1. BASELINE Data for Copenhagen/Technical drawing - Medieval City/I100275_P-pladser_Oversigt.xlsx",
+      "type": "xlsx",
+      "sheetNames": [
+        "Opslagsværk",
+        "Eksisterende forhold",
+        "Udbud",
+        "Udført",
+        "Formler"
+      ],
+      "sheets": {
+        "Opslagsværk": {
+          "rowCount": 130,
+          "headers": [
+            "__EMPTY",
+            "Tidligere forhold / Eksisterende forhold",
+            "__EMPTY_1",
+            "__EMPTY_2",
+            "__EMPTY_3",
+            "__EMPTY_4",
+            "__EMPTY_5",
+            "__EMPTY_6",
+            "__EMPTY_7",
+            "__EMPTY_8",
+            "__EMPTY_9",
+            "__EMPTY_10",
+            "__EMPTY_11",
+            "Projekterede forhold",
+            "__EMPTY_12",
+            "__EMPTY_13",
+            "__EMPTY_14",
+            "__EMPTY_15",
+            "__EMPTY_16",
+            "__EMPTY_17"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        },
+        "Eksisterende forhold": {
+          "rowCount": 1064,
+          "headers": [
+            "Count",
+            "ANTAL_PLADSER",
+            "Name",
+            "Layer",
+            "LINQ_PARKERINGSTYPE",
+            "P_ORDNING",
+            "ID",
+            "VEJSTATUS",
+            "VEJKODE",
+            "VEJNAVN",
+            "LINQ_HUSNUMMER",
+            "VEJSIDE",
+            "BYDEL",
+            "LINQ_DELOMRAADER",
+            "BEBOERZONE",
+            "BETALINGSZONE",
+            "P_ORDNING_UDVIDET",
+            "RESTRIKTION",
+            "RESTRIKTIONSTYPE",
+            "RESTRIKTIONSTEKST"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        },
+        "Udbud": {
+          "rowCount": 476,
+          "headers": [
+            "Count",
+            "ANTAL_PLADSER",
+            "Name",
+            "Layer",
+            "LINQ_PARKERINGSTYPE",
+            "P_ORDNING",
+            "ID",
+            "VEJSTATUS",
+            "VEJKODE",
+            "VEJNAVN",
+            "LINQ_HUSNUMMER",
+            "VEJSIDE",
+            "BYDEL",
+            "LINQ_DELOMRAADER",
+            "BEBOERZONE",
+            "BETALINGSZONE",
+            "P_ORDNING_UDVIDET",
+            "RESTRIKTION",
+            "RESTRIKTIONSTYPE",
+            "RESTRIKTIONSTEKST"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        },
+        "Udført": {
+          "rowCount": 183,
+          "headers": [
+            "I100275",
+            "Vejkode",
+            "Vejnavn",
+            "Husnummer",
+            "Område",
+            "Parkering",
+            "Antal_plad",
+            "Restriktio",
+            "Vejside",
+            "P_ordning",
+            "Bemærknin"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        },
+        "Formler": {
+          "rowCount": 129,
+          "headers": [
+            "Vejnavne",
+            "Tidligere forhold / Eksisterende forhold",
+            "__EMPTY",
+            "__EMPTY_1",
+            "__EMPTY_2",
+            "__EMPTY_3",
+            "__EMPTY_4",
+            "__EMPTY_5",
+            "__EMPTY_6",
+            "__EMPTY_7",
+            "__EMPTY_8",
+            "__EMPTY_9",
+            "Projekterede forhold",
+            "__EMPTY_10",
+            "__EMPTY_11",
+            "__EMPTY_12",
+            "__EMPTY_13",
+            "__EMPTY_14",
+            "__EMPTY_15",
+            "__EMPTY_16"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        }
+      }
+    },
+    {
+      "path": "1. BASELINE Data for Copenhagen/Telraam/Telraam counts Medieval City Copenhagen 2024 and 2025.xlsx",
+      "type": "xlsx",
+      "sheetNames": [
+        "Vognmagergade",
+        "Vestergade",
+        "Rosenborggade",
+        "Studiestræde"
+      ],
+      "sheets": {
+        "Vognmagergade": {
+          "rowCount": 13,
+          "headers": [
+            "Telraam Counts - Relative change CPH Medieval City",
+            "__EMPTY",
+            "__EMPTY_1",
+            "__EMPTY_2",
+            "__EMPTY_3",
+            "__EMPTY_4"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        },
+        "Vestergade": {
+          "rowCount": 14,
+          "headers": [
+            "Telraam Counts - Relative change CPH Medieval City",
+            "__EMPTY",
+            "__EMPTY_1",
+            "__EMPTY_2",
+            "__EMPTY_3",
+            "__EMPTY_4"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        },
+        "Rosenborggade": {
+          "rowCount": 13,
+          "headers": [
+            "Telraam Counts - Relative change CPH Medieval City",
+            "__EMPTY",
+            "__EMPTY_1",
+            "__EMPTY_2",
+            "__EMPTY_3",
+            "__EMPTY_4"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        },
+        "Studiestræde": {
+          "rowCount": 13,
+          "headers": [
+            "Telraam Counts - Relative change CPH Medieval City",
+            "__EMPTY",
+            "__EMPTY_1",
+            "__EMPTY_2",
+            "__EMPTY_3",
+            "__EMPTY_4"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        }
+      }
+    },
+    {
+      "path": "1. BASELINE Data for Copenhagen/OpenTrafficCam Counts 2024 and 2025/Countings_Hojbro.xlsx",
+      "type": "xlsx",
+      "sheetNames": [
+        "Overview",
+        "Data_Hojbro_Pre",
+        "Data_Hojbro_Post"
+      ],
+      "sheets": {
+        "Overview": {
+          "rowCount": 6,
+          "headers": [
+            "Site",
+            "Hojbro/Vindebrogade"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        },
+        "Data_Hojbro_Pre": {
+          "rowCount": 6746,
+          "headers": [
+            "start time",
+            "start occurrence date",
+            "start occurrence time",
+            "end time",
+            "end occurrence date",
+            "end occurrence time",
+            "classification",
+            "flow",
+            "count"
+          ],
+          "flows": [
+            "Hojbro north",
+            "Hojbro south"
+          ],
+          "flowCount": 2,
+          "classifications": [
+            "bicyclist",
+            "bicyclist_with_trailer",
+            "bus",
+            "car",
+            "car_with_trailer",
+            "cargo_bike_driver",
+            "delivery_van",
+            "delivery_van_with_trailer",
+            "motorcyclist",
+            "other",
+            "pedestrian",
+            "private_van",
+            "private_van_with_trailer",
+            "scooter_driver",
+            "train",
+            "truck",
+            "truck_with_semitrailer",
+            "truck_with_trailer"
+          ],
+          "classificationCount": 18
+        },
+        "Data_Hojbro_Post": {
+          "rowCount": 7462,
+          "headers": [
+            "start time",
+            "start occurrence date",
+            "start occurrence time",
+            "end time",
+            "end occurrence date",
+            "end occurrence time",
+            "classification",
+            "flow",
+            "count"
+          ],
+          "flows": [
+            "Hojbro north",
+            "Hojbro south"
+          ],
+          "flowCount": 2,
+          "classifications": [
+            "bicyclist",
+            "bicyclist_with_trailer",
+            "bus",
+            "car",
+            "car_with_trailer",
+            "cargo_bike_driver",
+            "delivery_van",
+            "delivery_van_with_trailer",
+            "motorcyclist",
+            "other",
+            "pedestrian",
+            "private_van",
+            "private_van_with_trailer",
+            "scooter_driver",
+            "train",
+            "truck",
+            "truck_with_semitrailer",
+            "truck_with_trailer"
+          ],
+          "classificationCount": 18
+        }
+      }
+    },
+    {
+      "path": "1. BASELINE Data for Copenhagen/iRap safety ranking system/Manual counts/iRap safety ranking Counts in 2024 and 2025 CPH.xlsx",
+      "type": "xlsx",
+      "sheetNames": [
+        "Frederiksholms kanal 2024",
+        "Frederiksholms kanal 2025",
+        "Løngangsstræde Nov 2024",
+        "Løngangsstræde nov 2025",
+        "Lavendelstræde Nov 2024",
+        "Lavendelstræde Nov 2025"
+      ],
+      "sheets": {
+        "Frederiksholms kanal 2024": {
+          "rowCount": 40,
+          "headers": [
+            "Frederiksholms kanal 1 b  8th of November 2024",
+            "__EMPTY",
+            "__EMPTY_1",
+            "__EMPTY_2",
+            "__EMPTY_3",
+            "__EMPTY_4",
+            "__EMPTY_5",
+            "__EMPTY_6",
+            "__EMPTY_7",
+            "__EMPTY_8",
+            "__EMPTY_9",
+            "__EMPTY_10",
+            "__EMPTY_11",
+            "__EMPTY_12"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        },
+        "Frederiksholms kanal 2025": {
+          "rowCount": 30,
+          "headers": [
+            "Frederiksholms kanal 1 b  6th of November 2025",
+            "__EMPTY",
+            "__EMPTY_1",
+            "__EMPTY_2",
+            "__EMPTY_3",
+            "__EMPTY_4",
+            "__EMPTY_5",
+            "__EMPTY_6",
+            "__EMPTY_7",
+            "__EMPTY_8",
+            "__EMPTY_9",
+            "__EMPTY_10",
+            "__EMPTY_11",
+            "__EMPTY_12"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        },
+        "Løngangsstræde Nov 2024": {
+          "rowCount": 31,
+          "headers": [
+            "Løngangsstræde number 23  13 of November 2024",
+            "__EMPTY",
+            "__EMPTY_1",
+            "__EMPTY_2",
+            "__EMPTY_3",
+            "__EMPTY_4",
+            "__EMPTY_5",
+            "__EMPTY_6",
+            "__EMPTY_7",
+            "__EMPTY_8",
+            "__EMPTY_9",
+            "Løngangsstræde number 23  14 of November 2024",
+            "__EMPTY_10",
+            "__EMPTY_11",
+            "__EMPTY_12",
+            "__EMPTY_13",
+            "__EMPTY_14",
+            "__EMPTY_15",
+            "__EMPTY_16",
+            "__EMPTY_17"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        },
+        "Løngangsstræde nov 2025": {
+          "rowCount": 30,
+          "headers": [
+            "Løngangsstræde number 23  6th of November 2025",
+            "__EMPTY",
+            "__EMPTY_1",
+            "__EMPTY_2",
+            "__EMPTY_3",
+            "__EMPTY_4",
+            "__EMPTY_5",
+            "__EMPTY_6",
+            "__EMPTY_7",
+            "__EMPTY_8"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        },
+        "Lavendelstræde Nov 2024": {
+          "rowCount": 41,
+          "headers": [
+            "__EMPTY",
+            "__EMPTY_1",
+            "__EMPTY_2",
+            "__EMPTY_3",
+            "__EMPTY_4",
+            "__EMPTY_5",
+            "__EMPTY_6",
+            "__EMPTY_7",
+            "__EMPTY_8",
+            "__EMPTY_9",
+            "__EMPTY_10",
+            "__EMPTY_11",
+            "__EMPTY_12",
+            "__EMPTY_13",
+            "__EMPTY_14",
+            "__EMPTY_15",
+            "__EMPTY_16",
+            "__EMPTY_17",
+            "__EMPTY_18",
+            "__EMPTY_19"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        },
+        "Lavendelstræde Nov 2025": {
+          "rowCount": 30,
+          "headers": [
+            "Lavendelsstræde  number 10, 6th of November 2025",
+            "__EMPTY",
+            "__EMPTY_1",
+            "__EMPTY_2",
+            "__EMPTY_3",
+            "__EMPTY_4",
+            "__EMPTY_5",
+            "__EMPTY_6",
+            "__EMPTY_7",
+            "__EMPTY_8"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        }
+      }
+    },
+    {
+      "path": "1. BASELINE Data for Copenhagen/OpenTrafficCam Counts 2024 and 2025/Countings_Gammeltorv.xlsx",
+      "type": "xlsx",
+      "sheetNames": [
+        "Overview",
+        "Data_Gammeltorv_Pre",
+        "Data_Gammeltorv_Post"
+      ],
+      "sheets": {
+        "Overview": {
+          "rowCount": 6,
+          "headers": [
+            "Site",
+            "Gammeltorv/Vestergade"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        },
+        "Data_Gammeltorv_Pre": {
+          "rowCount": 16176,
+          "headers": [
+            "start time",
+            "start occurrence date",
+            "start occurrence time",
+            "end time",
+            "end occurrence date",
+            "end occurrence time",
+            "classification",
+            "flow",
+            "count"
+          ],
+          "flows": [
+            "Gammeltorv north",
+            "Gammeltorv south",
+            "Vestergade east",
+            "Vestergade west"
+          ],
+          "flowCount": 4,
+          "classifications": [
+            "bicyclist",
+            "bicyclist_with_trailer",
+            "bus",
+            "car",
+            "car_with_trailer",
+            "cargo_bike_driver",
+            "delivery_van",
+            "delivery_van_with_trailer",
+            "motorcyclist",
+            "other",
+            "pedestrian",
+            "private_van",
+            "private_van_with_trailer",
+            "scooter_driver",
+            "train",
+            "truck",
+            "truck_with_semitrailer",
+            "truck_with_trailer"
+          ],
+          "classificationCount": 18
+        },
+        "Data_Gammeltorv_Post": {
+          "rowCount": 8704,
+          "headers": [
+            "start time",
+            "start occurrence date",
+            "start occurrence time",
+            "end time",
+            "end occurrence date",
+            "end occurrence time",
+            "classification",
+            "flow",
+            "count"
+          ],
+          "flows": [
+            "Gammeltorv north",
+            "Gammeltorv south",
+            "Vestergade east",
+            "Vestergade west"
+          ],
+          "flowCount": 4,
+          "classifications": [
+            "bicyclist",
+            "bicyclist_with_trailer",
+            "bus",
+            "car",
+            "car_with_trailer",
+            "cargo_bike_driver",
+            "delivery_van",
+            "delivery_van_with_trailer",
+            "motorcyclist",
+            "other",
+            "pedestrian",
+            "private_van",
+            "private_van_with_trailer",
+            "scooter_driver",
+            "train",
+            "truck",
+            "truck_with_semitrailer",
+            "truck_with_trailer"
+          ],
+          "classificationCount": 18
+        }
+      }
+    },
+    {
+      "path": "1. BASELINE Data for Copenhagen/OpenTrafficCam Counts 2024 and 2025/Marias Comparison of pre and post OTC/Countings_Vandkunsten_sortet.xlsx",
+      "type": "xlsx",
+      "sheetNames": [
+        "Overview",
+        "Data_Vandkunsten_Pre",
+        "Pivot Pre 2024",
+        "Data_Vandkunsten_Post",
+        "Pivot pre 2025"
+      ],
+      "sheets": {
+        "Overview": {
+          "rowCount": 6,
+          "headers": [
+            "Site",
+            "Vandkunsten/Radhuusstraede"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        },
+        "Data_Vandkunsten_Pre": {
+          "rowCount": 6880,
+          "headers": [
+            "start time",
+            "start occurrence date",
+            "start occurrence time",
+            "end time",
+            "end occurrence date",
+            "end occurrence time",
+            "classification",
+            "flow",
+            "count"
+          ],
+          "flows": [
+            "Radhuusstraede North --> Radhuusstraede South",
+            "Radhuusstraede South --> Radhuusstraede North"
+          ],
+          "flowCount": 2,
+          "classifications": [
+            "bicyclist",
+            "bicyclist_with_trailer",
+            "bus",
+            "car",
+            "car_with_trailer",
+            "cargo_bike_driver",
+            "delivery_van",
+            "delivery_van_with_trailer",
+            "motorcyclist",
+            "other",
+            "pedestrian",
+            "private_van",
+            "private_van_with_trailer",
+            "scooter_driver",
+            "train",
+            "truck",
+            "truck_with_semitrailer",
+            "truck_with_trailer"
+          ],
+          "classificationCount": 18
+        },
+        "Pivot Pre 2024": {
+          "rowCount": 6,
+          "headers": [
+            "Sum af count",
+            "Kolonnemærkater",
+            "__EMPTY",
+            "__EMPTY_1",
+            "__EMPTY_2",
+            "__EMPTY_3",
+            "__EMPTY_4",
+            "__EMPTY_5",
+            "__EMPTY_6",
+            "__EMPTY_7",
+            "__EMPTY_8",
+            "__EMPTY_9",
+            "__EMPTY_10",
+            "__EMPTY_11",
+            "__EMPTY_12",
+            "__EMPTY_13",
+            "__EMPTY_14",
+            "__EMPTY_15",
+            "__EMPTY_16",
+            "__EMPTY_17"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        },
+        "Data_Vandkunsten_Post": {
+          "rowCount": 7902,
+          "headers": [
+            "start time",
+            "start occurrence date",
+            "start occurrence time",
+            "end time",
+            "end occurrence date",
+            "end occurrence time",
+            "classification",
+            "flow",
+            "count"
+          ],
+          "flows": [
+            "Radhuusstraede North --> Radhuusstraede South",
+            "Radhuusstraede South --> Radhuusstraede North"
+          ],
+          "flowCount": 2,
+          "classifications": [
+            "bicyclist",
+            "bicyclist_with_trailer",
+            "bus",
+            "car",
+            "car_with_trailer",
+            "cargo_bike_driver",
+            "delivery_van",
+            "delivery_van_with_trailer",
+            "motorcyclist",
+            "other",
+            "pedestrian",
+            "private_van",
+            "private_van_with_trailer",
+            "scooter_driver",
+            "train",
+            "truck",
+            "truck_with_semitrailer",
+            "truck_with_trailer"
+          ],
+          "classificationCount": 18
+        },
+        "Pivot pre 2025": {
+          "rowCount": 6,
+          "headers": [
+            "Sum af count",
+            "Kolonnemærkater",
+            "__EMPTY",
+            "__EMPTY_1",
+            "__EMPTY_2",
+            "__EMPTY_3",
+            "__EMPTY_4",
+            "__EMPTY_5",
+            "__EMPTY_6",
+            "__EMPTY_7",
+            "__EMPTY_8",
+            "__EMPTY_9",
+            "__EMPTY_10",
+            "__EMPTY_11",
+            "__EMPTY_12",
+            "__EMPTY_13",
+            "__EMPTY_14",
+            "__EMPTY_15",
+            "__EMPTY_16",
+            "__EMPTY_17"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        }
+      }
+    },
+    {
+      "path": "1. BASELINE Data for Copenhagen/OpenTrafficCam Counts 2024 and 2025/Countings_Vandkunsten.xlsx",
+      "type": "xlsx",
+      "sheetNames": [
+        "Overview",
+        "Data_Vandkunsten_Pre",
+        "Data_Vandkunsten_Post"
+      ],
+      "sheets": {
+        "Overview": {
+          "rowCount": 6,
+          "headers": [
+            "Site",
+            "Vandkunsten/Radhuusstraede"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        },
+        "Data_Vandkunsten_Pre": {
+          "rowCount": 6880,
+          "headers": [
+            "start time",
+            "start occurrence date",
+            "start occurrence time",
+            "end time",
+            "end occurrence date",
+            "end occurrence time",
+            "classification",
+            "flow",
+            "count"
+          ],
+          "flows": [
+            "Radhuusstraede North --> Radhuusstraede South",
+            "Radhuusstraede South --> Radhuusstraede North"
+          ],
+          "flowCount": 2,
+          "classifications": [
+            "bicyclist",
+            "bicyclist_with_trailer",
+            "bus",
+            "car",
+            "car_with_trailer",
+            "cargo_bike_driver",
+            "delivery_van",
+            "delivery_van_with_trailer",
+            "motorcyclist",
+            "other",
+            "pedestrian",
+            "private_van",
+            "private_van_with_trailer",
+            "scooter_driver",
+            "train",
+            "truck",
+            "truck_with_semitrailer",
+            "truck_with_trailer"
+          ],
+          "classificationCount": 18
+        },
+        "Data_Vandkunsten_Post": {
+          "rowCount": 7902,
+          "headers": [
+            "start time",
+            "start occurrence date",
+            "start occurrence time",
+            "end time",
+            "end occurrence date",
+            "end occurrence time",
+            "classification",
+            "flow",
+            "count"
+          ],
+          "flows": [
+            "Radhuusstraede North --> Radhuusstraede South",
+            "Radhuusstraede South --> Radhuusstraede North"
+          ],
+          "flowCount": 2,
+          "classifications": [
+            "bicyclist",
+            "bicyclist_with_trailer",
+            "bus",
+            "car",
+            "car_with_trailer",
+            "cargo_bike_driver",
+            "delivery_van",
+            "delivery_van_with_trailer",
+            "motorcyclist",
+            "other",
+            "pedestrian",
+            "private_van",
+            "private_van_with_trailer",
+            "scooter_driver",
+            "train",
+            "truck",
+            "truck_with_semitrailer",
+            "truck_with_trailer"
+          ],
+          "classificationCount": 18
+        }
+      }
+    },
+    {
+      "path": "1. BASELINE Data for Copenhagen/OpenTrafficCam Counts 2024 and 2025/Marias Comparison of pre and post OTC/Countings_Norreport_sortet.xlsx",
+      "type": "xlsx",
+      "sheetNames": [
+        "Overview",
+        "Data_Norreport_Pre",
+        "pivot pre 2024",
+        "pivot post 2025",
+        "Data_Norreport_Post"
+      ],
+      "sheets": {
+        "Overview": {
+          "rowCount": 6,
+          "headers": [
+            "Site",
+            "Norregade/Norre Volgade"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        },
+        "Data_Norreport_Pre": {
+          "rowCount": 7834,
+          "headers": [
+            "start time",
+            "start occurrence date",
+            "start occurrence time",
+            "end time",
+            "end occurrence date",
+            "end occurrence time",
+            "classification",
+            "flow",
+            "count"
+          ],
+          "flows": [
+            "Norregade north",
+            "Norregade south"
+          ],
+          "flowCount": 2,
+          "classifications": [
+            "bicyclist",
+            "bicyclist_with_trailer",
+            "bus",
+            "car",
+            "car_with_trailer",
+            "cargo_bike_driver",
+            "delivery_van",
+            "delivery_van_with_trailer",
+            "motorcyclist",
+            "other",
+            "pedestrian",
+            "private_van",
+            "private_van_with_trailer",
+            "scooter_driver",
+            "train",
+            "truck",
+            "truck_with_semitrailer",
+            "truck_with_trailer"
+          ],
+          "classificationCount": 18
+        },
+        "pivot pre 2024": {
+          "rowCount": 6,
+          "headers": [
+            "Sum af count",
+            "Kolonnemærkater",
+            "__EMPTY",
+            "__EMPTY_1",
+            "__EMPTY_2",
+            "__EMPTY_3",
+            "__EMPTY_4",
+            "__EMPTY_5",
+            "__EMPTY_6",
+            "__EMPTY_7",
+            "__EMPTY_8",
+            "__EMPTY_9",
+            "__EMPTY_10",
+            "__EMPTY_11",
+            "__EMPTY_12",
+            "__EMPTY_13",
+            "__EMPTY_14",
+            "__EMPTY_15",
+            "__EMPTY_16",
+            "__EMPTY_17"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        },
+        "pivot post 2025": {
+          "rowCount": 6,
+          "headers": [
+            "Sum af count",
+            "Kolonnemærkater",
+            "__EMPTY",
+            "__EMPTY_1",
+            "__EMPTY_2",
+            "__EMPTY_3",
+            "__EMPTY_4",
+            "__EMPTY_5",
+            "__EMPTY_6",
+            "__EMPTY_7",
+            "__EMPTY_8",
+            "__EMPTY_9",
+            "__EMPTY_10",
+            "__EMPTY_11",
+            "__EMPTY_12",
+            "__EMPTY_13",
+            "__EMPTY_14",
+            "__EMPTY_15",
+            "__EMPTY_16",
+            "__EMPTY_17"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        },
+        "Data_Norreport_Post": {
+          "rowCount": 8962,
+          "headers": [
+            "start time",
+            "start occurrence date",
+            "start occurrence time",
+            "end time",
+            "end occurrence date",
+            "end occurrence time",
+            "classification",
+            "flow",
+            "count"
+          ],
+          "flows": [
+            "Norregade north",
+            "Norregade south"
+          ],
+          "flowCount": 2,
+          "classifications": [
+            "bicyclist",
+            "bicyclist_with_trailer",
+            "bus",
+            "car",
+            "car_with_trailer",
+            "cargo_bike_driver",
+            "delivery_van",
+            "delivery_van_with_trailer",
+            "motorcyclist",
+            "other",
+            "pedestrian",
+            "private_van",
+            "private_van_with_trailer",
+            "scooter_driver",
+            "train",
+            "truck",
+            "truck_with_semitrailer",
+            "truck_with_trailer"
+          ],
+          "classificationCount": 18
+        }
+      }
+    },
+    {
+      "path": "1. BASELINE Data for Copenhagen/OpenTrafficCam Counts 2024 and 2025/Countings_Norreport.xlsx",
+      "type": "xlsx",
+      "sheetNames": [
+        "Overview",
+        "Data_Norreport_Pre",
+        "Data_Norreport_Post"
+      ],
+      "sheets": {
+        "Overview": {
+          "rowCount": 6,
+          "headers": [
+            "Site",
+            "Norregade/Norre Volgade"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        },
+        "Data_Norreport_Pre": {
+          "rowCount": 7834,
+          "headers": [
+            "start time",
+            "start occurrence date",
+            "start occurrence time",
+            "end time",
+            "end occurrence date",
+            "end occurrence time",
+            "classification",
+            "flow",
+            "count"
+          ],
+          "flows": [
+            "Norregade north",
+            "Norregade south"
+          ],
+          "flowCount": 2,
+          "classifications": [
+            "bicyclist",
+            "bicyclist_with_trailer",
+            "bus",
+            "car",
+            "car_with_trailer",
+            "cargo_bike_driver",
+            "delivery_van",
+            "delivery_van_with_trailer",
+            "motorcyclist",
+            "other",
+            "pedestrian",
+            "private_van",
+            "private_van_with_trailer",
+            "scooter_driver",
+            "train",
+            "truck",
+            "truck_with_semitrailer",
+            "truck_with_trailer"
+          ],
+          "classificationCount": 18
+        },
+        "Data_Norreport_Post": {
+          "rowCount": 8962,
+          "headers": [
+            "start time",
+            "start occurrence date",
+            "start occurrence time",
+            "end time",
+            "end occurrence date",
+            "end occurrence time",
+            "classification",
+            "flow",
+            "count"
+          ],
+          "flows": [
+            "Norregade north",
+            "Norregade south"
+          ],
+          "flowCount": 2,
+          "classifications": [
+            "bicyclist",
+            "bicyclist_with_trailer",
+            "bus",
+            "car",
+            "car_with_trailer",
+            "cargo_bike_driver",
+            "delivery_van",
+            "delivery_van_with_trailer",
+            "motorcyclist",
+            "other",
+            "pedestrian",
+            "private_van",
+            "private_van_with_trailer",
+            "scooter_driver",
+            "train",
+            "truck",
+            "truck_with_semitrailer",
+            "truck_with_trailer"
+          ],
+          "classificationCount": 18
+        }
+      }
+    },
+    {
+      "path": "1. BASELINE Data for Copenhagen/Telraam/Vognmagergade SHEET.xlsx",
+      "type": "xlsx",
+      "sheetNames": [
+        "raw data",
+        "typical data",
+        "process_EN",
+        "fiche_EN"
+      ],
+      "sheets": {
+        "raw data": {
+          "rowCount": 14429,
+          "headers": [
+            "Segment Id",
+            "Street",
+            "City",
+            "Date",
+            "Uptime",
+            "Pedestrian (A > B / lft)",
+            "Pedestrian (B > A / rgt)",
+            "Pedestrian Total",
+            "Bike (A > B / lft)",
+            "Bike (B > A / rgt)",
+            "Bike Total",
+            "Car (A > B / lft)",
+            "Car (B > A / rgt)",
+            "Car Total",
+            "Large vehicle (A > B)",
+            "Large vehicle (B > A)",
+            "Large vehicle Total",
+            "Speed v85",
+            "Speed Car 0-10 km/h",
+            "Speed Car 10-20 km/h"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        },
+        "typical data": {
+          "rowCount": 400,
+          "headers": [
+            "concat",
+            "From",
+            "To",
+            "segment_id",
+            "interval",
+            "day_of_week",
+            "time",
+            "flag",
+            "avg_heavy",
+            "std_heavy",
+            "avg_car",
+            "std_car",
+            "avg_bike",
+            "std_bike",
+            "avg_pedestrian",
+            "std_pedestrian",
+            "avg_heavy_lft",
+            "std_heavy_lft",
+            "avg_heavy_rgt",
+            "std_heavy_rgt"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        },
+        "process_EN": {
+          "rowCount": 156,
+          "headers": [
+            "__EMPTY",
+            "period 1",
+            "2024-03-01 00:00:00Z",
+            "2024-06-01 00:00:00Z",
+            "__EMPTY_1",
+            "__EMPTY_2",
+            "__EMPTY_3",
+            "__EMPTY_4",
+            "__EMPTY_5",
+            "__EMPTY_6",
+            "__EMPTY_7",
+            "__EMPTY_8",
+            "__EMPTY_9",
+            "__EMPTY_10",
+            "__EMPTY_11",
+            "__EMPTY_12",
+            "__EMPTY_13",
+            "__EMPTY_14",
+            "__EMPTY_15",
+            "__EMPTY_16"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        },
+        "fiche_EN": {
+          "rowCount": 6,
+          "headers": [
+            "Vognmagergade",
+            "__EMPTY",
+            "__EMPTY_1",
+            "__EMPTY_2",
+            "__EMPTY_3",
+            "__EMPTY_4",
+            "__EMPTY_5",
+            "__EMPTY_6",
+            "__EMPTY_7",
+            "__EMPTY_8",
+            "__EMPTY_9",
+            "__EMPTY_10",
+            "__EMPTY_11",
+            "__EMPTY_12",
+            "__EMPTY_13",
+            "__EMPTY_14",
+            "__EMPTY_15",
+            "__EMPTY_16",
+            "__EMPTY_17",
+            "__EMPTY_18"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        }
+      }
+    },
+    {
+      "path": "1. BASELINE Data for Copenhagen/OpenTrafficCam Counts 2024 and 2025/Marias Comparison of pre and post OTC/Countings_Gammeltorv_sortet.xlsx",
+      "type": "xlsx",
+      "sheetNames": [
+        "Overview",
+        "Data_Gammeltorv_Pre",
+        "Data_Gammeltorv_Post",
+        "Pivot pre 2024",
+        "Pivot post 2025"
+      ],
+      "sheets": {
+        "Overview": {
+          "rowCount": 6,
+          "headers": [
+            "Site",
+            "Gammeltorv/Vestergade"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        },
+        "Data_Gammeltorv_Pre": {
+          "rowCount": 16176,
+          "headers": [
+            "start time",
+            "start occurrence date",
+            "start occurrence time",
+            "end time",
+            "end occurrence date",
+            "end occurrence time",
+            "classification",
+            "flow",
+            "count"
+          ],
+          "flows": [
+            "Gammeltorv north",
+            "Gammeltorv south",
+            "Vestergade east",
+            "Vestergade west"
+          ],
+          "flowCount": 4,
+          "classifications": [
+            "bicyclist",
+            "bicyclist_with_trailer",
+            "bus",
+            "car",
+            "car_with_trailer",
+            "cargo_bike_driver",
+            "delivery_van",
+            "delivery_van_with_trailer",
+            "motorcyclist",
+            "other",
+            "pedestrian",
+            "private_van",
+            "private_van_with_trailer",
+            "scooter_driver",
+            "train",
+            "truck",
+            "truck_with_semitrailer",
+            "truck_with_trailer"
+          ],
+          "classificationCount": 18
+        },
+        "Data_Gammeltorv_Post": {
+          "rowCount": 8704,
+          "headers": [
+            "start time",
+            "start occurrence date",
+            "start occurrence time",
+            "end time",
+            "end occurrence date",
+            "end occurrence time",
+            "classification",
+            "flow",
+            "count"
+          ],
+          "flows": [
+            "Gammeltorv north",
+            "Gammeltorv south",
+            "Vestergade east",
+            "Vestergade west"
+          ],
+          "flowCount": 4,
+          "classifications": [
+            "bicyclist",
+            "bicyclist_with_trailer",
+            "bus",
+            "car",
+            "car_with_trailer",
+            "cargo_bike_driver",
+            "delivery_van",
+            "delivery_van_with_trailer",
+            "motorcyclist",
+            "other",
+            "pedestrian",
+            "private_van",
+            "private_van_with_trailer",
+            "scooter_driver",
+            "train",
+            "truck",
+            "truck_with_semitrailer",
+            "truck_with_trailer"
+          ],
+          "classificationCount": 18
+        },
+        "Pivot pre 2024": {
+          "rowCount": 6,
+          "headers": [
+            "Sum af count",
+            "Kolonnemærkater",
+            "__EMPTY",
+            "__EMPTY_1",
+            "__EMPTY_2",
+            "__EMPTY_3",
+            "__EMPTY_4",
+            "__EMPTY_5",
+            "__EMPTY_6",
+            "__EMPTY_7",
+            "__EMPTY_8",
+            "__EMPTY_9",
+            "__EMPTY_10",
+            "__EMPTY_11",
+            "__EMPTY_12",
+            "__EMPTY_13",
+            "__EMPTY_14",
+            "__EMPTY_15",
+            "__EMPTY_16",
+            "__EMPTY_17"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        },
+        "Pivot post 2025": {
+          "rowCount": 6,
+          "headers": [
+            "Sum af count",
+            "Kolonnemærkater",
+            "__EMPTY",
+            "__EMPTY_1",
+            "__EMPTY_2",
+            "__EMPTY_3",
+            "__EMPTY_4",
+            "__EMPTY_5",
+            "__EMPTY_6",
+            "__EMPTY_7",
+            "__EMPTY_8",
+            "__EMPTY_9",
+            "__EMPTY_10",
+            "__EMPTY_11",
+            "__EMPTY_12",
+            "__EMPTY_13",
+            "__EMPTY_14",
+            "__EMPTY_15",
+            "__EMPTY_16",
+            "__EMPTY_17"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        }
+      }
+    },
+    {
+      "path": "1. BASELINE Data for Copenhagen/Telraam/Rosenborggade SHEET.xlsx",
+      "type": "xlsx",
+      "sheetNames": [
+        "raw data",
+        "typical data",
+        "process_EN",
+        "fiche_EN"
+      ],
+      "sheets": {
+        "raw data": {
+          "rowCount": 14386,
+          "headers": [
+            "Segment Id",
+            "Street",
+            "City",
+            "Date",
+            "Uptime",
+            "Pedestrian (A > B / lft)",
+            "Pedestrian (B > A / rgt)",
+            "Pedestrian Total",
+            "Bike (A > B / lft)",
+            "Bike (B > A / rgt)",
+            "Bike Total",
+            "Car (A > B / lft)",
+            "Car (B > A / rgt)",
+            "Car Total",
+            "Large vehicle (A > B)",
+            "Large vehicle (B > A)",
+            "Large vehicle Total",
+            "Speed v85",
+            "Speed Car 0-10 km/h",
+            "Speed Car 10-20 km/h"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        },
+        "typical data": {
+          "rowCount": 400,
+          "headers": [
+            "concat",
+            "From",
+            "To",
+            "segment_id",
+            "interval",
+            "day_of_week",
+            "time",
+            "flag",
+            "avg_heavy",
+            "std_heavy",
+            "avg_car",
+            "std_car",
+            "avg_bike",
+            "std_bike",
+            "avg_pedestrian",
+            "std_pedestrian",
+            "avg_heavy_lft",
+            "std_heavy_lft",
+            "avg_heavy_rgt",
+            "std_heavy_rgt"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        },
+        "process_EN": {
+          "rowCount": 156,
+          "headers": [
+            "__EMPTY",
+            "period 1",
+            "2024-03-01 00:00:00Z",
+            "2024-06-01 00:00:00Z",
+            "__EMPTY_1",
+            "__EMPTY_2",
+            "__EMPTY_3",
+            "__EMPTY_4",
+            "__EMPTY_5",
+            "__EMPTY_6",
+            "__EMPTY_7",
+            "__EMPTY_8",
+            "__EMPTY_9",
+            "__EMPTY_10",
+            "__EMPTY_11",
+            "__EMPTY_12",
+            "__EMPTY_13",
+            "__EMPTY_14",
+            "__EMPTY_15",
+            "__EMPTY_16"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        },
+        "fiche_EN": {
+          "rowCount": 6,
+          "headers": [
+            "Rosenborggade",
+            "__EMPTY",
+            "__EMPTY_1",
+            "__EMPTY_2",
+            "__EMPTY_3",
+            "__EMPTY_4",
+            "__EMPTY_5",
+            "__EMPTY_6",
+            "__EMPTY_7",
+            "__EMPTY_8",
+            "__EMPTY_9",
+            "__EMPTY_10",
+            "__EMPTY_11",
+            "__EMPTY_12",
+            "__EMPTY_13",
+            "__EMPTY_14",
+            "__EMPTY_15",
+            "__EMPTY_16",
+            "__EMPTY_17",
+            "__EMPTY_18"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        }
+      }
+    },
+    {
+      "path": "1. BASELINE Data for Copenhagen/OpenTrafficCam Counts 2024 and 2025/Marias Comparison of pre and post OTC/OTC Combined counts ELABORATOR.xlsx",
+      "type": "xlsx",
+      "sheetNames": [
+        "Norreport Noerregade",
+        "Comparison Noerreport",
+        "Comparison Vandkunsten",
+        "Stormgade",
+        "Gammeltorv"
+      ],
+      "sheets": {
+        "Norreport Noerregade": {
+          "rowCount": 81,
+          "headers": [
+            "2024",
+            "2025",
+            "__EMPTY",
+            "2024_1",
+            "2024_2",
+            "2025_1",
+            "2025_2",
+            "__EMPTY_1",
+            "__EMPTY_2",
+            "__EMPTY_3",
+            "__EMPTY_4",
+            "__EMPTY_5",
+            "__EMPTY_6",
+            "__EMPTY_7",
+            "__EMPTY_8",
+            "__EMPTY_9",
+            "__EMPTY_10",
+            "__EMPTY_11",
+            "__EMPTY_12",
+            "__EMPTY_13"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        },
+        "Comparison Noerreport": {
+          "rowCount": 37,
+          "headers": [
+            "2024",
+            "2025",
+            "__EMPTY",
+            "2024_1",
+            "2024_2",
+            "2025_1",
+            "2025_2",
+            "__EMPTY_1",
+            "__EMPTY_2",
+            "__EMPTY_3",
+            "__EMPTY_4",
+            "__EMPTY_5",
+            "__EMPTY_6",
+            "__EMPTY_7",
+            "__EMPTY_8",
+            "__EMPTY_9",
+            "__EMPTY_10",
+            "__EMPTY_11",
+            "__EMPTY_12",
+            "__EMPTY_13"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        },
+        "Comparison Vandkunsten": {
+          "rowCount": 38,
+          "headers": [
+            "2024",
+            "2025",
+            "__EMPTY",
+            "2024_1",
+            "2024_2",
+            "2025_1",
+            "2025_2",
+            "__EMPTY_1",
+            "__EMPTY_2",
+            "__EMPTY_3",
+            "__EMPTY_4",
+            "__EMPTY_5",
+            "__EMPTY_6",
+            "__EMPTY_7",
+            "__EMPTY_8",
+            "__EMPTY_9",
+            "__EMPTY_10",
+            "__EMPTY_11",
+            "__EMPTY_12",
+            "__EMPTY_13"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        },
+        "Stormgade": {
+          "rowCount": 28,
+          "headers": [
+            "2023",
+            "2025",
+            "__EMPTY",
+            "2023_1",
+            "2023_2",
+            "2025_1",
+            "2025_2",
+            "__EMPTY_1",
+            "__EMPTY_2",
+            "__EMPTY_3",
+            "__EMPTY_4",
+            "__EMPTY_5",
+            "__EMPTY_6",
+            "__EMPTY_7",
+            "__EMPTY_8",
+            "__EMPTY_9",
+            "__EMPTY_10",
+            "__EMPTY_11",
+            "__EMPTY_12",
+            "__EMPTY_13"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        },
+        "Gammeltorv": {
+          "rowCount": 29,
+          "headers": [
+            "2024",
+            "2025",
+            "__EMPTY",
+            "2024_1",
+            "2024_2",
+            "2025_1",
+            "2025_2",
+            "__EMPTY_1",
+            "__EMPTY_2",
+            "__EMPTY_3",
+            "__EMPTY_4",
+            "__EMPTY_5",
+            "__EMPTY_6",
+            "__EMPTY_7",
+            "__EMPTY_8",
+            "__EMPTY_9",
+            "__EMPTY_10",
+            "__EMPTY_11",
+            "__EMPTY_12",
+            "__EMPTY_13"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        }
+      }
+    },
+    {
+      "path": "1. BASELINE Data for Copenhagen/Telraam/Studiestr�de SHEET.xlsx",
+      "error": "ENOENT: no such file or directory, open 'C:\\Users\\lione\\Downloads\\ELLABORATOR\\public\\sharepoint-data\\.inventory-tmp\\Copenhagen Lighthouse\\1. BASELINE Data for Copenhagen\\Telraam\\Studiestr�de SHEET.xlsx'"
+    },
+    {
+      "path": "1. BASELINE Data for Copenhagen/Telraam/Vestergade SHEET.xlsx",
+      "type": "xlsx",
+      "sheetNames": [
+        "raw data",
+        "typical data",
+        "process_EN",
+        "fiche_EN"
+      ],
+      "sheets": {
+        "raw data": {
+          "rowCount": 13989,
+          "headers": [
+            "Segment Id",
+            "Street",
+            "City",
+            "Date",
+            "Uptime",
+            "Pedestrian (A > B / lft)",
+            "Pedestrian (B > A / rgt)",
+            "Pedestrian Total",
+            "Bike (A > B / lft)",
+            "Bike (B > A / rgt)",
+            "Bike Total",
+            "Car (A > B / lft)",
+            "Car (B > A / rgt)",
+            "Car Total",
+            "Large vehicle (A > B)",
+            "Large vehicle (B > A)",
+            "Large vehicle Total",
+            "Speed v85",
+            "Speed Car 0-10 km/h",
+            "Speed Car 10-20 km/h"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        },
+        "typical data": {
+          "rowCount": 400,
+          "headers": [
+            "concat",
+            "From",
+            "To",
+            "segment_id",
+            "interval",
+            "day_of_week",
+            "time",
+            "flag",
+            "avg_heavy",
+            "std_heavy",
+            "avg_car",
+            "std_car",
+            "avg_bike",
+            "std_bike",
+            "avg_pedestrian",
+            "std_pedestrian",
+            "avg_heavy_lft",
+            "std_heavy_lft",
+            "avg_heavy_rgt",
+            "std_heavy_rgt"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        },
+        "process_EN": {
+          "rowCount": 156,
+          "headers": [
+            "__EMPTY",
+            "period 1",
+            "2024-03-01 00:00:00Z",
+            "2024-06-01 00:00:00Z",
+            "__EMPTY_1",
+            "__EMPTY_2",
+            "__EMPTY_3",
+            "__EMPTY_4",
+            "__EMPTY_5",
+            "__EMPTY_6",
+            "__EMPTY_7",
+            "__EMPTY_8",
+            "__EMPTY_9",
+            "__EMPTY_10",
+            "__EMPTY_11",
+            "__EMPTY_12",
+            "__EMPTY_13",
+            "__EMPTY_14",
+            "__EMPTY_15",
+            "__EMPTY_16"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        },
+        "fiche_EN": {
+          "rowCount": 6,
+          "headers": [
+            "Vestergade",
+            "__EMPTY",
+            "__EMPTY_1",
+            "__EMPTY_2",
+            "__EMPTY_3",
+            "__EMPTY_4",
+            "__EMPTY_5",
+            "__EMPTY_6",
+            "__EMPTY_7",
+            "__EMPTY_8",
+            "__EMPTY_9",
+            "__EMPTY_10",
+            "__EMPTY_11",
+            "__EMPTY_12",
+            "__EMPTY_13",
+            "__EMPTY_14",
+            "__EMPTY_15",
+            "__EMPTY_16",
+            "__EMPTY_17",
+            "__EMPTY_18"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        }
+      }
+    },
+    {
+      "path": "1. BASELINE Data for Copenhagen/OpenTrafficCam Counts 2024 and 2025/Countings_Stormgade.xlsx",
+      "type": "xlsx",
+      "sheetNames": [
+        "Overview",
+        "Data_Stormgade_Pre",
+        "Data_Stormgade_Post"
+      ],
+      "sheets": {
+        "Overview": {
+          "rowCount": 8,
+          "headers": [
+            "Site",
+            "Frederiksholmskanal/Stormgade"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        },
+        "Data_Stormgade_Pre": {
+          "rowCount": 19124,
+          "headers": [
+            "start time",
+            "start occurrence date",
+            "start occurrence time",
+            "end time",
+            "end occurrence date",
+            "end occurrence time",
+            "classification",
+            "flow",
+            "count"
+          ],
+          "flows": [
+            "Frederiksholmskanal South",
+            "Frederiksholmskanal north",
+            "Stormgade east",
+            "Stormgade west"
+          ],
+          "flowCount": 4,
+          "classifications": [
+            "bicyclist",
+            "bicyclist_with_trailer",
+            "bus",
+            "car",
+            "car_with_trailer",
+            "cargo_bike_driver",
+            "delivery_van",
+            "delivery_van_with_trailer",
+            "motorcyclist",
+            "other",
+            "pedestrian",
+            "private_van",
+            "private_van_with_trailer",
+            "scooter_driver",
+            "train",
+            "truck",
+            "truck_with_semitrailer",
+            "truck_with_trailer"
+          ],
+          "classificationCount": 18
+        },
+        "Data_Stormgade_Post": {
+          "rowCount": 23876,
+          "headers": [
+            "start time",
+            "start occurrence date",
+            "start occurrence time",
+            "end time",
+            "end occurrence date",
+            "end occurrence time",
+            "classification",
+            "flow",
+            "count"
+          ],
+          "flows": [
+            "Frederiksholmskanal north",
+            "Frederiksholmskanal south",
+            "Stormgade east",
+            "Stormgade west"
+          ],
+          "flowCount": 4,
+          "classifications": [
+            "bicyclist",
+            "bicyclist_with_trailer",
+            "bus",
+            "car",
+            "car_with_trailer",
+            "cargo_bike_driver",
+            "delivery_van",
+            "delivery_van_with_trailer",
+            "motorcyclist",
+            "other",
+            "pedestrian",
+            "private_van",
+            "private_van_with_trailer",
+            "scooter_driver",
+            "train",
+            "truck",
+            "truck_with_semitrailer",
+            "truck_with_trailer"
+          ],
+          "classificationCount": 18
+        }
+      }
+    },
+    {
+      "path": "1. BASELINE Data for Copenhagen/OpenTrafficCam Counts 2024 and 2025/Marias Comparison of pre and post OTC/Countings_Stormgade_sortet.xlsx",
+      "type": "xlsx",
+      "sheetNames": [
+        "Overview",
+        "pivot pre 2023",
+        "Pre and post Frholms kanal",
+        "Data_Stormgade_Pre",
+        "Data_Stormgade_Post",
+        "Pivot post 2025"
+      ],
+      "sheets": {
+        "Overview": {
+          "rowCount": 8,
+          "headers": [
+            "Site",
+            "Frederiksholmskanal/Stormgade"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        },
+        "pivot pre 2023": {
+          "rowCount": 6,
+          "headers": [
+            "Sum af count",
+            "Kolonnemærkater",
+            "__EMPTY",
+            "__EMPTY_1",
+            "__EMPTY_2",
+            "__EMPTY_3",
+            "__EMPTY_4",
+            "__EMPTY_5",
+            "__EMPTY_6",
+            "__EMPTY_7",
+            "__EMPTY_8",
+            "__EMPTY_9",
+            "__EMPTY_10",
+            "__EMPTY_11",
+            "__EMPTY_12",
+            "__EMPTY_13",
+            "__EMPTY_14",
+            "__EMPTY_15",
+            "__EMPTY_16",
+            "__EMPTY_17"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        },
+        "Pre and post Frholms kanal": {
+          "rowCount": 20,
+          "headers": [
+            "Sum af count",
+            "Kolonnemærkater",
+            "__EMPTY",
+            "__EMPTY_1",
+            "__EMPTY_2",
+            "__EMPTY_3",
+            "__EMPTY_4",
+            "__EMPTY_5",
+            "__EMPTY_6",
+            "__EMPTY_7",
+            "__EMPTY_8",
+            "__EMPTY_9",
+            "__EMPTY_10",
+            "__EMPTY_11",
+            "__EMPTY_12",
+            "__EMPTY_13",
+            "__EMPTY_14",
+            "__EMPTY_15",
+            "__EMPTY_16",
+            "__EMPTY_17"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        },
+        "Data_Stormgade_Pre": {
+          "rowCount": 19124,
+          "headers": [
+            "start time",
+            "start occurrence date",
+            "start occurrence time",
+            "end time",
+            "end occurrence date",
+            "end occurrence time",
+            "classification",
+            "flow",
+            "count"
+          ],
+          "flows": [
+            "Frederiksholmskanal South",
+            "Frederiksholmskanal north",
+            "Stormgade east",
+            "Stormgade west"
+          ],
+          "flowCount": 4,
+          "classifications": [
+            "bicyclist",
+            "bicyclist_with_trailer",
+            "bus",
+            "car",
+            "car_with_trailer",
+            "cargo_bike_driver",
+            "delivery_van",
+            "delivery_van_with_trailer",
+            "motorcyclist",
+            "other",
+            "pedestrian",
+            "private_van",
+            "private_van_with_trailer",
+            "scooter_driver",
+            "train",
+            "truck",
+            "truck_with_semitrailer",
+            "truck_with_trailer"
+          ],
+          "classificationCount": 18
+        },
+        "Data_Stormgade_Post": {
+          "rowCount": 23876,
+          "headers": [
+            "start time",
+            "start occurrence date",
+            "start occurrence time",
+            "end time",
+            "end occurrence date",
+            "end occurrence time",
+            "classification",
+            "flow",
+            "count"
+          ],
+          "flows": [
+            "Frederiksholmskanal north",
+            "Frederiksholmskanal south",
+            "Stormgade east",
+            "Stormgade west"
+          ],
+          "flowCount": 4,
+          "classifications": [
+            "bicyclist",
+            "bicyclist_with_trailer",
+            "bus",
+            "car",
+            "car_with_trailer",
+            "cargo_bike_driver",
+            "delivery_van",
+            "delivery_van_with_trailer",
+            "motorcyclist",
+            "other",
+            "pedestrian",
+            "private_van",
+            "private_van_with_trailer",
+            "scooter_driver",
+            "train",
+            "truck",
+            "truck_with_semitrailer",
+            "truck_with_trailer"
+          ],
+          "classificationCount": 18
+        },
+        "Pivot post 2025": {
+          "rowCount": 6,
+          "headers": [
+            "Sum af count",
+            "Kolonnemærkater",
+            "__EMPTY",
+            "__EMPTY_1",
+            "__EMPTY_2",
+            "__EMPTY_3",
+            "__EMPTY_4",
+            "__EMPTY_5",
+            "__EMPTY_6",
+            "__EMPTY_7",
+            "__EMPTY_8",
+            "__EMPTY_9",
+            "__EMPTY_10",
+            "__EMPTY_11",
+            "__EMPTY_12",
+            "__EMPTY_13",
+            "__EMPTY_14",
+            "__EMPTY_15",
+            "__EMPTY_16",
+            "__EMPTY_17"
+          ],
+          "flows": [],
+          "flowCount": 0,
+          "classifications": [],
+          "classificationCount": 0
+        }
+      }
+    }
+  ],
+  "allXlsxPaths": [
+    "1. BASELINE Data for Copenhagen/cph_otc_surveysites.xlsx",
+    "1. BASELINE Data for Copenhagen/Tube Counts Bicyclist/Tube count bicyclist Medieval City April 2024.xlsx",
+    "1. BASELINE Data for Copenhagen/Survey Acceptability - Satisfaction with Intervention 1 BEFORE/Acceptability_Intervention1_BEFORE.xlsx",
+    "1. BASELINE Data for Copenhagen/iRap safety ranking system/Manual counts/10277_Frederiksholms_Kanal_6_FOD_20230926.xlsx",
+    "2. POST IMPLEMENTATION Data from Copenhagen/Survey Traffic Safety before-after change/Before_After_changes_traffic_safety.xlsx",
+    "2. POST IMPLEMENTATION Data from Copenhagen/Survey Acceptability - Satisfaction with Intervention 1 AFTER/Acceptability_Intervention1_AFTER.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/Medieval City manual counts traffic_2023_uploaded to ELABORATOR.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/10298_Lavendelstr�de_20230613.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/10276_Frederiksholms_Kanal_6_20230926.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/217_Vestergade_37_20230613.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual Counts 2025 Medieval City/Frederiksholms_Kanal_6_20250904.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/10247_Tornebuskegade_20230608.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual Counts 2025 Medieval City/Ny_Kongensgade_20250909.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/10274_Bremerholm_FOD_20230921.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual Counts 2025 Medieval City/Kristen_Bernikows_Gade_FOD_20250903.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual Counts 2025 Medieval City/N�rregade_FOD_20250904.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/9938_Teglg�rdstr�de_20230608.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual Counts 2025 Medieval City/Christian_IXs_Gade_FOD_20250904.xlsx",
+    "1. BASELINE Data for Copenhagen/iRap safety ranking system/Manual counts/10276_Frederiksholms_Kanal_6_20230926.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual Counts 2025 Medieval City/N�rregade_20250904.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual Counts 2025 Medieval City/Landem�rket_20250909.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/10277_Frederiksholms_Kanal_6_FOD_20230926.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/10279_Nikolajgade_20230921.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/982_Frederiksholms_Kanal_12_20230926.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/10134_N�rregade_FOD_20230608.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual Counts 2025 Medieval City/Ny_Kongensgade_FOD_20250909.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/10239_M�ntergade_20230607.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/7102_�stergade_Str�get_20230614.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/10300_Christiansborg_Slotsplads_20230926.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/Middelalderbyen_trafik_ind_2023_rettet_20250402.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/33_N�rregade_20220608.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/9717_Rigsdagsg�rden_20230926.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/10246_Sankt_Peders_Str�de_20230608.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/377_Fiolstr�de_G�gade_20230608.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual Counts 2025 Medieval City/H�jbro_20250903.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual Counts 2025 Medieval City/H�jbro_FOD_20250903.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/525_H�jbro_20230926.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual Counts 2025 Medieval City/Frederiksholms_Kanal_6_FOD_20250904.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual Counts 2025 Medieval City/Sankt_Peders_Str�de_20250910.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual Counts 2025 Medieval City/Knabrostr�de_8A_20250916.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/113_Str�get_vest_Frederiksberggade_20230613.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/300_L�ngangsstr�de_20230613.xlsx",
+    "1. BASELINE Data for Copenhagen/iRap safety ranking system/Manual counts/Frederiksholms_Kanal_6_FOD_20250904 (1).xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/10286_Vestergade_37_FOD_20230613.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/10280_Ny_Kongensgade_15_FOD_20230613.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/10269_Landem�rket_FOD_20230607.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/11_Frederiksborggade_G�gade_20230608.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual Counts 2025 Medieval City/Vestergade_5_20250916.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/10139_H�jbro_20230926_FOD.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/10237_Rosenborggade_20230607.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/652_Gr�nnegade_20230921.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/10267_Gr�nnegade_FOD_20230607.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/10273_Bremerholm_20230921.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/10303_Store_Regnegade_FOD_20230607.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/10245_Ny_Vestergade_20230613.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/10240_Christian_IXs_Gade_20230607.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/10248_L�nporten_20240917.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/10242_Lille_Kongensgade_20230622.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual Counts 2025 Medieval City/Vognmagergade 8_20250916.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/332_Studiestr�de_20230613.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual Counts 2025 Medieval City/Landem�rket_FOD_20250909.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/09_Farvergade_20230613.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/10285_Ved_Stranden_20230926.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/10208_Frederiksholms_Kanal_29_20230614.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/653_Store_Regnegade_20230607.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/650_Hovedvagtsgade_20230622.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/542_Landem�rket_20230607.xlsx",
+    "1. BASELINE Data for Copenhagen/OpenTrafficCam Counts 2024 and 2025/Marias Comparison of pre and post OTC/ELABORATOR Counts OTC combined Noerreport Noerregade to WP7.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual Counts 2025 Medieval City/Rosenborggade_15_20250916.xlsx",
+    "1. BASELINE Data for Copenhagen/Technical drawing - Medieval City/I100275_P-pladser_Oversigt.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/10241_Ny_Adelgade_20230607.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/Manual counts from Medieval City 12 places 20230918 Uploaded to ELAB sharepoint.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/809_Larslejsstr�de_20230608.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual Counts 2025 Medieval City/L�ngangstr�de_20250909.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/4006_Ny_Kongensgade_20230613.xlsx",
+    "1. BASELINE Data for Copenhagen/Telraam/Telraam counts Medieval City Copenhagen 2024 and 2025.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/10238_Sj�leboderne_20230607.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/10265_Christian_IXs_Gade_FOD_20230607.xlsx",
+    "1. BASELINE Data for Copenhagen/OpenTrafficCam Counts 2024 and 2025/Countings_Hojbro.xlsx",
+    "1. BASELINE Data for Copenhagen/iRap safety ranking system/Manual counts/Frederiksholms_Kanal_6_20250904 (1).xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/10275_Bryghuspladsen_20230926.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual Counts 2025 Medieval City/Christian_IX_s_Gade_20250904.xlsx",
+    "1. BASELINE Data for Copenhagen/OpenTrafficCam Counts 2024 and 2025/Marias Comparison of pre and post OTC/ELABORATOR Counts OTC combined Vandkunsten to WP7.xlsx",
+    "1. BASELINE Data for Copenhagen/iRap safety ranking system/Manual counts/iRap safety ranking Counts in 2024 and 2025 CPH.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual counts 2023 Medeival City/10112_Frederiksholms_Kanal_12_FOD_20230926.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual Counts 2025 Medieval City/Kristen_Bernikows_Gade_20250903.xlsx",
+    "1. BASELINE Data for Copenhagen/Manual Counts/Manual Counts 2025 Medieval City/Studiestr�de_47B_20250916.xlsx",
+    "1. BASELINE Data for Copenhagen/OpenTrafficCam Counts 2024 and 2025/Countings_Gammeltorv.xlsx",
+    "1. BASELINE Data for Copenhagen/OpenTrafficCam Counts 2024 and 2025/Marias Comparison of pre and post OTC/Countings_Vandkunsten_sortet.xlsx",
+    "1. BASELINE Data for Copenhagen/OpenTrafficCam Counts 2024 and 2025/Countings_Vandkunsten.xlsx",
+    "1. BASELINE Data for Copenhagen/OpenTrafficCam Counts 2024 and 2025/Marias Comparison of pre and post OTC/Countings_Norreport_sortet.xlsx",
+    "1. BASELINE Data for Copenhagen/OpenTrafficCam Counts 2024 and 2025/Countings_Norreport.xlsx",
+    "1. BASELINE Data for Copenhagen/Telraam/Vognmagergade SHEET.xlsx",
+    "1. BASELINE Data for Copenhagen/OpenTrafficCam Counts 2024 and 2025/Marias Comparison of pre and post OTC/Countings_Gammeltorv_sortet.xlsx",
+    "1. BASELINE Data for Copenhagen/Telraam/Rosenborggade SHEET.xlsx",
+    "1. BASELINE Data for Copenhagen/OpenTrafficCam Counts 2024 and 2025/Marias Comparison of pre and post OTC/OTC Combined counts ELABORATOR.xlsx",
+    "1. BASELINE Data for Copenhagen/Telraam/Studiestr�de SHEET.xlsx",
+    "1. BASELINE Data for Copenhagen/Telraam/Vestergade SHEET.xlsx",
+    "1. BASELINE Data for Copenhagen/OpenTrafficCam Counts 2024 and 2025/Countings_Stormgade.xlsx",
+    "1. BASELINE Data for Copenhagen/OpenTrafficCam Counts 2024 and 2025/Marias Comparison of pre and post OTC/Countings_Stormgade_sortet.xlsx"
+  ]
+}

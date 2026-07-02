@@ -1,0 +1,44 @@
+[
+  {
+    "id": "platomo-1",
+    "position": "Frederiksholmskanal",
+    "lat": 55.675535,
+    "lon": 12.575545,
+    "pilotId": "cph-p1"
+  },
+  {
+    "id": "platomo-2",
+    "position": "Stormgade",
+    "lat": 55.675535,
+    "lon": 12.575545,
+    "pilotId": "cph-p1"
+  },
+  {
+    "id": "platomo-3",
+    "position": "Gammeltorv",
+    "lat": 55.678437,
+    "lon": 12.572236,
+    "pilotId": "cph-p1"
+  },
+  {
+    "id": "platomo-4",
+    "position": "Skindergade",
+    "lat": 55.678437,
+    "lon": 12.572236,
+    "pilotId": "cph-p1"
+  },
+  {
+    "id": "platomo-5",
+    "position": "Hojbro",
+    "lat": 55.677575,
+    "lon": 12.579961,
+    "pilotId": "cph-p1"
+  },
+  {
+    "id": "platomo-6",
+    "position": "Norreport",
+    "lat": 55.682312,
+    "lon": 12.570922,
+    "pilotId": "cph-p1"
+  }
+]

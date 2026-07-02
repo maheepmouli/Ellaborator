@@ -10,6 +10,7 @@ interface ModeShareBarChartProps {
 export function ModeShareBarChart({ payload, compact }: ModeShareBarChartProps) {
   const rows = payload.modeShare ?? [];
   const maxVal = Math.max(1, ...rows.flatMap((r) => [r.before, r.after]));
+  const fmtPct = (value: number) => `${Number(value).toFixed(1)}%`;
 
   return (
     <div className={obsGlassCardClass(compact)} style={obsGlassCardStyle()}>
@@ -24,7 +25,7 @@ export function ModeShareBarChart({ payload, compact }: ModeShareBarChartProps) 
               <div className="flex justify-between text-[10px] text-white/50 mb-1">
                 <span>{row.mode}</span>
                 <span>
-                  {row.before}% → {row.after}%
+                  {fmtPct(row.before)} → {fmtPct(row.after)}
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-2">

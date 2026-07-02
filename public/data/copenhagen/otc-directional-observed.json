@@ -1,66 +1,302 @@
 [
   {
-    "siteName": "Norregade / Nørre Voldgade",
-    "lat": 55.682312,
-    "lon": 12.570922,
-    "flow": "Norregade north",
-    "pre": { "bike": 460, "pedestrian": 310, "motorised": 520, "ptw": 22, "total": 1312 },
-    "post": { "bike": 530, "pedestrian": 345, "motorised": 470, "ptw": 20, "total": 1365 }
-  },
-  {
-    "siteName": "Norregade / Nørre Voldgade",
+    "siteName": "Norregade/Norre Volgade",
     "lat": 55.682312,
     "lon": 12.570922,
     "flow": "Norregade south",
-    "pre": { "bike": 430, "pedestrian": 295, "motorised": 545, "ptw": 24, "total": 1294 },
-    "post": { "bike": 505, "pedestrian": 330, "motorised": 495, "ptw": 21, "total": 1351 }
+    "pre": {
+      "bike": 27728,
+      "pedestrian": 16840,
+      "motorised": 10519,
+      "ptw": 2067,
+      "total": 57590
+    },
+    "post": {
+      "bike": 23978,
+      "pedestrian": 16570,
+      "motorised": 11517,
+      "ptw": 813,
+      "total": 52982
+    }
   },
   {
-    "siteName": "Vandkunsten / Rådhusstræde",
+    "siteName": "Norregade/Norre Volgade",
+    "lat": 55.682312,
+    "lon": 12.570922,
+    "flow": "Norregade north",
+    "pre": {
+      "bike": 21173,
+      "pedestrian": 17814,
+      "motorised": 15344,
+      "ptw": 496,
+      "total": 54920
+    },
+    "post": {
+      "bike": 14583,
+      "pedestrian": 9849,
+      "motorised": 18777,
+      "ptw": 163,
+      "total": 43682
+    }
+  },
+  {
+    "siteName": "Vandkunsten/Radhuusstraede",
     "lat": 55.677575,
     "lon": 12.579961,
-    "flow": "Rådhusstræde east",
-    "pre": { "bike": 360, "pedestrian": 280, "motorised": 420, "ptw": 16, "total": 1076 },
-    "post": { "bike": 425, "pedestrian": 315, "motorised": 385, "ptw": 15, "total": 1140 }
+    "flow": "Radhuusstraede North --> Radhuusstraede South",
+    "pre": {
+      "bike": 11305,
+      "pedestrian": 15613,
+      "motorised": 4130,
+      "ptw": 784,
+      "total": 32025
+    },
+    "post": {
+      "bike": 17558,
+      "pedestrian": 24563,
+      "motorised": 749,
+      "ptw": 1253,
+      "total": 44286
+    }
   },
   {
-    "siteName": "Vandkunsten / Rådhusstræde",
+    "siteName": "Vandkunsten/Radhuusstraede",
     "lat": 55.677575,
     "lon": 12.579961,
-    "flow": "Rådhusstræde west",
-    "pre": { "bike": 350, "pedestrian": 265, "motorised": 435, "ptw": 18, "total": 1068 },
-    "post": { "bike": 420, "pedestrian": 300, "motorised": 398, "ptw": 16, "total": 1134 }
+    "flow": "Radhuusstraede South --> Radhuusstraede North",
+    "pre": {
+      "bike": 8996,
+      "pedestrian": 13550,
+      "motorised": 10570,
+      "ptw": 638,
+      "total": 33949
+    },
+    "post": {
+      "bike": 15105,
+      "pedestrian": 22212,
+      "motorised": 12509,
+      "ptw": 1961,
+      "total": 51890
+    }
   },
   {
-    "siteName": "Gammeltorv / Vestergade",
+    "siteName": "Gammeltorv/Vestergade",
     "lat": 55.678437,
     "lon": 12.572236,
     "flow": "Vestergade east",
-    "pre": { "bike": 390, "pedestrian": 300, "motorised": 500, "ptw": 20, "total": 1210 },
-    "post": { "bike": 470, "pedestrian": 335, "motorised": 448, "ptw": 18, "total": 1271 }
+    "pre": {
+      "bike": 24580,
+      "pedestrian": 17241,
+      "motorised": 5388,
+      "ptw": 214,
+      "total": 47469
+    },
+    "post": {
+      "bike": 9050,
+      "pedestrian": 4768,
+      "motorised": 2428,
+      "ptw": 314,
+      "total": 16646
+    }
   },
   {
-    "siteName": "Gammeltorv / Vestergade",
+    "siteName": "Gammeltorv/Vestergade",
     "lat": 55.678437,
     "lon": 12.572236,
     "flow": "Vestergade west",
-    "pre": { "bike": 378, "pedestrian": 288, "motorised": 512, "ptw": 19, "total": 1197 },
-    "post": { "bike": 455, "pedestrian": 322, "motorised": 460, "ptw": 17, "total": 1254 }
+    "pre": {
+      "bike": 23541,
+      "pedestrian": 16525,
+      "motorised": 39,
+      "ptw": 49,
+      "total": 40181
+    },
+    "post": {
+      "bike": 9092,
+      "pedestrian": 5633,
+      "motorised": 19,
+      "ptw": 173,
+      "total": 15017
+    }
   },
   {
-    "siteName": "Frederiksholmskanal / Stormgade",
+    "siteName": "Gammeltorv/Vestergade",
+    "lat": 55.678437,
+    "lon": 12.572236,
+    "flow": "Gammeltorv south",
+    "pre": {
+      "bike": 25231,
+      "pedestrian": 40218,
+      "motorised": 1603,
+      "ptw": 178,
+      "total": 67462
+    },
+    "post": {
+      "bike": 10462,
+      "pedestrian": 10724,
+      "motorised": 548,
+      "ptw": 396,
+      "total": 22175
+    }
+  },
+  {
+    "siteName": "Gammeltorv/Vestergade",
+    "lat": 55.678437,
+    "lon": 12.572236,
+    "flow": "Gammeltorv north",
+    "pre": {
+      "bike": 20582,
+      "pedestrian": 41363,
+      "motorised": 3848,
+      "ptw": 509,
+      "total": 66627
+    },
+    "post": {
+      "bike": 10025,
+      "pedestrian": 11565,
+      "motorised": 2032,
+      "ptw": 672,
+      "total": 24359
+    }
+  },
+  {
+    "siteName": "Frederiksholmskanal/Stormgade",
     "lat": 55.675535,
     "lon": 12.575545,
-    "flow": "Stormgade east",
-    "pre": { "bike": 340, "pedestrian": 260, "motorised": 480, "ptw": 18, "total": 1098 },
-    "post": { "bike": 405, "pedestrian": 290, "motorised": 438, "ptw": 16, "total": 1149 }
+    "flow": "Frederiksholmskanal north",
+    "pre": {
+      "bike": 8544,
+      "pedestrian": 11241,
+      "motorised": 26973,
+      "ptw": 35,
+      "total": 46801
+    },
+    "post": {
+      "bike": 16638,
+      "pedestrian": 27021,
+      "motorised": 16537,
+      "ptw": 1225,
+      "total": 61567
+    }
   },
   {
-    "siteName": "Frederiksholmskanal / Stormgade",
+    "siteName": "Frederiksholmskanal/Stormgade",
+    "lat": 55.675535,
+    "lon": 12.575545,
+    "flow": "Frederiksholmskanal South",
+    "pre": {
+      "bike": 6658,
+      "pedestrian": 11430,
+      "motorised": 11170,
+      "ptw": 26,
+      "total": 29289
+    },
+    "post": {
+      "bike": 0,
+      "pedestrian": 0,
+      "motorised": 0,
+      "ptw": 0,
+      "total": 0
+    }
+  },
+  {
+    "siteName": "Frederiksholmskanal/Stormgade",
     "lat": 55.675535,
     "lon": 12.575545,
     "flow": "Stormgade west",
-    "pre": { "bike": 332, "pedestrian": 252, "motorised": 492, "ptw": 18, "total": 1094 },
-    "post": { "bike": 398, "pedestrian": 286, "motorised": 446, "ptw": 16, "total": 1146 }
+    "pre": {
+      "bike": 4688,
+      "pedestrian": 1553,
+      "motorised": 34133,
+      "ptw": 13,
+      "total": 40389
+    },
+    "post": {
+      "bike": 28369,
+      "pedestrian": 21078,
+      "motorised": 39891,
+      "ptw": 2266,
+      "total": 91713
+    }
+  },
+  {
+    "siteName": "Frederiksholmskanal/Stormgade",
+    "lat": 55.675535,
+    "lon": 12.575545,
+    "flow": "Stormgade east",
+    "pre": {
+      "bike": 11054,
+      "pedestrian": 2703,
+      "motorised": 28523,
+      "ptw": 31,
+      "total": 42319
+    },
+    "post": {
+      "bike": 21139,
+      "pedestrian": 20450,
+      "motorised": 49850,
+      "ptw": 1325,
+      "total": 92858
+    }
+  },
+  {
+    "siteName": "Frederiksholmskanal/Stormgade",
+    "lat": 55.675535,
+    "lon": 12.575545,
+    "flow": "Frederiksholmskanal south",
+    "pre": {
+      "bike": 0,
+      "pedestrian": 0,
+      "motorised": 0,
+      "ptw": 0,
+      "total": 0
+    },
+    "post": {
+      "bike": 17432,
+      "pedestrian": 31163,
+      "motorised": 9399,
+      "ptw": 1070,
+      "total": 59184
+    }
+  },
+  {
+    "siteName": "Hojbro/Vindebrogade",
+    "lat": 55.677575,
+    "lon": 12.579961,
+    "flow": "Hojbro south",
+    "pre": {
+      "bike": 6666,
+      "pedestrian": 13494,
+      "motorised": 4440,
+      "ptw": 25,
+      "total": 24688
+    },
+    "post": {
+      "bike": 8468,
+      "pedestrian": 31149,
+      "motorised": 4602,
+      "ptw": 220,
+      "total": 44755
+    }
+  },
+  {
+    "siteName": "Hojbro/Vindebrogade",
+    "lat": 55.677575,
+    "lon": 12.579961,
+    "flow": "Hojbro north",
+    "pre": {
+      "bike": 7700,
+      "pedestrian": 19881,
+      "motorised": 11610,
+      "ptw": 48,
+      "total": 39296
+    },
+    "post": {
+      "bike": 11316,
+      "pedestrian": 31512,
+      "motorised": 11375,
+      "ptw": 248,
+      "total": 54773
+    }
   }
 ]

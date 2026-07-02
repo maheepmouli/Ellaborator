@@ -13,7 +13,7 @@ export function AreaPolygonSchematic({ payload, expanded }: AreaPolygonSchematic
 
   return (
     <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} aria-label="Intervention area schematic">
-      <rect width={size} height={size} fill="#06050f" rx="12" />
+      <rect width={size} height={size} fill={OBS_C.schematicBg} rx="12" />
       <polygon
         points={`${cx},${cy - 55} ${cx + 60},${cy - 15} ${cx + 45},${cy + 50} ${cx - 45},${cy + 50} ${cx - 60},${cy - 15}`}
         fill="rgba(99,204,255,0.12)"

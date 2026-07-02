@@ -1,5 +1,6 @@
 import { getCopenhagenPilotMapFocus } from "@/data/copenhagenCameraSites";
 import { getPilotById } from "@/data/pilotDefinitions";
+import { trikalaMapZoom } from "@/lib/trikalaMapConfig";
 
 export type GeometryRegime =
   | "point"
@@ -167,7 +168,7 @@ export const PILOT_GEOMETRY_REGISTRY: Record<string, PilotGeometryRecord> = {
     regime: "point",
     geometryTruth: { status: "inferred", source: "survey", spatialReliability: 0.2 },
     renderEligibility: "dashboard_only",
-    focus: pilotFocus("Trikala", "tri-p1", 11),
+    focus: pilotFocus("Trikala", "tri-p1", trikalaMapZoom()),
   },
 };
 

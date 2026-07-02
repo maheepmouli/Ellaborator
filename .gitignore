@@ -27,6 +27,9 @@ dist-ssr
 
 # Local SharePoint dumps — too large for Git; host separately if needed for production.
 public/sharepoint-data/
+
+# Trikala workshop route map exceeds GitHub 100 MB limit — available from SharePoint mirror only.
+public/data/trikala/docs/map.pdf
 public/Sharepoint_Datasets_06_2026/
 Sharepoint data-*.zip
 .claude/

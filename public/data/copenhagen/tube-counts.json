@@ -1,0 +1,110 @@
+[
+  {
+    "road": "Brolæggerstræde",
+    "dailyTraffic": 1354,
+    "avgSpeedKmh": 19.3,
+    "pilotId": "cph-p2"
+  },
+  {
+    "road": "Hestemøllestræde",
+    "dailyTraffic": 1030,
+    "avgSpeedKmh": 21.7,
+    "pilotId": "cph-p2"
+  },
+  {
+    "road": "Hovedvagtsgade",
+    "dailyTraffic": 1217,
+    "avgSpeedKmh": 17.2,
+    "pilotId": "cph-p2"
+  },
+  {
+    "road": "Klosterstræde",
+    "dailyTraffic": 758,
+    "avgSpeedKmh": 18.6,
+    "pilotId": "cph-p2"
+  },
+  {
+    "road": "Knabrostræde",
+    "dailyTraffic": 1237,
+    "avgSpeedKmh": 19.3,
+    "pilotId": "cph-p2"
+  },
+  {
+    "road": "Kronprinsensgade",
+    "dailyTraffic": 423,
+    "avgSpeedKmh": 17.8,
+    "pilotId": "cph-p2"
+  },
+  {
+    "road": "Krystalgade",
+    "dailyTraffic": 424,
+    "avgSpeedKmh": 16.1,
+    "pilotId": "cph-p2"
+  },
+  {
+    "road": "Landemærket",
+    "dailyTraffic": 293,
+    "avgSpeedKmh": 16.8,
+    "pilotId": "cph-p2"
+  },
+  {
+    "road": "Lille Kirkestræde",
+    "dailyTraffic": 56,
+    "avgSpeedKmh": 15.1,
+    "pilotId": "cph-p2"
+  },
+  {
+    "road": "Magstræde",
+    "dailyTraffic": 50,
+    "avgSpeedKmh": 16.6,
+    "pilotId": "cph-p2"
+  },
+  {
+    "road": "Nikolajgade",
+    "dailyTraffic": 625,
+    "avgSpeedKmh": 15.3,
+    "pilotId": "cph-p2"
+  },
+  {
+    "road": "Ny Adelgade",
+    "dailyTraffic": 345,
+    "avgSpeedKmh": 28.6,
+    "pilotId": "cph-p2"
+  },
+  {
+    "road": "Peder Hvitfeldts Stræde",
+    "dailyTraffic": 402,
+    "avgSpeedKmh": 11.8,
+    "pilotId": "cph-p2"
+  },
+  {
+    "road": "Sankt Gertruds Stræde",
+    "dailyTraffic": 154,
+    "avgSpeedKmh": 19.5,
+    "pilotId": "cph-p2"
+  },
+  {
+    "road": "Sankt Peders Stræde",
+    "dailyTraffic": 594,
+    "avgSpeedKmh": 19,
+    "pilotId": "cph-p2"
+  },
+  {
+    "road": "Snaregade",
+    "dailyTraffic": 161,
+    "avgSpeedKmh": 15.2,
+    "pilotId": "cph-p2"
+  },
+  {
+    "road": "Sværtegade",
+    "dailyTraffic": 342,
+    "avgSpeedKmh": 16.7,
+    "pilotId": "cph-p2"
+  },
+  {
+    "road": "Teglgårdsstræde",
+    "dailyTraffic": 184,
+    "avgSpeedKmh": 18,
+    "pilotId": "cph-p2"
+  }
+]

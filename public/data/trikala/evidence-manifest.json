@@ -1,0 +1,528 @@
+[
+  {
+    "id": "tri-p1-interventions",
+    "pilotId": "tri-p1",
+    "title": "Trikala ELABORATOR interventions",
+    "type": "narrative",
+    "linkedDatasetIds": [
+      "tri-smart-crossing-survey",
+      "tri-smart-crossing-post",
+      "tri-bike-lane-baseline",
+      "tri-bike-lane-post",
+      "tri-smarta-app-post"
+    ],
+    "linkedMethods": [
+      "Smart crossing (1st intervention)",
+      "Bike lane redesign (3rd intervention)",
+      "SMARTA app (4th intervention)"
+    ],
+    "fallback": {
+      "type": "narrative",
+      "text": "Three monitored interventions with baseline and/or post-intervention survey waves, plus partner workshop and deployment documentation from the June 2026 SharePoint drop."
+    }
+  },
+  {
+    "id": "tri-p1-women-survey",
+    "pilotId": "tri-p1",
+    "title": "Women mobility questionnaire",
+    "type": "narrative",
+    "linkedDatasetIds": [
+      "tri-women-mobility-survey"
+    ],
+    "linkedMethods": [
+      "Women mobility questionnaire"
+    ],
+    "fallback": {
+      "type": "narrative",
+      "text": "117 women respondents — caregiver segments, harassment and route-avoidance cross-tabs, and village vs urban mode-share patterns feed KPI 2.1 safety narratives."
+    }
+  },
+  {
+    "id": "tri-p1-environmental-fleet",
+    "pilotId": "tri-p1",
+    "title": "Smart Citizen Kit sensor fleet",
+    "type": "narrative",
+    "linkedDatasetIds": [
+      "tri-environmental-sensors"
+    ],
+    "linkedMethods": [
+      "Smart Citizen Kit environmental monitoring"
+    ],
+    "fallback": {
+      "type": "narrative",
+      "text": "19 Smart Citizen Kit sensors registered — outdoor online coverage and PM2.5/noise capability matrix feed KPI 3.2 monitoring proxies (coordinates not supplied in workbook)."
+    }
+  },
+  {
+    "id": "tri-p1-park-ride-pending",
+    "pilotId": "tri-p1",
+    "title": "Park & Ride (2nd intervention)",
+    "type": "narrative",
+    "linkedDatasetIds": [],
+    "linkedMethods": [
+      "Park & Ride intervention"
+    ],
+    "fallback": {
+      "type": "narrative",
+      "text": "2nd Intervention_Park & Ride folder present in zip inventory but no structured workbook or survey file delivered in the June 2026 drop."
+    }
+  },
+  {
+    "id": "tri-p1-women-workshop-audio",
+    "pilotId": "tri-p1",
+    "title": "Women cycling workshop — field interview audio",
+    "type": "narrative",
+    "linkedDatasetIds": [
+      "tri-women-mobility-survey"
+    ],
+    "linkedMethods": [
+      "Qualitative interviews"
+    ],
+    "fallback": {
+      "type": "narrative",
+      "text": "One .m4a field interview from the 2nd women cycling workshop is in the SharePoint zip but not bundled in the dashboard (audio-only qualitative asset)."
+    }
+  },
+  {
+    "id": "tri-p1-meeting-attendance",
+    "pilotId": "tri-p1",
+    "title": "One2One city engagements — May 2025",
+    "type": "narrative",
+    "linkedDatasetIds": [
+      "tri-meeting-attendance"
+    ],
+    "linkedMethods": [
+      "Stakeholder meetings"
+    ],
+    "fallback": {
+      "type": "narrative",
+      "text": "17-row meeting attendance workbook documents ELABORATOR–E-Trikala engagement sessions (administrative, not mapped to KPI geometry)."
+    }
+  },
+  {
+    "id": "tri-p1-smarta-deployment-photos",
+    "pilotId": "tri-p1",
+    "title": "SMARTA app deployment photos",
+    "type": "image",
+    "path": "/data/trikala/media/img_0122.jpg",
+    "linkedDatasetIds": [
+      "tri-smarta-app-post",
+      "tri-media-gallery"
+    ],
+    "linkedMethods": [
+      "SMARTA app deployment",
+      "Field photography"
+    ],
+    "caption": "13 deployment photos from the SMARTA app intervention folder.",
+    "fallback": {
+      "type": "narrative",
+      "text": "SMARTA deployment photos not bundled — run extract-sharepoint and build-trikala-bundle."
+    }
+  },
+  {
+    "id": "tri-p1-bike-lane-baseline-report",
+    "pilotId": "tri-p1",
+    "title": "Bike lane safety baseline report",
+    "type": "pdf",
+    "path": "/data/trikala/docs/elaborator_baseline_data_bike_lanes_safety.pdf",
+    "linkedDatasetIds": [
+      "tri-bike-lane-baseline",
+      "tri-docs-bundle"
+    ],
+    "linkedMethods": [
+      "Bike lane safety survey"
+    ],
+    "caption": "Elaborator baseline data bike lanes safety",
+    "fallback": {
+      "type": "narrative",
+      "text": "Bike lane safety baseline report not bundled — run extract-sharepoint and build-trikala-bundle."
+    }
+  },
+  {
+    "id": "tri-p1-smart-crossing-baseline-report",
+    "pilotId": "tri-p1",
+    "title": "Smart crossing baseline report",
+    "type": "pdf",
+    "path": "/data/trikala/docs/elaborator_baseline_data_smart_crossing.pdf",
+    "linkedDatasetIds": [
+      "tri-smart-crossing-survey",
+      "tri-docs-bundle"
+    ],
+    "linkedMethods": [
+      "Smart crossing survey"
+    ],
+    "caption": "Elaborator baseline data smart crossing",
+    "fallback": {
+      "type": "narrative",
+      "text": "Smart crossing baseline report not bundled — run extract-sharepoint and build-trikala-bundle."
+    }
+  },
+  {
+    "id": "tri-p1-sensor-kit-poster",
+    "pilotId": "tri-p1",
+    "title": "ELABORATOR sensor kit poster",
+    "type": "pdf",
+    "path": "/data/trikala/docs/elaborator_sensorkit_poster.pdf",
+    "linkedDatasetIds": [
+      "tri-environmental-sensors",
+      "tri-docs-bundle"
+    ],
+    "linkedMethods": [
+      "Smart Citizen Kit"
+    ],
+    "caption": "Elaborator sensorkit poster",
+    "fallback": {
+      "type": "narrative",
+      "text": "ELABORATOR sensor kit poster not bundled — run extract-sharepoint and build-trikala-bundle."
+    }
+  },
+  {
+    "id": "tri-p1-women-mobility-analysis",
+    "pilotId": "tri-p1",
+    "title": "Women mobility analysis",
+    "type": "pdf",
+    "path": "/data/trikala/docs/elaborator_trikala_mobility_of_women_questionnaire_analysis.docx",
+    "linkedDatasetIds": [
+      "tri-women-mobility-survey",
+      "tri-docs-bundle"
+    ],
+    "linkedMethods": [
+      "Women mobility questionnaire",
+      "Qualitative analysis"
+    ],
+    "caption": "Elaborator trikala mobility of women questionnaire analysis",
+    "fallback": {
+      "type": "narrative",
+      "text": "Women mobility analysis not bundled — run extract-sharepoint and build-trikala-bundle."
+    }
+  },
+  {
+    "id": "tri-p1-women-workshop-maps",
+    "pilotId": "tri-p1",
+    "title": "Women workshops — route maps",
+    "type": "pdf",
+    "linkedDatasetIds": [
+      "tri-women-mobility-survey",
+      "tri-docs-bundle"
+    ],
+    "linkedMethods": [
+      "Participatory mapping"
+    ],
+    "caption": "Map (451 MB — SharePoint mirror only; exceeds GitHub file limit)",
+    "fallback": {
+      "type": "narrative",
+      "text": "Women workshop route maps (map.pdf, ~451 MB) are available from the SharePoint extract only — too large for the Git bundle. Run extract-sharepoint locally or use the partner document portal."
+    }
+  },
+  {
+    "id": "tri-p1-engagement-transcript",
+    "pilotId": "tri-p1",
+    "title": "E-Trikala engagement notes & transcript",
+    "type": "pdf",
+    "path": "/data/trikala/docs/meeting_notes_etrikala_23rd_may_2025.docx",
+    "linkedDatasetIds": [
+      "tri-meeting-attendance",
+      "tri-docs-bundle"
+    ],
+    "linkedMethods": [
+      "One2One city engagements"
+    ],
+    "caption": "Meeting notes etrikala 23rd may 2025",
+    "fallback": {
+      "type": "narrative",
+      "text": "E-Trikala engagement notes & transcript not bundled — run extract-sharepoint and build-trikala-bundle."
+    }
+  },
+  {
+    "id": "tri-p1-women-workshop-participants",
+    "pilotId": "tri-p1",
+    "title": "Women workshops — participant lists",
+    "type": "pdf",
+    "path": "/data/trikala/docs/participant_list.pdf",
+    "linkedDatasetIds": [
+      "tri-women-mobility-survey",
+      "tri-docs-bundle"
+    ],
+    "linkedMethods": [
+      "Workshop administration"
+    ],
+    "caption": "Participant list",
+    "fallback": {
+      "type": "narrative",
+      "text": "Women workshops — participant lists not bundled — run extract-sharepoint and build-trikala-bundle."
+    }
+  },
+  {
+    "id": "tri-p1-smarta-survey-report",
+    "pilotId": "tri-p1",
+    "title": "SMARTA app survey results report",
+    "type": "pdf",
+    "path": "/data/trikala/docs/survey_results_reports_sustainable_urban_mobility_application_smarta_app_trikala_pilot.pdf",
+    "linkedDatasetIds": [
+      "tri-smarta-app-post",
+      "tri-docs-bundle"
+    ],
+    "linkedMethods": [
+      "SMARTA app post-intervention survey"
+    ],
+    "caption": "Survey results reports sustainable urban mobility application smarta app trikala pilot",
+    "fallback": {
+      "type": "narrative",
+      "text": "SMARTA app survey results report not bundled — run extract-sharepoint and build-trikala-bundle."
+    }
+  },
+  {
+    "id": "tri-p1-bike-sharing-data",
+    "pilotId": "tri-p1",
+    "title": "Municipal bike sharing system data",
+    "type": "pdf",
+    "path": "/data/trikala/docs/trikala_-_municipal_bike_sharing_system_data.pdf",
+    "linkedDatasetIds": [
+      "tri-docs-bundle"
+    ],
+    "linkedMethods": [
+      "Bike sharing inventory"
+    ],
+    "caption": "Trikala - municipal bike sharing system data",
+    "fallback": {
+      "type": "narrative",
+      "text": "Municipal bike sharing system data not bundled — run extract-sharepoint and build-trikala-bundle."
+    }
+  },
+  {
+    "id": "tri-p1-ccc-action-plan",
+    "pilotId": "tri-p1",
+    "title": "Trikala CCC — Action plan",
+    "type": "pdf",
+    "path": "/data/trikala/docs/trikala_ccc_-_action_plan.pdf",
+    "linkedDatasetIds": [
+      "tri-docs-bundle"
+    ],
+    "linkedMethods": [
+      "Citizen change coalition"
+    ],
+    "caption": "Trikala ccc - action plan",
+    "fallback": {
+      "type": "narrative",
+      "text": "Trikala CCC — Action plan not bundled — run extract-sharepoint and build-trikala-bundle."
+    }
+  },
+  {
+    "id": "tri-p1-ccc-commitments",
+    "pilotId": "tri-p1",
+    "title": "Trikala CCC — Commitments",
+    "type": "pdf",
+    "path": "/data/trikala/docs/trikala_ccc_-_commitments.pdf",
+    "linkedDatasetIds": [
+      "tri-docs-bundle"
+    ],
+    "linkedMethods": [
+      "Citizen change coalition"
+    ],
+    "caption": "Trikala ccc - commitments",
+    "fallback": {
+      "type": "narrative",
+      "text": "Trikala CCC — Commitments not bundled — run extract-sharepoint and build-trikala-bundle."
+    }
+  },
+  {
+    "id": "tri-p1-evaluation-plan",
+    "pilotId": "tri-p1",
+    "title": "Trikala intervention evaluation plan (draft)",
+    "type": "pdf",
+    "path": "/data/trikala/docs/trikala_intervention_evaluation_plan_draft.docx",
+    "linkedDatasetIds": [
+      "tri-docs-bundle"
+    ],
+    "linkedMethods": [
+      "Evaluation framework"
+    ],
+    "caption": "Trikala intervention evaluation plan draft",
+    "fallback": {
+      "type": "narrative",
+      "text": "Trikala intervention evaluation plan (draft) not bundled — run extract-sharepoint and build-trikala-bundle."
+    }
+  },
+  {
+    "id": "tri-p1-women-workshop-notes",
+    "pilotId": "tri-p1",
+    "title": "Women workshops — field notes",
+    "type": "pdf",
+    "path": "/data/trikala/docs/workshop_notes.pdf",
+    "linkedDatasetIds": [
+      "tri-women-mobility-survey",
+      "tri-docs-bundle"
+    ],
+    "linkedMethods": [
+      "Explorative walks",
+      "Women workshops"
+    ],
+    "caption": "Workshop notes",
+    "fallback": {
+      "type": "narrative",
+      "text": "Women workshops — field notes not bundled — run extract-sharepoint and build-trikala-bundle."
+    }
+  },
+  {
+    "id": "tri-p1-doc-elaborator_baseline_data_bike_lanes_safety",
+    "pilotId": "tri-p1",
+    "title": "Elaborator baseline data bike lanes safety",
+    "type": "pdf",
+    "path": "/data/trikala/docs/elaborator_baseline_data_bike_lanes_safety.pptx",
+    "linkedDatasetIds": [
+      "tri-docs-bundle"
+    ],
+    "linkedMethods": [
+      "Partner documentation"
+    ],
+    "caption": "Elaborator baseline data bike lanes safety",
+    "fallback": {
+      "type": "narrative",
+      "text": "Document unavailable in committed bundle."
+    }
+  },
+  {
+    "id": "tri-p1-doc-elaborator_baseline_data_smart_crossing",
+    "pilotId": "tri-p1",
+    "title": "Elaborator baseline data smart crossing",
+    "type": "pdf",
+    "path": "/data/trikala/docs/elaborator_baseline_data_smart_crossing.pptx",
+    "linkedDatasetIds": [
+      "tri-docs-bundle"
+    ],
+    "linkedMethods": [
+      "Partner documentation"
+    ],
+    "caption": "Elaborator baseline data smart crossing",
+    "fallback": {
+      "type": "narrative",
+      "text": "Document unavailable in committed bundle."
+    }
+  },
+  {
+    "id": "tri-p1-doc-elaborator_trikala_mobility_of_women_key_insights",
+    "pilotId": "tri-p1",
+    "title": "Elaborator trikala mobility of women key insights",
+    "type": "pdf",
+    "path": "/data/trikala/docs/elaborator_trikala_mobility_of_women_key_insights.docx",
+    "linkedDatasetIds": [
+      "tri-docs-bundle"
+    ],
+    "linkedMethods": [
+      "Partner documentation"
+    ],
+    "caption": "Elaborator trikala mobility of women key insights",
+    "fallback": {
+      "type": "narrative",
+      "text": "Document unavailable in committed bundle."
+    }
+  },
+  {
+    "id": "tri-p1-doc-elaborator_trikala_mobility_of_women_questionnaire_analysis_-_google_docs",
+    "pilotId": "tri-p1",
+    "title": "Elaborator trikala mobility of women questionnaire analysis - google docs",
+    "type": "pdf",
+    "path": "/data/trikala/docs/elaborator_trikala_mobility_of_women_questionnaire_analysis_-_google_docs.pdf",
+    "linkedDatasetIds": [
+      "tri-docs-bundle"
+    ],
+    "linkedMethods": [
+      "Partner documentation"
+    ],
+    "caption": "Elaborator trikala mobility of women questionnaire analysis - google docs",
+    "fallback": {
+      "type": "narrative",
+      "text": "Document unavailable in committed bundle."
+    }
+  },
+  {
+    "id": "tri-p1-doc-interview_notes",
+    "pilotId": "tri-p1",
+    "title": "Interview notes",
+    "type": "pdf",
+    "path": "/data/trikala/docs/interview_notes.pdf",
+    "linkedDatasetIds": [
+      "tri-docs-bundle"
+    ],
+    "linkedMethods": [
+      "Partner documentation"
+    ],
+    "caption": "Interview notes",
+    "fallback": {
+      "type": "narrative",
+      "text": "Document unavailable in committed bundle."
+    }
+  },
+  {
+    "id": "tri-p1-doc-map_1_2",
+    "pilotId": "tri-p1",
+    "title": "Map 1 2",
+    "type": "pdf",
+    "path": "/data/trikala/docs/map_1_2.pdf",
+    "linkedDatasetIds": [
+      "tri-docs-bundle"
+    ],
+    "linkedMethods": [
+      "Partner documentation"
+    ],
+    "caption": "Map 1 2",
+    "fallback": {
+      "type": "narrative",
+      "text": "Document unavailable in committed bundle."
+    }
+  },
+  {
+    "id": "tri-p1-doc-notes",
+    "pilotId": "tri-p1",
+    "title": "Notes",
+    "type": "pdf",
+    "path": "/data/trikala/docs/notes.pdf",
+    "linkedDatasetIds": [
+      "tri-docs-bundle"
+    ],
+    "linkedMethods": [
+      "Partner documentation"
+    ],
+    "caption": "Notes",
+    "fallback": {
+      "type": "narrative",
+      "text": "Document unavailable in committed bundle."
+    }
+  },
+  {
+    "id": "tri-p1-doc-participants_daily_routes_diagram",
+    "pilotId": "tri-p1",
+    "title": "Participants daily routes diagram",
+    "type": "pdf",
+    "path": "/data/trikala/docs/participants_daily_routes_diagram.pdf",
+    "linkedDatasetIds": [
+      "tri-docs-bundle"
+    ],
+    "linkedMethods": [
+      "Partner documentation"
+    ],
+    "caption": "Participants daily routes diagram",
+    "fallback": {
+      "type": "narrative",
+      "text": "Document unavailable in committed bundle."
+    }
+  },
+  {
+    "id": "tri-p1-doc-transcript_elaborator_one2one_e-trikala_city_engagements",
+    "pilotId": "tri-p1",
+    "title": "Transcript elaborator one2one e-trikala city engagements",
+    "type": "pdf",
+    "path": "/data/trikala/docs/transcript_elaborator_one2one_e-trikala_city_engagements.docx",
+    "linkedDatasetIds": [
+      "tri-docs-bundle"
+    ],
+    "linkedMethods": [
+      "Partner documentation"
+    ],
+    "caption": "Transcript elaborator one2one e-trikala city engagements",
+    "fallback": {
+      "type": "narrative",
+      "text": "Document unavailable in committed bundle."
+    }
+  }
+]

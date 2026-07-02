@@ -120,16 +120,16 @@
 | Dimension | Status | Notes |
 |-----------|--------|-------|
 | **Intervention geometry** | Missing | No reliable coordinates in SharePoint inventory |
-| **Monitoring locations** | Inferred | Smart-crossing + women mobility surveys at pilot anchor only |
-| **Baseline availability** | Active | Survey xlsx (2024–2025 responses) |
-| **Post availability** | Missing | No post-intervention monitoring feed in drop |
-| **KPI readiness** | KPI 2.1/4.1/4.2 partial from surveys; KPI 1.2 derived proxy | 143+ smart-crossing responses |
-| **Observatory readiness** | Ready (shell) | Unified shell; explicit missing-geometry notices |
-| **Confidence** | **Low–Medium** | Survey-derived; not spatially linked |
-| **Partner dependencies** | Intervention geometry delivery; post-intervention sensor or repeat survey |
+| **Monitoring locations** | Inferred | Surveys at pilot anchor; Smart Citizen Kit fleet (19 sensors) for KPI 3.2 |
+| **Baseline availability** | Active | 3 baseline xlsx + partner docs/workshop PDFs in evidence bundle |
+| **Post availability** | Active | 3 post xlsx + 13 SMARTA deployment images |
+| **KPI readiness** | KPI 2.1/4.1/4.2 from paired surveys; KPI 3.2 from sensor fleet registry | Real before/after Likert deltas; environmental monitoring coverage proxy |
+| **Observatory readiness** | Ready | Unified shell + evidence panel (surveys, PDFs, images, sensor narrative) |
+| **Confidence** | **Low–Medium** | Survey-derived; sensor coords not in workbook |
+| **Partner dependencies** | Intervention geometry delivery; sensor time-series readings (workbook is fleet registry only) |
 
 **Observatory type:** Area Observatory  
-**Pilot:** tri-p1 smart mobility area
+**Pilot:** tri-p1 smart mobility area (smart crossing + bike lanes + SMARTA app)
 
 ---
 
@@ -251,9 +251,9 @@ Each pilot must expose: title, summary, objectives, expected impacts, trust (dat
 - Intervention polygons not rendered (centroids only).
 
 ### Trikala
-- No intervention geometry — all survey KPIs at pilot anchor.
-- No post-intervention monitoring feed.
-- KPI 1.2 is survey-derived proxy only.
+- No intervention geometry — survey KPIs at pilot anchor; full zip integrated (8 xlsx, 13 images, 26 docs).
+- KPI 3.2 uses Smart Citizen Kit fleet registry (coordinates column empty — inferred map positions).
+- Park & Ride (2nd intervention) folder empty; one workshop .m4a audio not bundled.
 
 ---
 
@@ -268,7 +268,7 @@ Each pilot must expose: title, summary, objectives, expected impacts, trust (dat
 4. **Zaragoza:** Partner fills KPI 1.2 hourly workbook values; schedule second manual count for ped/bike.
 5. **Helsinki:** Request Telraam export with lat/lng or segment→geometry lookup table.
 6. **Milan:** Confirm SharePoint Milan tree on production; verify KPI 2.1 segment observatory with live data.
-7. **Trikala:** Add intervention polygon when partner delivers geometry; link post survey wave.
+7. **Trikala:** Add intervention polygon when partner delivers geometry; obtain sensor coordinate/time-series feed (fleet registry integrated).
 
 ### P2 — Nice to have
 8. Export button for non-Issy cities (currently Issy-only `exportObservatoryReport`).

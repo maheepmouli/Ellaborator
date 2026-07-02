@@ -7,6 +7,8 @@ export type InfluenceFieldOptions = {
   radiusMeters: number;
   /** Issy P2 flagship — slightly stronger visibility */
   flagship?: boolean;
+  /** Neutral gray tones for Copenhagen pilot zones */
+  tone?: "default" | "neutral";
 };
 
 /**
@@ -17,7 +19,9 @@ export function renderInfluenceField(
   layersOut: L.Circle[],
   options: InfluenceFieldOptions
 ): void {
-  const { center, radiusMeters, flagship = false } = options;
+  const { center, radiusMeters, flagship = false, tone = "default" } = options;
+  const fillColor =
+    tone === "neutral" ? "#94a3b8" : flagship ? "#8b5cf6" : "#657df5";
   const rings = [
     { scale: 1, fill: flagship ? 0.055 : 0.038, stroke: 0 },
     { scale: 0.72, fill: flagship ? 0.042 : 0.028, stroke: 0 },
@@ -30,7 +34,7 @@ export function renderInfluenceField(
       radius: radiusMeters * ring.scale,
       color: "transparent",
       weight: 0,
-      fillColor: flagship ? "#8b5cf6" : "#657df5",
+      fillColor,
       fillOpacity: ring.fill,
       interactive: false,
     }).addTo(map);

@@ -17,6 +17,7 @@ import {
   ReferenceLine,
   PieChart,
   Pie,
+  LabelList,
 } from "recharts";
 import type { KPIValue } from "@/data/kpiDefinitions";
 import type { ChartDrillPayload } from "@/types/chartMapInteraction";
@@ -67,6 +68,39 @@ const modeColors: Record<string, string> = {
   PTW: "#2F1B6D",
 };
 
+function ChartEmptyState({ message }: { message: string }) {
+  return (
+    <div className="flex h-[200px] items-center justify-center px-4 text-center text-[11px] font-medium leading-relaxed text-[#E9E2FF]/80">
+      {message}
+    </div>
+  );
+}
+
+function ModeShareBarLabel(props: {
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  value?: number | string;
+}) {
+  const { x = 0, y = 0, width = 0, height = 0, value } = props;
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric) || numeric <= 0) return null;
+  return (
+    <text
+      x={x + width + 6}
+      y={y + height / 2}
+      fill={TICK_STRONG}
+      fontSize={10}
+      fontWeight={600}
+      dominantBaseline="middle"
+      stroke="none"
+    >
+      {`${numeric.toFixed(1)}%`}
+    </text>
+  );
+}
+
 export const ModeShareChart = ({
   data,
   chartSelectionKeys,
@@ -80,7 +114,12 @@ export const ModeShareChart = ({
     value: breakdown[mode] || 0,
     fill: modeColors[mode] || "#96C2EF",
   }));
+  const hasData = chartData.some((row) => row.value > 0);
   const hasKeys = !!(chartSelectionKeys && chartSelectionKeys.length > 0);
+
+  if (!hasData) {
+    return <ChartEmptyState message="No mode-share observations for the current pilot and filters." />;
+  }
 
   const handleBarPlotClick = (state: unknown) => {
     if (!onChartDrill) return;
@@ -93,7 +132,7 @@ export const ModeShareChart = ({
       <BarChart
         data={chartData}
         layout="vertical"
-        margin={{ top: 8, right: 24, bottom: 8, left: 8 }}
+        margin={{ top: 8, right: 44, bottom: 8, left: 8 }}
         style={{ cursor: onChartDrill ? "pointer" : undefined }}
         onClick={onChartDrill ? handleBarPlotClick : undefined}
       >
@@ -105,7 +144,8 @@ export const ModeShareChart = ({
           labelStyle={TOOLTIP_LABEL_STYLE}
           itemStyle={TOOLTIP_ITEM_STYLE}
         />
-        <Bar dataKey="value" radius={[0, 4, 4, 0]} label={{ fill: TICK_STRONG, fontSize: 10, position: "right", formatter: (v: unknown) => (Number(v) > 0 ? `${Number(v).toFixed(1)}%` : "") }}>
+        <Bar dataKey="value" radius={[0, 4, 4, 0]} isAnimationActive={false}>
+          <LabelList dataKey="value" content={<ModeShareBarLabel />} />
           {chartData.map((row, i) => {
             const selected = !!(row.mode && hasKeys && chartSelectionKeys?.includes(row.mode));
             const dim = !!(hasKeys && !selected);
@@ -138,11 +178,26 @@ export const SafetyRadarChart = ({
     fullSubject: k,
     value: Number(breakdown[k]) || 0,
   }));
+  const hasData = chartData.some((d) => d.value > 0);
+  const maxValue = chartData.length ? Math.max(...chartData.map((d) => d.value), 0) : 0;
+  const radiusMax = Math.max(5, Math.ceil(maxValue * 10) / 10);
   const hasKeys = !!(chartSelectionKeys && chartSelectionKeys.length > 0);
 
+  if (!hasData) {
+    return (
+      <ChartEmptyState message="No safety pressure breakdown linked for this pilot — select a camera direction or switch KPI." />
+    );
+  }
+
   return (
-    <ResponsiveContainer width="100%" height={200}>
-      <RadarChart cx="50%" cy="52%" outerRadius="72%" data={chartData} style={{ cursor: onChartDrill ? "pointer" : undefined }}>
+    <ResponsiveContainer width="100%" height={200} className="insight-radar-chart">
+      <RadarChart
+        cx="50%"
+        cy="52%"
+        outerRadius="72%"
+        data={chartData}
+        style={{ cursor: onChartDrill ? "pointer" : undefined, background: "transparent" }}
+      >
         <PolarGrid stroke={GRID} />
         <PolarAngleAxis
           dataKey="subject"
@@ -180,7 +235,7 @@ export const SafetyRadarChart = ({
             );
           }}
         />
-        <PolarRadiusAxis angle={90} domain={[0, 5]} tick={{ fill: TICK, fontSize: 12 }} />
+        <PolarRadiusAxis angle={90} domain={[0, radiusMax]} tick={{ fill: TICK, fontSize: 12 }} />
         <Radar name="Safety" dataKey="value" stroke="#657DF5" fill="#657DF5" fillOpacity={hasKeys ? 0.55 : 0.35} strokeWidth={2} />
         <Tooltip
           formatter={(v: number) => [`${Number(v).toFixed(2)}`, "Rating"]}
@@ -210,6 +265,9 @@ export const InfrastructureBarChart = ({
     fill: ["#657DF5", "#8578C3", "#96C2EF", "#B0EDBA"][i % 4],
   }));
   const hasKeys = !!(chartSelectionKeys && chartSelectionKeys.length > 0);
+  if (!chartData.length) {
+    return <ChartEmptyState message="No infrastructure observations for the current pilot and segment." />;
+  }
   const drillFromBar = (entry: { fullName?: string } | undefined) => {
     if (!onChartDrill || !entry?.fullName) return;
     onChartDrill({ source: "kpi3.1", key: entry.fullName });
@@ -395,6 +453,9 @@ export const AccessibilityBarChart = ({
     fill: ["#657DF5", "#8578C3", "#96C2EF", "#B0EDBA"][i % 4],
   }));
   const hasKeys = !!(chartSelectionKeys && chartSelectionKeys.length > 0);
+  if (!chartData.length) {
+    return <ChartEmptyState message="No accessibility features for the current pilot and segment." />;
+  }
   const handleBarPlotClick = (state: unknown) => {
     if (!onChartDrill) return;
     const payload = payloadFromChartClick<{ fullLabel?: string }>(state);

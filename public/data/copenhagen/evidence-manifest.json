@@ -1,0 +1,123 @@
+[
+  {
+    "id": "cph-p2-monica-photos",
+    "pilotId": "cph-p2",
+    "title": "Vandkunsten Bicycle Infrastructure Deployment",
+    "type": "image",
+    "path": "/data/copenhagen/media/2024_area_of_r_dhusstr_de_and_vandkunsten.png",
+    "linkedDatasetIds": [
+      "cph-bike-parking-inventory",
+      "cph-media-gallery"
+    ],
+    "linkedMethods": [
+      "Bicycle parking photos"
+    ],
+    "caption": "Installed 90-degree bicycle racks accommodating active cargo-bike dimensions near Vandkunsten hub, captured May 2024.",
+    "fallback": {
+      "type": "narrative",
+      "text": "Photo asset unavailable — see I100275 Udført sheet and partner deployment facts (1,080 bike + 80 cargo spaces)."
+    }
+  },
+  {
+    "id": "cph-p2-evaluation-pdf",
+    "pilotId": "cph-p2",
+    "title": "Intervention Evaluation Plan",
+    "type": "pdf",
+    "path": "/data/copenhagen/docs/evaluering_af_omlaegningen_af_cykel-_og_bilparkering_i_middelalderbyen_februar_2026.pdf",
+    "linkedDatasetIds": [
+      "cph-bike-parking-inventory"
+    ],
+    "linkedMethods": [
+      "Bicycle parking counts",
+      "Explorative walks",
+      "Interviews"
+    ],
+    "caption": "Partner evaluation plan for bicycle parking reallocation (Feb 2026).",
+    "fallback": {
+      "type": "narrative",
+      "text": "Evaluation PDF not bundled — see partner SharePoint archive."
+    }
+  },
+  {
+    "id": "cph-p1-travel-survey",
+    "pilotId": "cph-p1",
+    "title": "Travel & car-user surveys",
+    "type": "narrative",
+    "linkedDatasetIds": [
+      "cph-travel-survey",
+      "cph-car-user-survey"
+    ],
+    "linkedMethods": [
+      "Travel surveys",
+      "Car-user survey"
+    ],
+    "fallback": {
+      "type": "narrative",
+      "text": "Partner travel and car-user surveys are documented in evaluation materials only — no structured workbook in the SharePoint bundle."
+    }
+  },
+  {
+    "id": "cph-p2-interviews-walks",
+    "pilotId": "cph-p2",
+    "title": "Interviews & explorative walks",
+    "type": "narrative",
+    "linkedDatasetIds": [
+      "cph-interviews",
+      "cph-explorative-walks"
+    ],
+    "linkedMethods": [
+      "Interviews",
+      "Explorative walks"
+    ],
+    "fallback": {
+      "type": "narrative",
+      "text": "Qualitative partner methods (interviews, explorative walks) are recorded in evaluation documentation — not machine-readable in the zip inventory."
+    }
+  },
+  {
+    "id": "cph-p3-near-encounters",
+    "pilotId": "cph-p3",
+    "title": "Near encounters & conflict analysis",
+    "type": "narrative",
+    "linkedDatasetIds": [
+      "cph-near-encounters",
+      "cph-conflict-analysis"
+    ],
+    "linkedMethods": [
+      "Near encounters",
+      "Conflict analysis"
+    ],
+    "fallback": {
+      "type": "narrative",
+      "text": "Near-encounter and conflict datasets were not delivered as structured files. Safety context uses iRAP counts, OTC flows, and perceived-safety surveys."
+    }
+  },
+  {
+    "id": "cph-p1-p3-accessibility-pending",
+    "pilotId": "cph-p1",
+    "title": "Accessibility audit (not observed)",
+    "type": "narrative",
+    "linkedDatasetIds": [],
+    "linkedMethods": [
+      "Accessibility audit"
+    ],
+    "fallback": {
+      "type": "narrative",
+      "text": "No EN 17210 accessibility audit for CPHK1/CPHK3. Linked datasets: OpenTrafficCam, Telraam, manual counts, flow cameras, surveys."
+    }
+  },
+  {
+    "id": "cph-p3-accessibility-pending",
+    "pilotId": "cph-p3",
+    "title": "Accessibility audit (not observed)",
+    "type": "narrative",
+    "linkedDatasetIds": [],
+    "linkedMethods": [
+      "Accessibility audit"
+    ],
+    "fallback": {
+      "type": "narrative",
+      "text": "No EN 17210 accessibility audit for CPHK3. Linked datasets: iRAP counts, OTC flows, safety perception survey."
+    }
+  }
+]

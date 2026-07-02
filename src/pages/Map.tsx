@@ -4,11 +4,12 @@ import { ArrowLeft, Eye, X } from "lucide-react";
 import Header from "@/components/Header";
 import HeroMap from "@/components/HeroMap";
 import InsightPanel from "@/components/InsightPanel";
+import { isTrikalaCityName } from "@/lib/trikalaMapConfig";
 import MapControls from "@/components/MapControls";
 import MapTour from "@/components/MapTour";
 import DataSummaryPanel from "@/components/ScenarioPanel";
 import SegmentIntelligencePanel from "@/components/SegmentIntelligencePanel";
-import { getPilotsByCity, SelectedPilot, ViewState } from "@/data/pilotDefinitions";
+import { getPilotsByCity, findPilotByIdGlobally, SelectedPilot, ViewState } from "@/data/pilotDefinitions";
 import { CITY_DATA, ELABORATOR_KPIS } from "@/data/kpiDefinitions";
 import { resolveMapLegend, type MapLegendMarker } from "@/lib/mapLayerLegend";
 import { ISSY_P2_JUNCTION, ISSY_JUNCTION_SEGMENT_IDS, isIssyStudyPilot } from "@/lib/issyPilot2Junction";
@@ -18,10 +19,13 @@ import { pickDefaultSegment, buildJunctionStudyView } from "@/lib/issyJunctionAn
 import { getPrimaryJunctionConfig } from "@/data/junctionConfigs";
 import { buildMockJunctionStudyView, mergeJunctionConfig } from "@/lib/junctionMockAnalytics";
 import { buildCityObservatoryView, buildSegmentScopedObservatoryView } from "@/lib/observatoryCityContent";
+import { buildCopenhagenObservatoryView, filterCopenhagenObservatoryPoints } from "@/lib/copenhagenObservatoryView";
 import { useLocalCityData } from "@/hooks/use-local-city-data";
 import { isIssyCity } from "@/lib/issyMapRouting";
 import { getIssyPilotProfile } from "@/data/issyPilotProfiles";
 import { canOpenObservatory } from "@/lib/observatoryAccess";
+import { isCopenhagenObservatoryContext } from "@/lib/copenhagenMapSelection";
+import { getCopenhagenPilotLatLngBounds } from "@/data/copenhagenCameraSites";
 import type { MapSelectionState } from "@/types/mapSelection";
 import { useMilanEnvironmentSegments, useMilanSpeedSegments } from "@/hooks/use-milan-segment-data";
 import type { TrafficSegment } from "@/types/traffic";
@@ -98,6 +102,7 @@ const MapContent = () => {
   const [selectedCity, setSelectedCity] = useState("");
   const [selectedPilot, setSelectedPilot] = useState<SelectedPilot | null>(null);
   const issyJunctionStudy = isIssyStudyPilot(selectedPilot?.id);
+  const isCopenhagenMap = isCopenhagenObservatoryContext(selectedCity, selectedPilot?.id);
   const [selectedKpi, setSelectedKpi] = useState("kpi1.2");
   const [mapRef, setMapRef] = useState<any>(null);
   const [viewLevel, setViewLevel] = useState<ViewState>("EUROPE");
@@ -138,15 +143,19 @@ const MapContent = () => {
   const pilotFlyNonceRef = useRef(0);
   const [pilotFlyToSignal, setPilotFlyToSignal] = useState<{
     nonce: number;
-    lat: number;
-    lng: number;
+    lat?: number;
+    lng?: number;
     zoom?: number;
+    bounds?: [[number, number], [number, number]];
+    maxZoom?: number;
   } | null>(null);
   /** KPI 3.1 chart selection → tighten infrastructure points on the map. */
   const [infrastructureMapFocus, setInfrastructureMapFocus] = useState<string | null>(null);
   /** KPI 3.2 trend chart — selected year drives map emission / climate intensity. */
   const [emissionsIntensityYear, setEmissionsIntensityYear] = useState<string | null>(null);
   const [selectedDirectionId, setSelectedDirectionId] = useState<string | null>(null);
+  /** Transient map hover — drives Copenhagen observatory preview without pinning selection. */
+  const [hoveredSegmentId, setHoveredSegmentId] = useState<string | null>(null);
   const resetToEuropeRef = useRef<null | (() => void)>(null);
 
   const cityCenter = useMemo(() => {
@@ -177,6 +186,14 @@ const MapContent = () => {
     pilotFlyNonceRef.current += 1;
     setPilotFlyToSignal({ nonce: pilotFlyNonceRef.current, lat, lng, zoom });
   }, []);
+
+  const requestPilotMapBounds = useCallback(
+    (bounds: [[number, number], [number, number]], maxZoom?: number) => {
+      pilotFlyNonceRef.current += 1;
+      setPilotFlyToSignal({ nonce: pilotFlyNonceRef.current, bounds, maxZoom });
+    },
+    []
+  );
 
   useEffect(() => {
     setIntelCity(selectedCity);
@@ -226,6 +243,7 @@ const MapContent = () => {
     setEmissionsIntensityYear(null);
     setMapContext(null);
     setSelectedDirectionId(null);
+    setHoveredSegmentId(null);
     setSelectedJunctionSegmentId(null);
     setFocusMode(false);
     patchSelection({ segmentId: null });
@@ -236,6 +254,7 @@ const MapContent = () => {
     setSelectedJunctionSegmentId(null);
     setMapContext(null);
     setSelectedDirectionId(null);
+    setHoveredSegmentId(null);
     patchSelection({ segmentId: null });
   }, [selectedKpi, setSelectedJunctionSegmentId, patchSelection]);
 
@@ -269,6 +288,15 @@ const MapContent = () => {
   useEffect(() => {
     if (!selectedPilot) return;
     if (selectedPilot.id.startsWith("issy-p")) return;
+    if (selectedPilot.id.startsWith("cph-")) {
+      const bounds = getCopenhagenPilotLatLngBounds(selectedPilot.id);
+      if (bounds) {
+        const maxZoom =
+          selectedPilot.id === "cph-p2" ? 18 : selectedPilot.id === "cph-p3" ? 17 : 16;
+        requestPilotMapBounds(bounds, maxZoom);
+        return;
+      }
+    }
     if (pilotGeometrySpec?.flyToAllowed && pilotGeometrySpec.bounds) {
       requestPilotMapFocus(
         pilotGeometrySpec.bounds.lat,
@@ -277,16 +305,19 @@ const MapContent = () => {
       );
       return;
     }
-    if (
-      pilotGeometrySpec?.interactionModel === "dashboard_only" ||
-      pilotGeometrySpec?.flyToAllowed === false
-    ) {
+    if (pilotGeometrySpec?.interactionModel === "dashboard_only") {
+      if (typeof selectedPilot.lat === "number" && typeof selectedPilot.lng === "number") {
+        requestPilotMapFocus(selectedPilot.lat, selectedPilot.lng, pilotGeometrySpec?.maxZoom ?? 14);
+      }
+      return;
+    }
+    if (pilotGeometrySpec?.flyToAllowed === false) {
       return;
     }
     if (typeof selectedPilot.lat === "number" && typeof selectedPilot.lng === "number") {
       requestPilotMapFocus(selectedPilot.lat, selectedPilot.lng, 14);
     }
-  }, [selectedPilot, pilotGeometrySpec, requestPilotMapFocus]);
+  }, [selectedPilot, pilotGeometrySpec, requestPilotMapFocus, requestPilotMapBounds]);
 
   const milanPilotId =
     selectedPilot?.id === "mil-p1" || selectedPilot?.id === "mil-p2" || selectedPilot?.id === "mil-p3"
@@ -450,16 +481,45 @@ const MapContent = () => {
         )
       : null;
 
+  const effectiveDirectionId = useMemo(() => {
+    if (!isCopenhagenMap) return selectedDirectionId;
+    const hoverId = hoveredSegmentId;
+    if (!hoverId) return selectedDirectionId;
+    if (hoverId.startsWith("loc:") || hoverId.startsWith("site:")) return selectedDirectionId;
+    return hoverId;
+  }, [hoveredSegmentId, isCopenhagenMap, selectedDirectionId]);
+
   const activeJunctionView = useMemo(() => {
     if (!junctionConfig || !selectedPilot?.id) return null;
-    const seg =
-      observatorySegments.find((s) => s.id === selectedJunctionSegmentId) ??
-      pickDefaultSegment(observatorySegments);
     const label = selectedPilot
       ? `${selectedCity} — ${selectedPilot.name}`
       : junctionConfig.pilot;
     const intensity =
       issyKpi32Intensity != null ? issyKpi32Intensity / 100 : 1;
+
+    if (isCopenhagenMap) {
+      const selectionId = hoveredSegmentId ?? selectedJunctionSegmentId;
+      const filtered = selectionId
+        ? filterCopenhagenObservatoryPoints(scopedObservatoryPoints, selectionId)
+        : scopedObservatoryPoints;
+      return buildCopenhagenObservatoryView(
+        junctionConfig,
+        selectedPilot.id,
+        selectedKpi,
+        scenario,
+        filtered.length ? filtered : scopedObservatoryPoints,
+        {
+          pilotLabel: label,
+          selectionId,
+          selectedModeTypes,
+          segmentName: mapContext?.segmentName ?? null,
+        }
+      );
+    }
+
+    const seg =
+      observatorySegments.find((s) => s.id === selectedJunctionSegmentId) ??
+      pickDefaultSegment(observatorySegments);
 
     if (seg && isIssyCity(selectedCity)) {
       const junctionArms = observatorySegments.filter((s) =>
@@ -501,7 +561,8 @@ const MapContent = () => {
           congestion: mapContext?.congestion ?? activeSeg.indice_de_congestion ?? null,
           properties: milanRecord?.properties,
         },
-        intensity
+        intensity,
+        selectedModeTypes
       );
     }
 
@@ -527,6 +588,9 @@ const MapContent = () => {
     mapContext,
     milanSpeedForObservatory?.records,
     milanEnvForObservatory?.records,
+    isCopenhagenMap,
+    selectedModeTypes,
+    hoveredSegmentId,
   ]);
 
   const mapLegendSpec = resolveMapLegend(selectedCity || "", selectedKpi, scenario, {
@@ -560,14 +624,53 @@ const MapContent = () => {
     setIntelCity(city);
   };
 
+  const resolveCityLabelFromPilot = useCallback((pilot: SelectedPilot): string => {
+    const found = findPilotByIdGlobally(pilot.id);
+    if (found?.pilotsKey === "issy-les-moulineaux") return "Issy-les-Moulineaux";
+    if (found?.pilotsKey) {
+      return found.pilotsKey.charAt(0).toUpperCase() + found.pilotsKey.slice(1);
+    }
+    const row = CITY_DATA.find(
+      (c) => c.city.toLowerCase().replace(/[^a-z]/g, "") === pilot.cityId.toLowerCase().replace(/[^a-z]/g, "")
+    );
+    return row?.city ?? pilot.cityId;
+  }, []);
+
+  const handlePilotSelect = useCallback(
+    (pilot: SelectedPilot | null) => {
+      setSelectedPilot(pilot);
+      if (pilot) {
+        const cityLabel = resolveCityLabelFromPilot(pilot);
+        setSelectedCity(cityLabel);
+        setIntelCity(cityLabel);
+      }
+    },
+    [resolveCityLabelFromPilot, setIntelCity]
+  );
+
   const handleSegmentHover = useCallback(
     (detail: {
       segmentId: string;
       segmentName: string;
       speed?: number | null;
       congestion?: number | null;
-    }) => {
-      patchSelection({ segmentId: detail.segmentId });
+    } | null) => {
+      if (detail === null) {
+        setHoveredSegmentId(null);
+        if (isCopenhagenMap) {
+          setMapContext(null);
+        }
+        return;
+      }
+
+      if (isCopenhagenMap) {
+        setHoveredSegmentId(detail.segmentId);
+        if (canOpenObservatory(selectedCity, selectedPilot?.id, selectedKpi)) {
+          setIsObservatoryOpen(true);
+        }
+      } else {
+        patchSelection({ segmentId: detail.segmentId });
+      }
       setMapContext({
         segmentName: detail.segmentName,
         speed: detail.speed ?? null,
@@ -575,13 +678,19 @@ const MapContent = () => {
       });
       setMapSelection((prev) => ({
         ...prev,
-        segmentId: detail.segmentId,
+        segmentId: isCopenhagenMap ? prev.segmentId : detail.segmentId,
         city: selectedCity,
         pilotId: selectedPilot?.id,
         kpi: selectedKpi,
       }));
     },
-    [patchSelection, selectedCity, selectedPilot?.id, selectedKpi]
+    [
+      patchSelection,
+      selectedCity,
+      selectedPilot?.id,
+      selectedKpi,
+      isCopenhagenMap,
+    ]
   );
 
   const handlePilotChange = (pilotId: string) => {
@@ -640,6 +749,18 @@ const MapContent = () => {
           onSegmentHover={handleSegmentHover}
           onJunctionSegmentClick={(detail) => {
             patchSelection({ segmentId: detail.segmentId });
+            setMapContext({
+              segmentName: detail.segmentName,
+              speed: detail.speed ?? null,
+              congestion: detail.congestion ?? null,
+            });
+            if (isCopenhagenMap) {
+              if (!detail.segmentId.startsWith("loc:") && !detail.segmentId.startsWith("site:")) {
+                setSelectedDirectionId(detail.segmentId);
+              } else {
+                setSelectedDirectionId(null);
+              }
+            }
             setMapSelection({
               segmentId: detail.segmentId,
               city: selectedCity,
@@ -652,7 +773,7 @@ const MapContent = () => {
           }}
           showInterventionLayer={showInterventionLayer}
           selectedPilotId={selectedPilot?.id}
-          onPilotSelect={setSelectedPilot}
+          onPilotSelect={handlePilotSelect}
           onDataQualitySummaryChange={setDataQualitySummary}
           milanEnvironmentWindow={
             selectedCity === "Milan" && selectedKpi === "kpi3.2" ? milanEnvWindow : undefined
@@ -666,6 +787,7 @@ const MapContent = () => {
           infrastructureCategoryFocus={infrastructureMapFocus}
           kpi32SelectedYear={emissionsIntensityYear}
           selectedJunctionSegmentId={selectedJunctionSegmentId}
+          hoveredJunctionSegmentId={hoveredSegmentId}
           pilotGeometrySpec={pilotGeometrySpec}
           runtimeLinkage={runtimeLinkage}
         />
@@ -712,6 +834,7 @@ const MapContent = () => {
             mapContext={mapContext}
             dataQualitySummary={dataQualitySummary}
             mapSelection={mapSelection}
+            hoveredSegmentId={hoveredSegmentId}
             milanEnvironmentWindow={milanEnvWindow}
             onMilanEnvironmentWindowChange={setMilanEnvWindow}
             issyFlowDayCategory={issyFlowDayCategory}
@@ -854,8 +977,8 @@ const MapContent = () => {
         )}
       </AnimatePresence>
 
-      {/* Right-Side Map Controls - Minimal zoom only */}
-      {!showTour && (
+      {/* Right-Side Map Controls - Minimal zoom only (hidden for Trikala — fixed zoom canvas) */}
+      {!showTour && !isTrikalaCityName(selectedCity) && (
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -891,7 +1014,7 @@ const MapContent = () => {
             : undefined
         }
         segments={observatorySegments}
-        selectedSegmentId={selectedJunctionSegmentId}
+        selectedSegmentId={hoveredSegmentId ?? selectedJunctionSegmentId}
         onSelectSegmentId={(id) => patchSelection({ segmentId: id })}
         selectedKpi={selectedKpi}
         scenario={scenario}
@@ -907,8 +1030,12 @@ const MapContent = () => {
             : undefined
         }
         selectedModeTypes={selectedModeTypes}
-        selectedDirectionId={selectedDirectionId}
-        onSelectDirectionId={setSelectedDirectionId}
+        selectedDirectionId={effectiveDirectionId}
+        onSelectDirectionId={(id) => {
+          setSelectedDirectionId(id);
+          patchSelection({ segmentId: id });
+          setMapSelection((prev) => ({ ...prev, segmentId: id }));
+        }}
         pilotGeometrySpec={pilotGeometrySpec}
       />
 

@@ -32,12 +32,19 @@ import {
   segmentInteractionHandlers,
   wireCircleMarkerSegment,
   wirePolylineSegment,
+  type SegmentInteractionHandlers,
 } from "@/lib/wireMapSegmentInteraction";
 import { filterPointsInPilotZone } from "@/lib/interventionZone";
 import {
   getCopenhagenCameraIdsForPilot,
+  inferOtcWorkbookKey,
   isCopenhagenCameraKpi,
 } from "@/data/copenhagenCameraSites";
+import { renderCopenhagenMapLayers } from "@/lib/copenhagenMapLayers/renderCopenhagenMapLayers";
+import { renderTrikalaMapLayers } from "@/lib/trikalaMapLayers";
+import { getTrikalaSegmentInsights } from "@/services/trikalaSurveyParser";
+import { isTrikalaCityName, trikalaMapZoom } from "@/lib/trikalaMapConfig";
+import { loadCopenhagenParkingGeoJson, loadCopenhagenStreetsGeoJson } from "@/services/copenhagenExtendedParsers";
 import {
   ISSY_SEGMENT_KPIS,
   isIssyCity,
@@ -84,21 +91,6 @@ import {
   junctionMarkerLatLng,
 } from "@/lib/issyPilot2Junction";
 
-type CphStreetFeatureCollection = {
-  type: "FeatureCollection";
-  features: Array<{
-    type: "Feature";
-    geometry: { type: "LineString"; coordinates: [number, number][] };
-    properties?: {
-      street?: string;
-      cameraId?: string;
-      siteName?: string;
-      source?: string;
-      osmId?: number;
-    };
-  }>;
-};
-
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
@@ -142,13 +134,22 @@ interface HeroMapProps {
   /** Issy KPI 1.2 zone-flow CSV: filter by day type (bundled baseline/post extracts). */
   issyFlowDayCategory?: "all" | IssyDayCategory;
   /** Sidebar chart drill: zoom map to pilot / city anchor. */
-  pilotFlyToSignal?: { nonce: number; lat: number; lng: number; zoom?: number } | null;
+  pilotFlyToSignal?: {
+    nonce: number;
+    lat?: number;
+    lng?: number;
+    zoom?: number;
+    bounds?: [[number, number], [number, number]];
+    maxZoom?: number;
+  } | null;
   /** KPI 3.1: show only assets whose type/label fuzzy-matches the clicked chart bar. */
   infrastructureCategoryFocus?: string | null;
   /** KPI 3.2: chart year (e.g. "2022") — map climate hex + emission zones follow time series intensity. */
   kpi32SelectedYear?: string | null;
   /** Issy junction study — highlight colour for the selected arm marker. */
   selectedJunctionSegmentId?: string | null;
+  /** Transient hover highlight (Copenhagen markers / flow endpoints). */
+  hoveredJunctionSegmentId?: string | null;
   /** Segment focus — dim non-selected layers. */
   focusMode?: boolean;
   onSegmentHover?: (detail: {
@@ -156,7 +157,7 @@ interface HeroMapProps {
     segmentName: string;
     speed?: number | null;
     congestion?: number | null;
-  }) => void;
+  } | null) => void;
   pilotGeometrySpec?: PilotGeometryRenderSpec | null;
   runtimeLinkage?: RuntimeLinkage;
 }
@@ -219,26 +220,6 @@ function pilotFallbackCoord(
   };
 }
 
-function inferCopenhagenCameraId(siteName: string): string {
-  const value = siteName.toLowerCase();
-  if (value.includes("norregade") || value.includes("norreport")) return "norreport";
-  if (value.includes("vandkunsten") || value.includes("radhuus") || value.includes("rådhus")) {
-    return "vandkunsten";
-  }
-  if (value.includes("gammeltorv") || value.includes("vestergade")) return "gammeltorv";
-  if (value.includes("frederiksholms") || value.includes("stormgade")) return "stormgade";
-  return "unknown";
-}
-
-function directionBearingDeg(direction: string): number {
-  const d = direction.toLowerCase();
-  if (d.includes("north") || d.includes("nord")) return 0;
-  if (d.includes("east") || d.includes("øst") || d.includes("ost")) return 90;
-  if (d.includes("south") || d.includes("syd")) return 180;
-  if (d.includes("west") || d.includes("vest")) return 270;
-  return 45;
-}
-
 function corridorMatchesSelection(
   selectedId: string | null | undefined,
   cameraId: string,
@@ -273,6 +254,7 @@ const HeroMap = ({
   infrastructureCategoryFocus = null,
   kpi32SelectedYear = null,
   selectedJunctionSegmentId = null,
+  hoveredJunctionSegmentId = null,
   focusMode = false,
   onSegmentHover,
   pilotGeometrySpec = null,
@@ -302,6 +284,8 @@ const HeroMap = ({
     dataConfidence: "real" | "proxy" | "unavailable";
     statusMessage?: string;
   } | null>(null);
+  const [cphParkingGeo, setCphParkingGeo] = useState<GeoJSON.FeatureCollection | null>(null);
+  const [cphStreetsGeo, setCphStreetsGeo] = useState<GeoJSON.FeatureCollection | null>(null);
   const currentCityData = currentCity ? CITY_DATA.find((c) => c.city === currentCity) || null : null;
   const selectedPilotMeta = getPilotById(currentCity || "", selectedPilotId);
   const selectedPilotProfile = getCityPilotProfile(selectedPilotId);
@@ -322,9 +306,18 @@ const HeroMap = ({
     onSegmentFocusRef.current = onSegmentFocus;
   }, [onSegmentFocus]);
 
+  useEffect(() => {
+    if (!currentCity?.toLowerCase().includes("copenhagen")) {
+      setCphParkingGeo(null);
+      setCphStreetsGeo(null);
+      return;
+    }
+    void loadCopenhagenParkingGeoJson().then(setCphParkingGeo);
+    void loadCopenhagenStreetsGeoJson().then(setCphStreetsGeo);
+  }, [currentCity]);
+
   const segmentInteractionEnabled =
-    pilotGeometrySpec?.interactionModel !== "network" &&
-    pilotGeometrySpec?.interactionModel !== "dashboard_only";
+    pilotGeometrySpec?.interactionModel !== "network";
   const suppressMapSpatialLayers =
     pilotGeometrySpec?.interactionModel === "dashboard_only";
 
@@ -374,18 +367,12 @@ const HeroMap = ({
     selectedPilotId,
     scenario
   );
-  const { data: copenhagenStreetGeoJson } = useQuery<CphStreetFeatureCollection | null>({
-    queryKey: ["copenhagen-streets-geojson"],
-    queryFn: async () => {
-      const response = await fetch("/data/copenhagen/streets.geojson");
-      if (!response.ok) return null;
-      return response.json() as Promise<CphStreetFeatureCollection>;
-    },
-    enabled:
-      !!currentCity &&
-      currentCity.toLowerCase().includes("copenhagen") &&
-      selectedKpi !== "kpi4.2",
-    staleTime: 1000 * 60 * 60,
+  const isTrikalaCity = !!currentCity?.toLowerCase().includes("trikala");
+  const { data: trikalaSegmentInsights = [] } = useQuery({
+    queryKey: ["trikala-segment-insights"],
+    queryFn: getTrikalaSegmentInsights,
+    enabled: isTrikalaCity,
+    staleTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
   const { data: issyFlows } = useIssyFlowData(
@@ -483,15 +470,21 @@ const HeroMap = ({
     const focusLng = selectedPilotMeta?.lng ?? cityData.lon;
     const focusRadiusM = selectedPilotMeta?.scale === "street" ? 450 : selectedPilotMeta?.scale === "district" ? 900 : 1400;
     // Single pilot boundary — avoid two stacked filled discs that read as duplicate layers.
-    const interventionBoundary = L.circle([focusLat, focusLng], {
-      radius: focusRadiusM,
-      color: "#a78bfa",
-      weight: 2,
-      dashArray: "6 8",
-      fillColor: "#8b5cf6",
-      fillOpacity: 0.06,
-    });
-    layer.addLayer(interventionBoundary);
+    const isCopenhagenPilot =
+      currentCity?.toLowerCase().includes("copenhagen") && selectedPilotId?.startsWith("cph-");
+    if (!isCopenhagenPilot) {
+      const interventionBoundary = L.circle([focusLat, focusLng], {
+        radius: focusRadiusM,
+        color: "#a78bfa",
+        weight: 2,
+        dashArray: "6 8",
+        fillColor: "#8b5cf6",
+        fillOpacity: 0.06,
+        interactive: false,
+        bubblingMouseEvents: false,
+      });
+      layer.addLayer(interventionBoundary);
+    }
     if (selectedPilotProfile?.interventionMarkers?.length) {
       selectedPilotProfile.interventionMarkers.forEach((marker) => {
         const markerLayer = L.circleMarker([marker.lat, marker.lng], {
@@ -649,6 +642,7 @@ const HeroMap = ({
         (ctx) => onSegmentFocusRef.current?.(ctx),
         (detail) => onJunctionSegmentClickRef.current?.(detail)
       );
+      const activeMapSegmentId = hoveredJunctionSegmentId ?? selectedJunctionSegmentId;
 
       const isMilanInterventionPilot =
         cityName.toLowerCase() === "milan" &&
@@ -709,20 +703,24 @@ const HeroMap = ({
       addCityBoundary(cityData);
 
       if (suppressMapSpatialLayers) {
-        const dashboardNotice = L.marker([cityData.lat, cityData.lon], {
-          icon: L.divIcon({
-            className: "dashboard-only-notice",
-            html: `
-              <div style="padding:10px 12px;border-radius:10px;background:rgba(20,20,35,0.92);color:#e2e8f0;border:1px solid rgba(148,163,184,0.5);max-width:260px;font-size:11px;line-height:1.35;font-family:'DM Sans',sans-serif;">
-                <strong>Dashboard-only pilot</strong><br/>
-                ${pilotGeometrySpec?.legendHint ?? "Survey context — map spatial features suppressed."}
-              </div>
-            `,
-            iconSize: [260, 72],
-            iconAnchor: [130, 36],
-          }),
-        }).addTo(mapRef.current!);
-        markersRef.current.push(dashboardNotice);
+        const anchorLat = cityData.lat;
+        const anchorLon = cityData.lon;
+        renderTrikalaMapLayers({
+          map: mapRef.current!,
+          anchor: { lat: anchorLat, lng: anchorLon },
+          records: filterPointsInPilotZone(localCityPoints ?? [], cityName, selectedPilotId),
+          segmentInsights: trikalaSegmentInsights,
+          selectedKpi,
+          scenario,
+          selectedSegmentId: activeMapSegmentId,
+          filterRange,
+          segmentHandlers,
+          getValueColor,
+          markersOut: markersRef.current,
+          circlesOut: circlesRef.current,
+          polylinesOut: polylinesRef.current,
+          wireCircleMarker: wireCircleMarkerSegment,
+        });
         return;
       }
 
@@ -1493,33 +1491,71 @@ const HeroMap = ({
         return;
       }
       if (isCopenhagenCity && isCopenhagenCameraKpi(selectedKpi)) {
+        addInterventionLayer(cityData, showInterventionLayer);
         const pilotCameraIds = getCopenhagenCameraIdsForPilot(selectedPilotId);
-        const observedPoints = (localCityPoints || []).filter(
+        const allObservedPoints = (localCityPoints || []).filter(
           (p) => p.properties?.dataOrigin === "local-city-dataset"
         );
+        const observedPoints =
+          selectedKpi === "kpi4.2"
+            ? allObservedPoints.filter((p) => p.properties?.datasetKind === "accessibility")
+            : allObservedPoints;
         const cphDiagnostics = getLocalCityDiagnostics("Copenhagen", selectedKpi, selectedPilotId);
         if (observedPoints.length === 0) {
           const recordsLabel =
-            cphDiagnostics?.reason === "files-unavailable"
-              ? "Observed directional source unavailable"
-              : cphDiagnostics?.reason === "pilot-scope-empty"
-                ? "No observed directional mobility records for the selected configuration."
-                : "No observed directional mobility records for the selected configuration.";
+            selectedKpi === "kpi4.2"
+              ? "No EN 17210 accessibility audit — CPHK2 shows infrastructure proxy from parking inventory when selected."
+              : cphDiagnostics?.reason === "files-unavailable"
+                ? "Observed directional source unavailable"
+                : cphDiagnostics?.reason === "pilot-scope-empty"
+                  ? "No observed directional mobility records for the selected configuration."
+                  : "No observed directional mobility records for the selected configuration.";
           const temporalCoverage =
-            cphDiagnostics?.reason === "files-unavailable"
-              ? "source unavailable"
-              : "before-after";
+            selectedKpi === "kpi4.2"
+              ? "documentation"
+              : cphDiagnostics?.reason === "files-unavailable"
+                ? "source unavailable"
+                : "before-after";
           onDataQualitySummaryChange?.({
             recordsLabel,
-            spatialQuality: "exact OpenTrafficCam coordinates",
-            dataType: "observed directional camera counts",
+            spatialQuality:
+              selectedKpi === "kpi4.2"
+                ? "parking inventory proxy (derived)"
+                : "exact OpenTrafficCam coordinates",
+            dataType:
+              selectedKpi === "kpi4.2"
+                ? "derived accessibility infrastructure proxy"
+                : "observed directional camera counts",
             temporalCoverage,
             confidence: cphDiagnostics?.reason === "files-unavailable" ? "Low" : "Medium",
-            provenanceType: "observed",
-            geometryLinkage: "exact",
-            spatialSystemHint: "Observed directional mobility count points only.",
+            provenanceType: selectedKpi === "kpi4.2" ? "derived" : "observed",
+            geometryLinkage: selectedKpi === "kpi4.2" ? "matched" : "exact",
+            spatialSystemHint:
+              selectedKpi === "kpi4.2"
+                ? "Parking bay before/after categories — not a formal accessibility audit."
+                : "Observed directional mobility count points only.",
           });
-          addInterventionLayer(cityData, showInterventionLayer);
+          if (selectedKpi === "kpi4.2" && cphParkingGeo?.features?.length) {
+            renderCopenhagenMapLayers({
+              map: mapRef.current!,
+              pilotId: selectedPilotId,
+              observedPoints: [],
+              scenario,
+              selectedSegmentId: activeMapSegmentId,
+              segmentHandlers,
+              getValueColor,
+              selectedKpi,
+              markersOut: markersRef.current,
+              circlesOut: circlesRef.current,
+              polylinesOut: polylinesRef.current,
+              polygonsOut: polygonsRef.current,
+              circlesInfluenceOut: circlesRef.current,
+              showPilotField: showInterventionLayer,
+              wireCircleMarker: wireCircleMarkerSegment,
+              parkingGeoJson: cphParkingGeo,
+              streetsGeoJson: cphStreetsGeo,
+            });
+          }
           return;
         }
         const modeSelected = selectedModeTypes?.length ? selectedModeTypes : [];
@@ -1569,164 +1605,92 @@ const HeroMap = ({
             geometryLinkage: "exact",
             spatialSystemHint: "Mode filter currently excludes all observed directional rows.",
           });
-          addInterventionLayer(cityData, showInterventionLayer);
           return;
         }
 
-        const cameraValueById = new Map<string, number[]>();
+        const scopedObservedPoints =
+          selectedKpi === "kpi4.2"
+            ? observedPoints
+            : pilotCameraIds
+              ? observedPoints.filter((point) => {
+                  const key = inferOtcWorkbookKey(String(point.properties?.streetName ?? ""));
+                  return key != null && pilotCameraIds.has(key);
+                })
+              : observedPoints;
 
-        observedPoints.forEach((point) => {
-          const props = point.properties || {};
-          const cameraId = inferCopenhagenCameraId(String(props.streetName ?? ""));
-          const modeBreakdown = props.modeBreakdown as
-            | {
-                pre: { bike: number; pedestrian: number; motorised: number; ptw: number; total: number };
-                post: { bike: number; pedestrian: number; motorised: number; ptw: number; total: number };
-              }
-            | undefined;
-
-          let baselineValue = Number(props.baselineValue ?? point.value ?? 0);
-          let interventionValue = Number(props.interventionValue ?? point.value ?? 0);
-          if (selectedKpi === "kpi1.2" && modeBreakdown) {
-            baselineValue = recomputeKpi12Pct(modeBreakdown.pre);
-            interventionValue = recomputeKpi12Pct(modeBreakdown.post);
-          }
-          const comparisonValue =
-            typeof props.comparisonValue === "number"
-              ? Number(props.comparisonValue)
-              : interventionValue - baselineValue;
-          const renderValue =
-            scenario === "baseline"
-              ? baselineValue
-              : scenario === "comparison"
-                ? comparisonValue
-                : interventionValue;
-          const compareValue = scenario === "comparison" ? Math.abs(renderValue) : renderValue;
-          if (compareValue < filterRange[0] || compareValue > filterRange[1]) return;
-
-          if (!cameraValueById.has(cameraId)) cameraValueById.set(cameraId, []);
-          cameraValueById.get(cameraId)!.push(interventionValue);
-
-          const color =
-            scenario === "comparison"
-              ? renderValue >= 0
-                ? "#22C55E"
-                : "#A78BFA"
-              : getValueColor(interventionValue, selectedKpi === "kpi2.1");
-          const segmentId = String(props.segmentId || props.id || point.id);
-          const direction = String(props.direction ?? props.mode ?? "n/a");
-          const isSelected = corridorMatchesSelection(
-            selectedJunctionSegmentId,
-            cameraId,
-            segmentId
-          );
-
-          const marker = L.circleMarker([point.lat, point.lon], {
-            radius: isSelected ? 8.8 : 7,
-            fillColor: color,
-            fillOpacity: isSelected ? 0.92 : 0.34,
-            color: isSelected ? "#ffffff" : "#E6E8FF",
-            weight: isSelected ? 2.1 : 1.2,
-            opacity: isSelected ? 1 : 0.45,
-          }).addTo(mapRef.current!);
-
-          const popup = `
-            <div style="font-family: 'DM Sans', sans-serif; padding: 8px; min-width: 205px;">
-              <p style="font-size: 11px; color: #8578C3; margin: 0 0 2px 0; text-transform: uppercase;">Directional mobility counts</p>
-              <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Camera/site: ${String(props.streetName ?? "Copenhagen camera")}</p>
-              <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Observed camera direction: ${direction}</p>
-              <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Selected mode: ${strictModeFilterActive ? modeSelected.join(", ") : "Active mobility (bike + pedestrian)"}</p>
-              <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Before: ${baselineValue.toFixed(1)}%</p>
-              <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Intervention: ${interventionValue.toFixed(1)}%</p>
-              <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Comparison: ${comparisonValue >= 0 ? "+" : ""}${comparisonValue.toFixed(1)} pp</p>
-              <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Observed directional count comparison (selected mode set): ${interventionValue.toFixed(1)}%</p>
-              <p style="font-size: 9px; color: #96C2EF; margin-top: 4px;">Source: OpenTrafficCam Excel (observed)</p>
-              <p style="font-size: 9px; color: #96C2EF; margin-top: 2px;">Data type: observed directional counts · Geometry: exact sensor location / linked street geometry</p>
-            </div>
-          `;
-          marker.bindPopup(popup);
-          const segmentName = `${String(props.streetName ?? "Camera")} · ${direction}`;
-          wireCircleMarkerSegment(
-            marker,
-            { segmentId, segmentName, speed: null, congestion: null },
-            segmentHandlers,
-            {
-              baseRadius: isSelected ? 8.8 : 7,
-              selectedSegmentId: selectedJunctionSegmentId,
+        const flowPoints = scopedObservedPoints
+          .map((point) => {
+            const props = point.properties || {};
+            const modeBreakdown = props.modeBreakdown as
+              | {
+                  pre: { bike: number; pedestrian: number; motorised: number; ptw: number; total: number };
+                  post: { bike: number; pedestrian: number; motorised: number; ptw: number; total: number };
+                }
+              | undefined;
+            let baselineValue = Number(props.baselineValue ?? point.value ?? 0);
+            let interventionValue = Number(props.interventionValue ?? point.value ?? 0);
+            if (selectedKpi === "kpi1.2" && modeBreakdown) {
+              baselineValue = recomputeKpi12Pct(modeBreakdown.pre);
+              interventionValue = recomputeKpi12Pct(modeBreakdown.post);
             }
-          );
-          circlesRef.current.push(marker);
+            const comparisonValue =
+              typeof props.comparisonValue === "number"
+                ? Number(props.comparisonValue)
+                : interventionValue - baselineValue;
+            const renderValue =
+              scenario === "baseline"
+                ? baselineValue
+                : scenario === "comparison"
+                  ? comparisonValue
+                  : interventionValue;
+            const compareValue = scenario === "comparison" ? Math.abs(renderValue) : renderValue;
+            return {
+              point,
+              compareValue,
+              baselineValue,
+              interventionValue,
+              comparisonValue,
+            };
+          })
+          .filter(
+            ({ compareValue }) => compareValue >= filterRange[0] && compareValue <= filterRange[1]
+          )
+          .map(({ point, baselineValue, interventionValue, comparisonValue }) => ({
+            lat: point.lat,
+            lon: point.lon,
+            id: point.id,
+            value: point.value,
+            properties: {
+              ...(point.properties || {}),
+              baselineValue,
+              interventionValue,
+              comparisonValue,
+            },
+          }));
 
-          const arrow = L.marker([point.lat, point.lon], {
-            icon: L.divIcon({
-              className: "cph-direction-arrow",
-              html: `<div style="transform: translate(10px, -10px) rotate(${directionBearingDeg(direction)}deg); color:${color}; opacity:${isSelected ? 0.95 : 0.35}; font-size:${isSelected ? 17 : 14}px; font-weight:700;">➤</div>`,
-              iconSize: [20, 20],
-              iconAnchor: [10, 10],
-            }),
-            interactive: false,
-            zIndexOffset: 750,
-          }).addTo(mapRef.current!);
-          markersRef.current.push(arrow);
+        renderCopenhagenMapLayers({
+          map: mapRef.current!,
+          pilotId: selectedPilotId,
+          observedPoints: flowPoints,
+          scenario,
+          selectedSegmentId: activeMapSegmentId,
+          segmentHandlers,
+          getValueColor,
+          selectedKpi,
+          modeFilterLabel: strictModeFilterActive
+            ? modeSelected.join(", ")
+            : "Active mobility (bike + pedestrian)",
+          markersOut: markersRef.current,
+          circlesOut: circlesRef.current,
+          polylinesOut: polylinesRef.current,
+          polygonsOut: polygonsRef.current,
+          circlesInfluenceOut: circlesRef.current,
+          showPilotField: showInterventionLayer,
+          wireCircleMarker: wireCircleMarkerSegment,
+          parkingGeoJson: cphParkingGeo,
+          streetsGeoJson: cphStreetsGeo,
         });
 
-        if (copenhagenStreetGeoJson?.features?.length) {
-          copenhagenStreetGeoJson.features.forEach((feature) => {
-            const cameraId = feature.properties?.cameraId ?? "unknown";
-            if (pilotCameraIds && !pilotCameraIds.has(cameraId)) return;
-            const coords = feature.geometry?.coordinates;
-            if (!coords || coords.length < 2) return;
-            const vals = cameraValueById.get(cameraId) ?? [];
-            const avg = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 50;
-            const isSelected = corridorMatchesSelection(
-              selectedJunctionSegmentId,
-              cameraId,
-              `corridor:${cameraId}`
-            );
-              const line = L.polyline(
-              coords.map(([lon, lat]) => [lat, lon] as [number, number]),
-              {
-                  color: isSelected ? "#ffffff" : getValueColor(avg, false),
-                  weight: isSelected ? 6.5 : 4.2,
-                  opacity: isSelected ? 0.95 : 0.34,
-                lineCap: "round",
-                lineJoin: "round",
-              }
-            ).addTo(mapRef.current!);
-            line.bindPopup(`
-              <div style="font-family: 'DM Sans', sans-serif; padding: 6px; min-width: 170px;">
-                  <p style="font-size: 11px; color: #8578C3; margin: 0 0 3px 0; text-transform: uppercase;">Linked local street geometry</p>
-                <p style="font-size: 10px; color: #96C2EF; margin: 0;">Street: ${feature.properties?.street ?? "n/a"}</p>
-                  <p style="font-size: 9px; color: #96C2EF; margin-top: 4px;">Source: OpenTrafficCam observed dataset + OSM street centerline</p>
-              </div>
-            `);
-            const corridorSegId = `corridor:${cameraId}`;
-            const corridorName = `${feature.properties?.street ?? "Street corridor"} · ${feature.properties?.siteName ?? cameraId}`;
-            wirePolylineSegment(
-              line,
-              {
-                segmentId: corridorSegId,
-                segmentName: corridorName,
-                speed: null,
-                congestion: avg / 100,
-              },
-              segmentHandlers,
-              {
-                baseStyle: {
-                  color: isSelected ? "#ffffff" : getValueColor(avg, false),
-                  weight: isSelected ? 6.5 : 4.2,
-                  opacity: isSelected ? 0.95 : 0.34,
-                  lineCap: "round",
-                  lineJoin: "round",
-                },
-                selectedSegmentId: selectedJunctionSegmentId,
-              }
-            );
-            polylinesRef.current.push(line);
-          });
-        }
-
-        addInterventionLayer(cityData, showInterventionLayer);
         return;
       }
 
@@ -1908,174 +1872,7 @@ const HeroMap = ({
 
         const isCopenhagenCity = currentCity.toLowerCase().includes("copenhagen");
         if (selectedKpi === "kpi1.2") {
-          const isCopenhagen = isCopenhagenCity;
-          if (isCopenhagen) {
-            const pilotCameraIds = getCopenhagenCameraIdsForPilot(selectedPilotId);
-            const modeSelected = selectedModeTypes?.length ? selectedModeTypes : [];
-            const selectFromBreakdown = (breakdown: any): number => {
-              const total = Number(breakdown?.total ?? 0);
-              if (total <= 0) return 0;
-              const hasAny = modeSelected.length > 0 && !areAllTravelModesSelected(modeSelected);
-              const bike = Number(breakdown?.bike ?? 0);
-              const pedestrian = Number(breakdown?.pedestrian ?? 0);
-              const motorised = Number(breakdown?.motorised ?? 0);
-              const ptw = Number(breakdown?.ptw ?? 0);
-              if (!hasAny) {
-                return ((bike + pedestrian) / total) * 100;
-              }
-              let selected = 0;
-              if (modeSelected.includes("Cycle")) selected += bike;
-              if (modeSelected.includes("Pedestrian")) selected += pedestrian;
-              if (modeSelected.includes("Private Car")) selected += motorised;
-              if (modeSelected.includes("Public Transport")) selected += motorised;
-              if (modeSelected.includes("PTW")) selected += ptw;
-              return (selected / total) * 100;
-            };
-
-            const cameraValueById = new Map<string, number[]>();
-
-            points.forEach((point) => {
-              if (point.properties?.dataOrigin !== "local-city-dataset") return;
-              const props = point.properties || {};
-              const modeBreakdown = props.modeBreakdown as
-                | {
-                    pre: { bike: number; pedestrian: number; motorised: number; ptw: number; total: number };
-                    post: { bike: number; pedestrian: number; motorised: number; ptw: number; total: number };
-                  }
-                | undefined;
-              if (!modeBreakdown) return;
-
-              const baselinePct = selectFromBreakdown(modeBreakdown.pre);
-              const interventionPct = selectFromBreakdown(modeBreakdown.post);
-              const scenarioValue =
-                scenario === "baseline"
-                  ? baselinePct
-                  : scenario === "comparison"
-                    ? interventionPct - baselinePct
-                    : interventionPct;
-              const compareValue = scenario === "comparison" ? Math.abs(scenarioValue) : scenarioValue;
-              if (compareValue < filterRange[0] || compareValue > filterRange[1]) return;
-
-              const cameraId = inferCopenhagenCameraId(String(props.streetName ?? ""));
-              if (!cameraValueById.has(cameraId)) cameraValueById.set(cameraId, []);
-              cameraValueById.get(cameraId)!.push(interventionPct);
-
-              const color =
-                scenario === "comparison"
-                  ? scenarioValue >= 0
-                    ? "#22C55E"
-                    : "#A78BFA"
-                  : getValueColor(interventionPct, false);
-              const segmentId = String(props.segmentId || props.id || point.id);
-              const isSelected = corridorMatchesSelection(
-                selectedJunctionSegmentId,
-                cameraId,
-                segmentId
-              );
-              const size = Math.max(6, Math.min(18, 6 + interventionPct * 0.12));
-              const circle = L.circleMarker([point.lat, point.lon], {
-                radius: isSelected ? size + 1.4 : size,
-                fillColor: color,
-                fillOpacity: isSelected ? 0.9 : 0.34,
-                color: isSelected ? "#ffffff" : "#E6E8FF",
-                weight: isSelected ? 2.1 : 1.2,
-                opacity: isSelected ? 1 : 0.45,
-              }).addTo(mapRef.current!);
-
-              const direction = String(props.direction ?? props.mode ?? "n/a");
-              const popup = `
-                <div style="font-family: 'DM Sans', sans-serif; padding: 8px; min-width: 200px;">
-                  <p style="font-size: 10px; color: #2F1B6D; margin: 0 0 3px 0; font-weight: 700;">Data Quality</p>
-                  <div style="margin-bottom: 4px;">${badge("Exact")}${badge("Observed")}${badge("Per direction")}${badge("Pre + Post")}</div>
-                  <p style="font-size: 11px; color: #8578C3; margin: 0 0 2px 0; text-transform: uppercase;">Directional mobility counts</p>
-                  <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Camera/site: ${String(props.streetName ?? "Copenhagen camera")}</p>
-                  <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Observed camera direction: ${direction}</p>
-                  <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Baseline: ${baselinePct.toFixed(1)}%</p>
-                  <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Intervention: ${interventionPct.toFixed(1)}%</p>
-                  <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Active mobility share: ${interventionPct.toFixed(1)}%</p>
-                  <p style="font-size: 11px; font-weight: 700; color: ${scenarioValue >= 0 ? "#22C55E" : "#A78BFA"}; margin-top: 4px;">Comparison: ${scenarioValue >= 0 ? "+" : ""}${scenarioValue.toFixed(1)} pp</p>
-                  <p style="font-size: 9px; color: #96C2EF; margin-top: 4px;">Source: OpenTrafficCam observed dataset</p>
-                  ${props.spatialNote ? `<p style="font-size: 9px; color: #96C2EF; margin-top: 4px;">${String(props.spatialNote)}</p>` : ""}
-                </div>
-              `;
-              circle.bindPopup(popup);
-              circle.on("click", () => {
-                const segmentName = `${String(props.streetName ?? "Camera")} · ${direction}`;
-                onSegmentFocus?.({
-                  segmentName,
-                  speed: null,
-                  congestion: null,
-                });
-                onJunctionSegmentClickRef.current?.({
-                  segmentId,
-                  segmentName,
-                  speed: null,
-                  congestion: null,
-                });
-              });
-              circlesRef.current.push(circle);
-
-              const bearing = directionBearingDeg(direction);
-              const arrow = L.marker([point.lat, point.lon], {
-                icon: L.divIcon({
-                  className: "cph-direction-arrow",
-                  html: `<div style="transform: translate(10px, -10px) rotate(${bearing}deg); color:${color}; opacity:${isSelected ? 0.95 : 0.35}; font-size:${isSelected ? 17 : 14}px; font-weight:700;">➤</div>`,
-                  iconSize: [20, 20],
-                  iconAnchor: [10, 10],
-                }),
-                interactive: false,
-                zIndexOffset: 750,
-              }).addTo(mapRef.current!);
-              markersRef.current.push(arrow);
-            });
-
-            if (copenhagenStreetGeoJson?.features?.length) {
-              copenhagenStreetGeoJson.features.forEach((feature) => {
-                const cameraId = feature.properties?.cameraId ?? "unknown";
-                if (pilotCameraIds && !pilotCameraIds.has(cameraId)) return;
-                const coords = feature.geometry?.coordinates;
-                if (!coords || coords.length < 2) return;
-                const vals = cameraValueById.get(cameraId) ?? [];
-                const avg = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 50;
-                const streetColor = getValueColor(avg, false);
-                const isSelected = corridorMatchesSelection(
-                  selectedJunctionSegmentId,
-                  cameraId,
-                  `corridor:${cameraId}`
-                );
-                const latLngs: [number, number][] = coords.map(([lon, lat]) => [lat, lon]);
-                const poly = L.polyline(latLngs, {
-                  color: isSelected ? "#ffffff" : streetColor,
-                  weight: isSelected ? 6.5 : 4.2,
-                  opacity: isSelected ? 0.95 : 0.34,
-                  lineCap: "round",
-                  lineJoin: "round",
-                }).addTo(mapRef.current!);
-                poly.bindPopup(`
-                  <div style="font-family: 'DM Sans', sans-serif; padding: 6px; min-width: 170px;">
-                    <p style="font-size: 11px; color: #8578C3; margin: 0 0 3px 0; text-transform: uppercase;">Corridor activity</p>
-                    <p style="font-size: 10px; color: #96C2EF; margin: 0;">Street: ${feature.properties?.street ?? "n/a"}</p>
-                    <p style="font-size: 9px; color: #96C2EF; margin-top: 4px;">Source: OSM via Overpass</p>
-                  </div>
-                `);
-                poly.on("click", () => {
-                  const segmentName = `${feature.properties?.street ?? "Street corridor"} · ${feature.properties?.siteName ?? cameraId}`;
-                  onSegmentFocus?.({
-                    segmentName,
-                    speed: null,
-                    congestion: null,
-                  });
-                  onJunctionSegmentClickRef.current?.({
-                    segmentId: `corridor:${cameraId}`,
-                    segmentName,
-                    speed: null,
-                    congestion: null,
-                  });
-                });
-                polylinesRef.current.push(poly);
-              });
-            }
-
+          if (isCopenhagenCity && isCopenhagenCameraKpi(selectedKpi)) {
             addInterventionLayer(cityData, showInterventionLayer);
             return;
           }
@@ -2268,7 +2065,6 @@ const HeroMap = ({
           return;
         }
         if (currentCity.toLowerCase().includes("copenhagen") && selectedKpi === "kpi4.2") {
-          // Copenhagen KPI4.2 has no observed accessibility dataset linked yet.
           addInterventionLayer(cityData, showInterventionLayer);
           return;
         }
@@ -2455,17 +2251,32 @@ const HeroMap = ({
       isKpiSupportedByPilot,
       issyJunctionStudy,
       selectedJunctionSegmentId,
+      hoveredJunctionSegmentId,
       onSegmentHover,
       pilotGeometrySpec,
       runtimeLinkage,
       segmentInteractionEnabled,
       suppressMapSpatialLayers,
+      cphParkingGeo,
+      cphStreetsGeo,
+      trikalaSegmentInsights,
     ]
   );
 
   useEffect(() => {
     if (!pilotFlyToSignal || !mapRef.current || viewLevel !== "PILOT_DATA") return;
-    const maxZoom = pilotGeometrySpec?.maxZoom ?? 18;
+    const maxZoom = pilotFlyToSignal.maxZoom ?? pilotGeometrySpec?.maxZoom ?? 18;
+    if (pilotFlyToSignal.bounds) {
+      const bounds = L.latLngBounds(pilotFlyToSignal.bounds);
+      mapRef.current.fitBounds(bounds, {
+        padding: [52, 52],
+        maxZoom,
+        animate: true,
+        duration: 0.85,
+      });
+      return;
+    }
+    if (pilotFlyToSignal.lat == null || pilotFlyToSignal.lng == null) return;
     const requested = pilotFlyToSignal.zoom ?? Math.max(mapRef.current.getZoom(), 13);
     const zoom = Math.min(requested, maxZoom);
     mapRef.current.flyTo([pilotFlyToSignal.lat, pilotFlyToSignal.lng], zoom, { duration: 0.85 });
@@ -2474,7 +2285,39 @@ const HeroMap = ({
   useEffect(() => {
     if (!mapRef.current || pilotGeometrySpec?.maxZoom == null) return;
     mapRef.current.setMaxZoom(pilotGeometrySpec.maxZoom);
-  }, [pilotGeometrySpec?.maxZoom]);
+    if (pilotGeometrySpec.minZoom != null) {
+      mapRef.current.setMinZoom(pilotGeometrySpec.minZoom);
+    } else if (!isTrikalaCity) {
+      mapRef.current.setMinZoom(4);
+    }
+  }, [pilotGeometrySpec?.maxZoom, pilotGeometrySpec?.minZoom, isTrikalaCity]);
+
+  useEffect(() => {
+    if (!mapRef.current || !isTrikalaCity || viewLevel !== "PILOT_DATA") return;
+    const map = mapRef.current;
+    const lockedZoom = trikalaMapZoom();
+    map.scrollWheelZoom.disable();
+    map.doubleClickZoom.disable();
+    map.touchZoom.disable();
+
+    const enforceZoom = () => {
+      if (map.getZoom() !== lockedZoom) {
+        map.setZoom(lockedZoom, { animate: false });
+      }
+    };
+
+    enforceZoom();
+    map.on("zoomend", enforceZoom);
+
+    return () => {
+      map.off("zoomend", enforceZoom);
+      map.scrollWheelZoom.enable();
+      map.doubleClickZoom.enable();
+      map.touchZoom.enable();
+      map.setMinZoom(4);
+      map.setMaxZoom(19);
+    };
+  }, [isTrikalaCity, viewLevel]);
 
   useEffect(() => {
     if (!currentCity || !onDataQualitySummaryChange) return;
@@ -2576,6 +2419,20 @@ const HeroMap = ({
         confidence: "High",
         provenanceType: "observed",
         geometryLinkage: "matched",
+        spatialSystemHint: spatialPlan.legendHint,
+      });
+      return;
+    }
+    if (currentCity.toLowerCase().includes("trikala")) {
+      const total = localCityPoints?.length || 0;
+      onDataQualitySummaryChange({
+        recordsLabel: `${total.toLocaleString()} survey aggregates`,
+        spatialQuality: "inferred pilot anchor (no intervention geometry)",
+        dataType: "observed survey Likert aggregates",
+        temporalCoverage: total > 0 ? "before-after" : "unavailable",
+        confidence: total > 0 ? "Medium" : "Low",
+        provenanceType: "observed",
+        geometryLinkage: "inferred",
         spatialSystemHint: spatialPlan.legendHint,
       });
       return;
@@ -2699,7 +2556,11 @@ const HeroMap = ({
               onPilotSelect?.(pilot);
               setViewLevel("PILOT_DATA");
               onCitySelect?.(city.city);
-              mapRef.current!.flyTo([pilot.lat ?? city.lat, pilot.lng ?? city.lon], 14, { duration: 0.9 });
+              mapRef.current!.flyTo(
+                [pilot.lat ?? city.lat, pilot.lng ?? city.lon],
+                isTrikalaCityName(city.city) ? trikalaMapZoom() : 14,
+                { duration: 0.9 }
+              );
               setTimeout(() => {
                 clearLayers();
                 addHexbinData(city.city, selectedModeTypes);
@@ -2750,7 +2611,7 @@ const HeroMap = ({
           setViewLevel("PILOT_DATA");
           mapRef.current.flyTo(
             [selectedPilot.lat ?? cityData.lat, selectedPilot.lng ?? cityData.lon],
-            14,
+            isTrikalaCityName(selectedCity) ? trikalaMapZoom() : 14,
             { duration: 1.2 }
           );
           setTimeout(() => {
@@ -2785,7 +2646,7 @@ const HeroMap = ({
                 setViewLevel("PILOT_DATA");
                 mapRef.current!.flyTo(
                   [pilot.lat ?? cityData.lat, pilot.lng ?? cityData.lon],
-                  14,
+                  isTrikalaCityName(selectedCity) ? trikalaMapZoom() : 14,
                   { duration: 0.9 }
                 );
                 setTimeout(() => {
@@ -2859,6 +2720,22 @@ const HeroMap = ({
           backdrop-filter: blur(22px);
           -webkit-backdrop-filter: blur(22px);
           border: 1px solid rgba(255,255,255,0.22) !important;
+        }
+        .cph-parking-popup .leaflet-popup-content-wrapper {
+          background: #131a30 !important;
+          color: #ffffff !important;
+          border: 1px solid #2b385c !important;
+          border-radius: 6px !important;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+          padding: 8px 12px !important;
+        }
+        .cph-parking-popup .leaflet-popup-content {
+          margin: 0 !important;
+        }
+        .cph-parking-popup .leaflet-popup-tip {
+          background: #131a30 !important;
+          border: 1px solid #2b385c !important;
+          box-shadow: none !important;
         }
       `}</style>
       <div className="absolute inset-0 pointer-events-none z-10 bg-gradient-to-b from-background/30 via-transparent to-background/20" />
