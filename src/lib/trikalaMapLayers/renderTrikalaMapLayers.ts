@@ -1,9 +1,8 @@
 import L from "leaflet";
 import type { LocalCityPoint } from "@/services/localCityData";
 import type { TrikalaSegmentInsight } from "@/services/trikalaSurveyParser";
-import { renderInfluenceField } from "@/lib/renderInfluenceField";
 import type { SegmentInteractionHandlers } from "@/lib/wireMapSegmentInteraction";
-import { wireCircleMarkerSegment, wirePolylineSegment } from "@/lib/wireMapSegmentInteraction";
+import { wirePolylineSegment, wireMarkerSegment } from "@/lib/wireMapSegmentInteraction";
 import {
   buildSmartCrossingPolyline,
   jitterSurveyPosition,
@@ -14,17 +13,24 @@ import {
   resolveTrikalaSegmentTheme,
   resolveTrikalaSubSegmentAccent,
   resolveTrikalaSubSegmentLabel,
-  surveyMarkerHtml,
   themeColor,
   TRIKALA_SEGMENT_RING_THEMES,
   type TrikalaThemeId,
 } from "./trikalaMapStyles";
+import type { TrikalaLocation } from "@/data/trikalaLocationRegistry";
+import { renderTrikalaInfrastructureLayers } from "./renderTrikalaInfrastructureLayers";
+import { renderTrikalaModeShareRadar } from "./renderTrikalaModeShareRadar";
+import { renderTrikalaPilot2ModeShareRadar } from "./renderTrikalaPilot2ModeShareRadar";
+import { resolveTrikalaSurveyIconSpec } from "./trikalaPointIcons";
+import { createMapPointDivIcon } from "@/lib/mapPointIcons";
 
 export interface RenderTrikalaMapLayersOptions {
   map: L.Map;
   anchor: { lat: number; lng: number };
+  selectedPilotId?: string | null;
   records: LocalCityPoint[];
   segmentInsights: TrikalaSegmentInsight[];
+  infrastructureLocations?: TrikalaLocation[];
   selectedKpi: string;
   scenario: "baseline" | "intervention" | "comparison";
   selectedSegmentId?: string | null;
@@ -32,8 +38,9 @@ export interface RenderTrikalaMapLayersOptions {
   segmentHandlers: SegmentInteractionHandlers;
   getValueColor: (value: number, safetyKpi: boolean) => string;
   markersOut: L.Marker[];
-  circlesOut: L.Circle[];
+  circlesOut: Array<L.Circle | L.CircleMarker>;
   polylinesOut: L.Polyline[];
+  polygonsOut?: L.Polygon[];
   wireCircleMarker: (
     marker: L.CircleMarker,
     meta: { segmentId: string; segmentName: string; speed: null; congestion: number | null },
@@ -61,39 +68,6 @@ function hasSmartCrossingRecords(records: LocalCityPoint[]): boolean {
   );
 }
 
-function renderInfluenceAndPulse(
-  map: L.Map,
-  anchor: { lat: number; lng: number },
-  circlesOut: L.Circle[]
-): void {
-  renderInfluenceField(map, circlesOut, {
-    center: [anchor.lat, anchor.lng],
-    radiusMeters: 220,
-    tone: "neutral",
-  });
-
-  const outline = L.circle([anchor.lat, anchor.lng], {
-    radius: 220,
-    color: "rgba(255,255,255,0.18)",
-    weight: 1.1,
-    dashArray: "5 7",
-    fillOpacity: 0,
-    interactive: false,
-  }).addTo(map);
-  circlesOut.push(outline);
-
-  const pulse = L.circle([anchor.lat, anchor.lng], {
-    radius: 180,
-    color: "rgba(0,255,255,0.35)",
-    weight: 1.5,
-    fillColor: "#00ffff",
-    fillOpacity: 0.12,
-    className: "trikala-survey-pulse-glow",
-    interactive: false,
-  }).addTo(map);
-  circlesOut.push(pulse);
-}
-
 function renderSegmentGlowRings(
   map: L.Map,
   anchor: { lat: number; lng: number },
@@ -119,9 +93,9 @@ function renderSegmentGlowRings(
       const ring = L.circle([anchor.lat, anchor.lng], {
         radius: radiusM + ringOffset,
         color,
-        weight: ringIdx === 0 ? 2 : 1.2,
-        opacity: 0.55 - ringIdx * 0.1,
-        fillOpacity: 0,
+        weight: ringIdx === 0 ? 2.8 : 2,
+        opacity: 0.82 - ringIdx * 0.12,
+        fillOpacity: 0.04,
         interactive: false,
         className: "tri-segment-glow-ring",
       }).addTo(map);
@@ -130,10 +104,10 @@ function renderSegmentGlowRings(
 
     const innerCore = L.circle([anchor.lat, anchor.lng], {
       radius: 12 + segmentIndex * 4,
-      color: "rgba(255,255,255,0.35)",
-      weight: 1,
+      color: "rgba(255,255,255,0.55)",
+      weight: 1.4,
       fillColor: color,
-      fillOpacity: 0.08,
+      fillOpacity: 0.2,
       interactive: false,
     }).addTo(map);
     circlesOut.push(innerCore);
@@ -190,17 +164,40 @@ function renderSmartCrossingVector(
   polylinesOut.push(polyline);
 }
 
+function shouldHideAggregateSurveyMarkers(
+  selectedKpi: string,
+  selectedPilotId: string | null | undefined,
+  infrastructureLocations: TrikalaLocation[],
+  modeShareRadarActive: boolean
+): boolean {
+  if (modeShareRadarActive) return true;
+  // Pilot 3 always shows survey pins alongside sensor nodes (different KPI semantics).
+  if (selectedPilotId === "tri-p3") return false;
+  if (selectedPilotId !== "tri-p1") return false;
+  if (selectedKpi !== "kpi2.1" && selectedKpi !== "kpi4.2") return false;
+  return infrastructureLocations.some(
+    (l) => l.kind === "traffic_signal" || l.kind === "smart_crossing_site"
+  );
+}
+
 function renderSurveyMarkers(
   map: L.Map,
   records: LocalCityPoint[],
   selectedKpi: string,
+  selectedPilotId: string | null | undefined,
   selectedSegmentId: string | null | undefined,
   filterRange: [number, number],
   segmentHandlers: SegmentInteractionHandlers,
   markersOut: L.Marker[],
   circlesOut: L.Circle[],
-  wireCircleMarker: RenderTrikalaMapLayersOptions["wireCircleMarker"]
+  wireCircleMarker: RenderTrikalaMapLayersOptions["wireCircleMarker"],
+  infrastructureLocations: TrikalaLocation[] = [],
+  modeShareRadarActive = false
 ): void {
+  if (shouldHideAggregateSurveyMarkers(selectedKpi, selectedPilotId, infrastructureLocations, modeShareRadarActive)) {
+    return;
+  }
+
   const visible = records.filter(
     (p) => p.value >= filterRange[0] && p.value <= filterRange[1]
   );
@@ -208,29 +205,26 @@ function renderSurveyMarkers(
   visible.forEach((point, index) => {
     const props = point.properties || {};
     const segmentId = String(props.segmentId ?? point.id);
-    const [lat, lon] = jitterSurveyPosition(point.lat, point.lon, index, visible.length, segmentId);
-    const theme = resolveTrikalaSegmentTheme(segmentId, selectedKpi);
-    const accentColor = resolveTrikalaSubSegmentAccent(segmentId);
     const isEnvironmental =
       props.datasetKind === "environmental-sensor" || segmentId.includes("environmental");
+    if (
+      isEnvironmental &&
+      selectedKpi === "kpi3.2" &&
+      infrastructureLocations.some((l) => l.kind === "air_quality_sensor")
+    ) {
+      return;
+    }
+    const [lat, lon] = jitterSurveyPosition(point.lat, point.lon, index, visible.length, segmentId);
+    const accentColor = resolveTrikalaSubSegmentAccent(segmentId);
     const isSelected = selectedSegmentId === segmentId;
     const segName = resolveTrikalaSubSegmentLabel(segmentId, props);
+    const iconSpec = resolveTrikalaSurveyIconSpec(segmentId, selectedKpi, props);
     const metricLabel = String(props.likertLabel ?? props.streetName ?? "Survey metric");
 
     const marker = L.marker([lat, lon], {
-      icon: L.divIcon({
-        className: "tri-survey-icon",
-        html: surveyMarkerHtml({
-          theme,
-          accentColor,
-          isSelected,
-          intensity: point.value,
-          isEnvironmental,
-        }),
-        iconSize: [28, 28],
-        iconAnchor: [14, 14],
-      }),
+      icon: createMapPointDivIcon(iconSpec, `${iconSpec.label} · ${segName}`),
       zIndexOffset: isSelected ? 1200 : 1000 + index,
+      interactive: true,
     }).addTo(map);
     marker.bindPopup(buildSurveyPopupHtml(point));
     marker.bindTooltip(
@@ -243,66 +237,123 @@ function renderSurveyMarkers(
       }
     );
 
-    const hit = L.circleMarker([lat, lon], {
-      radius: 14,
-      fillOpacity: 0,
-      opacity: 0,
-      weight: 0,
-    }).addTo(map);
-
-    wireCircleMarker(
-      hit,
+    wireMarkerSegment(
+      marker,
       {
         segmentId,
-        segmentName: segName,
+        segmentName: `${iconSpec.label} · ${segName}`,
         speed: null,
         congestion: point.value / 100,
       },
-      segmentHandlers,
-      { baseRadius: 14, highlightRadius: 17, selectedSegmentId }
+      segmentHandlers
     );
 
     markersOut.push(marker);
-    circlesOut.push(hit);
   });
+}
+
+function shouldRenderWomenMobilityRings(
+  selectedPilotId: string | null | undefined,
+  selectedKpi: string
+): boolean {
+  return (
+    selectedPilotId === "tri-p1" &&
+    (selectedKpi === "kpi1.2" || selectedKpi === "kpi4.1")
+  );
 }
 
 export function renderTrikalaMapLayers(options: RenderTrikalaMapLayersOptions): void {
   const {
     map,
     anchor,
+    selectedPilotId,
     records,
     segmentInsights,
+    infrastructureLocations = [],
     selectedKpi,
+    scenario,
     selectedSegmentId,
     filterRange = [0, 100],
     segmentHandlers,
     markersOut,
     circlesOut,
     polylinesOut,
+    polygonsOut = [],
     wireCircleMarker,
   } = options;
 
-  renderInfluenceAndPulse(map, anchor, circlesOut);
-  renderSegmentGlowRings(map, anchor, segmentInsights, circlesOut, selectedKpi);
-  renderSmartCrossingVector(
-    map,
-    anchor,
-    records,
-    selectedKpi,
-    selectedSegmentId,
-    segmentHandlers,
-    polylinesOut
-  );
+  const modeShareRadarActive =
+    (selectedPilotId === "tri-p1" &&
+      selectedKpi === "kpi1.2" &&
+      renderTrikalaModeShareRadar({
+        map,
+        hub: anchor,
+        segmentInsights,
+        scenario,
+        selectedSegmentId,
+        segmentHandlers,
+        markersOut,
+        circlesOut,
+        polylinesOut,
+        wireCircleMarker,
+      })) ||
+    (selectedPilotId === "tri-p2" &&
+      selectedKpi === "kpi1.2" &&
+      renderTrikalaPilot2ModeShareRadar({
+        map,
+        hub: anchor,
+        locations: infrastructureLocations,
+        scenario,
+        selectedSegmentId,
+        segmentHandlers,
+        markersOut,
+        circlesOut,
+        polylinesOut,
+        wireCircleMarker,
+      }));
+
+  if (shouldRenderWomenMobilityRings(selectedPilotId, selectedKpi) && !modeShareRadarActive) {
+    renderSegmentGlowRings(map, anchor, segmentInsights, circlesOut as L.Circle[], selectedKpi);
+  }
+
+  if (infrastructureLocations.length > 0) {
+    renderTrikalaInfrastructureLayers({
+      map,
+      anchor,
+      locations: infrastructureLocations,
+      selectedKpi,
+      selectedPilotId,
+      selectedSegmentId,
+      segmentHandlers,
+      markersOut,
+      circlesOut,
+      polylinesOut,
+      polygonsOut,
+    });
+  } else {
+    renderSmartCrossingVector(
+      map,
+      anchor,
+      records,
+      selectedKpi,
+      selectedSegmentId,
+      segmentHandlers,
+      polylinesOut
+    );
+  }
+
   renderSurveyMarkers(
     map,
     records,
     selectedKpi,
+    selectedPilotId,
     selectedSegmentId,
     filterRange,
     segmentHandlers,
     markersOut,
     circlesOut,
-    wireCircleMarker
+    wireCircleMarker,
+    infrastructureLocations,
+    modeShareRadarActive
   );
 }

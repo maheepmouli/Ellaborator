@@ -1,4 +1,12 @@
 import { COPENHAGEN_TELRAAM_OUTCOMES } from "@/data/copenhagenLocationRegistry";
+import type { CopenhagenNearEncountersSnapshot } from "@/types/copenhagen-encounters";
+import type { CopenhagenEmissionsSnapshot } from "@/types/copenhagen-emissions";
+import { loadCopenhagenNearEncountersSnapshot } from "@/services/copenhagenEncounterSnapshots";
+import { loadCopenhagenEmissionsSnapshot } from "@/services/copenhagenEmissionsSnapshots";
+import {
+  co2GPerHourToKpiIntensity,
+  co2ReductionPct,
+} from "@/lib/copenhagenEmissionsModel";
 import type { NormalizedCityRecord } from "@/types/normalized-city-data";
 
 const BUNDLE_BASE = "/data/copenhagen";
@@ -11,7 +19,9 @@ export type CopenhagenDatasetKind =
   | "parking"
   | "tube"
   | "accessibility"
-  | "flow_camera";
+  | "flow_camera"
+  | "near_encounter"
+  | "emissions";
 
 export type CopenhagenExtendedRecord = NormalizedCityRecord & {
   datasetKind?: CopenhagenDatasetKind;
@@ -61,7 +71,6 @@ type AccessibilityBundle = {
   netBikeBays: number;
   netCarBaysRemoved: number;
   cargoBikeBays: number;
-  partnerCrossCheck?: { bikeSpaces: number; cargoSpaces: number; footprintSqM: number };
   source?: string;
 };
 
@@ -537,8 +546,11 @@ function accessibilityRecords(kpiId: string, bundle: AccessibilityBundle): Copen
     });
   }
 
-  const bikeGain = bundle.partnerCrossCheck?.bikeSpaces ?? bundle.netBikeBays;
-  const cargo = bundle.cargoBikeBays || bundle.partnerCrossCheck?.cargoSpaces || 0;
+  const bikeGain = bundle.netBikeBays;
+  const cargo = bundle.cargoBikeBays;
+  if (bikeGain <= 0 && cargo <= 0 && bundle.netCarBaysRemoved <= 0) {
+    return records;
+  }
   records.push({
     id: "copenhagen-a11y-vandkunsten-summary",
     city: "Copenhagen",
@@ -557,8 +569,8 @@ function accessibilityRecords(kpiId: string, bundle: AccessibilityBundle): Copen
     ),
     comparisonValue: bundle.netCarBaysRemoved,
     mode: "Vandkunsten hub",
-    source: "I100275 parking inventory + partner deployment facts",
-    method: `${method} Summary: ${bikeGain} bike bays, ${cargo} cargo bays, ${bundle.netCarBaysRemoved} car bays removed.`,
+    source: "I100275 parking inventory (Eksisterende forhold vs Udført)",
+    method: `${method} Inventory delta: ${bikeGain > 0 ? `+${bikeGain} bike bays` : bikeGain < 0 ? `${bikeGain} bike bays` : "no net bike bay change"}, ${cargo > 0 ? `${cargo} cargo bike bays` : "no cargo bays in inventory"}, ${bundle.netCarBaysRemoved} net car bays removed.`,
     type: "derived",
     spatialQuality: "exact",
     geometryLinkage: "exact",
@@ -695,12 +707,125 @@ function irapRecords(kpiId: string, sites: IrapSite[]): CopenhagenExtendedRecord
     }));
 }
 
+function nearEncounterRecords(
+  kpiId: string,
+  snapshot: CopenhagenNearEncountersSnapshot
+): CopenhagenExtendedRecord[] {
+  if (kpiId !== "kpi2.1") return [];
+  const bySite = new Map<
+    string,
+    {
+      siteName: string;
+      lat: number;
+      lon: number;
+      pre: number;
+      post: number;
+      sourceKind: "partner" | "proxy";
+      method: string;
+    }
+  >();
+  for (const row of snapshot.records) {
+    const existing = bySite.get(row.siteId) ?? {
+      siteName: row.siteName,
+      lat: row.lat,
+      lon: row.lon,
+      pre: 0,
+      post: 0,
+      sourceKind: row.sourceKind,
+      method: row.method,
+    };
+    if (row.period === "pre") existing.pre = row.encounterCount;
+    else existing.post = row.encounterCount;
+    bySite.set(row.siteId, existing);
+  }
+  return [...bySite.entries()].map(([siteId, site]) => {
+    const baselineValue = clampPercent(Math.min(100, site.pre / 2));
+    const interventionValue = clampPercent(Math.min(100, site.post / 2));
+    const label = site.sourceKind === "partner" ? "Partner observed" : "OTC proxy";
+    return {
+      id: `copenhagen-near-encounter-${siteId}`,
+      city: "Copenhagen",
+      cityId: "copenhagen",
+      interventionId: "cph-p3",
+      kpiId,
+      sourceFile: `${BUNDLE_BASE}/near-encounters-snapshot.json`,
+      geometryType: "point",
+      lat: site.lat,
+      lng: site.lon,
+      geometry: [[site.lat, site.lon]],
+      value: interventionValue,
+      baselineValue,
+      interventionValue,
+      comparisonValue: interventionValue - baselineValue,
+      mode: site.siteName,
+      source: `Near encounter analysis (${label})`,
+      method: site.method,
+      type: site.sourceKind === "partner" ? "observed" : "derived",
+      spatialQuality: "exact",
+      geometryLinkage: "exact",
+      temporalCoverage: "before-after",
+      locationMethod: "coordinates",
+      segmentId: `encounter-${siteId}`,
+      streetName: site.siteName,
+      parserStatus: "ready",
+      datasetKind: "near_encounter",
+      category: label,
+    };
+  });
+}
+
+function emissionsRecords(
+  kpiId: string,
+  snapshot: CopenhagenEmissionsSnapshot
+): CopenhagenExtendedRecord[] {
+  if (kpiId !== "kpi3.2") return [];
+  return snapshot.flows.map((flow) => {
+    const siteKey = flow.siteName.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    const flowId = flow.flow.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    const lat = flow.lat ?? 55.676;
+    const lon = flow.lon ?? 12.57;
+    const baselineIntensity = co2GPerHourToKpiIntensity(flow.preCo2GPerHour);
+    const interventionIntensity = co2GPerHourToKpiIntensity(flow.postCo2GPerHour);
+    const reductionPct = co2ReductionPct(flow.preCo2GPerHour, flow.postCo2GPerHour);
+    return {
+      id: `copenhagen-emissions-${siteKey}-${flowId}`,
+      city: "Copenhagen",
+      cityId: "copenhagen",
+      interventionId: "cph-p1",
+      kpiId,
+      sourceFile: `${BUNDLE_BASE}/emissions-snapshot.json`,
+      geometryType: "hex",
+      lat,
+      lng: lon,
+      geometry: [[lat, lon]],
+      value: interventionIntensity,
+      baselineValue: baselineIntensity,
+      interventionValue: interventionIntensity,
+      comparisonValue: reductionPct,
+      mode: flow.flow,
+      source: snapshot.modelLabel,
+      method: `Modelled ${flow.preCo2GPerHour} → ${flow.postCo2GPerHour} g CO₂/h (${reductionPct.toFixed(1)}% vs pre). Not measured ambient CO₂.`,
+      type: "modelled",
+      spatialQuality: "exact",
+      geometryLinkage: "exact",
+      temporalCoverage: "before-after",
+      locationMethod: "coordinates",
+      segmentId: `emissions-${siteKey}-${flowId}`,
+      streetName: `${flow.siteName} · ${flow.flow}`,
+      parserStatus: "ready",
+      datasetKind: "emissions",
+      category: "Modelled CO₂",
+    };
+  });
+}
+
 export async function parseCopenhagenExtendedRecords(kpiId: string): Promise<CopenhagenExtendedRecord[]> {
   const cacheKey = `cph-ext-${kpiId}`;
   const cached = parsedRecordsCache.get(cacheKey);
   if (cached) return cached;
 
-  const [telraam, manual, surveys, parking, tube, irap, accessibility, platomo] = await Promise.all([
+  const [telraam, manual, surveys, parking, tube, irap, accessibility, platomo, encounters, emissions] =
+    await Promise.all([
     loadBundle<TelraamSiteRow[]>("telraam-sites.json"),
     loadBundle<ManualBundle>("manual-counts.json"),
     loadBundle<SurveyBundle>("surveys.json"),
@@ -709,6 +834,8 @@ export async function parseCopenhagenExtendedRecords(kpiId: string): Promise<Cop
     loadBundle<IrapSite[]>("irap-sites.json"),
     loadBundle<AccessibilityBundle>("accessibility-inventory.json"),
     loadBundle<PlatomoSite[]>("platomo-sites.json"),
+    loadCopenhagenNearEncountersSnapshot(),
+    loadCopenhagenEmissionsSnapshot(),
   ]);
 
   const records: CopenhagenExtendedRecord[] = [
@@ -720,6 +847,8 @@ export async function parseCopenhagenExtendedRecords(kpiId: string): Promise<Cop
     ...(irap ? irapRecords(kpiId, irap) : []),
     ...(accessibility ? accessibilityRecords(kpiId, accessibility) : []),
     ...(platomo ? flowCameraRecords(kpiId, platomo) : []),
+    ...(encounters ? nearEncounterRecords(kpiId, encounters) : []),
+    ...(emissions ? emissionsRecords(kpiId, emissions) : []),
   ];
 
   parsedRecordsCache.set(cacheKey, records);

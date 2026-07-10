@@ -86,11 +86,6 @@
   ],
   "netBikeBays": 0,
   "netCarBaysRemoved": 582,
-  "cargoBikeBays": 80,
-  "partnerCrossCheck": {
-    "bikeSpaces": 1080,
-    "cargoSpaces": 80,
-    "footprintSqM": 1250
-  },
+  "cargoBikeBays": 0,
   "source": "I100275_P-pladser_Oversigt.xlsx (Eksisterende forhold vs Udført)"
 }

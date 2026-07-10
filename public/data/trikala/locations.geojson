@@ -1,0 +1,1208 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-smy",
+        "kind": "park_and_ride",
+        "name": "SMY",
+        "linkedKpis": [
+          "kpi1.2",
+          "kpi3.1",
+          "kpi4.1"
+        ],
+        "segmentId": "tri-p2-park-ride"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.775418,
+              39.5536436
+            ],
+            [
+              21.7760832,
+              39.5536891
+            ],
+            [
+              21.7760671,
+              39.5539807
+            ],
+            [
+              21.7752946,
+              39.5539041
+            ],
+            [
+              21.775418,
+              39.5536436
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-deh",
+        "kind": "park_and_ride",
+        "name": "DEH",
+        "linkedKpis": [
+          "kpi1.2",
+          "kpi3.1",
+          "kpi4.1"
+        ],
+        "segmentId": "tri-p2-park-ride"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.773034,
+              39.5584682
+            ],
+            [
+              21.7737891,
+              39.5582562
+            ],
+            [
+              21.7739031,
+              39.5585571
+            ],
+            [
+              21.7732084,
+              39.5587484
+            ],
+            [
+              21.773034,
+              39.5584682
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-gisemi",
+        "kind": "park_and_ride",
+        "name": "GiSeMi",
+        "linkedKpis": [
+          "kpi1.2",
+          "kpi3.1",
+          "kpi4.1"
+        ],
+        "segmentId": "tri-p2-park-ride"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.7582267,
+              39.56683
+            ],
+            [
+              21.7580677,
+              39.5667908
+            ],
+            [
+              21.7581389,
+              39.5666507
+            ],
+            [
+              21.7582977,
+              39.5666977
+            ],
+            [
+              21.7582267,
+              39.56683
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-vasili-tsitsani-str-military-school",
+        "kind": "smart_crossing_site",
+        "name": "Vasili Tsitsani str, Military School",
+        "linkedKpis": [
+          "kpi2.1",
+          "kpi4.2"
+        ],
+        "segmentId": "tri-p1-smart-crossing"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.7759437,
+          39.5540151
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-laiki",
+        "kind": "air_quality_sensor",
+        "name": "LAIKI",
+        "linkedKpis": [
+          "kpi3.2"
+        ],
+        "segmentId": "tri-p1-environmental-sensor"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.7690573,
+          39.5558483
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-military-school",
+        "kind": "air_quality_sensor",
+        "name": "MILITARY SCHOOL",
+        "linkedKpis": [
+          "kpi3.2"
+        ],
+        "segmentId": "tri-p1-environmental-sensor"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.7776555,
+          39.5514744
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-traffic-lights",
+        "kind": "traffic_signal",
+        "name": "TRAFFIC LIGHTS",
+        "linkedKpis": [
+          "kpi2.1",
+          "kpi4.2"
+        ],
+        "segmentId": "tri-p1-smart-crossing"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.7664723,
+          39.5526115
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-tzami",
+        "kind": "traffic_signal",
+        "name": "TZAMI",
+        "linkedKpis": [
+          "kpi2.1",
+          "kpi4.2"
+        ],
+        "segmentId": "tri-p1-smart-crossing"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.770736,
+          39.5509517
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-ote-square",
+        "kind": "air_quality_sensor",
+        "name": "OTE SQUARE",
+        "linkedKpis": [
+          "kpi3.2"
+        ],
+        "segmentId": "tri-p1-environmental-sensor"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.7666363,
+          39.5570004
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-fanari-karditsis",
+        "kind": "air_quality_sensor",
+        "name": "FANARI KARDITSIS",
+        "linkedKpis": [
+          "kpi3.2"
+        ],
+        "segmentId": "tri-p1-environmental-sensor"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.77535,
+          39.5453798
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-train-station",
+        "kind": "air_quality_sensor",
+        "name": "TRAIN STATION",
+        "linkedKpis": [
+          "kpi3.2"
+        ],
+        "segmentId": "tri-p1-environmental-sensor"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.7633497,
+          39.5465678
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-parking-courthouse",
+        "kind": "air_quality_sensor",
+        "name": "PARKING COURTHOUSE",
+        "linkedKpis": [
+          "kpi3.2"
+        ],
+        "segmentId": "tri-p1-environmental-sensor"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.7715845,
+          39.5556942
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-matsopoulos",
+        "kind": "air_quality_sensor",
+        "name": "MATSOPOULOS",
+        "linkedKpis": [
+          "kpi3.2"
+        ],
+        "segmentId": "tri-p1-environmental-sensor"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.7588172,
+          39.5460135
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-underground-municipal-parking",
+        "kind": "parking_station",
+        "name": "Underground Municipal Parking",
+        "linkedKpis": [
+          "kpi3.1",
+          "kpi1.2"
+        ],
+        "segmentId": "tri-p2-park-ride"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.77166,
+          39.55567
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-municipal-parking",
+        "kind": "parking_station",
+        "name": "Municipal Parking",
+        "linkedKpis": [
+          "kpi3.1",
+          "kpi1.2"
+        ],
+        "segmentId": "tri-p2-park-ride"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.765877,
+          39.555114
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-underground-parking-lanara",
+        "kind": "parking_station",
+        "name": "Underground Parking - Lanara",
+        "linkedKpis": [
+          "kpi3.1",
+          "kpi1.2"
+        ],
+        "segmentId": "tri-p2-park-ride"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.767141,
+          39.55873
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-openair-municipal-parking",
+        "kind": "parking_station",
+        "name": "Openair Municipal Parking",
+        "linkedKpis": [
+          "kpi3.1",
+          "kpi1.2"
+        ],
+        "segmentId": "tri-p2-park-ride"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.775541,
+          39.553757
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-free-municipal-parking",
+        "kind": "parking_station",
+        "name": "Free Municipal Parking",
+        "linkedKpis": [
+          "kpi3.1",
+          "kpi1.2"
+        ],
+        "segmentId": "tri-p2-park-ride"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.767673,
+          39.550992
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-free-parking",
+        "kind": "parking_station",
+        "name": "Free Parking",
+        "linkedKpis": [
+          "kpi3.1",
+          "kpi1.2"
+        ],
+        "segmentId": "tri-p2-park-ride"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.773094,
+          39.545944
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-parking-mill-of-matsopoulos",
+        "kind": "parking_station",
+        "name": "Parking Mill of Matsopoulos",
+        "linkedKpis": [
+          "kpi3.1",
+          "kpi1.2"
+        ],
+        "segmentId": "tri-p2-park-ride"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.75929,
+          39.545449
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-bike-station",
+        "kind": "bike_station",
+        "name": "BIKE STATION - Μύλος Ματσόπουλου",
+        "linkedKpis": [
+          "kpi1.2",
+          "kpi3.1",
+          "kpi4.1"
+        ],
+        "segmentId": "tri-p3-bike-lane"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.76046,
+          39.545817
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-bike-station-parking",
+        "kind": "bike_station",
+        "name": "BIKE STATION - Parking Ασκληπιού",
+        "linkedKpis": [
+          "kpi1.2",
+          "kpi3.1",
+          "kpi4.1"
+        ],
+        "segmentId": "tri-p3-bike-lane"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.764114,
+          39.547264
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-bike-station",
+        "kind": "bike_station",
+        "name": "BIKE STATION - Μουσείο Τσιτσάνη",
+        "linkedKpis": [
+          "kpi1.2",
+          "kpi3.1",
+          "kpi4.1"
+        ],
+        "segmentId": "tri-p3-bike-lane"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.769889,
+          39.550809
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-bike-station-parking",
+        "kind": "bike_station",
+        "name": "BIKE STATION - Parking Παπαστάθη",
+        "linkedKpis": [
+          "kpi1.2",
+          "kpi3.1",
+          "kpi4.1"
+        ],
+        "segmentId": "tri-p3-bike-lane"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.7754051,
+          39.5538927
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-bike-station-parking",
+        "kind": "bike_station",
+        "name": "BIKE STATION - Parking ΔΕΗ",
+        "linkedKpis": [
+          "kpi1.2",
+          "kpi3.1",
+          "kpi4.1"
+        ],
+        "segmentId": "tri-p3-bike-lane"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.7737664,
+          39.5583264
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-bike-station",
+        "kind": "bike_station",
+        "name": "BIKE STATION - Κονδύλη Τέρμα & Παλαιολόγου",
+        "linkedKpis": [
+          "kpi1.2",
+          "kpi3.1",
+          "kpi4.1"
+        ],
+        "segmentId": "tri-p3-bike-lane"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.771553,
+          39.564351
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-bike-station-amberg",
+        "kind": "bike_station",
+        "name": "BIKE STATION - Πλατεία Amberg",
+        "linkedKpis": [
+          "kpi1.2",
+          "kpi3.1",
+          "kpi4.1"
+        ],
+        "segmentId": "tri-p3-bike-lane"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.75327,
+          39.56238
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-jimmys-1",
+        "kind": "bike_lane_sensor",
+        "name": "JIMMYS 1",
+        "linkedKpis": [
+          "kpi2.1",
+          "kpi4.2"
+        ],
+        "segmentId": "tri-p3-bike-lane"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.7663548,
+          39.5527182
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-jimmys-2",
+        "kind": "bike_lane_sensor",
+        "name": "JIMMYS 2",
+        "linkedKpis": [
+          "kpi2.1",
+          "kpi4.2"
+        ],
+        "segmentId": "tri-p3-bike-lane"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.7663078,
+          39.552744
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-parking-1",
+        "kind": "bike_lane_sensor",
+        "name": "ΔΗΜΑΡΧΕΙΟ PARKING 1",
+        "linkedKpis": [
+          "kpi2.1",
+          "kpi4.2"
+        ],
+        "segmentId": "tri-p3-bike-lane"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.7660135,
+          39.552925
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-parking-2",
+        "kind": "bike_lane_sensor",
+        "name": "ΔΗΜΑΡΧΕΙΟ PARKING 2",
+        "linkedKpis": [
+          "kpi2.1",
+          "kpi4.2"
+        ],
+        "segmentId": "tri-p3-bike-lane"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.7659805,
+          39.5529437
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-parking-3",
+        "kind": "bike_lane_sensor",
+        "name": "ΔΗΜΑΡΧΕΙΟ PARKING 3",
+        "linkedKpis": [
+          "kpi2.1",
+          "kpi4.2"
+        ],
+        "segmentId": "tri-p3-bike-lane"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.7659458,
+          39.5529627
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-parking-4",
+        "kind": "bike_lane_sensor",
+        "name": "ΔΗΜΑΡΧΕΙΟ PARKING 4",
+        "linkedKpis": [
+          "kpi2.1",
+          "kpi4.2"
+        ],
+        "segmentId": "tri-p3-bike-lane"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.7659106,
+          39.5529828
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-1",
+        "kind": "bike_lane_sensor",
+        "name": "ΔΕΣΠΟΤΙΚΟ 1",
+        "linkedKpis": [
+          "kpi2.1",
+          "kpi4.2"
+        ],
+        "segmentId": "tri-p3-bike-lane"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.7656375,
+          39.5531465
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-2",
+        "kind": "bike_lane_sensor",
+        "name": "ΔΕΣΠΟΤΙΚΟ 2",
+        "linkedKpis": [
+          "kpi2.1",
+          "kpi4.2"
+        ],
+        "segmentId": "tri-p3-bike-lane"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.7655981,
+          39.5531713
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-3",
+        "kind": "bike_lane_sensor",
+        "name": "ΔΕΣΠΟΤΙΚΟ 3",
+        "linkedKpis": [
+          "kpi2.1",
+          "kpi4.2"
+        ],
+        "segmentId": "tri-p3-bike-lane"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.7655583,
+          39.5531967
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-4",
+        "kind": "bike_lane_sensor",
+        "name": "ΔΕΣΠΟΤΙΚΟ 4",
+        "linkedKpis": [
+          "kpi2.1",
+          "kpi4.2"
+        ],
+        "segmentId": "tri-p3-bike-lane"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.7655228,
+          39.5532144
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-5",
+        "kind": "bike_lane_sensor",
+        "name": "ΔΕΣΠΟΤΙΚΟ 5",
+        "linkedKpis": [
+          "kpi2.1",
+          "kpi4.2"
+        ],
+        "segmentId": "tri-p3-bike-lane"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.765489,
+          39.5532395
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-6",
+        "kind": "bike_lane_sensor",
+        "name": "ΔΕΣΠΟΤΙΚΟ 6",
+        "linkedKpis": [
+          "kpi2.1",
+          "kpi4.2"
+        ],
+        "segmentId": "tri-p3-bike-lane"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.765453,
+          39.5532646
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-7",
+        "kind": "bike_lane_sensor",
+        "name": "ΔΕΣΠΟΤΙΚΟ 7",
+        "linkedKpis": [
+          "kpi2.1",
+          "kpi4.2"
+        ],
+        "segmentId": "tri-p3-bike-lane"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.7654028,
+          39.5532921
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-8",
+        "kind": "bike_lane_sensor",
+        "name": "ΔΕΣΠΟΤΙΚΟ 8",
+        "linkedKpis": [
+          "kpi2.1",
+          "kpi4.2"
+        ],
+        "segmentId": "tri-p3-bike-lane"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.7653592,
+          39.5533144
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-cups-nine-1",
+        "kind": "bike_lane_sensor",
+        "name": "CUPS NINE 1",
+        "linkedKpis": [
+          "kpi2.1",
+          "kpi4.2"
+        ],
+        "segmentId": "tri-p3-bike-lane"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.7652141,
+          39.5533833
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-cups-nine-2",
+        "kind": "bike_lane_sensor",
+        "name": "CUPS NINE 2",
+        "linkedKpis": [
+          "kpi2.1",
+          "kpi4.2"
+        ],
+        "segmentId": "tri-p3-bike-lane"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.7651854,
+          39.5533817
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-cups-nine-3",
+        "kind": "bike_lane_sensor",
+        "name": "CUPS NINE 3",
+        "linkedKpis": [
+          "kpi2.1",
+          "kpi4.2"
+        ],
+        "segmentId": "tri-p3-bike-lane"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.7651491,
+          39.5533837
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-cups-nine-4",
+        "kind": "bike_lane_sensor",
+        "name": "CUPS NINE 4",
+        "linkedKpis": [
+          "kpi2.1",
+          "kpi4.2"
+        ],
+        "segmentId": "tri-p3-bike-lane"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.7651082,
+          39.5534047
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-cups-nine-5",
+        "kind": "bike_lane_sensor",
+        "name": "CUPS NINE 5",
+        "linkedKpis": [
+          "kpi2.1",
+          "kpi4.2"
+        ],
+        "segmentId": "tri-p3-bike-lane"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.7650821,
+          39.5534286
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-parking",
+        "kind": "bike_lane_sensor",
+        "name": "PARKING ΜΠΟΝΩΤΗ",
+        "linkedKpis": [
+          "kpi2.1",
+          "kpi4.2"
+        ],
+        "segmentId": "tri-p3-bike-lane"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.7649046,
+          39.5537287
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-1",
+        "kind": "bike_lane_sensor",
+        "name": "ΒΟΥΒΗΣ 1",
+        "linkedKpis": [
+          "kpi2.1",
+          "kpi4.2"
+        ],
+        "segmentId": "tri-p3-bike-lane"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.7630869,
+          39.5557729
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-2",
+        "kind": "bike_lane_sensor",
+        "name": "ΒΟΥΒΗΣ 2",
+        "linkedKpis": [
+          "kpi2.1",
+          "kpi4.2"
+        ],
+        "segmentId": "tri-p3-bike-lane"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.7627984,
+          39.555935
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-parking-1",
+        "kind": "bike_lane_sensor",
+        "name": "PARKING ΣΜΥ 1",
+        "linkedKpis": [
+          "kpi2.1",
+          "kpi4.2"
+        ],
+        "segmentId": "tri-p3-bike-lane"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.7754694,
+          39.5538938
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-parking-2",
+        "kind": "bike_lane_sensor",
+        "name": "PARKING ΣΜΥ 2",
+        "linkedKpis": [
+          "kpi2.1",
+          "kpi4.2"
+        ],
+        "segmentId": "tri-p3-bike-lane"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.775509,
+          39.5538974
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-parking-1",
+        "kind": "bike_lane_sensor",
+        "name": "PARKING ΔΕΗ 1",
+        "linkedKpis": [
+          "kpi2.1",
+          "kpi4.2"
+        ],
+        "segmentId": "tri-p3-bike-lane"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.7736975,
+          39.5583197
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-parking-2",
+        "kind": "bike_lane_sensor",
+        "name": "PARKING ΔΕΗ 2",
+        "linkedKpis": [
+          "kpi2.1",
+          "kpi4.2"
+        ],
+        "segmentId": "tri-p3-bike-lane"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.773664,
+          39.5583259
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-gisemi-1",
+        "kind": "bike_lane_sensor",
+        "name": "GiSeMi 1",
+        "linkedKpis": [
+          "kpi2.1",
+          "kpi4.2"
+        ],
+        "segmentId": "tri-p3-bike-lane"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.7581435,
+          39.5667944
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-gisemi-2",
+        "kind": "bike_lane_sensor",
+        "name": "GiSeMi 2",
+        "linkedKpis": [
+          "kpi2.1",
+          "kpi4.2"
+        ],
+        "segmentId": "tri-p3-bike-lane"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.758157,
+          39.5667711
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-gisemi-3",
+        "kind": "bike_lane_sensor",
+        "name": "GiSeMi 3",
+        "linkedKpis": [
+          "kpi2.1",
+          "kpi4.2"
+        ],
+        "segmentId": "tri-p3-bike-lane"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.7581698,
+          39.5667484
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "tri-loc-gisemi-4",
+        "kind": "bike_lane_sensor",
+        "name": "GiSeMi 4",
+        "linkedKpis": [
+          "kpi2.1",
+          "kpi4.2"
+        ],
+        "segmentId": "tri-p3-bike-lane"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.7581865,
+          39.5667293
+        ]
+      }
+    }
+  ]
+}

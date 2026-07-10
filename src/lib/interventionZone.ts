@@ -26,6 +26,8 @@ function defaultRadiusForPilot(pilotId: string): number {
   if (pilotId.startsWith("cph-")) return 0.012;
   if (pilotId.startsWith("hel-")) return 0.015;
   if (pilotId.startsWith("zar-")) return 0.018;
+  if (pilotId === "tri-p2") return 0.022;
+  if (pilotId === "tri-p3") return 0.02;
   if (pilotId.startsWith("tri-")) return 0.012;
   if (pilotId.startsWith("issy-")) return 0.008;
   return 0.014;

@@ -23,14 +23,29 @@ import {
 import { getIssyPilotProfile } from "@/data/issyPilotProfiles";
 import { ISSY_OD_CSV_DISCLAIMER } from "@/lib/issyDataTransparency";
 import {
+  formatWinticsModalShareLine,
+  ISSY_WINTICS_SITE_DISCLAIMER,
+  winticsSustainableSharePct,
+} from "@/lib/issyWinticsSite";
+import {
   baselineKpiSlice,
   interventionKpiSlice,
   computeBaselineMainValue,
 } from "@/lib/kpiBaselineVersusIntervention";
 import { formatKpiFigure } from "@/lib/formatKpiFigure";
 import { useIssyFlowData } from "@/hooks/use-issy-flow-data";
+import { useIssyWorkbooks } from "@/hooks/use-issy-workbooks";
+import { useCopenhagenNearEncounters } from "@/hooks/use-copenhagen-encounters";
+import { useCopenhagenEmissions } from "@/hooks/use-copenhagen-emissions";
 import { useLocalCityData } from "@/hooks/use-local-city-data";
 import { buildIssyModeShareKpiSlices } from "@/lib/issyFlowAggregates";
+import { buildTrikalaModeShareSliceForSelection } from "@/lib/trikalaModeShare";
+import { loadTrikalaLocationsBundle } from "@/data/trikalaLocationRegistry";
+import {
+  getTrikalaSegmentInsights,
+  getTrikalaWomenMobilityModeShareRows,
+} from "@/services/trikalaSurveyParser";
+import { useQuery } from "@tanstack/react-query";
 import { isCopenhagenCameraKpi } from "@/data/copenhagenCameraSites";
 import { filterCopenhagenObservatoryPoints } from "@/lib/copenhagenObservatoryView";
 import {
@@ -47,6 +62,8 @@ import {
   getKpiMissingDataNotice,
 } from "@/lib/kpiMissingDataMessage";
 import { dataSourceTrustLabel, kpiPrimaryIssySource } from "@/lib/issyDataTransparency";
+import { getIssySentimentMock, issySentimentKpiHeadline } from "@/data/issySentimentMock";
+import { getIssyAccessibilityMock, issyAccessibilityKpiHeadline } from "@/data/issyAccessibilityMock";
 import { getCityPilotProfile } from "@/data/cityPilotProfiles";
 import { getPrimaryJunctionConfig, hasJunctionConfig } from "@/data/junctionConfigs";
 import { getCityReadinessSummary } from "@/data/kpiReadinessMatrix";
@@ -171,8 +188,72 @@ const InsightPanel = ({
 
   const isIssyCity = selectedCity.toLowerCase().includes("issy");
   const isCopenhagenCity = selectedCity === "Copenhagen";
+  const isTrikalaCity = selectedCity.toLowerCase().includes("trikala");
+  const segmentFocusId = hoveredSegmentId ?? mapSelection?.segmentId ?? null;
+  const { data: trikalaSegmentInsights = [] } = useQuery({
+    queryKey: ["trikala-segment-insights-insight-panel"],
+    queryFn: getTrikalaSegmentInsights,
+    enabled: isTrikalaCity && selectedKpi === "kpi1.2",
+    staleTime: 120_000,
+  });
+  const { data: trikalaLocationsBundle } = useQuery({
+    queryKey: ["trikala-locations-bundle-insight-panel"],
+    queryFn: loadTrikalaLocationsBundle,
+    enabled: isTrikalaCity && selectedKpi === "kpi1.2" && selectedPilotId === "tri-p2",
+    staleTime: 600_000,
+  });
+  const { data: trikalaWomenMobilityModeShare = [] } = useQuery({
+    queryKey: ["trikala-women-mobility-mode-share", segmentFocusId],
+    queryFn: () => getTrikalaWomenMobilityModeShareRows(segmentFocusId),
+    enabled:
+      isTrikalaCity && selectedKpi === "kpi1.2" && selectedPilotId !== "tri-p2",
+    staleTime: 120_000,
+  });
+  const trikalaObservedModeShare = useMemo(() => {
+    if (!isTrikalaCity || selectedKpi !== "kpi1.2") return null;
+    if (selectedPilotId === "tri-p2") {
+      return buildTrikalaModeShareSliceForSelection({
+        pilotId: selectedPilotId,
+        segmentId: segmentFocusId,
+        insights: trikalaSegmentInsights,
+        locations: trikalaLocationsBundle?.locations,
+      });
+    }
+    if (!trikalaSegmentInsights.length && !trikalaWomenMobilityModeShare.length) return null;
+    return buildTrikalaModeShareSliceForSelection({
+      pilotId: selectedPilotId,
+      segmentId: segmentFocusId,
+      insights: trikalaSegmentInsights,
+      womenMobilityModeShare: trikalaWomenMobilityModeShare,
+    });
+  }, [
+    isTrikalaCity,
+    selectedKpi,
+    selectedPilotId,
+    trikalaSegmentInsights,
+    segmentFocusId,
+    trikalaLocationsBundle?.locations,
+    trikalaWomenMobilityModeShare,
+  ]);
+  const usingTrikalaObservedModeShare = !!trikalaObservedModeShare;
+  const usingTrikalaIllustrativeModeShare =
+    isTrikalaCity && selectedPilotId === "tri-p2" && selectedKpi === "kpi1.2" && !!trikalaObservedModeShare;
   const issyFlowsQueryEnabled = isIssyCity && selectedKpi === "kpi1.2";
   const { data: issyFlowFeatures } = useIssyFlowData(issyFlowDayCategory, issyFlowsQueryEnabled);
+  const { wintics: issyWinticsQuery, classeur: issyClasseurQuery } = useIssyWorkbooks(isIssyCity);
+  const issyWinticsBaseline =
+    selectedPilot?.id === "issy-p1" && selectedKpi === "kpi1.2"
+      ? (issyWinticsQuery.data ?? null)
+      : null;
+  const issyClasseurEmissions = selectedKpi === "kpi3.2" ? (issyClasseurQuery.data ?? null) : null;
+  const { snapshot: cphEncounters } = useCopenhagenNearEncounters();
+  const { snapshot: cphEmissions } = useCopenhagenEmissions();
+  const cphEncounterSummary =
+    isCopenhagenCity && selectedKpi === "kpi2.1" && selectedPilotId === "cph-p3"
+      ? cphEncounters?.records
+      : null;
+  const cphEmissionsModel =
+    isCopenhagenCity && selectedKpi === "kpi3.2" ? cphEmissions : null;
   const issyModeShareFromCsv = useMemo(
     () =>
       issyFlowsQueryEnabled && issyFlowFeatures?.length
@@ -181,8 +262,49 @@ const InsightPanel = ({
     [issyFlowsQueryEnabled, issyFlowFeatures]
   );
   const usingIssyObservedModeShare = !!issyModeShareFromCsv;
+  const issySentimentMock = useMemo(() => {
+    if (!isIssyCity || selectedKpi !== "kpi4.1" || !selectedPilotId) return null;
+    return getIssySentimentMock(selectedPilotId);
+  }, [isIssyCity, selectedKpi, selectedPilotId]);
+  const issySentimentFromMock = useMemo(() => {
+    if (!issySentimentMock) return null;
+    const headline = issySentimentKpiHeadline(issySentimentMock, scenario);
+    return {
+      baseline: {
+        mainValue: headline.baselineMain,
+        breakdown: headline.baselineBreakdown,
+        change: 0,
+      },
+      intervention: {
+        mainValue: headline.mainValue,
+        breakdown: headline.breakdown,
+        change: headline.change,
+      },
+      unit: headline.unit,
+    };
+  }, [issySentimentMock, scenario]);
+  const issyAccessibilityMock = useMemo(() => {
+    if (!isIssyCity || selectedKpi !== "kpi4.2" || !selectedPilotId) return null;
+    return getIssyAccessibilityMock(selectedPilotId);
+  }, [isIssyCity, selectedKpi, selectedPilotId]);
+  const issyAccessibilityFromMock = useMemo(() => {
+    if (!issyAccessibilityMock) return null;
+    const headline = issyAccessibilityKpiHeadline(issyAccessibilityMock);
+    return {
+      baseline: {
+        mainValue: Math.max(1, headline.mainValue - headline.change),
+        breakdown: headline.breakdown,
+        change: 0,
+      },
+      intervention: {
+        mainValue: headline.mainValue,
+        breakdown: headline.breakdown,
+        change: headline.change,
+      },
+      unit: headline.unit,
+    };
+  }, [issyAccessibilityMock]);
   const copenhagenCenter = cityData ? { lat: cityData.lat, lon: cityData.lon } : null;
-  const segmentFocusId = hoveredSegmentId ?? mapSelection?.segmentId ?? null;
   const shouldUseCopenhagenObserved =
     selectedCity === "Copenhagen" && isCopenhagenCameraKpi(selectedKpi);
   const { data: copenhagenLocalPoints } = useLocalCityData(
@@ -209,10 +331,23 @@ const InsightPanel = ({
 
   const displayUnit = useMemo(() => {
     if (!kpiValue) return "";
-    return isCopenhagenCity && copenhagenObservedModeShare
+    if (issySentimentFromMock?.unit) return issySentimentFromMock.unit;
+    if (issyAccessibilityFromMock?.unit) return issyAccessibilityFromMock.unit;
+    return isTrikalaCity && trikalaObservedModeShare
+      ? "%"
+      : isCopenhagenCity && copenhagenObservedModeShare
       ? resolveCopenhagenKpiDisplayUnit(selectedKpi)
       : kpiValue.unit;
-  }, [isCopenhagenCity, copenhagenObservedModeShare, selectedKpi, kpiValue]);
+  }, [
+    isTrikalaCity,
+    trikalaObservedModeShare,
+    isCopenhagenCity,
+    copenhagenObservedModeShare,
+    selectedKpi,
+    kpiValue,
+    issySentimentFromMock,
+    issyAccessibilityFromMock,
+  ]);
 
   const chartExplorerKeys = useMemo(() => {
     if (selectedKpi === "kpi1.2") return selectedModeTypes;
@@ -348,16 +483,31 @@ const InsightPanel = ({
     const fwEarly = getKpiFrameworkConfig(selectedKpi);
     const baselineMainValue = issyModeShareFromCsv
       ? issyModeShareFromCsv.baseline.mainValue
-      : copenhagenObservedModeShare
-        ? copenhagenObservedModeShare.baselineMain
-        : computeBaselineMainValue(kpiValue);
+      : issySentimentFromMock
+        ? issySentimentFromMock.baseline.mainValue
+        : issyAccessibilityFromMock
+          ? issyAccessibilityFromMock.baseline.mainValue
+          : trikalaObservedModeShare
+          ? trikalaObservedModeShare.baselineMain
+          : copenhagenObservedModeShare
+            ? copenhagenObservedModeShare.baselineMain
+            : computeBaselineMainValue(kpiValue);
     const interventionMainValue = issyModeShareFromCsv
       ? issyModeShareFromCsv.intervention.mainValue
-      : copenhagenObservedModeShare
-        ? copenhagenObservedModeShare.interventionMain
-        : Number(kpiValue.mainValue);
+      : issySentimentFromMock
+        ? issySentimentFromMock.intervention.mainValue
+        : issyAccessibilityFromMock
+          ? issyAccessibilityFromMock.intervention.mainValue
+          : trikalaObservedModeShare
+            ? trikalaObservedModeShare.interventionMain
+            : copenhagenObservedModeShare
+              ? copenhagenObservedModeShare.interventionMain
+              : Number(kpiValue.mainValue);
     const headlineChange =
       issyModeShareFromCsv?.intervention.change ??
+      issySentimentFromMock?.intervention.change ??
+      issyAccessibilityFromMock?.intervention.change ??
+      trikalaObservedModeShare?.change ??
       copenhagenObservedModeShare?.change ??
       kpiValue.change;
     const helsinkiBA =
@@ -416,7 +566,10 @@ const InsightPanel = ({
     kpiFramework,
     kpiValue,
     issyModeShareFromCsv,
+    issySentimentFromMock,
+    issyAccessibilityFromMock,
     copenhagenObservedModeShare,
+    trikalaObservedModeShare,
     displayUnit,
   ]);
 
@@ -424,33 +577,71 @@ const InsightPanel = ({
 
   const baselineKvSlice = issyModeShareFromCsv
     ? issyModeShareFromCsv.baseline
-    : copenhagenObservedModeShare
-      ? {
-          mainValue: copenhagenObservedModeShare.baselineMain,
-          breakdown: copenhagenObservedModeShare.breakdownBaseline,
-          change: 0,
-        }
-      : baselineKpiSlice(kpiValue);
+    : issySentimentFromMock
+      ? issySentimentFromMock.baseline
+      : issyAccessibilityFromMock
+        ? issyAccessibilityFromMock.baseline
+        : trikalaObservedModeShare
+          ? {
+              mainValue: trikalaObservedModeShare.baselineMain,
+              breakdown: trikalaObservedModeShare.breakdownBaseline,
+              change: 0,
+            }
+          : copenhagenObservedModeShare
+          ? {
+              mainValue: copenhagenObservedModeShare.baselineMain,
+              breakdown: copenhagenObservedModeShare.breakdownBaseline,
+              change: 0,
+            }
+          : baselineKpiSlice(kpiValue);
   const interventionKvSlice = issyModeShareFromCsv
     ? issyModeShareFromCsv.intervention
-    : copenhagenObservedModeShare
-      ? {
-          mainValue: copenhagenObservedModeShare.interventionMain,
-          breakdown: copenhagenObservedModeShare.breakdownIntervention,
-          change: copenhagenObservedModeShare.change,
-        }
-      : interventionKpiSlice(kpiValue);
+    : issySentimentFromMock
+      ? issySentimentFromMock.intervention
+      : issyAccessibilityFromMock
+        ? issyAccessibilityFromMock.intervention
+        : trikalaObservedModeShare
+          ? {
+              mainValue: trikalaObservedModeShare.interventionMain,
+              breakdown: trikalaObservedModeShare.breakdownIntervention,
+              change: trikalaObservedModeShare.change,
+            }
+          : copenhagenObservedModeShare
+          ? {
+              mainValue: copenhagenObservedModeShare.interventionMain,
+              breakdown: copenhagenObservedModeShare.breakdownIntervention,
+              change: copenhagenObservedModeShare.change,
+            }
+          : interventionKpiSlice(kpiValue);
   const baselineMainValue = issyModeShareFromCsv
     ? issyModeShareFromCsv.baseline.mainValue
-    : copenhagenObservedModeShare
-      ? copenhagenObservedModeShare.baselineMain
-      : computeBaselineMainValue(kpiValue);
+    : issySentimentFromMock
+      ? issySentimentFromMock.baseline.mainValue
+      : issyAccessibilityFromMock
+        ? issyAccessibilityFromMock.baseline.mainValue
+        : trikalaObservedModeShare
+          ? trikalaObservedModeShare.baselineMain
+          : copenhagenObservedModeShare
+          ? copenhagenObservedModeShare.baselineMain
+          : computeBaselineMainValue(kpiValue);
   const interventionMainValue = issyModeShareFromCsv
     ? issyModeShareFromCsv.intervention.mainValue
-    : copenhagenObservedModeShare
-      ? copenhagenObservedModeShare.interventionMain
-      : Number(kpiValue.mainValue);
-  const headlineChange = issyModeShareFromCsv?.intervention.change ?? copenhagenObservedModeShare?.change ?? kpiValue.change;
+    : issySentimentFromMock
+      ? issySentimentFromMock.intervention.mainValue
+      : issyAccessibilityFromMock
+        ? issyAccessibilityFromMock.intervention.mainValue
+        : trikalaObservedModeShare
+          ? trikalaObservedModeShare.interventionMain
+          : copenhagenObservedModeShare
+          ? copenhagenObservedModeShare.interventionMain
+          : Number(kpiValue.mainValue);
+  const headlineChange =
+    issyModeShareFromCsv?.intervention.change ??
+    issySentimentFromMock?.intervention.change ??
+    issyAccessibilityFromMock?.intervention.change ??
+    trikalaObservedModeShare?.change ??
+    copenhagenObservedModeShare?.change ??
+    kpiValue.change;
   const currentMainValue = scenario === "baseline" ? baselineMainValue : interventionMainValue;
   const currentBreakdown =
     scenario === "baseline" ? baselineKvSlice.breakdown : interventionKvSlice.breakdown;
@@ -814,6 +1005,65 @@ const InsightPanel = ({
             </p>
           </div>
         )}
+        {selectedPilot?.id === "issy-p1" && selectedKpi === "kpi1.2" && issyWinticsBaseline && (
+          <div className="rounded-lg border border-cyan-400/25 bg-cyan-500/10 px-3 py-2">
+            <p className="text-intel-meta font-bold text-white/85 mb-1.5">
+              Wintics site camera (baseline · {issyWinticsBaseline.period})
+            </p>
+            <p className="text-[10px] text-white/88 leading-snug">
+              {formatWinticsModalShareLine(issyWinticsBaseline)} · sustainable modes{" "}
+              {winticsSustainableSharePct(issyWinticsBaseline)}%
+            </p>
+            <p className="text-[10px] text-white/70 mt-1.5 leading-snug">
+              Mean speed {issyWinticsBaseline.overall.meanSpeedKmh?.toFixed(1) ?? "n/a"} km/h · 85th %ile{" "}
+              {issyWinticsBaseline.overall.p85SpeedKmh?.toFixed(1) ?? "n/a"} km/h
+            </p>
+            <p className="text-intel-meta font-medium text-white/68 mt-1.5 leading-snug">
+              {ISSY_WINTICS_SITE_DISCLAIMER}
+            </p>
+          </div>
+        )}
+        {isCopenhagenCity && selectedKpi === "kpi2.1" && cphEncounterSummary?.length ? (
+          <div className="rounded-lg border border-amber-400/25 bg-amber-500/10 px-3 py-2">
+            <p className="text-intel-meta font-bold text-white/85 mb-1.5">
+              Near encounters ({cphEncounterSummary[0]?.sourceKind === "partner" ? "partner" : "OTC proxy"})
+            </p>
+            <p className="text-[10px] text-white/88 leading-snug">
+              {cphEncounterSummary.length} site(s) · encounter-pressure index from mixed-mode 15-min bins
+            </p>
+            <p className="text-intel-meta font-medium text-white/68 mt-1.5 leading-snug">
+              Derived proxy until UCPH delivers structured near-encounter export — not observed conflict counts.
+            </p>
+          </div>
+        ) : null}
+        {isCopenhagenCity && selectedKpi === "kpi3.2" && cphEmissionsModel && (
+          <div className="rounded-lg border border-emerald-400/25 bg-emerald-500/10 px-3 py-2">
+            <p className="text-intel-meta font-bold text-white/85 mb-1.5">
+              Modelled corridor CO₂ ({cphEmissionsModel.modelLabel})
+            </p>
+            <p className="text-[10px] text-white/88 leading-snug">
+              {cphEmissionsModel.flows.length} directional flow(s) · COPERT-lite urban fleet factors
+            </p>
+            <p className="text-intel-meta font-medium text-white/68 mt-1.5 leading-snug">
+              Modelled from normalised OTC mode counts — not measured ambient CO₂.
+            </p>
+          </div>
+        )}
+        {isIssyCity && selectedKpi === "kpi3.2" && issyClasseurEmissions && (
+          <div className="rounded-lg border border-emerald-400/25 bg-emerald-500/10 px-3 py-2">
+            <p className="text-intel-meta font-bold text-white/85 mb-1.5">
+              ASIF emissions model (Classeur.xlsx)
+            </p>
+            <p className="text-[10px] text-white/88 leading-snug">
+              {issyClasseurEmissions.corridorLengthM} m corridor · baseline{" "}
+              {Math.round(issyClasseurEmissions.totalBaselineCo2G)} g CO₂/h
+            </p>
+            <p className="text-intel-meta font-medium text-white/68 mt-1.5 leading-snug">
+              Modelled from Nov 2024 traffic flows and Île-de-France fleet factors — hex map uses
+              distance-weighted allocation; not measured air quality.
+            </p>
+          </div>
+        )}
         {selectedCity === "Milan" && selectedKpi === "kpi3.2" && onMilanEnvironmentWindowChange && (
           <div className="rounded-lg border border-white/15 bg-white/[0.06] px-3 py-2">
             <p className="text-intel-meta font-bold text-white/85 mb-2">Time of day (Milan roads)</p>
@@ -840,6 +1090,15 @@ const InsightPanel = ({
             </ToggleGroup>
           </div>
         )}
+        {usingTrikalaIllustrativeModeShare && (
+          <div
+            className="rounded-lg border px-3 py-2 text-[10px] text-amber-100/90 leading-relaxed"
+            style={{ borderColor: "rgba(245,158,11,0.35)", background: "rgba(245,158,11,0.08)" }}
+          >
+            Illustrative intermodal proxy per P+R hub — partner occupancy survey pending (June 2026
+            drop).
+          </div>
+        )}
         {isModeShare && (
           <div className="rounded-lg border border-white/15 bg-white/[0.06] px-3 py-2">
             <p className="text-intel-meta font-bold text-white/85 mb-2">Travel modes (map filter)</p>
@@ -847,7 +1106,8 @@ const InsightPanel = ({
               {["Pedestrian", "Cycle", "Public Transport", "Private Car", "PTW"].map((modeType) => {
                 const isSelected = selectedModeTypes.includes(modeType);
                 const value = currentBreakdown?.[modeType] || 0;
-                const displayValue = usingIssyObservedModeShare
+                const displayValue =
+                  usingIssyObservedModeShare || usingTrikalaObservedModeShare
                   ? `${value.toFixed(1)}%`
                   : String(Math.round(value));
                 return (

@@ -14,6 +14,12 @@ const DROP_DIR = path.join(ROOT, "public", "Sharepoint_Datasets_06_2026");
 const OUT_DIR = path.join(ROOT, "public", "sharepoint-data");
 const MANIFEST_PATH = path.join(OUT_DIR, "_manifest.json");
 
+const INCLUDE_ISSY_MEDIA = process.argv.includes("--include-issy-media");
+
+const ISSY_ZIP = "Issy (Paris) Lighthouse-20260625T113904Z-3-001.zip";
+const ISSY_DEST = "Issy-20260625T113904Z-3-001/Issy";
+const ISSY_DEST_LEGACY = "Issy-20260427T130625Z-3-001/Issy";
+
 /** @type {{ zip: string; match: RegExp; dest: string; label: string }[]} */
 const EXTRACTIONS = [
   {
@@ -157,21 +163,87 @@ const EXTRACTIONS = [
   },
   {
     zip: "Helsinki Lighthouse-20260625T113858Z-3-001.zip",
+    match: /Helsinki_Intervention_Locations_EPSG3067\.gpkg$/i,
+    dest: "Helsinki/Helsinki_Intervention_Locations_EPSG3067.gpkg",
+    label: "hel-intervention-locations-gpkg",
+  },
+  {
+    zip: "Helsinki Lighthouse-20260625T113858Z-3-001.zip",
     match: /Helsinki_eScooter_Observations\.zip$/i,
     dest: "Helsinki/Helsinki_eScooter_Observations.zip",
     label: "hel-escooter-nested-zip",
   },
   {
-    zip: "Issy (Paris) Lighthouse-20260625T113904Z-3-001.zip",
+    zip: ISSY_ZIP,
     match: /ISSY1_baseline_traffic_data_november_2024\.csv$/i,
-    dest: "Issy-20260427T130625Z-3-001/Issy/1. BASELINE DATA from Issy/ISSY1 - detailed traffic data/ISSY1_baseline_traffic_data_november_2024.csv",
+    dest: `${ISSY_DEST}/1. BASELINE DATA from Issy/ISSY1 - detailed traffic data/ISSY1_baseline_traffic_data_november_2024.csv`,
     label: "issy-baseline-csv",
   },
   {
-    zip: "Issy (Paris) Lighthouse-20260625T113904Z-3-001.zip",
+    zip: ISSY_ZIP,
     match: /ISSY1_post_intervention_traffic_data_november_2025\.csv$/i,
-    dest: "Issy-20260427T130625Z-3-001/Issy/2. POST IMPLEMENTATION DATA from Issy/ISSY1 - detailed traffic_data/ISSY1_post_intervention_traffic_data_november_2025.csv",
+    dest: `${ISSY_DEST}/2. POST IMPLEMENTATION DATA from Issy/ISSY1 - detailed traffic_data/ISSY1_post_intervention_traffic_data_november_2025.csv`,
     label: "issy-post-csv",
+  },
+  {
+    zip: ISSY_ZIP,
+    match: /ISSY1_baseline_traffic_data_november_2024\.csv$/i,
+    dest: `${ISSY_DEST_LEGACY}/1. BASELINE DATA from Issy/ISSY1 - detailed traffic data/ISSY1_baseline_traffic_data_november_2024.csv`,
+    label: "issy-baseline-csv-legacy",
+  },
+  {
+    zip: ISSY_ZIP,
+    match: /ISSY1_post_intervention_traffic_data_november_2025\.csv$/i,
+    dest: `${ISSY_DEST_LEGACY}/2. POST IMPLEMENTATION DATA from Issy/ISSY1 - detailed traffic_data/ISSY1_post_intervention_traffic_data_november_2025.csv`,
+    label: "issy-post-csv-legacy",
+  },
+  {
+    zip: ISSY_ZIP,
+    match: /baseline_evaluation_data_light_emitting_marking_solution\.xlsx$/i,
+    dest: `${ISSY_DEST}/1. BASELINE DATA from Issy/baseline_evaluation_data_light_emitting_marking_solution.xlsx`,
+    label: "issy-wintics-baseline-xlsx",
+  },
+  {
+    zip: ISSY_ZIP,
+    match: /Classeur\.xlsx$/i,
+    dest: `${ISSY_DEST}/1. BASELINE DATA from Issy/Classeur.xlsx`,
+    label: "issy-classeur-emissions-xlsx",
+  },
+  {
+    zip: ISSY_ZIP,
+    match: /Pre-intervention evaluation - data requirements\.xlsx$/i,
+    dest: `${ISSY_DEST}/Pre-intervention evaluation - data requirements.xlsx`,
+    label: "issy-data-requirements-xlsx",
+  },
+  {
+    zip: ISSY_ZIP,
+    match: /ELABORATOR_Issy-Le-Molineaux_Metadata_Records\.xlsx$/i,
+    dest: `${ISSY_DEST}/ELABORATOR_Issy-Le-Molineaux_Metadata_Records.xlsx`,
+    label: "issy-metadata-records-xlsx",
+  },
+  {
+    zip: ISSY_ZIP,
+    match: /ISSY Intervention Evaluation Plan_DRAFT \(1\)\.docx$/i,
+    dest: `${ISSY_DEST}/ISSY Intervention Evaluation Plan_DRAFT (1).docx`,
+    label: "issy-evaluation-plan-docx",
+  },
+  {
+    zip: ISSY_ZIP,
+    match: /FLOWELL ISSY - T0-T1 SYNTHESIS \.pdf$/i,
+    dest: `${ISSY_DEST}/1. BASELINE DATA from Issy/FLOWELL ISSY - T0-T1 SYNTHESIS .pdf`,
+    label: "issy-flowell-synthesis-pdf",
+  },
+  {
+    zip: ISSY_ZIP,
+    match: /1\. BASELINE DATA from Issy\/ISSY1 - detailed traffic data\/readme\.docx$/i,
+    dest: `${ISSY_DEST}/1. BASELINE DATA from Issy/ISSY1 - detailed traffic data/readme.docx`,
+    label: "issy-baseline-readme-docx",
+  },
+  {
+    zip: ISSY_ZIP,
+    match: /2\. POST IMPLEMENTATION DATA from Issy\/ISSY1 - detailed traffic_data\/readme\.docx$/i,
+    dest: `${ISSY_DEST}/2. POST IMPLEMENTATION DATA from Issy/ISSY1 - detailed traffic_data/readme.docx`,
+    label: "issy-post-readme-docx",
   },
   {
     zip: "Zaragoza Lighthouse-20260625T113918Z-3-001.zip",
@@ -232,6 +304,42 @@ const EXTRACTIONS = [
     match: /Intervention areas 1\.zip$/i,
     dest: "Zaragoza/1. BASELINE DATA from Zaragoza/Intervention areas 1.zip",
     label: "zar-intervention-areas-zip",
+  },
+  {
+    zip: "Zaragoza Lighthouse-20260625T113918Z-3-001.zip",
+    match: /AirQuality\.xlsx$/i,
+    dest: "Zaragoza/1. BASELINE DATA from Zaragoza/AirQuality.xlsx",
+    label: "zar-air-quality-xlsx",
+  },
+  {
+    zip: "Milano-20260709T084301Z-2-001.zip",
+    match: /Milan_Accessibility_Features_DSS_Analysis_CIRCE\.xlsx$/i,
+    dest: "Milan/8. Data - accessibility features/Milan_Accessibility_Features_DSS_Analysis_CIRCE.xlsx",
+    label: "mil-accessibility-dss-xlsx",
+  },
+  {
+    zip: "Milano-20260709T084301Z-2-001.zip",
+    match: /1\. Shape file\/Pilot 1_AMAT\/pilot01\.shp$/i,
+    dest: "Milan/1. Shape file/Pilot 1_AMAT/pilot01.shp",
+    label: "mil-pilot01-shp",
+  },
+  {
+    zip: "Milano-20260709T084301Z-2-001.zip",
+    match: /1\. Shape file\/Pilot 2_AMAT\/pilot02\.shp$/i,
+    dest: "Milan/1. Shape file/Pilot 2_AMAT/pilot02.shp",
+    label: "mil-pilot02-shp",
+  },
+  {
+    zip: "Milano-20260709T084301Z-2-001.zip",
+    match: /DSS pedestrian tool graph\/walk_graph\.shp$/i,
+    dest: "Milan/DSS pedestrian tool graph/walk_graph.shp",
+    label: "mil-walk-graph-shp",
+  },
+  {
+    zip: "Milano-20260709T084301Z-2-001.zip",
+    match: /Eval data Ex ante\/6\. CO2 and noise emissions\/.*\.shp$/i,
+    dest: "Milan/Eval data Ex ante/6. CO2 and noise emissions/network_co2_noise.shp",
+    label: "mil-co2-network-shp",
   },
   {
     zip: "Trikala Lighthouse-20260625T113913Z-3-001.zip",
@@ -543,6 +651,98 @@ async function unpackTrikalaDocs(zipPath) {
   return written;
 }
 
+function issySafeFileName(name) {
+  return name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9._-]+/g, "_")
+    .replace(/_+/g, "_")
+    .toLowerCase();
+}
+
+async function unpackIssyEngagements(zipPath) {
+  const members = listZipMembers(zipPath);
+  const engagementMembers = members.filter(
+    (m) =>
+      /3\. City engagements & Meetings\//i.test(m) &&
+      /\.(xlsx|docx)$/i.test(m) &&
+      !m.includes("__MACOSX") &&
+      !m.endsWith("/")
+  );
+  const tempDir = path.join(OUT_DIR, ".extract-tmp", "issy-engagements");
+  await fs.mkdir(tempDir, { recursive: true });
+  const written = [];
+  for (const member of engagementMembers) {
+    const quoted = member.includes(" ") ? `"${member}"` : member;
+    try {
+      execSync(`tar -xf "${zipPath}" -C "${tempDir}" ${quoted}`, {
+        stdio: "pipe",
+        maxBuffer: 50 * 1024 * 1024,
+      });
+    } catch {
+      continue;
+    }
+  }
+  const walk = async (dir) => {
+    for (const entry of await fs.readdir(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) await walk(full);
+      else if (/\.(xlsx|docx)$/i.test(entry.name)) {
+        const normalized = full.replace(/\\/g, "/");
+        const marker = "3. City engagements & Meetings/";
+        const idx = normalized.toLowerCase().indexOf(marker.toLowerCase());
+        if (idx < 0) continue;
+        const relFromEng = normalized.slice(idx + marker.length);
+        const dest = path.join(OUT_DIR, ISSY_DEST, "3. City engagements & Meetings", relFromEng);
+        await fs.mkdir(path.dirname(dest), { recursive: true });
+        await fs.copyFile(full, dest);
+        written.push(`${ISSY_DEST}/3. City engagements & Meetings/${relFromEng}`);
+      }
+    }
+  };
+  await walk(tempDir);
+  return written;
+}
+
+async function unpackIssyMedia(zipPath, includeLargeVideo) {
+  const members = listZipMembers(zipPath);
+  const mediaMembers = members.filter((m) => {
+    if (m.includes("__MACOSX") || m.endsWith("/")) return false;
+    if (/Video n image from Monica_2024\/Image\.jpg$/i.test(m)) return true;
+    if (!includeLargeVideo) return false;
+    return /\.(jpg|jpeg|png|mov|mp4)$/i.test(m) && /Issy \(Paris\) Lighthouse\//i.test(m);
+  });
+  const tempDir = path.join(OUT_DIR, ".extract-tmp", "issy-media");
+  await fs.mkdir(tempDir, { recursive: true });
+  const written = [];
+  for (const member of mediaMembers) {
+    const quoted = member.includes(" ") ? `"${member}"` : member;
+    try {
+      execSync(`tar -xf "${zipPath}" -C "${tempDir}" ${quoted}`, {
+        stdio: "pipe",
+        maxBuffer: 200 * 1024 * 1024,
+      });
+    } catch {
+      continue;
+    }
+  }
+  const walk = async (dir) => {
+    for (const entry of await fs.readdir(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) await walk(full);
+      else if (/\.(jpg|jpeg|png|mov|mp4)$/i.test(entry.name)) {
+        const safeName = issySafeFileName(entry.name);
+        const dest = path.join(OUT_DIR, ISSY_DEST, "media", safeName);
+        await fs.mkdir(path.dirname(dest), { recursive: true });
+        await fs.copyFile(full, dest);
+        written.push(`${ISSY_DEST}/media/${safeName}`);
+      }
+    }
+  };
+  await walk(tempDir);
+  return written;
+}
+
 async function unpackCopenhagenDocs(zipPath) {
   const members = listZipMembers(zipPath);
   const docMembers = members.filter(
@@ -785,6 +985,109 @@ async function main() {
   } catch (err) {
     manifest.errors.push({
       label: "cph-bulk-extract",
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+
+  const milZip = path.join(DROP_DIR, "Milano-20260709T084301Z-2-001.zip");
+  try {
+    await fs.access(milZip);
+    const milShapefiles = [
+      {
+        label: "mil-pilot01-shapefile",
+        pattern: /1\. Shape file\/Pilot 1_AMAT\/pilot01\.shp$/i,
+        outSubdir: "Milan/1. Shape file/Pilot 1_AMAT",
+      },
+      {
+        label: "mil-pilot02-shapefile",
+        pattern: /1\. Shape file\/Pilot 2_AMAT\/pilot02\.shp$/i,
+        outSubdir: "Milan/1. Shape file/Pilot 2_AMAT",
+      },
+      {
+        label: "mil-walk-graph-shapefile",
+        pattern: /DSS pedestrian tool graph\/walk_graph\.shp$/i,
+        outSubdir: "Milan/DSS pedestrian tool graph",
+      },
+      {
+        label: "mil-co2-network-shapefile",
+        pattern: /Eval data Ex ante\/6\. CO2 and noise emissions\/.*\.shp$/i,
+        outSubdir: "Milan/Eval data Ex ante/6. CO2 and noise emissions",
+      },
+    ];
+    for (const shapefile of milShapefiles) {
+      try {
+        const extracted = await unpackShapefileFromZip(milZip, shapefile.pattern, shapefile.outSubdir);
+        manifest.files.push({
+          label: shapefile.label,
+          dest: `${shapefile.outSubdir}/*`,
+          publicPath: `/sharepoint-data/${shapefile.outSubdir}/`,
+          bytes: extracted.length,
+          status: extracted.length ? "ok" : "empty",
+          members: extracted,
+        });
+        console.log(`OK  ${shapefile.label} (${extracted.length} sidecar files)`);
+      } catch (err) {
+        manifest.errors.push({
+          label: shapefile.label,
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
+  } catch (err) {
+    manifest.errors.push({
+      label: "mil-bulk-extract",
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+
+  const issyZip = path.join(DROP_DIR, ISSY_ZIP);
+  try {
+    await fs.access(issyZip);
+    try {
+      const issyEngagements = await unpackIssyEngagements(issyZip);
+      manifest.files.push({
+        label: "issy-engagements-bundle",
+        dest: `${ISSY_DEST}/3. City engagements & Meetings/*`,
+        publicPath: `/sharepoint-data/${ISSY_DEST}/3. City engagements & Meetings/`,
+        bytes: issyEngagements.length,
+        status: issyEngagements.length ? "ok" : "empty",
+        members: issyEngagements,
+        memberCount: issyEngagements.length,
+      });
+      console.log(`OK  issy-engagements-bundle (${issyEngagements.length} files)`);
+    } catch (err) {
+      manifest.errors.push({
+        label: "issy-engagements-bundle",
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+
+    try {
+      const issyMedia = await unpackIssyMedia(issyZip, INCLUDE_ISSY_MEDIA);
+      manifest.files.push({
+        label: INCLUDE_ISSY_MEDIA ? "issy-media-gallery-full" : "issy-media-gallery",
+        dest: `${ISSY_DEST}/media/*`,
+        publicPath: `/sharepoint-data/${ISSY_DEST}/media/`,
+        bytes: issyMedia.length,
+        status: issyMedia.length ? "ok" : "empty",
+        members: issyMedia,
+        memberCount: issyMedia.length,
+        notes: INCLUDE_ISSY_MEDIA
+          ? "Full video mirror (~630 MB)"
+          : "Site photo only; pass --include-issy-media for mp4/mov",
+      });
+      console.log(
+        `OK  ${INCLUDE_ISSY_MEDIA ? "issy-media-gallery-full" : "issy-media-gallery"} (${issyMedia.length} files)`
+      );
+    } catch (err) {
+      manifest.errors.push({
+        label: "issy-media-gallery",
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  } catch (err) {
+    manifest.errors.push({
+      label: "issy-bulk-extract",
       error: err instanceof Error ? err.message : String(err),
     });
   }

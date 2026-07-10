@@ -1,6 +1,7 @@
 import type { TrafficDirection, CopenhagenEvaluationRules } from "@/data/copenhagenLocationRegistry";
 import {
   getMethodologyConstraint,
+  getOtcEvaluationRulesForWorkbook,
   type MethodologyConstraint,
 } from "@/data/copenhagenLocationRegistry";
 
@@ -135,4 +136,163 @@ export function shouldExcludeCphRowByEvaluationRules(
   const date = parseCphOccurrenceDate(row);
   if (!date) return false;
   return date.getDay() === 5;
+}
+
+export const CPH_REFERENCE_WEEKDAYS = 5;
+
+export interface CphNormalizationMeta {
+  normalizationMethod: "weekday-equivalent-scaling";
+  referenceWeekdays: number;
+  weekdaysObservedPre: number;
+  weekdaysObservedPost: number;
+  preScaleFactor: number;
+  postScaleFactor: number;
+}
+
+function parseCount(value: unknown): number {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const parsed = Number.parseFloat(value.replace(",", ".").trim());
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+  return 0;
+}
+
+/** Sum 15-min OTC rows by flow (raw totals). */
+export function aggregateCphRowsByFlow(
+  rows: Record<string, unknown>[],
+  workbookKey: string | null
+): Map<string, CphModeAgg> {
+  const rule = getMethodologyConstraintForWorkbook(workbookKey);
+  const evaluationRules = workbookKey
+    ? getOtcEvaluationRulesForWorkbook(workbookKey)
+    : undefined;
+
+  const byFlow = new Map<string, CphModeAgg>();
+  rows.forEach((row) => {
+    if (shouldExcludeCphRowByEvaluationRules(row, evaluationRules)) return;
+    const cls = String(row.classification || "").toLowerCase();
+    const flow = String(row.flow || "").trim();
+    if (!flow) return;
+    if (
+      rule &&
+      shouldExcludeCphClassification(rule, inferTrafficDirectionFromFlow(flow), cls)
+    ) {
+      return;
+    }
+    const count = parseCount(row.count);
+    if (!count) return;
+    const agg =
+      byFlow.get(flow) ?? {
+        flow,
+        total: 0,
+        bike: 0,
+        pedestrian: 0,
+        motorized: 0,
+        ptw: 0,
+      };
+    agg.total += count;
+    if (cls.includes("bicycl") || cls.includes("cargo_bike")) agg.bike += count;
+    else if (cls.includes("pedestrian")) agg.pedestrian += count;
+    else if (cls.includes("motorcycl") || cls.includes("scooter")) agg.ptw += count;
+    else if (
+      cls.includes("car") ||
+      cls.includes("bus") ||
+      cls.includes("truck") ||
+      cls.includes("van") ||
+      cls.includes("train")
+    ) {
+      agg.motorized += count;
+    }
+    byFlow.set(flow, agg);
+  });
+  return byFlow;
+}
+
+export function countDistinctCphObservationDays(
+  rows: Record<string, unknown>[],
+  workbookKey: string | null
+): number {
+  const evaluationRules = workbookKey
+    ? getOtcEvaluationRulesForWorkbook(workbookKey)
+    : undefined;
+  const dates = new Set<string>();
+  for (const row of rows) {
+    if (shouldExcludeCphRowByEvaluationRules(row, evaluationRules)) continue;
+    const date = parseCphOccurrenceDate(row);
+    if (!date) continue;
+    dates.add(date.toISOString().slice(0, 10));
+  }
+  return Math.max(1, dates.size);
+}
+
+export function scaleCphModeAgg(agg: CphModeAgg, factor: number): CphModeAgg {
+  if (factor === 1) return { ...agg };
+  return {
+    ...agg,
+    bike: agg.bike * factor,
+    pedestrian: agg.pedestrian * factor,
+    motorized: agg.motorized * factor,
+    ptw: agg.ptw * factor,
+    total: agg.total * factor,
+  };
+}
+
+export function normalizeCphPrePost(
+  preRows: Record<string, unknown>[],
+  postRows: Record<string, unknown>[],
+  workbookKey: string | null,
+  referenceWeekdays = CPH_REFERENCE_WEEKDAYS
+): {
+  preRaw: Map<string, CphModeAgg>;
+  postRaw: Map<string, CphModeAgg>;
+  preNormalized: Map<string, CphModeAgg>;
+  postNormalized: Map<string, CphModeAgg>;
+  meta: CphNormalizationMeta;
+} {
+  const preRaw = aggregateCphRowsByFlow(preRows, workbookKey);
+  const postRaw = aggregateCphRowsByFlow(postRows, workbookKey);
+  const weekdaysObservedPre = countDistinctCphObservationDays(preRows, workbookKey);
+  const weekdaysObservedPost = countDistinctCphObservationDays(postRows, workbookKey);
+  const preScaleFactor = referenceWeekdays / weekdaysObservedPre;
+  const postScaleFactor = referenceWeekdays / weekdaysObservedPost;
+
+  const preNormalized = new Map<string, CphModeAgg>();
+  const postNormalized = new Map<string, CphModeAgg>();
+  const flows = new Set([...preRaw.keys(), ...postRaw.keys()]);
+  for (const flow of flows) {
+    const pre = preRaw.get(flow) ?? {
+      flow,
+      total: 0,
+      bike: 0,
+      pedestrian: 0,
+      motorized: 0,
+      ptw: 0,
+    };
+    const post = postRaw.get(flow) ?? {
+      flow,
+      total: 0,
+      bike: 0,
+      pedestrian: 0,
+      motorized: 0,
+      ptw: 0,
+    };
+    preNormalized.set(flow, scaleCphModeAgg(pre, preScaleFactor));
+    postNormalized.set(flow, scaleCphModeAgg(post, postScaleFactor));
+  }
+
+  return {
+    preRaw,
+    postRaw,
+    preNormalized,
+    postNormalized,
+    meta: {
+      normalizationMethod: "weekday-equivalent-scaling",
+      referenceWeekdays,
+      weekdaysObservedPre,
+      weekdaysObservedPost,
+      preScaleFactor,
+      postScaleFactor,
+    },
+  };
 }

@@ -20,7 +20,24 @@ import type {
   TrendPoint,
 } from "@/lib/observatoryGraphicTypes";
 import type { LocalCityPoint } from "@/services/localCityData";
+import { normalizeConfidencePct } from "@/lib/observatoryCityContent";
 import { filterCopenhagenObservatoryPoints } from "@/lib/copenhagenObservatoryView";
+import {
+  modeShareFromTrikalaInsights,
+  modeShareFromTrikalaSurveyRecords,
+} from "@/lib/trikalaModeShare";
+import {
+  modeShareFromTrikalaPilot2Aggregate,
+  modeShareFromTrikalaPilot2Location,
+  resolveTrikalaPilot2HubId,
+} from "@/lib/trikalaMapLayers/trikalaPilot2ModeShare";
+import type { TrikalaSegmentInsight } from "@/services/trikalaSurveyParser";
+import type { TrikalaLocation, TrikalaSensorJoin } from "@/data/trikalaLocationRegistry";
+import {
+  filterTrikalaObservatoryPoints,
+  findTrikalaLocationBySelection,
+  resolveTrikalaInsightSegmentFromSelection,
+} from "@/lib/trikalaObservatoryView";
 
 type ModeBreakdown = {
   pre: { bike: number; pedestrian: number; motorised: number; ptw: number; total: number };
@@ -171,18 +188,72 @@ function likertFromPoints(points: LocalCityPoint[]): LikertRow[] {
   }));
 }
 
-function statCardsFromView(view: JunctionStudyView, kpiId: string): ObservatoryGraphicPayload["statCards"] {
+function statCardsFromView(
+  view: JunctionStudyView,
+  kpiId: string,
+  points: LocalCityPoint[] = []
+): ObservatoryGraphicPayload["statCards"] {
   const { baseline, intervention } = view;
   if (kpiId === "kpi4.1") {
+    const sentimentSamples = points.filter(
+      (p) =>
+        Number.isFinite(p.value) &&
+        (p.properties?.datasetKind === "sentiment" ||
+          p.properties?.datasetKind === "survey" ||
+          p.properties?.dataOrigin === "mock")
+    );
+    const isMock = sentimentSamples.some(
+      (p) => p.properties?.dataOrigin === "mock" || p.properties?.type === "mock"
+    );
+    const avgSentiment =
+      sentimentSamples.length > 0
+        ? sentimentSamples.reduce((sum, p) => sum + p.value, 0) / sentimentSamples.length
+        : null;
+    const satisfiedPct =
+      avgSentiment != null
+        ? Math.round(avgSentiment)
+        : Math.round(intervention.modeShare.Cycle + intervention.modeShare.Pedestrian);
     return [
-      { label: "Satisfied share", value: `${Math.round(intervention.modeShare.Cycle + intervention.modeShare.Pedestrian)}%`, color: "#b0edba" },
-      { label: "Sample confidence", value: `${Math.round(view.dataConfidence * 100)}%`, note: "Survey proxy" },
+      {
+        label: "Satisfied share",
+        value: `${satisfiedPct}%`,
+        color: "#b0edba",
+        note: sentimentSamples.length
+          ? isMock
+            ? `Mock survey · n=${sentimentSamples.length}`
+            : `n=${sentimentSamples.length} samples`
+          : "Modelled proxy",
+      },
+      {
+        label: "Sample confidence",
+        value: `${normalizeConfidencePct(view.dataConfidence)}%`,
+        note: isMock ? "Mock / demo" : "Survey proxy",
+      },
     ];
   }
   if (kpiId === "kpi4.2") {
+    const a11yPoints = points.filter((p) => p.properties?.datasetKind === "accessibility");
+    const avgQuality =
+      a11yPoints.length > 0
+        ? a11yPoints.reduce((sum, p) => sum + p.value, 0) / a11yPoints.length
+        : view.kpiValue;
     return [
-      { label: "Accessibility score", value: view.kpiValue.toFixed(1), color: "#63ccff" },
-      { label: "Coverage", value: `${view.approachesCovered}/${view.totalApproaches}`, note: "Feature reach" },
+      {
+        label: "Accessibility index",
+        value: `${Math.round(avgQuality)}/100`,
+        color: "#63ccff",
+        note: a11yPoints.length ? "Mock inventory avg" : "Mock proxy",
+      },
+      {
+        label: "Indexed features",
+        value: `${a11yPoints.length || Math.round(view.kpiValue)}`,
+        note: "Mock / demo",
+      },
+      {
+        label: "Sample confidence",
+        value: `${normalizeConfidencePct(view.dataConfidence)}%`,
+        note: "Mock audit",
+      },
     ];
   }
   if (kpiId === "kpi3.2") {
@@ -221,6 +292,10 @@ export interface BuildGraphicPayloadInput {
   selectedDirectionId?: string | null;
   selectedSegmentId?: string | null;
   spec?: ObservatoryGraphicSpec | null;
+  trikalaSegmentInsights?: TrikalaSegmentInsight[];
+  trikalaLocations?: TrikalaLocation[];
+  trikalaSensorJoins?: TrikalaSensorJoin[];
+  trikalaWomenMobilityModeShare?: ModeShareRow[];
 }
 
 export function buildObservatoryGraphicPayload(
@@ -237,10 +312,20 @@ export function buildObservatoryGraphicPayload(
     selectedDirectionId,
     selectedSegmentId,
     spec: inputSpec,
+    trikalaSegmentInsights,
+    trikalaLocations,
+    trikalaSensorJoins,
+    trikalaWomenMobilityModeShare,
   } = input;
 
   const observatoryType = resolveObservatoryType(cityName, pilotId);
-  const spec = inputSpec ?? resolveObservatoryGraphic(observatoryType, selectedKpi, zone, pilotId);
+  const spec = inputSpec ?? resolveObservatoryGraphic(
+    observatoryType,
+    selectedKpi,
+    zone,
+    pilotId,
+    selectedSegmentId
+  );
   if (!spec) return null;
 
   const profile = getCityPilotProfile(pilotId);
@@ -257,11 +342,21 @@ export function buildObservatoryGraphicPayload(
       p.properties?.type === "observed" ||
       p.properties?.type === "derived"
   );
-  const scopedObserved =
-    cityName === "Copenhagen" && selectedSegmentId
-      ? filterCopenhagenObservatoryPoints(observedPoints, selectedSegmentId)
-      : observedPoints;
-  const activeObserved = scopedObserved.length ? scopedObserved : observedPoints;
+  let activeObserved = observedPoints;
+  if (selectedSegmentId) {
+    if (cityName === "Copenhagen") {
+      const scoped = filterCopenhagenObservatoryPoints(observedPoints, selectedSegmentId);
+      if (scoped.length) activeObserved = scoped;
+    } else if (cityName === "Trikala") {
+      const location = findTrikalaLocationBySelection(trikalaLocations ?? [], selectedSegmentId);
+      activeObserved = filterTrikalaObservatoryPoints(
+        observedPoints,
+        selectedSegmentId,
+        location,
+        trikalaSensorJoins
+      );
+    }
+  }
 
   const cameraDirections =
     cityName === "Copenhagen" ? cameraRowsFromPoints(activeObserved, selectedModeTypes) : [];
@@ -289,6 +384,40 @@ export function buildObservatoryGraphicPayload(
   if (cityName === "Copenhagen" && spec.graphicId === "manualCountBars") {
     const manualShare = modeShareFromManualPoints(activeObserved);
     if (manualShare.length) modeShare = manualShare;
+  }
+  if (
+    cityName === "Trikala" &&
+    (spec.graphicId === "modeShareBars" || spec.graphicId === "segmentModeShare")
+  ) {
+    if (pilotId === "tri-p2") {
+      const hubId = resolveTrikalaPilot2HubId(selectedSegmentId);
+      const hubLocation = hubId
+        ? findTrikalaLocationBySelection(trikalaLocations ?? [], hubId)
+        : undefined;
+      if (hubId) {
+        modeShare = modeShareFromTrikalaPilot2Location(hubId, hubLocation ?? null);
+      } else {
+        modeShare = modeShareFromTrikalaPilot2Aggregate();
+      }
+    } else {
+      if (trikalaWomenMobilityModeShare?.length) {
+        modeShare = trikalaWomenMobilityModeShare;
+      } else {
+        const fromRecords = modeShareFromTrikalaSurveyRecords(activeObserved);
+        if (fromRecords.length) {
+          modeShare = fromRecords;
+        } else if (trikalaSegmentInsights?.length) {
+          const segmentKey = resolveTrikalaInsightSegmentFromSelection(selectedSegmentId);
+          const scopedInsights = segmentKey
+            ? trikalaSegmentInsights.filter((i) => i.segment === segmentKey)
+            : trikalaSegmentInsights;
+          const fromInsights = modeShareFromTrikalaInsights(
+            scopedInsights.length ? scopedInsights : trikalaSegmentInsights
+          );
+          if (fromInsights.length) modeShare = fromInsights;
+        }
+      }
+    }
   }
 
   let accessibilityLikert: ObservatoryGraphicPayload["likert"];
@@ -373,7 +502,7 @@ export function buildObservatoryGraphicPayload(
             },
           ];
         })()
-      : tubeSpeedCards ?? statCardsFromView(view, selectedKpi);
+      : tubeSpeedCards ?? statCardsFromView(view, selectedKpi, activeObserved);
 
   const payload: ObservatoryGraphicPayload = {
     spec: accessibilityEmptySpec !== spec ? accessibilityEmptySpec : spec,

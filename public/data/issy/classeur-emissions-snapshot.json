@@ -1,0 +1,56 @@
+{
+  "generatedAt": "2026-07-09T12:54:40.450Z",
+  "sourceFile": "1. BASELINE DATA from Issy/Classeur.xlsx",
+  "datasetId": "issy-classeur-emissions-xlsx",
+  "modelLabel": "ASIF corridor emissions model",
+  "corridorLengthKm": 0.05,
+  "corridorLengthM": 50,
+  "trafficFlowPerHour": {
+    "motorcycles": 57,
+    "buses": 13,
+    "trucks": 11,
+    "pedestrians": 15,
+    "scooters": 2,
+    "cyclists": 99,
+    "cars": 264,
+    "lcv": 20
+  },
+  "emissionFactorsGCo2PerVkm": {
+    "motorcycles": 60.4,
+    "buses": 101.22125899999999,
+    "pedestrians": 0,
+    "scooters": 2,
+    "cyclists": 0.7997425125823131,
+    "cars": 126.42591524475526
+  },
+  "emissionsGCo2PerHour": {
+    "motorcycles": 172.14,
+    "buses": 65.79381835,
+    "trucks": 0,
+    "pedestrians": 0,
+    "scooters": 0.2,
+    "cyclists": 3.9587254372824496,
+    "cars": 1668.8220812307693,
+    "lcv": 0
+  },
+  "totalBaselineCo2G": 1910.9146250180518,
+  "fleetMix": {
+    "bus": {
+      "%": 0.04028,
+      "CO2 emissions (gCO2/km)": 9.5
+    },
+    "cars": {
+      "%": 0.057306,
+      "CO2 emissions (gCO2/km)": 19.8,
+      "Average occupancy rate": 1.43
+    },
+    "cyclists": {
+      "% e-bike trips": 0.358628929409109,
+      "CO2 emissions (gCO2/km)": 2.23
+    }
+  },
+  "notes": [
+    "Modelled CO₂ from traffic flows and Île-de-France fleet emission factors — not measured emissions.",
+    "Baseline total ~1911 g CO₂/h for 50 m corridor."
+  ]
+}

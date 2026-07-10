@@ -6,21 +6,21 @@ export const HELSINKI_PILOT_PROFILES: Record<HelsinkiPilotId, CityPilotProfile> 
   "hel-p1": {
     id: "hel-p1",
     city: "Helsinki",
-    title: "Safety Sense Helsinki",
+    title: "Accident & Near-Miss Data Collection (FVH1)",
     interventionSummary:
-      "Safety Sense corridor monitoring with intervention-first visualization and explicit pending links for partner datasets.",
+      "Safety Sense dangerous-locations and near-miss evidence collection for intervention-level safety monitoring.",
     objectives: [
-      "Map intervention geometry and monitoring points first.",
-      "Track safety pressure before/after when FVH data is linked.",
+      "Collect dangerous-location and near-miss evidence at intervention scope.",
+      "Track safety pressure and active-mobility context with linked observations.",
     ],
     expectedImpacts: [
-      "Better visibility of high-risk intervention zones.",
-      "Faster pilot-level prioritization for follow-up measures.",
+      "Higher visibility of high-risk intervention zones.",
+      "Faster prioritization of follow-up safety measures.",
     ],
     geometryType: "point",
-    dataAvailability: "Dangerous locations survey GeoJSON linked from SharePoint extract.",
+    dataAvailability: "Dangerous-locations survey and near-miss evidence linked from partner extracts.",
     methodologyNotes:
-      "Observed dangerous-location points are rendered from converted SharePoint GeoJSON (DangerousLocations_hki layer).",
+      "Observed dangerous-location points are rendered from converted partner GeoJSON and contextual support counts.",
     observatoryType: "intervention",
     interventionMarkers: [
       {
@@ -38,21 +38,21 @@ export const HELSINKI_PILOT_PROFILES: Record<HelsinkiPilotId, CityPilotProfile> 
   "hel-p2": {
     id: "hel-p2",
     city: "Helsinki",
-    title: "E-scooter parking intervention",
+    title: "E-Scooter Parking Optimisation (FVH2)",
     interventionSummary:
-      "Intervention-level monitoring at two official e-scooter parking sites with direct coordinates.",
+      "Geofencing and parking-zone optimization pilot for e-scooter curbside order and accessibility.",
     objectives: [
       "Reduce unsafe parking and improve sidewalk accessibility.",
-      "Track behavior shifts at monitored intervention locations.",
+      "Track parking behavior shifts at monitored intervention locations.",
     ],
     expectedImpacts: [
-      "Improved micromobility order near key corridors.",
-      "Clearer before/after intervention evidence at site level.",
+      "Improved micromobility parking order near key corridors.",
+      "Clearer intervention evidence at site level.",
     ],
     geometryType: "point",
-    dataAvailability: "Coordinates available; baseline/post monitoring feed partially linked.",
+    dataAvailability: "Intervention coordinates available; geofencing and parking observations partially linked.",
     methodologyNotes:
-      "Use official site coordinates as authoritative intervention markers and compare observed directional trends once post dataset is complete.",
+      "Use official intervention coordinates and compare observed parking behavior once post datasets are complete.",
     observatoryType: "intervention",
     interventionMarkers: [
       {
@@ -80,21 +80,21 @@ export const HELSINKI_PILOT_PROFILES: Record<HelsinkiPilotId, CityPilotProfile> 
   "hel-p3": {
     id: "hel-p3",
     city: "Helsinki",
-    title: "Citywide active mobility behavior",
+    title: "Intersection Safety at Viikki (FVH3)",
     interventionSummary:
-      "Pilot-level intervention observatory combining Telraam and partner mobility observations with explicit data gaps.",
+      "Raide-Jokeri crossing safety pilot at Viikki combining lidar, Telraam, and Innotrafik warning-system monitoring.",
     objectives: [
-      "Assess intervention impact on active mobility behavior.",
-      "Compare monitored intervention zones with contextual city activity.",
+      "Assess multimodal safety at the Viikki intervention crossing.",
+      "Compare baseline and post safety context with linked sensor systems.",
     ],
     expectedImpacts: [
-      "Consistent intervention reporting across Helsinki pilots.",
-      "Transparent readiness and trust communication for decision makers.",
+      "Improved evidence for intervention safety decisions at Viikki.",
+      "Transparent readiness communication for linked sensor feeds.",
     ],
     geometryType: "mixed",
-    dataAvailability: "Partial observed data; intervention geometry ingestion pending.",
+    dataAvailability: "Partial observed data from lidar/Telraam/Innotrafik sources; additional links pending.",
     methodologyNotes:
-      "Prioritize intervention geometries and show explicit missing states where post-intervention records are not yet linked.",
+      "Prioritize intervention crossing geometry and show explicit missing states where post records are not yet linked.",
     observatoryType: "intervention",
   },
 };

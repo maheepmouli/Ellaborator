@@ -15,7 +15,7 @@
     "caption": "Installed 90-degree bicycle racks accommodating active cargo-bike dimensions near Vandkunsten hub, captured May 2024.",
     "fallback": {
       "type": "narrative",
-      "text": "Photo asset unavailable — see I100275 Udført sheet and partner deployment facts (1,080 bike + 80 cargo spaces)."
+      "text": "Photo asset unavailable — see I100275 Udført sheet and parking inventory on the map."
     }
   },
   {
@@ -78,7 +78,8 @@
     "id": "cph-p3-near-encounters",
     "pilotId": "cph-p3",
     "title": "Near encounters & conflict analysis",
-    "type": "narrative",
+    "type": "dataset",
+    "path": "/data/copenhagen/near-encounters-snapshot.json",
     "linkedDatasetIds": [
       "cph-near-encounters",
       "cph-conflict-analysis"
@@ -87,9 +88,10 @@
       "Near encounters",
       "Conflict analysis"
     ],
+    "caption": "OTC-derived encounter-pressure proxy (partner structured export pending).",
     "fallback": {
       "type": "narrative",
-      "text": "Near-encounter and conflict datasets were not delivered as structured files. Safety context uses iRAP counts, OTC flows, and perceived-safety surveys."
+      "text": "Near-encounter proxy from OTC mixed-mode 15-min bins. Partner CSV/xlsx replaces proxy when delivered."
     }
   },
   {

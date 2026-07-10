@@ -13,18 +13,16 @@ import { renderInfluenceField } from "@/lib/renderInfluenceField";
 import { getCopenhagenPilotZoneAnchor } from "@/data/copenhagenCameraSites";
 import {
   buildFovWedgePolygon,
-  destinationLatLng,
-  flowArmLengthMeters,
   hubForWorkbook,
-  resolveFlowBearing,
 } from "./copenhagenFlowGeometry";
 import {
-  getCopenhagenEndpointMarkerStyle,
-  getCopenhagenFlowStyle,
   resolveCopenhagenIntensityColor,
 } from "./copenhagenFlowStyles";
 import type { SegmentInteractionHandlers } from "@/lib/wireMapSegmentInteraction";
+import { wireMarkerSegment } from "@/lib/wireMapSegmentInteraction";
 import { spreadOverlappingPositions } from "@/lib/copenhagenMarkerLayout";
+import { createMapPointDivIcon } from "@/lib/mapPointIcons";
+import { resolveMapPointIconSpec } from "@/lib/mapPointIconTaxonomy";
 import {
   buildParkingPopupHtml,
   parkingSegmentDetailFromProps,
@@ -32,6 +30,9 @@ import {
   renderCopenhagenStreetUnderlay,
   resolveParkingCategoryColor,
 } from "./copenhagenParkingLayerStyles";
+import { renderCopenhagenRadarFlowLayout } from "./copenhagenRadarFlowLayout";
+import { bindCopenhagenMapTooltip } from "./copenhagenMapTooltips";
+import { renderCopenhagenTrafficPulseOverlay } from "./copenhagenTrafficPulse";
 
 export interface CopenhagenObservedPoint {
   lat: number;
@@ -93,25 +94,27 @@ function featureSelected(
 function cameraMarkerHtml(
   loc: CopenhagenLocation,
   isSelected: boolean,
-  accentColor = "#64748b"
+  accentColor = "#64748b",
+  dimmed = false
 ): string {
+  const dimStyle = dimmed ? "opacity:0.32;filter:saturate(0.55);" : "";
   if (loc.kind === "telraam_counter") {
-    return `<div class="cph-telraam-marker ${isSelected ? "is-selected" : ""}">
+    return `<div class="cph-telraam-marker ${isSelected ? "is-selected" : ""}" style="${dimStyle}">
       <span class="cph-telraam-ping" style="background:${accentColor}33"></span>
       <span class="cph-telraam-core" style="background:${isSelected ? "#00ffff" : accentColor}"></span>
     </div>`;
   }
   if (loc.kind === "intelligent_camera") {
-    return `<div class="cph-camera-marker ${isSelected ? "is-selected" : ""}">
+    return `<div class="cph-camera-marker ${isSelected ? "is-selected" : ""}" style="${dimStyle}">
       <span class="cph-camera-ring" style="border-color:${isSelected ? "#00ffff" : accentColor}"></span>
       <span class="cph-camera-core" style="background:${isSelected ? "#00ffff" : accentColor}"></span>
     </div>`;
   }
   if (loc.kind === "otc_workbook_site") {
-    return `<div class="cph-workbook-ring ${isSelected ? "is-selected" : ""}"></div>`;
+    return `<div class="cph-workbook-ring ${isSelected ? "is-selected" : ""}" style="${dimStyle}"></div>`;
   }
   if (loc.kind === "flow_camera") {
-    return `<div class="cph-flow-camera-marker ${isSelected ? "is-selected" : ""}">
+    return `<div class="cph-flow-camera-marker ${isSelected ? "is-selected" : ""}" style="${dimStyle}">
       <span class="cph-flow-camera-ring" style="border-color:${isSelected ? "#00ffff" : accentColor}"></span>
       <span class="cph-flow-camera-core" style="background:${isSelected ? "#00ffff" : "#f59e0b"}"></span>
     </div>`;
@@ -184,12 +187,17 @@ function renderRegistryMarkers(
 ): CopenhagenLocation[] {
   const locations = getLocationsForPilot(pilotId).filter((loc) => {
     if (loc.kind === "flow_camera") return selectedKpi === "kpi1.2";
+    if (loc.kind === "intelligent_camera" && loc.otcWorkbookKey === "vandkunsten") {
+      return loc.id === "wb-vandkunsten";
+    }
     return (
       loc.kind === "telraam_counter" ||
       loc.kind === "intelligent_camera" ||
       loc.kind === "otc_workbook_site"
     );
   });
+
+  const hasFocus = Boolean(selectedSegmentId);
 
   const markerLayout = spreadOverlappingPositions(
     locations.map((loc) => ({ id: loc.id, lat: loc.lat, lon: loc.lon })),
@@ -202,25 +210,33 @@ function renderRegistryMarkers(
     const segmentId = isSite
       ? copenhagenSiteSegmentId(loc.otcWorkbookKey ?? loc.id)
       : copenhagenLocationSegmentId(loc.id);
-    const isSelected = selectedSegmentId === segmentId;
+    const isSelected = selectedSegmentId === segmentId || featureSelected(
+      selectedSegmentId,
+      segmentId,
+      loc.otcWorkbookKey ?? loc.id,
+      loc.name
+    );
+    const dimmed = hasFocus && !isSelected;
 
     if (loc.kind === "flow_camera") {
       const marker = L.marker([markerLat, markerLon], {
         icon: L.divIcon({
           className: "cph-flow-camera-icon",
-          html: cameraMarkerHtml(loc, isSelected, "#f59e0b"),
+          html: cameraMarkerHtml(loc, isSelected, "#f59e0b", dimmed),
           iconSize: [24, 24],
           iconAnchor: [12, 12],
         }),
         zIndexOffset: isSelected ? 1150 : 1050,
       }).addTo(map);
-      marker.bindTooltip(loc.name, { direction: "top", opacity: 0.9 });
+      marker.bindTooltip(loc.name, { direction: "top", opacity: 0.9, className: "tri-segment-tooltip" });
+      wireMarkerSegment(marker, { segmentId, segmentName: loc.name, speed: null, congestion: null }, handlers);
       const hit = L.circleMarker([markerLat, markerLon], {
         radius: 12,
         fillOpacity: 0,
         opacity: 0,
         weight: 0,
       }).addTo(map);
+      bindCopenhagenMapTooltip(hit, loc.name);
       wireCircleMarker(
         hit,
         { segmentId, segmentName: loc.name, speed: null, congestion: null },
@@ -246,18 +262,21 @@ function renderRegistryMarkers(
       const marker = L.marker([markerLat, markerLon], {
         icon: L.divIcon({
           className: "cph-sensor-icon",
-          html: cameraMarkerHtml(loc, isSelected, sensorColor),
+          html: cameraMarkerHtml(loc, isSelected, sensorColor, dimmed),
           iconSize: [28, 28],
           iconAnchor: [14, 14],
         }),
         zIndexOffset: isSelected ? 1200 : loc.kind === "telraam_counter" ? 1100 : 1000,
       }).addTo(map);
+      bindCopenhagenMapTooltip(marker, loc.name);
+      wireMarkerSegment(marker, { segmentId, segmentName: loc.name, speed: null, congestion: null }, handlers);
       const hit = L.circleMarker([markerLat, markerLon], {
         radius: 14,
         fillOpacity: 0,
         opacity: 0,
         weight: 0,
       }).addTo(map);
+      bindCopenhagenMapTooltip(hit, loc.name);
       wireCircleMarker(
         hit,
         { segmentId, segmentName: loc.name, speed: null, congestion: null },
@@ -272,22 +291,37 @@ function renderRegistryMarkers(
       return;
     }
 
-    if (isSite && isSelected) {
-      const ring = L.circleMarker([markerLat, markerLon], {
-        radius: 11,
-        fillColor: "transparent",
-        fillOpacity: 0,
-        color: "#c4b5fd",
-        weight: 2,
-        opacity: 0.9,
-        dashArray: "4 3",
+    if (isSite) {
+      const marker = L.marker([markerLat, markerLon], {
+        icon: L.divIcon({
+          className: "cph-workbook-site-icon",
+          html: cameraMarkerHtml(loc, isSelected, "#c4b5fd", dimmed),
+          iconSize: [22, 22],
+          iconAnchor: [11, 11],
+        }),
+        zIndexOffset: isSelected ? 1180 : 1080,
       }).addTo(map);
+      bindCopenhagenMapTooltip(marker, loc.name);
+      wireMarkerSegment(marker, { segmentId, segmentName: loc.name, speed: null, congestion: null }, handlers);
+      const hit = L.circleMarker([markerLat, markerLon], {
+        radius: 16,
+        fillOpacity: 0,
+        opacity: 0,
+        weight: 0,
+      }).addTo(map);
+      bindCopenhagenMapTooltip(hit, loc.name);
       wireCircleMarker(
-        ring,
+        hit,
         { segmentId, segmentName: loc.name, speed: null, congestion: null },
         handlers,
-        { baseRadius: 11, selectedSegmentId }
+        {
+          baseRadius: 16,
+          highlightRadius: 18,
+          selectedSegmentId,
+        }
       );
+      markersOut.push(marker);
+      return;
     }
   });
 
@@ -450,7 +484,8 @@ export function renderCopenhagenMapLayers(options: RenderCopenhagenMapLayersOpti
   );
 
   const svgRenderer = L.svg({ padding: 0.8 });
-  const safetyKpi = selectedKpi === "kpi2.1";
+  const useRadarFlowLayout =
+    !["kpi3.1", "kpi4.2"].includes(selectedKpi) && observedPoints.length > 0;
 
   flowsByWorkbook.forEach((flows, workbookKey) => {
     const workbookSite = registryLocations.find(
@@ -465,112 +500,64 @@ export function renderCopenhagenMapLayers(options: RenderCopenhagenMapLayersOpti
       }
     );
 
-    flows.forEach((point, flowIndex) => {
-      const props = point.properties ?? {};
-      const streetName = String(props.streetName ?? "Copenhagen");
-      const direction = String(props.direction ?? props.mode ?? "n/a");
-      const segmentId = String(props.segmentId || props.id || point.id);
-      const cameraId = inferCameraId(streetName);
-      const isSelected = featureSelected(selectedSegmentId, segmentId, cameraId, streetName);
-
-      const baselineValue = Number(props.baselineValue ?? point.value ?? 0);
-      const interventionValue = Number(props.interventionValue ?? point.value ?? 0);
-      const comparisonValue =
-        typeof props.comparisonValue === "number"
-          ? Number(props.comparisonValue)
-          : interventionValue - baselineValue;
-
-      const intensityColor = resolveCopenhagenIntensityColor({
+    if (useRadarFlowLayout) {
+      renderCopenhagenRadarFlowLayout({
+        map,
+        hubLat: hub.lat,
+        hubLon: hub.lon,
+        flows,
         scenario,
-        baselineValue,
-        interventionValue,
-        comparisonValue,
-        getValueColor,
-        safetyKpi,
-      });
-      const intensityValue = intensityScalar(
-        scenario,
-        baselineValue,
-        interventionValue,
-        comparisonValue
-      );
-
-      const bearing = resolveFlowBearing(streetName, direction, flowIndex, flows.length);
-      const armLen = flowArmLengthMeters(Math.abs(comparisonValue), isSelected);
-      const end = destinationLatLng(hub.lat, hub.lon, bearing, armLen);
-      const flowStyle = getCopenhagenFlowStyle({
-        isSelected,
-        comparisonValue,
-        scenario,
-        baseColor: intensityColor,
-      });
-
-      const polyline = L.polyline(
-        [
-          [hub.lat, hub.lon],
-          end,
-        ],
-        {
-          color: flowStyle.color,
-          weight: flowStyle.weight,
-          opacity: flowStyle.opacity,
-          dashArray: flowStyle.dashArray,
-          className: flowStyle.className,
-          lineCap: "round",
-          renderer: flowStyle.className ? svgRenderer : undefined,
-          interactive: false,
-        }
-      ).addTo(map);
-      polylinesOut.push(polyline);
-
-      const endpointStyle = getCopenhagenEndpointMarkerStyle(
-        isSelected,
-        intensityColor,
-        intensityValue
-      );
-      const endpoint = L.circleMarker(end, {
-        ...endpointStyle,
-        interactive: true,
-      }).addTo(map);
-
-      endpoint.bindPopup(
-        buildFlowPopup({
-          streetName,
-          direction,
-          baselineValue,
-          interventionValue,
-          comparisonValue,
-          modeFilterLabel,
-        })
-      );
-
-      const segmentName = `${streetName} · ${direction}`;
-      wireCircleMarker(
-        endpoint,
-        { segmentId, segmentName, speed: null, congestion: null },
+        selectedSegmentId,
         segmentHandlers,
+        polylinesOut,
+        circlesOut,
+        svgRenderer,
+        wireCircleMarker,
+        intensityScalar,
+        featureSelected: (segmentId) => {
+          const flow = flows.find(
+            (f) => String(f.properties?.segmentId || f.properties?.id || f.id) === segmentId
+          );
+          const streetName = String(
+            flow?.properties?.streetName ?? flows[0]?.properties?.streetName ?? ""
+          );
+          const cameraId = inferCameraId(streetName);
+          return featureSelected(selectedSegmentId, segmentId, cameraId, streetName);
+        },
+        buildPopup: (point) => {
+          const props = point.properties ?? {};
+          return buildFlowPopup({
+            streetName: String(props.streetName ?? "Copenhagen"),
+            direction: String(props.direction ?? props.mode ?? "n/a"),
+            baselineValue: Number(props.baselineValue ?? point.value ?? 0),
+            interventionValue: Number(props.interventionValue ?? point.value ?? 0),
+            comparisonValue:
+              typeof props.comparisonValue === "number"
+                ? Number(props.comparisonValue)
+                : Number(props.interventionValue ?? point.value ?? 0) -
+                  Number(props.baselineValue ?? point.value ?? 0),
+            modeFilterLabel,
+          });
+        },
+      });
+      renderCopenhagenTrafficPulseOverlay(
+        map,
+        hub.lat,
+        hub.lon,
+        flows,
+        scenario,
+        markersOut,
+        circlesOut,
+        workbookSite?.name ?? String(flows[0]?.properties?.streetName ?? workbookKey),
         {
-          baseRadius: endpointStyle.radius,
-          highlightRadius: endpointStyle.radius + 2,
+          workbookKey,
+          segmentHandlers,
+          wireCircleMarker,
           selectedSegmentId,
-          baseStyle: {
-            fillColor: endpointStyle.fillColor,
-            fillOpacity: endpointStyle.fillOpacity,
-            color: endpointStyle.color,
-            weight: endpointStyle.weight,
-            opacity: 1,
-          },
-          highlightStyle: {
-            fillColor: "#00ffff",
-            fillOpacity: 0.95,
-            color: "#ffffff",
-            weight: 2.4,
-            opacity: 1,
-          },
         }
       );
-      circlesOut.push(endpoint);
-    });
+      return;
+    }
   });
 
   if ((selectedKpi === "kpi3.1" || selectedKpi === "kpi4.2") && parkingGeoJson?.features?.length) {
@@ -580,7 +567,8 @@ export function renderCopenhagenMapLayers(options: RenderCopenhagenMapLayersOpti
       polylinesOut,
       selectedKpi,
       segmentHandlers,
-      selectedSegmentId
+      selectedSegmentId,
+      map.getZoom()
     );
   }
 
@@ -608,16 +596,19 @@ export function renderCopenhagenMapLayers(options: RenderCopenhagenMapLayersOpti
           },
           selectedKpi
         );
-        const radius = Math.min(11, 4 + Math.sqrt(Math.max(0, bays)));
-        const marker = L.circleMarker([markerLat, markerLon], {
-          radius,
-          color: accent,
-          fillColor: accent,
-          fillOpacity: 0.78,
-          weight: 1.6,
-          opacity: 1,
-          className: "cph-parking-bay-marker",
+        const iconSpec = resolveMapPointIconSpec({
+          facilityCategory: category,
+          category,
+          datasetKind: point.properties?.datasetKind,
+        });
+        const marker = L.marker([markerLat, markerLon], {
+          icon: createMapPointDivIcon(iconSpec, `${iconSpec.label} · ${String(point.properties?.streetName ?? "Copenhagen")}`),
         }).addTo(map);
+        wireMarkerSegment(
+          marker,
+          { segmentId, segmentName, speed: null, congestion: null },
+          segmentHandlers
+        );
         marker.bindPopup(
           buildParkingPopupHtml({
             Vejnavn: point.properties?.streetName,
@@ -650,11 +641,13 @@ export function renderCopenhagenMapLayers(options: RenderCopenhagenMapLayersOpti
             },
           }
         );
-        circlesOut.push(marker);
+        markersOut.push(marker);
       });
   }
 
   if (selectedKpi === "kpi4.2") {
+    const hasParkingPolygons = Boolean(parkingGeoJson?.features?.length);
+    if (!hasParkingPolygons) {
     const accessibilityPoints = observedPoints.filter(
       (p) => p.properties?.datasetKind === "accessibility"
     );
@@ -673,14 +666,19 @@ export function renderCopenhagenMapLayers(options: RenderCopenhagenMapLayersOpti
         const category = String(point.properties?.facilityCategory ?? point.properties?.category ?? "Accessibility");
         const segmentId = String(point.properties?.segmentId ?? point.id);
         const segmentName = String(point.properties?.streetName ?? category);
-        const marker = L.circleMarker([markerLat, markerLon], {
-          radius: Math.min(12, 5 + Math.sqrt(Math.abs(delta))),
-          color: delta >= 0 ? "#22c55e" : "#f97316",
-          fillColor: delta >= 0 ? "#86efac" : "#fdba74",
-          fillOpacity: 0.55,
-          weight: 1.4,
-          className: "cph-accessibility-marker",
+        const iconSpec = resolveMapPointIconSpec({
+          facilityCategory: category,
+          category,
+          datasetKind: point.properties?.datasetKind,
+        });
+        const marker = L.marker([markerLat, markerLon], {
+          icon: createMapPointDivIcon(iconSpec, `${iconSpec.label} · ${segmentName}`),
         }).addTo(map);
+        wireMarkerSegment(
+          marker,
+          { segmentId, segmentName, speed: null, congestion: null },
+          segmentHandlers
+        );
         marker.bindTooltip(
           `${segmentName} · before ${Number(point.properties?.baselineValue ?? 0)} → after ${Number(point.properties?.interventionValue ?? point.value ?? 0)} bays`,
           { direction: "top", opacity: 0.92 }
@@ -701,8 +699,9 @@ export function renderCopenhagenMapLayers(options: RenderCopenhagenMapLayersOpti
             selectedSegmentId,
           }
         );
-        circlesOut.push(marker);
+        markersOut.push(marker);
       });
+    }
   }
 
   circlesOut.forEach((layer) => layer.bringToFront());

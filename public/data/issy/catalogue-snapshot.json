@@ -1,0 +1,393 @@
+{
+  "generatedAt": "2026-07-09T13:03:17.651Z",
+  "sourceDrop": "Issy (Paris) Lighthouse-20260625T113904Z-3-001.zip",
+  "zipFileCount": 21,
+  "extractedFileCount": 17,
+  "dataReadinessMatrix": [
+    {
+      "theme": "Mobility",
+      "kpi": "1.1. Plans to expand interventions beyond the LL",
+      "dataRequired": "Plans to expand interventions beyond the LL",
+      "pilot1Data": "NA",
+      "pilot1Status": "NA",
+      "pilot2Data": "NA",
+      "pilot2Status": "NA",
+      "pilot3Data": "NA",
+      "pilot3Status": "NA"
+    },
+    {
+      "theme": "Mobility",
+      "kpi": "1.2. Increased share of sustainable mobility modes",
+      "dataRequired": "Modal share",
+      "pilot1Data": "Wintics camera measuring traffic at LL intervention site",
+      "pilot1Status": "completed",
+      "pilot2Data": "NA",
+      "pilot2Status": "NA",
+      "pilot3Data": "GECO Air data",
+      "pilot3Status": "in progress"
+    },
+    {
+      "theme": "Safety",
+      "kpi": "2.1. Increase safety of all users",
+      "dataRequired": "Safety Star Rating",
+      "pilot1Data": "TODO",
+      "pilot1Status": "not started",
+      "pilot2Data": "NA",
+      "pilot2Status": "NA",
+      "pilot3Data": "NA",
+      "pilot3Status": "NA"
+    },
+    {
+      "theme": "Safety",
+      "kpi": "2.1. Increase safety of all users",
+      "dataRequired": "Predicted fatal and serious injuries (FSI)",
+      "pilot1Data": "?",
+      "pilot1Status": "not started",
+      "pilot2Data": "NA",
+      "pilot2Status": "NA",
+      "pilot3Data": "?",
+      "pilot3Status": "?"
+    },
+    {
+      "theme": "Safety",
+      "kpi": "2.1. Increase safety of all users",
+      "dataRequired": "CycleRap",
+      "pilot1Data": "TODO",
+      "pilot1Status": "not started",
+      "pilot2Data": "NA",
+      "pilot2Status": "NA",
+      "pilot3Data": "NA",
+      "pilot3Status": "NA"
+    },
+    {
+      "theme": "Safety",
+      "kpi": "2.1. Increase safety of all users",
+      "dataRequired": "Median and 85th %ile operating speeds of general traffic",
+      "pilot1Data": "3 potential sources :\r\n- FCD data from Urban Radar\r\n- Potential COLAS data from its own evaluation\r\n- GECO Air GPS data",
+      "pilot1Status": "in progress",
+      "pilot2Data": "NA",
+      "pilot2Status": "NA",
+      "pilot3Data": "GECO Air data",
+      "pilot3Status": "in progress"
+    },
+    {
+      "theme": "Environment",
+      "kpi": "3.1. Deployment of facilities and services that support ZEM",
+      "dataRequired": "Deployment of facilities and services that support ZEM",
+      "pilot1Data": "NA",
+      "pilot1Status": "NA",
+      "pilot2Data": "NA",
+      "pilot2Status": "NA",
+      "pilot3Data": "NA",
+      "pilot3Status": "NA"
+    },
+    {
+      "theme": "Environment",
+      "kpi": "3.2. Addresses city climate and environmental targets",
+      "dataRequired": "Features installed/deployed that align with the city’s targets (water, tree covers, etc.)",
+      "pilot1Data": "NA",
+      "pilot1Status": "NA",
+      "pilot2Data": "NA",
+      "pilot2Status": "NA",
+      "pilot3Data": "NA",
+      "pilot3Status": "NA"
+    },
+    {
+      "theme": "Environment",
+      "kpi": "3.2. Addresses city climate and environmental targets",
+      "dataRequired": "Estimated or modelled emissions/noise pollution/quality adjusted life years, etc.",
+      "pilot1Data": "2 potential ways of measuring it:\r\n- if the toolkit \r\n- estimation based on modal share (KPI 1.2) and speed patterns (KPI 2.1)",
+      "pilot1Status": "?",
+      "pilot2Data": "NA",
+      "pilot2Status": "NA",
+      "pilot3Data": "GECO Air data",
+      "pilot3Status": "in progress"
+    },
+    {
+      "theme": "Social",
+      "kpi": "4.1. User satisfaction for interventions",
+      "dataRequired": "User satisfaction for interventions",
+      "pilot1Data": "NA",
+      "pilot1Status": "NA",
+      "pilot2Data": "NA",
+      "pilot2Status": "NA",
+      "pilot3Data": "NA",
+      "pilot3Status": "NA"
+    },
+    {
+      "theme": "Social",
+      "kpi": "4.2. Increase in accessibility and security",
+      "dataRequired": "Disabled car parking, wayfinding, tactile pavement, auditory signals, ramps etc.",
+      "pilot1Data": "NA",
+      "pilot1Status": "NA",
+      "pilot2Data": "NA",
+      "pilot2Status": "NA",
+      "pilot3Data": "NA",
+      "pilot3Status": "NA"
+    },
+    {
+      "theme": "Social",
+      "kpi": "4.2. Increase in accessibility and security",
+      "dataRequired": "Data of mode split/choice, time people spend at the site, and diversity captured in the mandatory LL site assessments",
+      "pilot1Data": "?",
+      "pilot1Status": "?",
+      "pilot2Data": "NA",
+      "pilot2Status": "NA",
+      "pilot3Data": "?",
+      "pilot3Status": "?"
+    },
+    {
+      "theme": "Social",
+      "kpi": "4.2. Increase in accessibility and security",
+      "dataRequired": "Observed use or uptake of services and facilities provided in the intervention",
+      "pilot1Data": "Wintics camera measuring traffic at LL intervention site",
+      "pilot1Status": "completed",
+      "pilot2Data": "NA",
+      "pilot2Status": "NA",
+      "pilot3Data": "GECO Air users",
+      "pilot3Status": "completed"
+    },
+    {
+      "theme": "Social",
+      "kpi": "4.2. Increase in accessibility and security",
+      "dataRequired": "Healthy Streets feelings survey",
+      "pilot1Data": "TODO",
+      "pilot1Status": "not started",
+      "pilot2Data": "NA",
+      "pilot2Status": "NA",
+      "pilot3Data": "NA",
+      "pilot3Status": "NA"
+    }
+  ],
+  "files": [
+    {
+      "id": "issy-flow-baseline-csv",
+      "file": "1. BASELINE DATA from Issy/ISSY1 - detailed traffic data/ISSY1_baseline_traffic_data_november_2024.csv",
+      "title": "ISSY1 zone OD — baseline (Nov 2024)",
+      "format": "csv",
+      "integrationStatus": "integrated",
+      "pilotIds": [
+        "issy-p1",
+        "issy-p2",
+        "issy-p3"
+      ],
+      "linkedKpis": [
+        "kpi1.2"
+      ],
+      "sheets": [],
+      "notes": "3,118 hourly OD rows; bundled at /data/issy/.",
+      "publicPath": "/sharepoint-data/Issy-20260625T113904Z-3-001/Issy/1. BASELINE DATA from Issy/ISSY1 - detailed traffic data/ISSY1_baseline_traffic_data_november_2024.csv"
+    },
+    {
+      "id": "issy-flow-post-csv",
+      "file": "2. POST IMPLEMENTATION DATA from Issy/ISSY1 - detailed traffic_data/ISSY1_post_intervention_traffic_data_november_2025.csv",
+      "title": "ISSY1 zone OD — post (Nov 2025)",
+      "format": "csv",
+      "integrationStatus": "integrated",
+      "pilotIds": [
+        "issy-p1",
+        "issy-p2",
+        "issy-p3"
+      ],
+      "linkedKpis": [
+        "kpi1.2"
+      ],
+      "sheets": [],
+      "notes": "2,944 hourly OD rows; paired with baseline for comparison.",
+      "publicPath": "/sharepoint-data/Issy-20260625T113904Z-3-001/Issy/2. POST IMPLEMENTATION DATA from Issy/ISSY1 - detailed traffic_data/ISSY1_post_intervention_traffic_data_november_2025.csv"
+    },
+    {
+      "id": "issy-flowell-synthesis-pdf",
+      "file": "1. BASELINE DATA from Issy/FLOWELL ISSY - T0-T1 SYNTHESIS .pdf",
+      "title": "FLOWELL Issy T0–T1 synthesis report",
+      "format": "pdf",
+      "integrationStatus": "catalogued",
+      "pilotIds": [
+        "issy-p1"
+      ],
+      "linkedKpis": [
+        "kpi1.2"
+      ],
+      "sheets": [],
+      "notes": "Partner synthesis PDF — narrative and stakeholder context.",
+      "publicPath": "/sharepoint-data/Issy-20260625T113904Z-3-001/Issy/1. BASELINE DATA from Issy/FLOWELL ISSY - T0-T1 SYNTHESIS .pdf"
+    },
+    {
+      "id": "issy-evaluation-plan-docx",
+      "file": "ISSY Intervention Evaluation Plan_DRAFT (1).docx",
+      "title": "Intervention evaluation plan (draft)",
+      "format": "docx",
+      "integrationStatus": "catalogued",
+      "pilotIds": [
+        "issy-p1",
+        "issy-p2",
+        "issy-p3"
+      ],
+      "linkedKpis": [],
+      "sheets": [],
+      "notes": "Evaluation methodology draft from Issy partners.",
+      "publicPath": "/sharepoint-data/Issy-20260625T113904Z-3-001/Issy/ISSY Intervention Evaluation Plan_DRAFT (1).docx"
+    },
+    {
+      "id": "issy-baseline-readme-docx",
+      "file": "1. BASELINE DATA from Issy/ISSY1 - detailed traffic data/readme.docx",
+      "title": "ISSY1 baseline OD readme",
+      "format": "docx",
+      "integrationStatus": "catalogued",
+      "pilotIds": [
+        "issy-p1",
+        "issy-p2",
+        "issy-p3"
+      ],
+      "linkedKpis": [
+        "kpi1.2"
+      ],
+      "sheets": [],
+      "notes": "Zone and CSV field definitions for baseline traffic data.",
+      "publicPath": "/sharepoint-data/Issy-20260625T113904Z-3-001/Issy/1. BASELINE DATA from Issy/ISSY1 - detailed traffic data/readme.docx"
+    },
+    {
+      "id": "issy-post-readme-docx",
+      "file": "2. POST IMPLEMENTATION DATA from Issy/ISSY1 - detailed traffic_data/readme.docx",
+      "title": "ISSY1 post-intervention OD readme",
+      "format": "docx",
+      "integrationStatus": "catalogued",
+      "pilotIds": [
+        "issy-p1",
+        "issy-p2",
+        "issy-p3"
+      ],
+      "linkedKpis": [
+        "kpi1.2"
+      ],
+      "sheets": [],
+      "notes": "Zone and CSV field definitions for post-intervention traffic data.",
+      "publicPath": "/sharepoint-data/Issy-20260625T113904Z-3-001/Issy/2. POST IMPLEMENTATION DATA from Issy/ISSY1 - detailed traffic_data/readme.docx"
+    },
+    {
+      "id": "issy-cycling-infra-api",
+      "file": "(live API — not in SharePoint zip)",
+      "title": "KPI 3.1 — Cycling / zero-emission facilities API",
+      "format": "api",
+      "integrationStatus": "integrated",
+      "pilotIds": [
+        "issy-p2"
+      ],
+      "linkedKpis": [
+        "kpi3.1"
+      ],
+      "sheets": [],
+      "notes": "Observed facility counts and map geometry from Issy cycling infrastructure REST API. No ZEM inventory file in the June 2026 zip — requirements xlsx marks KPI 3.1 as NA for all pilots.",
+      "publicPath": null
+    },
+    {
+      "id": "issy-wintics-baseline-xlsx",
+      "file": "1. BASELINE DATA from Issy/baseline_evaluation_data_light_emitting_marking_solution.xlsx",
+      "title": "Wintics baseline — light-emitting markings",
+      "pilotIds": [
+        "issy-p1"
+      ],
+      "linkedKpis": [
+        "kpi1.2",
+        "kpi2.1"
+      ],
+      "parserStatus": "integrated",
+      "geometry": "point",
+      "notes": "Site camera at living-lab junction; baseline only — no post Wintics workbook in drop.",
+      "format": "xlsx",
+      "integrationStatus": "extracted",
+      "sheets": [
+        "Feuil1"
+      ],
+      "publicPath": "/sharepoint-data/Issy-20260625T113904Z-3-001/Issy/1. BASELINE DATA from Issy/baseline_evaluation_data_light_emitting_marking_solution.xlsx"
+    },
+    {
+      "id": "issy-classeur-emissions-xlsx",
+      "file": "1. BASELINE DATA from Issy/Classeur.xlsx",
+      "title": "ASIF emissions workbook (Classeur)",
+      "pilotIds": [
+        "issy-p1",
+        "issy-p3"
+      ],
+      "linkedKpis": [
+        "kpi3.2"
+      ],
+      "parserStatus": "integrated",
+      "geometry": "segment",
+      "notes": "Modelled CO₂ from traffic flows and fleet emission factors (~1,911 g baseline for 50 m corridor).",
+      "format": "xlsx",
+      "integrationStatus": "extracted",
+      "sheets": [
+        "ASIF",
+        "Bus",
+        "Trucks",
+        "Cars",
+        "Cyclists"
+      ],
+      "publicPath": "/sharepoint-data/Issy-20260625T113904Z-3-001/Issy/1. BASELINE DATA from Issy/Classeur.xlsx"
+    },
+    {
+      "id": "issy-data-requirements-xlsx",
+      "file": "Pre-intervention evaluation - data requirements.xlsx",
+      "title": "Pre-intervention data requirements matrix",
+      "pilotIds": [
+        "issy-p1",
+        "issy-p2",
+        "issy-p3"
+      ],
+      "linkedKpis": [
+        "kpi1.2",
+        "kpi2.1",
+        "kpi3.1",
+        "kpi3.2"
+      ],
+      "parserStatus": "ready",
+      "geometry": "none",
+      "notes": "KPI readiness by intervention — Wintics completed, GecoAir in progress, iRAP not started.",
+      "format": "xlsx",
+      "integrationStatus": "catalogued",
+      "sheets": [
+        "Feuil1"
+      ],
+      "publicPath": "/sharepoint-data/Issy-20260625T113904Z-3-001/Issy/Pre-intervention evaluation - data requirements.xlsx"
+    },
+    {
+      "id": "issy-metadata-records-xlsx",
+      "file": "ELABORATOR_Issy-Le-Molineaux_Metadata_Records.xlsx",
+      "title": "ELABORATOR metadata records template",
+      "pilotIds": [
+        "issy-p1",
+        "issy-p2",
+        "issy-p3"
+      ],
+      "linkedKpis": [],
+      "parserStatus": "planned",
+      "geometry": "none",
+      "notes": "FAIR metadata template — partially filled for Traffic data 2025.",
+      "format": "xlsx",
+      "integrationStatus": "extracted",
+      "sheets": [
+        "Metadata Records",
+        "Legend",
+        "Selection Lists"
+      ],
+      "publicPath": "/sharepoint-data/Issy-20260625T113904Z-3-001/Issy/ELABORATOR_Issy-Le-Molineaux_Metadata_Records.xlsx"
+    }
+  ],
+  "kpi31ZeroEmission": {
+    "sharePointFile": false,
+    "requirementsStatus": "NA for all pilots (Pilot 1, 2, 3) in pre-intervention matrix",
+    "runtimeSource": "issy-cycling-infra-api",
+    "runtimeSourceLabel": "City cycling infrastructure REST API (live)",
+    "primaryPilot": "issy-p2",
+    "notes": "KPI 3.1 is supported in the app via the facilities API, not via a SharePoint workbook. No EV-charging or ZEM facility inventory was delivered in the June 2026 drop."
+  },
+  "gaps": [
+    "KPI 3.1 (zero-emission facilities): no SharePoint file — live cycling infrastructure API only; partners marked all pilots NA in requirements xlsx.",
+    "Post-intervention Wintics evaluation workbook (Pilot 1 T1) not in June 2026 drop.",
+    "GecoAir app export feeds not yet delivered (requirements: in progress).",
+    "iRAP / CycleRAP safety scores not started per requirements matrix.",
+    "Official zone polygon GIS — map uses layout-approximated centroids.",
+    "Large intervention videos (~630 MB) require --include-issy-media extract flag."
+  ]
+}

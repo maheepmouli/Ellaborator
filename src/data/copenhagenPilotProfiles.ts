@@ -16,10 +16,7 @@ export const COPENHAGEN_PILOT_PROFILES: Record<CopenhagenPilotId, CityPilotProfi
       COPENHAGEN_PILOT_REGISTRY["cph-p1"].objective.primary,
       ...COPENHAGEN_PILOT_REGISTRY["cph-p1"].objective.secondary,
     ],
-    expectedImpacts: [
-      COPENHAGEN_PILOT_REGISTRY["cph-p1"].evaluation.expectedOutcome ?? "",
-      COPENHAGEN_PILOT_REGISTRY["cph-p1"].intervention.spatialMetrics ?? "",
-    ].filter(Boolean),
+    expectedImpacts: COPENHAGEN_PILOT_REGISTRY["cph-p1"].evaluation.methods,
     geometryType: "point",
     dataAvailability:
       "OTC, Flow cameras, Manual counts, Telraam, and surveys (pilot-scoped locations on map).",
@@ -35,9 +32,7 @@ export const COPENHAGEN_PILOT_PROFILES: Record<CopenhagenPilotId, CityPilotProfi
       COPENHAGEN_PILOT_REGISTRY["cph-p2"].objective.primary,
       ...COPENHAGEN_PILOT_REGISTRY["cph-p2"].objective.secondary,
     ],
-    expectedImpacts: (COPENHAGEN_PILOT_REGISTRY["cph-p2"].intervention.deploymentFacts ?? []).map(
-      (fact) => fact
-    ),
+    expectedImpacts: COPENHAGEN_PILOT_REGISTRY["cph-p2"].evaluation.methods,
     geometryType: "point",
     dataAvailability:
       "Infrastructure deployment metrics primary; OTC at Vandkunsten provides supporting corridor context.",

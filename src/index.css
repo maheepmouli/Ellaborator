@@ -594,3 +594,355 @@
     opacity: 0;
   }
 }
+
+/* Trikala partner infrastructure markers (My Maps registry) */
+.tri-infra-icon {
+  background: transparent !important;
+  border: none !important;
+}
+
+.tri-infra-marker {
+  position: relative;
+  width: var(--tri-infra-size, 14px);
+  height: var(--tri-infra-size, 14px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tri-infra-dot {
+  width: calc(var(--tri-infra-size, 14px) * 0.55);
+  height: calc(var(--tri-infra-size, 14px) * 0.55);
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.55);
+}
+
+.tri-infra-pin {
+  width: calc(var(--tri-infra-size, 14px) * 0.5);
+  height: calc(var(--tri-infra-size, 14px) * 0.5);
+  border-radius: 2px 2px 50% 50%;
+  transform: rotate(-45deg);
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
+}
+
+.tri-infra-outer-ring {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1px dashed currentColor;
+  border-color: var(--tri-infra-color, #ffb300);
+  opacity: 0.65;
+  animation: tri-infra-sensor-pulse 2.4s ease-in-out infinite;
+}
+
+.tri-infra-marker.is-selected .tri-infra-dot,
+.tri-infra-marker.is-selected .tri-infra-pin {
+  outline: 2px solid rgba(255, 255, 255, 0.85);
+  outline-offset: 2px;
+}
+
+.leaflet-overlay-pane svg path.tri-infra-park-ride-poly {
+  filter: drop-shadow(0 0 6px rgba(46, 204, 113, 0.35));
+  transition: stroke-opacity 0.15s ease, stroke-width 0.15s ease, fill-opacity 0.15s ease;
+}
+
+.leaflet-overlay-pane svg path.tri-infra-park-ride-poly--hover {
+  filter: drop-shadow(0 0 12px rgba(46, 204, 113, 0.85));
+  animation: tri-crossing-dash 1.2s linear infinite;
+}
+
+@keyframes tri-infra-sensor-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  50% {
+    transform: scale(1.12);
+    opacity: 0.85;
+  }
+}
+
+/* High-contrast neon infrastructure nodes (Leaflet SVG circle markers) */
+.leaflet-overlay-pane svg path.tri-infra-marker {
+  transition:
+    stroke-width 0.2s ease-in-out,
+    stroke-opacity 0.2s ease-in-out,
+    fill-opacity 0.2s ease-in-out;
+  filter: drop-shadow(0 0 6px var(--marker-glow-color, rgba(255, 255, 255, 0.45)));
+}
+
+.leaflet-overlay-pane svg path.tri-infra-marker--hover,
+.leaflet-overlay-pane svg path.tri-infra-marker.tri-infra-marker--hover {
+  filter: drop-shadow(0 0 12px var(--marker-glow-color, rgba(255, 255, 255, 0.75)));
+}
+
+.leaflet-overlay-pane svg path.tri-infra-marker--air_quality_sensor {
+  filter: drop-shadow(0 0 4px rgba(201, 162, 39, 0.35));
+}
+
+.leaflet-overlay-pane svg path.tri-infra-marker--bike_lane_sensor {
+  filter: drop-shadow(0 0 4px rgba(34, 197, 94, 0.32));
+}
+
+.leaflet-overlay-pane svg path.tri-infra-marker--bike_station {
+  filter: drop-shadow(0 0 7px var(--marker-glow-color, #a3e4d7));
+}
+
+.leaflet-overlay-pane svg path.tri-infra-marker--parking_station {
+  filter: drop-shadow(0 0 5px var(--marker-glow-color, #b39ddb));
+}
+
+/* Expanding pulse halo for live sensor nodes */
+.leaflet-overlay-pane svg path.tri-infra-pulse-ring {
+  pointer-events: none;
+  fill: none;
+  animation: trikala-infra-pulse 2.5s infinite cubic-bezier(0.25, 0, 0, 1);
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
+@keyframes trikala-infra-pulse {
+  0% {
+    stroke-opacity: 0.42;
+    stroke-width: 1.5px;
+    transform: scale(0.55);
+  }
+  100% {
+    stroke-opacity: 0;
+    stroke-width: 0.5px;
+    transform: scale(1.25);
+  }
+}
+
+.leaflet-overlay-pane svg path.tri-env-zone-outer,
+.leaflet-overlay-pane svg path.tri-env-zone-inner {
+  pointer-events: none;
+  filter: drop-shadow(0 0 6px rgba(201, 162, 39, 0.45));
+  animation: tri-env-zone-pulse 3.6s ease-in-out infinite;
+}
+
+.leaflet-overlay-pane svg path.tri-satisfaction-zone {
+  pointer-events: none;
+  filter: drop-shadow(0 0 6px rgba(45, 168, 184, 0.42));
+  animation: tri-satisfaction-zone-pulse 3.6s ease-in-out infinite;
+}
+
+.leaflet-overlay-pane svg path.tri-accessibility-zone {
+  pointer-events: none;
+  filter: drop-shadow(0 0 6px rgba(34, 197, 94, 0.42));
+  animation: tri-accessibility-zone-pulse 3.6s ease-in-out infinite;
+}
+
+.leaflet-overlay-pane svg path.tri-segment-glow-ring {
+  pointer-events: none;
+  filter: drop-shadow(0 0 5px currentColor);
+}
+
+@keyframes tri-env-zone-pulse {
+  0%,
+  100% {
+    fill-opacity: 0.18;
+    stroke-opacity: 0.62;
+  }
+  50% {
+    fill-opacity: 0.28;
+    stroke-opacity: 0.82;
+  }
+}
+
+@keyframes tri-satisfaction-zone-pulse {
+  0%,
+  100% {
+    fill-opacity: 0.16;
+    stroke-opacity: 0.58;
+  }
+  50% {
+    fill-opacity: 0.26;
+    stroke-opacity: 0.78;
+  }
+}
+
+@keyframes tri-accessibility-zone-pulse {
+  0%,
+  100% {
+    fill-opacity: 0.16;
+    stroke-opacity: 0.56;
+  }
+  50% {
+    fill-opacity: 0.26;
+    stroke-opacity: 0.76;
+  }
+}
+
+.tri-zone-tag-host {
+  background: transparent !important;
+  border: 0 !important;
+}
+
+.tri-zone-tag {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  transform: translate(-50%, -100%);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.tri-zone-tag-kpi {
+  font-family: "DM Sans", system-ui, sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #f8fafc;
+  background: color-mix(in oklab, var(--zone-neon, #22c55e) 72%, #0f172a 28%);
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid color-mix(in oklab, var(--zone-neon) 55%, transparent);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+
+.tri-zone-tag-label {
+  font-family: "DM Sans", system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(248, 250, 252, 0.88);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+  padding: 1px 4px;
+}
+
+.map-point-icon-host {
+  background: transparent !important;
+  border: 0;
+}
+
+.map-point-icon-badge {
+  background: #0d1528 !important;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 0 0 2px var(--icon-accent),
+    0 0 12px var(--icon-glow),
+    0 0 22px color-mix(in oklab, var(--icon-glow) 75%, transparent 25%);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 26px;
+  height: 26px;
+}
+
+.map-point-icon-badge--hover {
+  transform: scale(1.16);
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.32),
+    0 0 14px var(--icon-glow),
+    0 0 26px color-mix(in oklab, var(--icon-glow) 78%, transparent 22%);
+}
+
+.map-point-icon {
+  width: 68%;
+  height: 68%;
+  color: var(--icon-accent);
+  display: grid;
+  place-items: center;
+}
+
+.map-point-icon svg {
+  width: 100%;
+  height: 100%;
+  color: var(--icon-accent);
+  stroke: currentColor;
+  stroke-width: 2.2;
+}
+
+.issy-flow-arm-animated {
+  animation: cph-flow-dash 1.4s linear infinite;
+}
+
+/* Copenhagen camera hub — radiating traffic pulse (layered over flow arms) */
+.custom-traffic-pulse {
+  background: transparent !important;
+  border: none !important;
+  pointer-events: none;
+}
+
+.traffic-pulse-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.pulse-ring {
+  position: absolute;
+  border: 2px solid #38bdf8;
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  will-change: width, height, opacity;
+}
+
+.pulse-outbound .ring-1 {
+  border-color: #38bdf8;
+  animation: ripple-out 2.5s infinite linear;
+}
+.pulse-outbound .ring-2 {
+  border-color: #38bdf8;
+  animation: ripple-out 2.5s infinite linear 0.8s;
+}
+.pulse-outbound .ring-3 {
+  border-color: #38bdf8;
+  animation: ripple-out 2.5s infinite linear 1.6s;
+}
+
+@keyframes ripple-out {
+  0% {
+    width: 10px;
+    height: 10px;
+    opacity: 0.8;
+  }
+  100% {
+    width: 180px;
+    height: 180px;
+    opacity: 0;
+  }
+}
+
+.pulse-inbound .ring-1 {
+  border-color: #ef4444;
+  animation: ripple-in 2.5s infinite linear;
+}
+.pulse-inbound .ring-2 {
+  border-color: #ef4444;
+  animation: ripple-in 2.5s infinite linear 0.8s;
+}
+.pulse-inbound .ring-3 {
+  border-color: #ef4444;
+  animation: ripple-in 2.5s infinite linear 1.6s;
+}
+
+@keyframes ripple-in {
+  0% {
+    width: 180px;
+    height: 180px;
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.6;
+  }
+  100% {
+    width: 10px;
+    height: 10px;
+    opacity: 0.1;
+  }
+}
+
+.leaflet-overlay-pane svg path.cph-traffic-anchor-dot,
+.leaflet-overlay-pane .cph-traffic-anchor-dot {
+  z-index: 1000;
+}

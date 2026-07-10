@@ -8,10 +8,9 @@ import {
 } from "@/data/copenhagenLocationRegistry";
 import {
   applyMethodologyToAgg,
+  aggregateCphRowsByFlow,
   getMethodologyConstraintForWorkbook,
-  shouldExcludeCphClassification,
-  shouldExcludeCphRowByEvaluationRules,
-  inferTrafficDirectionFromFlow,
+  normalizeCphPrePost,
 } from "@/lib/copenhagenMethodology";
 import type { NormalizedCityRecord, ScenarioType } from "@/types/normalized-city-data";
 import { parseCopenhagenExtendedRecords } from "@/services/copenhagenExtendedParsers";
@@ -61,6 +60,15 @@ interface CphJsonDirectionRow {
   flow: string;
   pre: { bike: number; pedestrian: number; motorised: number; ptw: number; total: number };
   post: { bike: number; pedestrian: number; motorised: number; ptw: number; total: number };
+  preNormalized?: { bike: number; pedestrian: number; motorised: number; ptw: number; total: number };
+  postNormalized?: { bike: number; pedestrian: number; motorised: number; ptw: number; total: number };
+  periodMeta?: {
+    referenceWeekdays: number;
+    weekdaysObservedPre: number;
+    weekdaysObservedPost: number;
+    preScaleFactor: number;
+    postScaleFactor: number;
+  };
 }
 
 interface ZarInterventionCentroid {
@@ -122,6 +130,11 @@ function isPlaceholderCell(value: unknown): boolean {
 }
 
 function inferZaragozaPilot(code: string): string {
+  const normalized = code.replace(/[^a-z0-9]/gi, "").toUpperCase();
+  if (normalized.includes("AYZG1")) return "zar-p1";
+  if (normalized.includes("AYZG2") || normalized.includes("ROMAREDA")) return "zar-p2";
+  if (normalized.includes("AYZG3")) return "zar-p3";
+  if (normalized.includes("AYZG4")) return "zar-p4";
   return "zar-p1";
 }
 
@@ -206,21 +219,23 @@ async function parseCopenhagenFromJsonFallback(kpiId: string): Promise<Normalize
       const applyRule = (agg: CphFlowAgg): CphFlowAgg =>
         rule ? applyMethodologyToAgg(agg, rule) : agg;
 
+      const preSource = row.preNormalized ?? row.pre;
+      const postSource = row.postNormalized ?? row.post;
       const baselineAgg = applyRule({
         flow: row.flow,
-        total: row.pre.total,
-        bike: row.pre.bike,
-        pedestrian: row.pre.pedestrian,
-        motorized: row.pre.motorised,
-        ptw: row.pre.ptw,
+        total: preSource.total,
+        bike: preSource.bike,
+        pedestrian: preSource.pedestrian,
+        motorized: preSource.motorised,
+        ptw: preSource.ptw,
       });
       const interventionAgg = applyRule({
         flow: row.flow,
-        total: row.post.total,
-        bike: row.post.bike,
-        pedestrian: row.post.pedestrian,
-        motorized: row.post.motorised,
-        ptw: row.post.ptw,
+        total: postSource.total,
+        bike: postSource.bike,
+        pedestrian: postSource.pedestrian,
+        motorized: postSource.motorised,
+        ptw: postSource.ptw,
       });
       const baselineValue = cphSiteMetric(baselineAgg, kpiId);
       const interventionValue = cphSiteMetric(interventionAgg, kpiId);
@@ -259,8 +274,9 @@ async function parseCopenhagenFromJsonFallback(kpiId: string): Promise<Normalize
           },
         },
         source: "OpenTrafficCam directional counts (bundled JSON fallback)",
-        method:
-          "Pre-aggregated directional counts from repository JSON when SharePoint xlsx mirror is unavailable.",
+        method: row.periodMeta
+          ? `Bundled JSON fallback, normalised to ${row.periodMeta.referenceWeekdays} weekday-equivalent days.`
+          : "Pre-aggregated directional counts from repository JSON when SharePoint xlsx mirror is unavailable.",
         type: "observed",
         spatialQuality: "exact",
         geometryLinkage: "exact",
@@ -353,51 +369,7 @@ function aggregateCphRows(
   rows: Record<string, unknown>[],
   workbookKey: string | null
 ): Map<string, CphFlowAgg> {
-  const rule = getMethodologyConstraintForWorkbook(workbookKey);
-  const evaluationRules = getOtcEvaluationRulesForWorkbook(workbookKey);
-  const byFlow = new Map<string, CphFlowAgg>();
-  rows.forEach((row) => {
-    if (shouldExcludeCphRowByEvaluationRules(row, evaluationRules)) return;
-    const cls = String(row.classification || "").toLowerCase();
-    const flow = String(row.flow || "").trim();
-    if (!flow) return;
-    if (
-      rule &&
-      shouldExcludeCphClassification(rule, inferTrafficDirectionFromFlow(flow), cls)
-    ) {
-      return;
-    }
-    const count = parseNumber(row.count);
-    if (!count) return;
-    const agg =
-      byFlow.get(flow) ?? {
-        flow,
-        total: 0,
-        bike: 0,
-        pedestrian: 0,
-        motorized: 0,
-        ptw: 0,
-      };
-    agg.total += count;
-    if (cls.includes("bicycl") || cls.includes("cargo_bike")) agg.bike += count;
-    else if (cls.includes("pedestrian")) agg.pedestrian += count;
-    else if (
-      cls.includes("motorcycl") ||
-      cls.includes("scooter")
-    ) {
-      agg.ptw += count;
-    } else if (
-      cls.includes("car") ||
-      cls.includes("bus") ||
-      cls.includes("truck") ||
-      cls.includes("van") ||
-      cls.includes("train")
-    ) {
-      agg.motorized += count;
-    }
-    byFlow.set(flow, agg);
-  });
-  return byFlow;
+  return aggregateCphRowsByFlow(rows, workbookKey);
 }
 
 function cphSiteMetric(agg: CphFlowAgg, kpiId: string): number {
@@ -495,22 +467,41 @@ async function parseCopenhagenRecords(kpiId: string): Promise<NormalizedCityReco
 
       const workbookKey = inferOtcWorkbookKey(siteName);
       const methodologyRule = getMethodologyConstraintForWorkbook(workbookKey);
-      const preByFlow = aggregateCphRows(preRows, workbookKey);
-      const postByFlow = aggregateCphRows(postRows, workbookKey);
-      const allFlows = new Set<string>([...preByFlow.keys(), ...postByFlow.keys()]);
+      const { preNormalized, postNormalized, preRaw, postRaw, meta } = normalizeCphPrePost(
+        preRows,
+        postRows,
+        workbookKey
+      );
+      const allFlows = new Set<string>([
+        ...preNormalized.keys(),
+        ...postNormalized.keys(),
+      ]);
       if (allFlows.size === 0) continue;
 
       const siteId = siteName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
       const evaluationNotes = getCopenhagenWorkbookEvaluationNotes(workbookKey);
       const tempCoverage: NormalizedCityRecord["temporalCoverage"] =
-        preByFlow.size > 0 && postByFlow.size > 0 ? "before-after" : "single-period";
+        preNormalized.size > 0 && postNormalized.size > 0 ? "before-after" : "single-period";
 
       allFlows.forEach((flow) => {
-        const pre = preByFlow.get(flow);
-        const post = postByFlow.get(flow);
-        let baselineAgg = pre ?? { flow, total: 0, bike: 0, pedestrian: 0, motorized: 0, ptw: 0 };
-        let interventionAgg =
-          post ?? { flow, total: 0, bike: 0, pedestrian: 0, motorized: 0, ptw: 0 };
+        const preNorm = preNormalized.get(flow);
+        const postNorm = postNormalized.get(flow);
+        let baselineAgg = preNorm ?? {
+          flow,
+          total: 0,
+          bike: 0,
+          pedestrian: 0,
+          motorized: 0,
+          ptw: 0,
+        };
+        let interventionAgg = postNorm ?? {
+          flow,
+          total: 0,
+          bike: 0,
+          pedestrian: 0,
+          motorized: 0,
+          ptw: 0,
+        };
         if (methodologyRule) {
           baselineAgg = applyMethodologyToAgg(baselineAgg, methodologyRule);
           interventionAgg = applyMethodologyToAgg(interventionAgg, methodologyRule);
@@ -553,7 +544,7 @@ async function parseCopenhagenRecords(kpiId: string): Promise<NormalizedCityReco
           },
           source: "OpenTrafficCam counts (pre + post per direction)",
           method:
-            "Pre and post 15-min counts aggregated by direction (flow column) and vehicle classification; coordinates from workbook Overview sheet.",
+            `Pre and post 15-min counts aggregated by direction, normalised to ${meta.referenceWeekdays} weekday-equivalent days (pre ${meta.weekdaysObservedPre}d → ×${meta.preScaleFactor.toFixed(2)}, post ${meta.weekdaysObservedPost}d → ×${meta.postScaleFactor.toFixed(2)}).`,
           type: "observed",
           spatialQuality: "exact",
           geometryLinkage: "exact",
@@ -565,7 +556,7 @@ async function parseCopenhagenRecords(kpiId: string): Promise<NormalizedCityReco
             datePreRow ? ` · pre: ${String(datePreRow[1] ?? "").split(",")[0]}` : ""
           }${datePostRow ? ` · post: ${String(datePostRow[1] ?? "").split(",")[0]}` : ""}${
             evaluationNotes ? ` · ${evaluationNotes}` : ""
-          }`,
+          } · normalised ${meta.referenceWeekdays}d equiv.`,
           methodologyWarnings: methodologyRule?.warnings,
           parserStatus: "ready",
         });
@@ -591,7 +582,10 @@ async function parseCopenhagenRecords(kpiId: string): Promise<NormalizedCityReco
   }
 
   const extended = await parseCopenhagenExtendedRecords(kpiId);
-  const merged = dedupeCopenhagenRecordsBySegmentId([...otcRecords, ...extended]);
+  const hasEmissionsModel = extended.some((r) => r.datasetKind === "emissions");
+  const otcForMerge =
+    kpiId === "kpi3.2" && hasEmissionsModel ? [] : otcRecords;
+  const merged = dedupeCopenhagenRecordsBySegmentId([...otcForMerge, ...extended]);
 
   if (merged.length === 0) {
     if (missingFiles.length > 0 || loadedFiles.length !== COPENHAGEN_CAMERA_FILES.length) {
@@ -1073,6 +1067,42 @@ export async function loadLocalCityPoints(
   selectedPilotId?: string | null,
   scenario: ScenarioType = "intervention"
 ): Promise<LocalCityPoint[]> {
+  const cityKey = normalizeCityKey(cityName);
+  if (cityKey.includes("issy") && kpiId === "kpi4.2" && selectedPilotId) {
+    const { getIssyAccessibilityMock, issyAccessibilityToLocalPoints } = await import(
+      "@/data/issyAccessibilityMock"
+    );
+    const profile = getIssyAccessibilityMock(selectedPilotId);
+    if (profile) {
+      const diagnosticsKey = localCityDiagnosticsKey(cityName, kpiId, selectedPilotId);
+      localCityDiagnosticsCache.set(diagnosticsKey, {
+        reason: "ok",
+        message: `Mock accessibility inventory loaded for ${selectedPilotId} (${profile.totalFeatures} features).`,
+      });
+      return issyAccessibilityToLocalPoints(profile, scenario);
+    }
+  }
+
+  if (cityKey.includes("issy") && kpiId === "kpi4.1" && selectedPilotId) {
+    const { getIssySentimentMock, issySentimentToLocalPoints } = await import(
+      "@/data/issySentimentMock"
+    );
+    const profile = getIssySentimentMock(selectedPilotId);
+    if (profile) {
+      const diagnosticsKey = localCityDiagnosticsKey(cityName, kpiId, selectedPilotId);
+      localCityDiagnosticsCache.set(diagnosticsKey, {
+        reason: "ok",
+        message: `Mock GecoAir satisfaction loaded for ${selectedPilotId} (${profile.samples.length} samples).`,
+      });
+      return issySentimentToLocalPoints(profile, scenario);
+    }
+    localCityDiagnosticsCache.set(localCityDiagnosticsKey(cityName, kpiId, selectedPilotId), {
+      reason: "no-records",
+      message: "No mock satisfaction profile for this Issy pilot.",
+    });
+    return [];
+  }
+
   const records = await getNormalizedCityRecords(cityName, kpiId);
   const filtered = selectedPilotId
     ? records.filter((record) => {
@@ -1145,7 +1175,6 @@ export async function loadLocalCityPoints(
   }
 
   const observedCities = new Set(["copenhagen", "zaragoza", "trikala", "helsinki", "milan"]);
-  const cityKey = normalizeCityKey(cityName);
 
   if (observedCities.has(cityKey)) {
     const parseDiagnostics = cityKey === "copenhagen" ? copenhagenParseDiagnostics.get(kpiId) : null;

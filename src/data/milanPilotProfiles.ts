@@ -6,49 +6,49 @@ export const MILAN_PILOT_PROFILES: Record<MilanPilotId, CityPilotProfile> = {
   "mil-p1": {
     id: "mil-p1",
     city: "Milan",
-    title: "Neighbourhood low-traffic zone",
+    title: "Universal Design in Olympic Routes",
     interventionSummary:
-      "Street-segment intervention observatory for low-traffic neighborhood safety and flow pressure.",
+      "Universal-design adaptation along Olympic routes with partial segment-level evidence.",
     objectives: [
-      "Reduce vehicle dominance in neighborhood streets.",
-      "Improve safety and active mobility conditions.",
+      "Improve universal accessibility and safety along Olympic routes.",
+      "Track segment-level safety and mobility effects where data exists.",
     ],
     expectedImpacts: [
-      "Lower segment-level speed and pressure near intervention streets.",
-      "Improved mode balance in intervention area.",
+      "Lower pressure on priority intervention segments.",
+      "Improved route accessibility context for vulnerable users.",
     ],
     geometryType: "line",
-    dataAvailability: "Observed segment data active; joins partially dependent on IDs.",
+    dataAvailability: "Partial dataset; post-intervention data missing.",
     methodologyNotes:
-      "Use observed segment geometry where available; missing joins are reported in QA metadata.",
+      "Use observed segment geometry where available and keep missing post-intervention evidence explicit.",
     observatoryType: "street-segment",
   },
   "mil-p2": {
     id: "mil-p2",
     city: "Milan",
-    title: "Protected cycling corridor",
+    title: "Tactical Intervention at Stadium",
     interventionSummary:
-      "Street-segment observatory around protected cycling corridor implementation.",
+      "Tactical intervention around the stadium with partial segment observability.",
     objectives: [
-      "Increase cycling safety and uptake.",
+      "Improve mobility conditions around the stadium intervention footprint.",
       "Reduce speed-related exposure on intervention segments.",
     ],
     expectedImpacts: [
-      "Higher cycling activity around protected segments.",
       "Reduced speed pressure along intervention streets.",
+      "Clearer intervention monitoring around stadium-adjacent links.",
     ],
     geometryType: "line",
-    dataAvailability: "Observed speed and environment segment datasets active.",
+    dataAvailability: "Partial dataset; baseline package missing.",
     methodologyNotes:
-      "Maintain segment-level trust metadata and expose missing data joins explicitly.",
+      "Maintain segment-level trust metadata and expose missing baseline links explicitly.",
     observatoryType: "street-segment",
   },
   "mil-p3": {
     id: "mil-p3",
     city: "Milan",
-    title: "Transit-priority reallocation",
+    title: "Decision Support System",
     interventionSummary:
-      "Street-segment intervention observatory for transit-priority lane and signal changes.",
+      "Decision-support mobility layer integrating segment evidence for operational planning.",
     objectives: [
       "Improve transit reliability.",
       "Reduce emissions pressure from corridor delay.",

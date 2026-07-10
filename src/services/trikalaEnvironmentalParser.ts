@@ -1,6 +1,10 @@
 import * as XLSX from "xlsx";
 import type { NormalizedCityRecord } from "@/types/normalized-city-data";
 import { TRIKALA_PILOT_ANCHOR } from "@/services/trikalaSurveyParser";
+import {
+  loadTrikalaLocationsBundle,
+  resolveSensorRegistryPosition,
+} from "@/data/trikalaLocationRegistry";
 
 export const TRIKALA_ENVIRONMENTAL_FILE =
   "/sharepoint-data/Trikala/smart_citizen_kit_environmental_metrics.xlsx";
@@ -16,6 +20,9 @@ export interface TrikalaSensorRow {
   noiseCapable: boolean;
   lat: number;
   lng: number;
+  locationLabel?: string;
+  locationId?: string | null;
+  fromRegistry?: boolean;
 }
 
 function parseNumber(value: unknown): number {
@@ -41,7 +48,10 @@ function sensorOffset(sensorId: number, index: number): { lat: number; lng: numb
   };
 }
 
-function parseSensorRows(rows: Record<string, unknown>[]): TrikalaSensorRow[] {
+function parseSensorRows(
+  rows: Record<string, unknown>[],
+  registry?: Awaited<ReturnType<typeof loadTrikalaLocationsBundle>>
+): TrikalaSensorRow[] {
   const sensors: TrikalaSensorRow[] = [];
   let index = 0;
   rows.forEach((row) => {
@@ -54,7 +64,13 @@ function parseSensorRows(rows: Record<string, unknown>[]): TrikalaSensorRow[] {
       /outdoor/i.test(inOutdoorRaw) ? "Outdoor" : /indoor/i.test(inOutdoorRaw) ? "Indoor" : "Unknown";
     const statusRaw = String(row.Status ?? "").trim();
     const status = /online/i.test(statusRaw) ? "Online" : /offline/i.test(statusRaw) ? "Offline" : "Unknown";
-    const offset = sensorOffset(sensorId, index);
+    const label = String(row.Location ?? row.location ?? row.Site ?? "").trim();
+    const registryPos =
+      registry &&
+      resolveSensorRegistryPosition(sensorId, registry.sensorJoins, registry.locations);
+    const join = registry?.sensorJoins.find((j) => j.sensorId === sensorId);
+    const locationId = join?.locationId ?? null;
+    const offset = registryPos ?? sensorOffset(sensorId, index);
     index += 1;
     sensors.push({
       sensorId,
@@ -65,19 +81,23 @@ function parseSensorRows(rows: Record<string, unknown>[]): TrikalaSensorRow[] {
       noiseCapable: hasCapability(row.Noise),
       lat: offset.lat,
       lng: offset.lng,
+      locationLabel: label || join?.label || undefined,
+      locationId,
+      fromRegistry: Boolean(registryPos),
     });
   });
   return sensors;
 }
 
 async function loadSensorRows(): Promise<TrikalaSensorRow[]> {
+  const registry = await loadTrikalaLocationsBundle();
   try {
     const response = await fetch(encodeURI(TRIKALA_ENVIRONMENTAL_FILE));
     if (!response.ok) return [];
     const workbook = XLSX.read(await response.arrayBuffer(), { type: "array" });
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: "" });
-    return parseSensorRows(rows);
+    return parseSensorRows(rows, registry);
   } catch {
     return [];
   }
@@ -160,8 +180,13 @@ export async function buildTrikalaEnvironmentalRecords(
     const monitoringIndex = Math.round(
       sensor.capabilityScore * 100 * (sensor.status === "Online" ? 1 : 0.55)
     );
+    const segmentId = sensor.locationId ?? "tri-p1-environmental-sensor";
+    const recordId = sensor.locationId
+      ? `trikala-kpi3.2-${sensor.locationId}`
+      : `trikala-kpi3.2-sensor-${sensor.sensorId}`;
+    const displayLabel = sensor.locationLabel ?? `Sensor ${sensor.sensorId}`;
     records.push({
-      id: `trikala-kpi3.2-sensor-${sensor.sensorId}`,
+      id: recordId,
       city: "Trikala",
       cityId: "trikala",
       interventionId: "tri-p1",
@@ -177,13 +202,15 @@ export async function buildTrikalaEnvironmentalRecords(
       source: "Smart Citizen Kit sensor registry",
       method: `Sensor ${sensor.sensorId} — ${sensor.status.toLowerCase()}, capability breadth ${Math.round(sensor.capabilityScore * 100)}%.`,
       type: "observed",
-      spatialQuality: "inferred",
-      geometryLinkage: "inferred",
+      spatialQuality: sensor.fromRegistry ? "matched" : "inferred",
+      geometryLinkage: sensor.fromRegistry ? "matched" : "inferred",
       temporalCoverage: "single-period",
-      locationMethod: "pilot_area_inference",
-      segmentId: "tri-p1-environmental-sensor",
-      streetName: `Sensor ${sensor.sensorId}`,
-      spatialNote: "Per-sensor position jittered near pilot anchor (coordinates column empty in source).",
+      locationMethod: sensor.fromRegistry ? "segment_id_join" : "pilot_area_inference",
+      segmentId,
+      streetName: displayLabel,
+      spatialNote: sensor.fromRegistry
+        ? "Position from partner My Maps registry join."
+        : "Per-sensor position jittered near pilot anchor (coordinates column empty in source).",
       parserStatus: "partial",
       datasetKind: "environmental-sensor",
     });

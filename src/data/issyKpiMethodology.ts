@@ -63,6 +63,7 @@ export const ISSY_KPI_METHODOLOGY: IssyKpiMethodologyEntry[] = [
         primaryDatasetIds: [
           "issy-flow-baseline-csv",
           "issy-flow-post-csv",
+          "issy-wintics-baseline-xlsx",
           "issy-traffic-api",
           "issy-bike-counter-api",
         ],
@@ -76,6 +77,7 @@ export const ISSY_KPI_METHODOLOGY: IssyKpiMethodologyEntry[] = [
           "Compare post vs baseline; report change in percentage points on the KPI card.",
           "Draw one OD arc per CSV row between zone centroids on the map at city / pilot zoom — never split across multiple contextual streets.",
           "The monitored intervention corridor uses traficissy segment context only. No per-street mode share is assigned from the OD CSV.",
+          "Wintics baseline xlsx (Pilot 1 site camera) parsed to wintics-baseline-snapshot.json — shown in sidebar for issy-p1 only; point measurement, not merged into zone OD KPI.",
         ],
         formulas: `OD roll-up (per period, optional day filter):
   flow(z_in, z_out, cat) = Σ avg_traffic
@@ -102,6 +104,7 @@ Fallback if CSV fails to load:
           ISSY_OD_CSV_DISCLAIMER,
           ISSY_JUNCTION_KPI12_ARM_NOTE,
           ISSY_JUNCTION_ARM_VISUAL_DISCLAIMER,
+          "Wintics baseline xlsx provides site-level modal share at the living-lab camera — distinct geometry from zone OD CSV; do not merge without explicit methodology.",
         ],
         codeRefs: [
           "src/services/issyFlowData.ts",
@@ -181,6 +184,7 @@ Map:
           "Observed only where the API returns features; partial coverage shows as reduced counts.",
           "Sidebar headline may use CITY_DATA mock (312 units) when live aggregation is not wired.",
           "Not a full city inventory audit unless the API covers all facility types.",
+          "No zero-emission / ZEM facility workbook in the June 2026 SharePoint drop — requirements xlsx marks KPI 3.1 as NA for all Issy pilots; this KPI is API-only at catalogue level.",
         ],
         codeRefs: [
           "src/services/cyclingInfrastructureApi.ts",
@@ -199,36 +203,38 @@ Map:
         name,
         sourceKind,
         dataType: sourceKindToDataType(sourceKind),
-        primaryDatasetIds: ["issy-traffic-api"],
+        primaryDatasetIds: ["issy-traffic-api", "issy-classeur-emissions-xlsx"],
         steps: [
-          "Map / segment layer: derive environmental pressure from traficissy congestion index per segment.",
+          "Climate hex grid at junction: allocate Classeur ASIF baseline CO₂ (~1,911 g/h for 50 m corridor) across hex cells when snapshot is loaded.",
+          "Intervention / comparison scenarios scale modelled CO₂ using KPI 3.2 chart-year anchor or headline reduction %.",
+          "Fallback when Classeur snapshot unavailable: derive environmental pressure from synthetic hex intensity (congestion-style proxy).",
           "Sidebar chart: use CITY_DATA time series (2020–2024) for headline % reduction and year selector.",
-          "Hex / influence field: scale visual intensity from selected chart year or headline mainValue.",
-          "At junction zoom, segment colouring may multiply pressure by chart-year anchor for visual consistency with the line chart.",
           "Pilot 3 (GecoAir): narrative references citizen air-quality app — no direct GecoAir feed in map layers yet.",
         ],
-        formulas: `Segment / map intensity (traficissy):
+        formulas: `ASIF model (Classeur.xlsx, when loaded):
+  totalBaselineCo2G ≈ 1,911 g/h (50 m corridor, Nov 2024 traffic inputs)
+
+Per hex cell (distance-weighted allocation):
+  cellCo2G = totalBaselineCo2G × weight(cell) / Σ weights
+
+Intervention scenario:
+  cellCo2G_intervention ≈ cellCo2G_baseline × reductionFactor(year)
+
+Fallback segment proxy (no Classeur):
   environmentalPressure = indice_de_congestion × 100
 
-Chart year anchor (sidebar time series):
-  intensity(year) = clamp(timeSeries[year].value, 0, 120)
-
-Hex / polygon base intensity:
-  polygonBase = intensity(selectedYear) ?? (100 − mainValue)
-
-Junction visual scaling (when year selected):
-  displayedPressure ≈ segmentPressure × (intensity(year) / 100)
-
-Not measured CO₂, PM2.5, or noise unless emissions inventory data is linked.`,
+Not measured CO₂, PM2.5, or noise unless live inventory feeds are linked.`,
         limitations: [
-          "Derived proxy from congestion — not measured emissions or air-quality raster.",
+          "Classeur values are modelled from traffic flows and fleet factors — not measured emissions.",
           "Sidebar breakdown (CO₂ kg/day, PM2.5, noise) is demo CITY_DATA unless inventory feeds are integrated.",
           "GecoAir app data is not yet wired into KPI computation.",
+          "Post-intervention ASIF workbook not in June 2026 drop — intervention hex values use KPI reduction scaling on baseline model.",
         ],
         codeRefs: [
-          "src/services/trafficApi.ts",
+          "src/services/issyWorkbookSnapshots.ts",
+          "src/lib/issyClasseurEmissions.ts",
+          "src/lib/issyClimateHexObservatory.ts",
           "src/lib/kpi32YearIntensity.ts",
-          "src/components/HeroMap.tsx",
         ],
       };
     })(),
@@ -245,20 +251,24 @@ Not measured CO₂, PM2.5, or noise unless emissions inventory data is linked.`,
         dataType: sourceKindToDataType(sourceKind),
         primaryDatasetIds: [],
         steps: [
-          "No Issy satisfaction survey or interview dataset is integrated in the current build.",
-          "Sidebar gauge and breakdown use static CITY_DATA demo values for storytelling.",
-          "Map sentiment field (if shown) is illustrative — not linked to observed survey responses.",
+          "Pilot-scoped mock GecoAir samples at src/data/issySentimentMock.ts (ISSY3 only until survey feed is delivered).",
+          "Left panel, observatory, and map use the same mock profile — headline 82% satisfied with per-arm mock scores.",
+          "All values are labelled Mock / demo until geo-coded GecoAir survey responses are integrated.",
         ],
-        formulas: `N/A — placeholder until survey dataset is linked.
+        formulas: `Per pilot mock profile:
+  satisfiedPct = mean(mock sample scores) — registry anchor 82%
+  breakdown = Physical Accessibility, Safety & Security, General Satisfaction
+  sample.satisfactionScore = deterministic mock score per corridor arm
 
-Demo sidebar (CITY_DATA):
-  mainValue = % satisfied (e.g. 82%)
-  breakdown = Physical Accessibility, Safety & Security, General Satisfaction`,
+Not a live citizen survey feed.`,
         limitations: [
-          "Mock / demo only — do not cite as observed citizen satisfaction for Issy.",
+          "Mock / demo only — do not cite as observed GecoAir satisfaction for Issy.",
           "Replace with stratified survey or app ratings when data is delivered.",
         ],
-        codeRefs: ["src/data/kpiDefinitions.ts (CITY_DATA Issy block)"],
+        codeRefs: [
+          "src/data/issySentimentMock.ts",
+          "src/data/kpiDefinitions.ts (CITY_DATA Issy block)",
+        ],
       };
     })(),
   },
@@ -274,21 +284,19 @@ Demo sidebar (CITY_DATA):
         dataType: sourceKindToDataType(sourceKind),
         primaryDatasetIds: [],
         steps: [
-          "No Issy-specific accessibility audit workbook (unlike Milan SharePoint KPI 4.2 sheet).",
-          "Map may show inferred accessibility / reach layers from facility proximity where configured.",
-          "Sidebar feature counts and change figures use CITY_DATA demo until audit geometry is linked.",
+          "Pilot-scoped mock inventory at src/data/issyAccessibilityMock.ts — feature counts and placement differ per ISSY1 / ISSY2 / ISSY3.",
+          "Map shows mock accessibility markers on KPI 1.2 mode-share corridor arms only; observatory uses the same pilot profile for breakdown bars.",
+          "All values are labelled Mock / demo until Issy delivers an audit workbook (Milan-style) or geo-coded inventory.",
         ],
-        formulas: `N/A — no Issy audit file in current integration.
+        formulas: `Per pilot mock profile:
+  totalFeatures = sum(category counts in pilot breakdown)
+  compositeIndex = 0–100 pilot reach score (headline index)
+  feature.qualityScore = deterministic mock score per placed asset
 
-Demo sidebar (CITY_DATA):
-  mainValue = total accessibility features (e.g. 124)
-  breakdown = Ramps, Tactile Paving, Audio Signals, Rest Areas
-
-Map (when enabled):
-  derived reach / facility proximity — not EN 17210 field audit`,
+Not an EN 17210 or WCAG field audit.`,
         limitations: [
-          "Derived / demo — not an official EN 17210 or WCAG accessibility audit for Issy.",
-          "Milan uses observed workbook percentages; Issy does not yet have an equivalent feed.",
+          "Mock / demo — trustworthy structure for UX testing only, not certified accessibility compliance.",
+          "Milan uses observed workbook percentages; Issy mock is pilot-parameterised placeholder data.",
         ],
         codeRefs: [
           "src/data/kpiDefinitions.ts",

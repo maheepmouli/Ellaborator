@@ -166,9 +166,23 @@ export const PILOT_GEOMETRY_REGISTRY: Record<string, PilotGeometryRecord> = {
   "tri-p1": {
     pilotId: "tri-p1",
     regime: "point",
-    geometryTruth: { status: "inferred", source: "survey", spatialReliability: 0.2 },
+    geometryTruth: { status: "exact", source: "gis", spatialReliability: 0.82 },
     renderEligibility: "dashboard_only",
     focus: pilotFocus("Trikala", "tri-p1", trikalaMapZoom()),
+  },
+  "tri-p2": {
+    pilotId: "tri-p2",
+    regime: "area",
+    geometryTruth: { status: "exact", source: "gis", spatialReliability: 0.78 },
+    renderEligibility: "dashboard_only",
+    focus: pilotFocus("Trikala", "tri-p2", trikalaMapZoom()),
+  },
+  "tri-p3": {
+    pilotId: "tri-p3",
+    regime: "segment",
+    geometryTruth: { status: "exact", source: "gis", spatialReliability: 0.8 },
+    renderEligibility: "dashboard_only",
+    focus: pilotFocus("Trikala", "tri-p3", trikalaMapZoom()),
   },
 };
 

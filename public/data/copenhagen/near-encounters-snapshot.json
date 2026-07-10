@@ -1,0 +1,146 @@
+{
+  "generatedAt": "2026-07-09T13:49:27.150Z",
+  "sourceFiles": [
+    "OpenTrafficCam Counts 2024 and 2025/Countings_Norreport_sortet.xlsx",
+    "OpenTrafficCam Counts 2024 and 2025/Countings_Vandkunsten_sortet.xlsx",
+    "OpenTrafficCam Counts 2024 and 2025/Countings_Gammeltorv_sortet.xlsx",
+    "OpenTrafficCam Counts 2024 and 2025/Countings_Stormgade_sortet.xlsx",
+    "OpenTrafficCam Counts 2024 and 2025/Countings_Hojbro.xlsx"
+  ],
+  "records": [
+    {
+      "id": "cph-encounter-norreport-pre",
+      "siteId": "ic-norreport",
+      "siteName": "Norregade/Norre Volgade",
+      "lat": 55.682312,
+      "lon": 12.570922,
+      "pilotId": "cph-p3",
+      "period": "pre",
+      "encounterCount": 22980,
+      "exposureBins": 1094,
+      "sourceKind": "proxy",
+      "method": "Derived encounter-pressure index from OTC 15-min bins with co-occurring vulnerable (bike+ped) and motor traffic — not observed near-miss counts."
+    },
+    {
+      "id": "cph-encounter-norreport-post",
+      "siteId": "ic-norreport",
+      "siteName": "Norregade/Norre Volgade",
+      "lat": 55.682312,
+      "lon": 12.570922,
+      "pilotId": "cph-p3",
+      "period": "post",
+      "encounterCount": 18933,
+      "exposureBins": 1245,
+      "sourceKind": "proxy",
+      "method": "Derived encounter-pressure index from OTC 15-min bins with co-occurring vulnerable (bike+ped) and motor traffic — not observed near-miss counts."
+    },
+    {
+      "id": "cph-encounter-vandkunsten-pre",
+      "siteId": "wb-vandkunsten",
+      "siteName": "Vandkunsten / Rådhusstræde",
+      "lat": 55.677575,
+      "lon": 12.579961,
+      "pilotId": "cph-p3",
+      "period": "pre",
+      "encounterCount": 11143,
+      "exposureBins": 972,
+      "sourceKind": "proxy",
+      "method": "Derived encounter-pressure index from OTC 15-min bins with co-occurring vulnerable (bike+ped) and motor traffic — not observed near-miss counts."
+    },
+    {
+      "id": "cph-encounter-vandkunsten-post",
+      "siteId": "wb-vandkunsten",
+      "siteName": "Vandkunsten / Rådhusstræde",
+      "lat": 55.677575,
+      "lon": 12.579961,
+      "pilotId": "cph-p3",
+      "period": "post",
+      "encounterCount": 11935,
+      "exposureBins": 928,
+      "sourceKind": "proxy",
+      "method": "Derived encounter-pressure index from OTC 15-min bins with co-occurring vulnerable (bike+ped) and motor traffic — not observed near-miss counts."
+    },
+    {
+      "id": "cph-encounter-gammeltorv-pre",
+      "siteId": "ic-gammeltorv",
+      "siteName": "Gammeltorv",
+      "lat": 55.678437,
+      "lon": 12.572236,
+      "pilotId": "cph-p3",
+      "period": "pre",
+      "encounterCount": 9566,
+      "exposureBins": 1609,
+      "sourceKind": "proxy",
+      "method": "Derived encounter-pressure index from OTC 15-min bins with co-occurring vulnerable (bike+ped) and motor traffic — not observed near-miss counts."
+    },
+    {
+      "id": "cph-encounter-gammeltorv-post",
+      "siteId": "ic-gammeltorv",
+      "siteName": "Gammeltorv",
+      "lat": 55.678437,
+      "lon": 12.572236,
+      "pilotId": "cph-p3",
+      "period": "post",
+      "encounterCount": 5118,
+      "exposureBins": 850,
+      "sourceKind": "proxy",
+      "method": "Derived encounter-pressure index from OTC 15-min bins with co-occurring vulnerable (bike+ped) and motor traffic — not observed near-miss counts."
+    },
+    {
+      "id": "cph-encounter-stormgade-pre",
+      "siteId": "ic-stormgade",
+      "siteName": "Stormgade",
+      "lat": 55.675535,
+      "lon": 12.575545,
+      "pilotId": "cph-p3",
+      "period": "pre",
+      "encounterCount": 39350,
+      "exposureBins": 1959,
+      "sourceKind": "proxy",
+      "method": "Derived encounter-pressure index from OTC 15-min bins with co-occurring vulnerable (bike+ped) and motor traffic — not observed near-miss counts."
+    },
+    {
+      "id": "cph-encounter-stormgade-post",
+      "siteId": "ic-stormgade",
+      "siteName": "Stormgade",
+      "lat": 55.675535,
+      "lon": 12.575545,
+      "pilotId": "cph-p3",
+      "period": "post",
+      "encounterCount": 73197,
+      "exposureBins": 1995,
+      "sourceKind": "proxy",
+      "method": "Derived encounter-pressure index from OTC 15-min bins with co-occurring vulnerable (bike+ped) and motor traffic — not observed near-miss counts."
+    },
+    {
+      "id": "cph-encounter-hojbro-pre",
+      "siteId": "ic-hojbro",
+      "siteName": "Højbro",
+      "lat": 55.677575,
+      "lon": 12.579961,
+      "pilotId": "cph-p3",
+      "period": "pre",
+      "encounterCount": 11384,
+      "exposureBins": 996,
+      "sourceKind": "proxy",
+      "method": "Derived encounter-pressure index from OTC 15-min bins with co-occurring vulnerable (bike+ped) and motor traffic — not observed near-miss counts."
+    },
+    {
+      "id": "cph-encounter-hojbro-post",
+      "siteId": "ic-hojbro",
+      "siteName": "Højbro",
+      "lat": 55.677575,
+      "lon": 12.579961,
+      "pilotId": "cph-p3",
+      "period": "post",
+      "encounterCount": 10386,
+      "exposureBins": 842,
+      "sourceKind": "proxy",
+      "method": "Derived encounter-pressure index from OTC 15-min bins with co-occurring vulnerable (bike+ped) and motor traffic — not observed near-miss counts."
+    }
+  ],
+  "notes": [
+    "Proxy index until partner delivers structured near-encounter export.",
+    "Partner ingest path: columns site, lat, lon, period, encounter_count."
+  ]
+}

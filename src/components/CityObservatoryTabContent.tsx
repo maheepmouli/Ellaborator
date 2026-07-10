@@ -25,6 +25,7 @@ import { parseCopenhagenMapSelection, getCopenhagenLocationFromSelection } from 
 import { TelraamSummaryCard } from "@/components/observatory/TelraamSummaryCard";
 import { CopenhagenEvidencePanel } from "@/components/CopenhagenEvidencePanel";
 import { TrikalaEvidencePanel } from "@/components/TrikalaEvidencePanel";
+import { IssyEvidencePanel } from "@/components/IssyEvidencePanel";
 
 const C = {
   border: "rgba(255,255,255,0.11)",
@@ -159,6 +160,7 @@ export function CityObservatoryTabContent({
 }: CityObservatoryTabContentProps) {
   const isCopenhagen = cityName.toLowerCase().includes("copenhagen");
   const isTrikala = cityName.toLowerCase().includes("trikala");
+  const isIssy = cityName.toLowerCase().includes("issy");
   const cphPilot = isCopenhagen ? getCopenhagenPilotRecord(selectedPilotId) : null;
   const methodologyRule = isCopenhagen
     ? resolveMethodologyConstraint({
@@ -272,14 +274,11 @@ export function CityObservatoryTabContent({
         <GlassCard>
           <p className="text-[11px] font-semibold text-white/88">Expected impacts</p>
           <ul className="mt-1 list-disc pl-4 text-[11px] text-white/72 space-y-0.5">
-            {(cphPilot?.evaluation.expectedOutcome
-              ? [cphPilot.evaluation.expectedOutcome]
-              : profile?.expectedImpacts || ["Transparent pilot-level evidence for stakeholders."]
-            ).concat(
-              cphPilot?.intervention.spatialMetrics ? [cphPilot.intervention.spatialMetrics] : []
-            ).map((item) => (
-              <li key={item}>{item}</li>
-            ))}
+            {(profile?.expectedImpacts || ["Transparent pilot-level evidence for stakeholders."]).map(
+              (item) => (
+                <li key={item}>{item}</li>
+              )
+            )}
           </ul>
         </GlassCard>
         {methodologyRule ? (
@@ -347,7 +346,7 @@ export function CityObservatoryTabContent({
   }
 
   if (tabId === "kpiAnalysis") {
-    if (selectedKpi === "kpi4.2" && cityName === "Copenhagen" && pilotId !== "cph-p2") {
+    if (selectedKpi === "kpi4.2" && cityName === "Copenhagen" && selectedPilotId !== "cph-p2") {
       return (
         <div className="space-y-3">
           <GraphicSlot zone="kpiAnalysis" {...graphicProps} />
@@ -408,12 +407,17 @@ export function CityObservatoryTabContent({
         )}
         {isCopenhagen && (
           <GlassCard>
-            <CopenhagenEvidencePanel pilotId={pilotId} />
+            <CopenhagenEvidencePanel pilotId={selectedPilotId} />
           </GlassCard>
         )}
         {isTrikala && (
           <GlassCard>
-            <TrikalaEvidencePanel pilotId={pilotId} />
+            <TrikalaEvidencePanel pilotId={selectedPilotId} />
+          </GlassCard>
+        )}
+        {isIssy && (
+          <GlassCard>
+            <IssyEvidencePanel pilotId={selectedPilotId} />
           </GlassCard>
         )}
         <GlassCard>

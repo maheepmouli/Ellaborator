@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import Header from "@/components/Header";
 import IssyKpiMethodologySection from "@/components/IssyKpiMethodologySection";
+import { IssyCatalogueSection } from "@/components/IssyCatalogueSection";
 import CityKpiMethodologySection from "@/components/CityKpiMethodologySection";
 import { SharePointIntegrationSection } from "@/components/SharePointIntegrationSection";
 import { InterventionGeometrySection } from "@/components/InterventionGeometrySection";
@@ -816,6 +817,16 @@ const DataCatalogue = () => {
               sub="Which cities can currently produce each KPI — derived from the dataset registry"
             />
             <ReadinessMatrix />
+          </GlassCard>
+
+          {/* ── Issy SharePoint file inventory ── */}
+          <GlassCard id="issy-sharepoint-catalogue" className="p-6 mb-6 scroll-mt-24">
+            <SectionTitle
+              icon={<Database className="h-4 w-4" />}
+              title="Issy-les-Moulineaux — SharePoint file inventory"
+              sub="June 2026 Lighthouse zip: per-file sheets, integration status, KPI linkage, and data-readiness matrix"
+            />
+            <IssyCatalogueSection />
           </GlassCard>
 
           {/* ── Issy KPI derivation ── */}

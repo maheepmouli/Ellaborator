@@ -120,3 +120,68 @@ export function hubForWorkbook(
   }
   return fallback;
 }
+
+/** Inbound (slot 0) vs outbound (slot 1) — corridor, pulse, and radar colours. */
+export const CPH_INBOUND_COLOR = "#ef4444";
+export const CPH_OUTBOUND_COLOR = "#38bdf8";
+export const CPH_DIRECTION_PAIR_COLORS = [CPH_INBOUND_COLOR, CPH_OUTBOUND_COLOR] as const;
+
+/** Slot 0 = inbound/primary (N/E); slot 1 = outbound/return (S/W). */
+export function directionPairSlot(flowLabel: string, flowIndex = 0): 0 | 1 {
+  const f = normalizeFlowKey(flowLabel);
+  if (f.includes("-->")) {
+    const parts = f.split("-->").map((p) => p.trim());
+    const to = parts[1] ?? "";
+    if (to.includes("south") || to.includes("west") || to.includes("syd") || to.includes("vest")) {
+      return 1;
+    }
+    if (to.includes("north") || to.includes("east") || to.includes("nord") || to.includes("ost")) {
+      return 0;
+    }
+  }
+  if (f.includes("south") || f.includes("west") || f.includes("syd") || f.includes("vest")) {
+    return 1;
+  }
+  if (f.includes("north") || f.includes("east") || f.includes("nord") || f.includes("ost")) {
+    return 0;
+  }
+  return (flowIndex % 2) as 0 | 1;
+}
+
+/**
+ * Quadratic Bezier sampled into a polyline that bends along the street bearing,
+ * with a small lateral offset so paired directions on the same street stay visible.
+ */
+export function buildStreetAlignedBezierPath(
+  hubLat: number,
+  hubLon: number,
+  bearingDeg: number,
+  armLenM: number,
+  pairSlot: 0 | 1,
+  steps = 16
+): [number, number][] {
+  const lateralM = pairSlot === 0 ? -6 : 6;
+  const end = destinationLatLng(hubLat, hubLon, bearingDeg, armLenM);
+  const endShift = destinationLatLng(end[0], end[1], bearingDeg + 90, lateralM * 0.55);
+
+  const ctrlDist = armLenM * 0.5;
+  const ctrlBase = destinationLatLng(hubLat, hubLon, bearingDeg, ctrlDist);
+  const curveLean = pairSlot === 0 ? -14 : 14;
+  const ctrlCurved = destinationLatLng(ctrlBase[0], ctrlBase[1], bearingDeg + curveLean, 12);
+  const ctrl = destinationLatLng(ctrlCurved[0], ctrlCurved[1], bearingDeg + 90, lateralM * 1.15);
+
+  const p0: [number, number] = [hubLat, hubLon];
+  const p1 = ctrl;
+  const p2 = endShift;
+
+  const pts: [number, number][] = [];
+  for (let i = 0; i <= steps; i += 1) {
+    const t = i / steps;
+    const u = 1 - t;
+    pts.push([
+      u * u * p0[0] + 2 * u * t * p1[0] + t * t * p2[0],
+      u * u * p0[1] + 2 * u * t * p1[1] + t * t * p2[1],
+    ]);
+  }
+  return pts;
+}

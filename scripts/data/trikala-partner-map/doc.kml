@@ -1,0 +1,796 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>ELABORATOR INTERVENTIONS</name>
+    <description/>
+    <Style id="icon-1522-0288D1-nodesc-normal">
+      <IconStyle>
+        <scale>1</scale>
+        <Icon>
+          <href>images/icon-4.png</href>
+        </Icon>
+      </IconStyle>
+      <LabelStyle>
+        <scale>0</scale>
+      </LabelStyle>
+      <BalloonStyle>
+        <text><![CDATA[<h3>$[name]</h3>]]></text>
+      </BalloonStyle>
+    </Style>
+    <Style id="icon-1522-0288D1-nodesc-highlight">
+      <IconStyle>
+        <scale>1</scale>
+        <Icon>
+          <href>images/icon-4.png</href>
+        </Icon>
+      </IconStyle>
+      <LabelStyle>
+        <scale>1</scale>
+      </LabelStyle>
+      <BalloonStyle>
+        <text><![CDATA[<h3>$[name]</h3>]]></text>
+      </BalloonStyle>
+    </Style>
+    <StyleMap id="icon-1522-0288D1-nodesc">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#icon-1522-0288D1-nodesc-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#icon-1522-0288D1-nodesc-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Style id="icon-1642-558B2F-nodesc-normal">
+      <IconStyle>
+        <scale>1</scale>
+        <Icon>
+          <href>images/icon-2.png</href>
+        </Icon>
+      </IconStyle>
+      <LabelStyle>
+        <scale>0</scale>
+      </LabelStyle>
+      <BalloonStyle>
+        <text><![CDATA[<h3>$[name]</h3>]]></text>
+      </BalloonStyle>
+    </Style>
+    <Style id="icon-1642-558B2F-nodesc-highlight">
+      <IconStyle>
+        <scale>1</scale>
+        <Icon>
+          <href>images/icon-2.png</href>
+        </Icon>
+      </IconStyle>
+      <LabelStyle>
+        <scale>1</scale>
+      </LabelStyle>
+      <BalloonStyle>
+        <text><![CDATA[<h3>$[name]</h3>]]></text>
+      </BalloonStyle>
+    </Style>
+    <StyleMap id="icon-1642-558B2F-nodesc">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#icon-1642-558B2F-nodesc-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#icon-1642-558B2F-nodesc-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Style id="icon-1644-7CB342-nodesc-normal">
+      <IconStyle>
+        <scale>1</scale>
+        <Icon>
+          <href>images/icon-3.png</href>
+        </Icon>
+      </IconStyle>
+      <LabelStyle>
+        <scale>0</scale>
+      </LabelStyle>
+      <BalloonStyle>
+        <text><![CDATA[<h3>$[name]</h3>]]></text>
+      </BalloonStyle>
+    </Style>
+    <Style id="icon-1644-7CB342-nodesc-highlight">
+      <IconStyle>
+        <scale>1</scale>
+        <Icon>
+          <href>images/icon-3.png</href>
+        </Icon>
+      </IconStyle>
+      <LabelStyle>
+        <scale>1</scale>
+      </LabelStyle>
+      <BalloonStyle>
+        <text><![CDATA[<h3>$[name]</h3>]]></text>
+      </BalloonStyle>
+    </Style>
+    <StyleMap id="icon-1644-7CB342-nodesc">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#icon-1644-7CB342-nodesc-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#icon-1644-7CB342-nodesc-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Style id="icon-1731-FF5252-nodesc-normal">
+      <IconStyle>
+        <scale>1</scale>
+        <Icon>
+          <href>images/icon-1.png</href>
+        </Icon>
+      </IconStyle>
+      <LabelStyle>
+        <scale>0</scale>
+      </LabelStyle>
+      <BalloonStyle>
+        <text><![CDATA[<h3>$[name]</h3>]]></text>
+      </BalloonStyle>
+    </Style>
+    <Style id="icon-1731-FF5252-nodesc-highlight">
+      <IconStyle>
+        <scale>1</scale>
+        <Icon>
+          <href>images/icon-1.png</href>
+        </Icon>
+      </IconStyle>
+      <LabelStyle>
+        <scale>1</scale>
+      </LabelStyle>
+      <BalloonStyle>
+        <text><![CDATA[<h3>$[name]</h3>]]></text>
+      </BalloonStyle>
+    </Style>
+    <StyleMap id="icon-1731-FF5252-nodesc">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#icon-1731-FF5252-nodesc-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#icon-1731-FF5252-nodesc-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Style id="icon-1770-9C27B0-nodesc-normal">
+      <IconStyle>
+        <scale>1</scale>
+        <Icon>
+          <href>images/icon-5.png</href>
+        </Icon>
+      </IconStyle>
+      <LabelStyle>
+        <scale>0</scale>
+      </LabelStyle>
+      <BalloonStyle>
+        <text><![CDATA[<h3>$[name]</h3>]]></text>
+      </BalloonStyle>
+    </Style>
+    <Style id="icon-1770-9C27B0-nodesc-highlight">
+      <IconStyle>
+        <scale>1</scale>
+        <Icon>
+          <href>images/icon-5.png</href>
+        </Icon>
+      </IconStyle>
+      <LabelStyle>
+        <scale>1</scale>
+      </LabelStyle>
+      <BalloonStyle>
+        <text><![CDATA[<h3>$[name]</h3>]]></text>
+      </BalloonStyle>
+    </Style>
+    <StyleMap id="icon-1770-9C27B0-nodesc">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#icon-1770-9C27B0-nodesc-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#icon-1770-9C27B0-nodesc-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Style id="poly-FF5252-1200-77-nodesc-normal">
+      <LineStyle>
+        <color>ff5252ff</color>
+        <width>1.2</width>
+      </LineStyle>
+      <PolyStyle>
+        <color>4d5252ff</color>
+        <fill>1</fill>
+        <outline>1</outline>
+      </PolyStyle>
+      <BalloonStyle>
+        <text><![CDATA[<h3>$[name]</h3>]]></text>
+      </BalloonStyle>
+    </Style>
+    <Style id="poly-FF5252-1200-77-nodesc-highlight">
+      <LineStyle>
+        <color>ff5252ff</color>
+        <width>1.8</width>
+      </LineStyle>
+      <PolyStyle>
+        <color>4d5252ff</color>
+        <fill>1</fill>
+        <outline>1</outline>
+      </PolyStyle>
+      <BalloonStyle>
+        <text><![CDATA[<h3>$[name]</h3>]]></text>
+      </BalloonStyle>
+    </Style>
+    <StyleMap id="poly-FF5252-1200-77-nodesc">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#poly-FF5252-1200-77-nodesc-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#poly-FF5252-1200-77-nodesc-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Folder>
+      <name><![CDATA[Park & Ride]]></name>
+      <Placemark>
+        <name>SMY</name>
+        <styleUrl>#poly-FF5252-1200-77-nodesc</styleUrl>
+        <Polygon>
+          <outerBoundaryIs>
+            <LinearRing>
+              <tessellate>1</tessellate>
+              <coordinates>
+                21.775418,39.5536436,0
+                21.7760832,39.5536891,0
+                21.7760671,39.5539807,0
+                21.7752946,39.5539041,0
+                21.775418,39.5536436,0
+              </coordinates>
+            </LinearRing>
+          </outerBoundaryIs>
+        </Polygon>
+      </Placemark>
+      <Placemark>
+        <name>DEH</name>
+        <styleUrl>#poly-FF5252-1200-77-nodesc</styleUrl>
+        <Polygon>
+          <outerBoundaryIs>
+            <LinearRing>
+              <tessellate>1</tessellate>
+              <coordinates>
+                21.773034,39.5584682,0
+                21.7737891,39.5582562,0
+                21.7739031,39.5585571,0
+                21.7732084,39.5587484,0
+                21.773034,39.5584682,0
+              </coordinates>
+            </LinearRing>
+          </outerBoundaryIs>
+        </Polygon>
+      </Placemark>
+      <Placemark>
+        <name>GiSeMi</name>
+        <styleUrl>#poly-FF5252-1200-77-nodesc</styleUrl>
+        <Polygon>
+          <outerBoundaryIs>
+            <LinearRing>
+              <tessellate>1</tessellate>
+              <coordinates>
+                21.7582267,39.56683,0
+                21.7580677,39.5667908,0
+                21.7581389,39.5666507,0
+                21.7582977,39.5666977,0
+                21.7582267,39.56683,0
+              </coordinates>
+            </LinearRing>
+          </outerBoundaryIs>
+        </Polygon>
+      </Placemark>
+    </Folder>
+    <Folder>
+      <name>Smart Crossing</name>
+      <Placemark>
+        <name>Vasili Tsitsani str, Military School</name>
+        <styleUrl>#icon-1731-FF5252-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.7759437,39.5540151,0
+          </coordinates>
+        </Point>
+      </Placemark>
+    </Folder>
+    <Folder>
+      <name>Air Quality Sensors</name>
+      <Placemark>
+        <name>LAIKI</name>
+        <styleUrl>#icon-1642-558B2F-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.7690573,39.5558483,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>MILITARY SCHOOL</name>
+        <styleUrl>#icon-1642-558B2F-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.7776555,39.5514744,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>TRAFFIC LIGHTS</name>
+        <styleUrl>#icon-1642-558B2F-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.7664723,39.5526115,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>TZAMI</name>
+        <styleUrl>#icon-1642-558B2F-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.770736,39.5509517,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>OTE SQUARE</name>
+        <styleUrl>#icon-1642-558B2F-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.7666363,39.5570004,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>FANARI KARDITSIS</name>
+        <styleUrl>#icon-1642-558B2F-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.77535,39.5453798,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>TRAIN STATION</name>
+        <styleUrl>#icon-1642-558B2F-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.7633497,39.5465678,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>PARKING COURTHOUSE</name>
+        <styleUrl>#icon-1642-558B2F-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.7715845,39.5556942,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>MATSOPOULOS</name>
+        <styleUrl>#icon-1642-558B2F-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.7588172,39.5460135,0
+          </coordinates>
+        </Point>
+      </Placemark>
+    </Folder>
+    <Folder>
+      <name>Parking Stations</name>
+      <Placemark>
+        <name>Underground Municipal Parking</name>
+        <styleUrl>#icon-1644-7CB342-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.77166,39.55567,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Municipal Parking</name>
+        <styleUrl>#icon-1644-7CB342-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.765877,39.555114,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Underground Parking - Lanara</name>
+        <styleUrl>#icon-1644-7CB342-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.767141,39.55873,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Openair Municipal Parking</name>
+        <styleUrl>#icon-1644-7CB342-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.775541,39.553757,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Free Municipal Parking</name>
+        <styleUrl>#icon-1644-7CB342-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.767673,39.550992,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Free Parking</name>
+        <styleUrl>#icon-1644-7CB342-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.773094,39.545944,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Parking Mill of Matsopoulos</name>
+        <styleUrl>#icon-1644-7CB342-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.75929,39.545449,0
+          </coordinates>
+        </Point>
+      </Placemark>
+    </Folder>
+    <Folder>
+      <name>Bike Stations</name>
+      <Placemark>
+        <name>BIKE STATION - Μύλος Ματσόπουλου</name>
+        <styleUrl>#icon-1522-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.76046,39.545817,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>BIKE STATION - Parking Ασκληπιού</name>
+        <styleUrl>#icon-1522-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.764114,39.547264,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>BIKE STATION - Μουσείο Τσιτσάνη</name>
+        <styleUrl>#icon-1522-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.769889,39.550809,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>BIKE STATION - Parking Παπαστάθη</name>
+        <styleUrl>#icon-1522-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.7754051,39.5538927,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>BIKE STATION - Parking ΔΕΗ</name>
+        <styleUrl>#icon-1522-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.7737664,39.5583264,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name><![CDATA[BIKE STATION - Κονδύλη Τέρμα & Παλαιολόγου]]></name>
+        <styleUrl>#icon-1522-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.771553,39.564351,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>BIKE STATION - Πλατεία Amberg</name>
+        <styleUrl>#icon-1522-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.75327,39.56238,0
+          </coordinates>
+        </Point>
+      </Placemark>
+    </Folder>
+    <Folder>
+      <name>Bike Lanes Sensors</name>
+      <Placemark>
+        <name>JIMMYS 1</name>
+        <styleUrl>#icon-1770-9C27B0-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.7663548,39.5527182,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>JIMMYS 2</name>
+        <styleUrl>#icon-1770-9C27B0-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.7663078,39.552744,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>ΔΗΜΑΡΧΕΙΟ PARKING 1</name>
+        <styleUrl>#icon-1770-9C27B0-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.7660135,39.552925,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>ΔΗΜΑΡΧΕΙΟ PARKING 2</name>
+        <styleUrl>#icon-1770-9C27B0-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.7659805,39.5529437,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>ΔΗΜΑΡΧΕΙΟ PARKING 3</name>
+        <styleUrl>#icon-1770-9C27B0-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.7659458,39.5529627,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>ΔΗΜΑΡΧΕΙΟ PARKING 4</name>
+        <styleUrl>#icon-1770-9C27B0-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.7659106,39.5529828,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>ΔΕΣΠΟΤΙΚΟ 1</name>
+        <styleUrl>#icon-1770-9C27B0-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.7656375,39.5531465,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>ΔΕΣΠΟΤΙΚΟ 2</name>
+        <styleUrl>#icon-1770-9C27B0-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.7655981,39.5531713,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>ΔΕΣΠΟΤΙΚΟ 3</name>
+        <styleUrl>#icon-1770-9C27B0-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.7655583,39.5531967,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>ΔΕΣΠΟΤΙΚΟ 4</name>
+        <styleUrl>#icon-1770-9C27B0-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.7655228,39.5532144,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>ΔΕΣΠΟΤΙΚΟ 5</name>
+        <styleUrl>#icon-1770-9C27B0-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.765489,39.5532395,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>ΔΕΣΠΟΤΙΚΟ 6</name>
+        <styleUrl>#icon-1770-9C27B0-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.765453,39.5532646,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>ΔΕΣΠΟΤΙΚΟ 7</name>
+        <styleUrl>#icon-1770-9C27B0-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.7654028,39.5532921,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>ΔΕΣΠΟΤΙΚΟ 8</name>
+        <styleUrl>#icon-1770-9C27B0-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.7653592,39.5533144,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>CUPS NINE 1</name>
+        <styleUrl>#icon-1770-9C27B0-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.7652141,39.5533833,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>CUPS NINE 2</name>
+        <styleUrl>#icon-1770-9C27B0-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.7651854,39.5533817,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>CUPS NINE 3</name>
+        <styleUrl>#icon-1770-9C27B0-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.7651491,39.5533837,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>CUPS NINE 4</name>
+        <styleUrl>#icon-1770-9C27B0-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.7651082,39.5534047,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>CUPS NINE 5</name>
+        <styleUrl>#icon-1770-9C27B0-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.7650821,39.5534286,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>PARKING ΜΠΟΝΩΤΗ</name>
+        <styleUrl>#icon-1770-9C27B0-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.7649046,39.5537287,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>ΒΟΥΒΗΣ 1</name>
+        <styleUrl>#icon-1770-9C27B0-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.7630869,39.5557729,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>ΒΟΥΒΗΣ 2</name>
+        <styleUrl>#icon-1770-9C27B0-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.7627984,39.555935,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>PARKING ΣΜΥ 1</name>
+        <styleUrl>#icon-1770-9C27B0-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.7754694,39.5538938,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>PARKING ΣΜΥ 2</name>
+        <styleUrl>#icon-1770-9C27B0-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.775509,39.5538974,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>PARKING ΔΕΗ 1</name>
+        <styleUrl>#icon-1770-9C27B0-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.7736975,39.5583197,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>PARKING ΔΕΗ 2</name>
+        <styleUrl>#icon-1770-9C27B0-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.773664,39.5583259,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>GiSeMi 1</name>
+        <styleUrl>#icon-1770-9C27B0-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.7581435,39.5667944,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>GiSeMi 2
+</name>
+        <styleUrl>#icon-1770-9C27B0-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.758157,39.5667711,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>GiSeMi 3
+</name>
+        <styleUrl>#icon-1770-9C27B0-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.7581698,39.5667484,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>GiSeMi 4
+</name>
+        <styleUrl>#icon-1770-9C27B0-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            21.7581865,39.5667293,0
+          </coordinates>
+        </Point>
+      </Placemark>
+    </Folder>
+  </Document>
+</kml>

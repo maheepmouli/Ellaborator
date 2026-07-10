@@ -12,7 +12,7 @@ import {
   getSegmentHighlight,
   segmentMetricKindForKpi,
 } from "@/lib/segmentHighlight";
-import { trimSegmentApproachFromJunction } from "@/lib/junctionArmRendering";
+import { trimSegmentApproachFromJunction, outerApproachPoint } from "@/lib/junctionArmRendering";
 import { createJunctionSampleDotIcon } from "@/lib/junctionSampleMarkers";
 import { junctionArmSeed } from "@/lib/junctionScenarioValues";
 import { issyModeColor } from "@/lib/issyMapRouting";
@@ -32,6 +32,13 @@ import {
   kpiPrimaryIssySource,
 } from "@/lib/issyDataTransparency";
 import { provenanceBadgesHtml } from "@/lib/dataProvenance";
+import {
+  wireMarkerSegment,
+  wirePolylineSegment,
+  wireCircleMarkerSegment,
+  type SegmentInteractionHandlers,
+} from "@/lib/wireMapSegmentInteraction";
+import { renderIssyCameraFovCones } from "@/lib/issyCameraFov";
 
 export type JunctionObservatoryClick = (detail: {
   segmentId: string;
@@ -85,8 +92,14 @@ export function renderIssyJunctionArms(
     /** KPI 1.2: tint lines by active travel mode colour (intervention / baseline only). */
     modeAccent?: string;
     scenario?: MapScenario;
-    onSegmentHover?: (detail: { segmentId: string; segmentName: string }) => void;
+    onSegmentHover?: (detail: {
+      segmentId: string;
+      segmentName: string;
+      speed?: number | null;
+      congestion?: number | null;
+    } | null) => void;
     filterRange?: [number, number];
+    segmentHandlers?: SegmentInteractionHandlers;
   }
 ): void {
   const scenario = options.scenario ?? "intervention";
@@ -126,6 +139,8 @@ export function renderIssyJunctionArms(
   const span = Math.max(maxScalar - minScalar, 1e-6);
   const rangeLowVal = minScalar + (span * range[0]) / 100;
   const rangeHighVal = minScalar + (span * range[1]) / 100;
+
+  renderIssyCameraFovCones(map, refs.polygons, options.selectedSegmentId);
 
   roadSegments.forEach((segment) => {
     if (!segment.coordinates || segment.coordinates.length < 2) return;
@@ -255,6 +270,23 @@ export function renderIssyJunctionArms(
       refs.polylines.push(ghost);
     }
 
+    const glowPass = L.polyline(approachCoords, {
+      color: armAccent,
+      weight: isSelected ? lineWeight + 10 : lineWeight + 7,
+      opacity: isSelected ? 0.38 : 0.22,
+      lineJoin: "round",
+      lineCap: "round",
+      interactive: false,
+    }).addTo(map);
+    const auraPass = L.polyline(approachCoords, {
+      color: isSelected ? "#00ffff" : armAccent,
+      weight: isSelected ? lineWeight + 5 : lineWeight + 3,
+      opacity: isSelected ? 0.55 : 0.32,
+      lineJoin: "round",
+      lineCap: "round",
+      interactive: false,
+    }).addTo(map);
+
     const visibleLine = L.polyline(approachCoords, lineStyle).addTo(map);
     if (isSelected) {
       const halo = L.polyline(approachCoords, {
@@ -298,23 +330,109 @@ export function renderIssyJunctionArms(
     const wire = (layer: L.Polyline) => {
       layer.on("mouseover", () => {
         visibleLine.setStyle({ weight: lineStyle.weight + 2.5, opacity: 1 });
+        glowPass.setStyle({ opacity: 0.45, weight: lineStyle.weight + 10 });
         const props = segmentProps(segment);
-        options.onSegmentHover?.({
+        const hoverDetail = {
           segmentId: segment.id,
           segmentName: segmentLabel,
           speed: (props.vitesse_km_h as number | undefined) ?? null,
           congestion: (props.indice_de_congestion as number | undefined) ?? null,
-        });
+        };
+        options.onSegmentHover?.(hoverDetail);
+        options.segmentHandlers?.onSegmentHover?.(hoverDetail);
       });
       layer.on("mouseout", () => {
         visibleLine.setStyle(lineStyle);
+        glowPass.setStyle({
+          color: armAccent,
+          weight: isSelected ? lineWeight + 10 : lineWeight + 7,
+          opacity: isSelected ? 0.38 : 0.22,
+        });
+        options.onSegmentHover?.(null);
+        options.segmentHandlers?.onSegmentHover?.(null);
       });
       layer.on("click", onArmClick);
     };
     wire(visibleLine);
     wire(hitLine);
 
-    refs.polylines.push(visibleLine, hitLine);
+    refs.polylines.push(glowPass, auraPass, visibleLine, hitLine);
+
+    if (arm) {
+      const hubLat = ISSY_P2_JUNCTION.lat;
+      const hubLon = ISSY_P2_JUNCTION.lon;
+      const outer = outerApproachPoint(segment.coordinates, arm.id);
+      const flowPath: [number, number][] = [
+        [hubLat, hubLon],
+        outer,
+      ];
+      const flowArm = L.polyline(flowPath, {
+        color: isSelected ? "#00ffff" : armAccent,
+        weight: isSelected ? 4.5 : 3,
+        opacity: isSelected ? 0.92 : 0.58,
+        dashArray: scenario === "baseline" ? "7 5" : undefined,
+        lineCap: "round",
+        className: isSelected ? "issy-flow-arm-animated" : undefined,
+        interactive: false,
+      }).addTo(map);
+      refs.polylines.push(flowArm);
+
+      const flowHit = L.polyline(flowPath, {
+        color: "#000000",
+        weight: 16,
+        opacity: 0,
+        lineCap: "round",
+        interactive: true,
+      }).addTo(map);
+      if (options.segmentHandlers) {
+        wirePolylineSegment(
+          flowHit,
+          {
+            segmentId: segment.id,
+            segmentName: `${segmentLabel} · flow arm`,
+            speed,
+            congestion,
+          },
+          options.segmentHandlers,
+          { selectedSegmentId: options.selectedSegmentId }
+        );
+      }
+      flowHit.on("click", onArmClick);
+      refs.polylines.push(flowHit);
+
+      const endpointDetail = {
+        segmentId: `${segment.id}:arm-end`,
+        segmentName: `${segmentLabel} · direction`,
+        speed: speed,
+        congestion: congestion,
+      };
+      const endpointColor = isSelected ? "#00ffff" : armAccent;
+      const endpointMarker = L.circleMarker([outer[0], outer[1]], {
+        radius: isSelected ? 7 : 5.5,
+        fillColor: endpointColor,
+        fillOpacity: 0.88,
+        color: "#E6E8FF",
+        weight: 1.5,
+        interactive: false,
+      }).addTo(map);
+      const endpointHit = L.circleMarker([outer[0], outer[1]], {
+        radius: 12,
+        fillOpacity: 0,
+        opacity: 0,
+        weight: 0,
+        interactive: true,
+      }).addTo(map);
+      if (options.segmentHandlers) {
+        wireCircleMarkerSegment(endpointHit, endpointDetail, options.segmentHandlers, {
+          baseRadius: 12,
+          highlightRadius: 14,
+          selectedSegmentId: options.selectedSegmentId,
+        });
+      }
+      endpointHit.bindTooltip(segmentLabel, { direction: "top", opacity: 0.92 });
+      refs.circles.push(endpointMarker);
+      refs.circles.push(endpointHit);
+    }
   });
 
   const [markerLat, markerLng] = junctionMarkerLatLng(roadSegments);
@@ -342,16 +460,29 @@ export function renderIssyJunctionArms(
     zIndexOffset: 900,
   }).addTo(map);
 
+  const hubTarget =
+    selectedSeg ?? roadSegments.find((s) => getIssyJunctionArm(s.id)) ?? roadSegments[0];
+  const hubArm = hubTarget ? getIssyJunctionArm(hubTarget.id) : undefined;
+  const hubDetail = {
+    segmentId: hubTarget?.id ?? ISSY_JUNCTION_ARMS[0].segmentId,
+    segmentName: `${ISSY_P2_JUNCTION.shortName} · Wintics camera`,
+    speed: hubTarget ? ((segmentProps(hubTarget).vitesse_km_h as number | undefined) ?? null) : null,
+    congestion: hubTarget
+      ? ((segmentProps(hubTarget).indice_de_congestion as number | undefined) ?? null)
+      : null,
+  };
+
+  if (options.segmentHandlers) {
+    wireMarkerSegment(junctionMarker, hubDetail, options.segmentHandlers);
+  }
+
   junctionMarker.on("click", (e: L.LeafletMouseEvent) => {
     L.DomEvent.stopPropagation(e);
     map.closePopup();
-    const target =
-      selectedSeg ?? roadSegments.find((s) => getIssyJunctionArm(s.id)) ?? roadSegments[0];
-    if (target) {
-      const arm = getIssyJunctionArm(target.id);
+    if (hubTarget) {
       openObservatory(
-        target,
-        arm?.mapLabel ?? (segmentProps(target).segment as string) ?? target.id
+        hubTarget,
+        hubArm?.mapLabel ?? (segmentProps(hubTarget).segment as string) ?? hubTarget.id
       );
     }
   });
@@ -365,22 +496,47 @@ export function bindJunctionObservatoryLayer(
   roadSegments: MapSegment[],
   onObservatoryClick: JunctionObservatoryClick,
   lat: number,
-  lon: number
+  lon: number,
+  segmentHandlers?: SegmentInteractionHandlers
 ): void {
-  layer.on("click", (e: L.LeafletMouseEvent) => {
-    L.DomEvent.stopPropagation(e);
-    map.closePopup();
+  const resolveDetail = (): {
+    segmentId: string;
+    segmentName: string;
+    speed: number | null;
+    congestion: number | null;
+  } | null => {
     const segmentId = pickNearestJunctionSegmentId(lat, lon);
     const segment = roadSegments.find((s) => s.id === segmentId) ?? roadSegments[0];
-    if (!segment) return;
+    if (!segment) return null;
     const arm = getIssyJunctionArm(segment.id);
     const props = segmentProps(segment);
-    onObservatoryClick({
+    return {
       segmentId: segment.id,
       segmentName: arm?.mapLabel ?? String(props.segment ?? segment.id),
       speed: (props.vitesse_km_h as number | undefined) ?? null,
       congestion: (props.indice_de_congestion as number | undefined) ?? null,
+    };
+  };
+
+  layer.on("mouseover", () => {
+    const detail = resolveDetail();
+    if (!detail) return;
+    segmentHandlers?.onSegmentHover?.(detail);
+    segmentHandlers?.onSegmentFocus?.({
+      segmentName: detail.segmentName,
+      speed: detail.speed,
+      congestion: detail.congestion,
     });
+  });
+  layer.on("mouseout", () => {
+    segmentHandlers?.onSegmentHover?.(null);
+  });
+  layer.on("click", (e: L.LeafletMouseEvent) => {
+    L.DomEvent.stopPropagation(e);
+    map.closePopup();
+    const detail = resolveDetail();
+    if (!detail) return;
+    onObservatoryClick(detail);
   });
 }
 

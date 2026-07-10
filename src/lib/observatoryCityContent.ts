@@ -72,16 +72,24 @@ export function confidenceFromDataClass(
   dataClass: ObservatoryDataClass,
   configConfidence: number
 ): { label: string; pct: number } {
+  const pct = normalizeConfidencePct(configConfidence);
   if (dataClass === "observed") {
-    return { label: "High", pct: Math.max(72, Math.round(configConfidence * 100)) };
+    return { label: "High", pct: Math.max(72, pct) };
   }
   if (dataClass === "derived") {
-    return { label: "Medium", pct: Math.max(48, Math.round(configConfidence * 85)) };
+    return { label: "Medium", pct: Math.max(48, Math.round(pct * 0.85)) };
   }
   if (dataClass === "modelled") {
     return { label: "Low", pct: 38 };
   }
-  return { label: "Registry mock", pct: Math.round(configConfidence * 70) };
+  return { label: "Registry mock", pct: Math.round(pct * 0.7) };
+}
+
+/** Junction configs use 0–100; some views pass 0–1 — always return 0–100. */
+export function normalizeConfidencePct(configConfidence: number): number {
+  if (!Number.isFinite(configConfidence)) return 60;
+  if (configConfidence > 1) return Math.round(Math.min(100, configConfidence));
+  return Math.round(Math.min(100, configConfidence * 100));
 }
 
 function avgPointValue(points: LocalCityPoint[]): number {

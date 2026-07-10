@@ -6,16 +6,22 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "prebuild": "npm run build-trikala-locations && npm run build-trikala-bundle",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
     "extract-sharepoint": "node scripts/extract-sharepoint-june2026.mjs",
+    "build-issy-catalogue": "node scripts/build-issy-catalogue-snapshot.mjs",
+    "build-issy-workbooks": "node scripts/build-issy-workbook-snapshots.mjs",
+    "build-issy-bundle": "node scripts/build-issy-bundle.mjs",
     "build-copenhagen-data": "node scripts/build-copenhagen-data.mjs",
     "inventory-copenhagen-zip": "node scripts/inventory-copenhagen-zip.mjs",
     "inventory-trikala": "node scripts/inventory-trikala-zip.mjs",
     "build-trikala-insights": "node scripts/build-trikala-insights.mjs",
     "build-trikala-bundle": "node scripts/build-trikala-bundle.mjs",
-    "convert-helsinki-gpkg": "node scripts/convert-helsinki-gpkg.mjs"
+    "build-trikala-locations": "node scripts/build-trikala-locations.mjs",
+    "convert-helsinki-gpkg": "node scripts/convert-helsinki-gpkg.mjs",
+    "prepare:geodata": "python scripts/prepare_geodata.py"
   },
   "dependencies": {
     "@deck.gl/core": "^9.3.2",

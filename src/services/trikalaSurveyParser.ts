@@ -2,7 +2,13 @@ import * as XLSX from "xlsx";
 import type { NormalizedCityRecord } from "@/types/normalized-city-data";
 import { buildTrikalaEnvironmentalRecords } from "@/services/trikalaEnvironmentalParser";
 
-export const TRIKALA_PILOT_ANCHOR = { lat: 39.555, lng: 21.767 };
+import { TRIKALA_MAP_ANCHOR, getTrikalaPilotAnchor, type TrikalaPilotId } from "@/lib/trikalaMapConfig";
+import { computeWomenMobilityModeShareRows } from "@/lib/trikalaModeShare";
+import { resolveTrikalaInsightSegmentFromSelection } from "@/lib/trikalaObservatoryView";
+import type { ModeShareRow } from "@/lib/observatoryGraphicTypes";
+
+/** @deprecated Use TRIKALA_MAP_ANCHOR or getTrikalaPilotAnchor */
+export const TRIKALA_PILOT_ANCHOR = TRIKALA_MAP_ANCHOR;
 
 export const TRIKALA_SURVEY_FILES = {
   smartCrossingBaseline:
@@ -298,6 +304,16 @@ export async function getTrikalaSegmentInsights(): Promise<TrikalaSegmentInsight
   return segmentInsightCache;
 }
 
+/** Per-mode shares from women mobility questionnaire rows (segment-scoped). */
+export async function getTrikalaWomenMobilityModeShareRows(
+  selectionId?: string | null
+): Promise<ModeShareRow[]> {
+  const segmentKey = resolveTrikalaInsightSegmentFromSelection(selectionId) ?? "all";
+  const bundle = await loadTrikalaSurveyBundle();
+  const rows = filterWomenSegment(bundle.womenMobility, segmentKey);
+  return computeWomenMobilityModeShareRows(rows);
+}
+
 function pushSurveyRecord(
   records: NormalizedCityRecord[],
   kpiId: string,
@@ -312,21 +328,24 @@ function pushSurveyRecord(
     segmentId?: string;
     subSegment?: string;
     likertLabel?: string;
+    interventionId?: TrikalaPilotId;
   }
 ) {
   if (opts.value <= 0 && opts.baselineValue <= 0 && opts.interventionValue <= 0) return;
+  const interventionId = opts.interventionId ?? "tri-p1";
+  const anchor = getTrikalaPilotAnchor(interventionId);
   const comparison = opts.interventionValue - opts.baselineValue;
   records.push({
     id: `trikala-${kpiId}-${opts.idSuffix}`,
     city: "Trikala",
     cityId: "trikala",
-    interventionId: "tri-p1",
+    interventionId,
     kpiId,
     sourceFile: opts.sourceFile,
     geometryType: "point",
-    lat: TRIKALA_PILOT_ANCHOR.lat,
-    lng: TRIKALA_PILOT_ANCHOR.lng,
-    geometry: [[TRIKALA_PILOT_ANCHOR.lat, TRIKALA_PILOT_ANCHOR.lng]],
+    lat: anchor.lat,
+    lng: anchor.lng,
+    geometry: [[anchor.lat, anchor.lng]],
     value: opts.interventionValue || opts.baselineValue || opts.value,
     baselineValue: opts.baselineValue,
     interventionValue: opts.interventionValue || opts.baselineValue,
@@ -340,7 +359,7 @@ function pushSurveyRecord(
     locationMethod: "pilot_area_inference",
     segmentId: opts.segmentId ?? "tri-p1-smart-crossing",
     streetName: opts.subSegment ? `Trikala survey — ${opts.subSegment}` : "Smart crossing corridor",
-    spatialNote: "Survey aggregate at pilot anchor (no reliable coordinates in SharePoint drop).",
+    spatialNote: "Survey aggregate at pilot anchor from partner My Maps geodata.",
     parserStatus: "partial",
     likertLabel: opts.likertLabel,
   });
@@ -357,7 +376,8 @@ function addBeforeAfterLikert(
   likertLabel: string,
   sourceFile: string,
   segmentId: string,
-  maxScale = 4
+  maxScale = 4,
+  interventionId: TrikalaPilotId = "tri-p1"
 ) {
   const baselineAvg = averageLikert(baselineRows, columnMatch);
   const postAvg = averageLikert(postRows, columnMatch);
@@ -374,6 +394,7 @@ function addBeforeAfterLikert(
     method: `Mean Likert (${likertLabel}) — baseline n=${baselineRows.length}, post n=${postRows.length}.`,
     segmentId,
     likertLabel,
+    interventionId,
   });
 }
 
@@ -501,7 +522,9 @@ export async function buildTrikalaRecords(kpiId: string): Promise<NormalizedCity
       "Bike lane safety survey",
       "Bike lane safety",
       TRIKALA_SURVEY_FILES.bikeLaneBaseline,
-      "tri-p1-bike-lane"
+      "tri-p3-bike-lane",
+      4,
+      "tri-p3"
     );
     addBeforeAfterLikert(
       records,
@@ -513,8 +536,9 @@ export async function buildTrikalaRecords(kpiId: string): Promise<NormalizedCity
       "Bike lane safety survey",
       "Night cycling safety",
       TRIKALA_SURVEY_FILES.bikeLaneBaseline,
-      "tri-p1-bike-lane",
-      5
+      "tri-p3-bike-lane",
+      5,
+      "tri-p3"
     );
     addBeforeAfterLikert(
       records,
@@ -526,7 +550,9 @@ export async function buildTrikalaRecords(kpiId: string): Promise<NormalizedCity
       "Bike lane safety survey",
       "Bike lane condition",
       TRIKALA_SURVEY_FILES.bikeLaneBaseline,
-      "tri-p1-bike-lane"
+      "tri-p3-bike-lane",
+      4,
+      "tri-p3"
     );
   }
 

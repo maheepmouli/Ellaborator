@@ -1,7 +1,9 @@
 import { buildTrikalaInsightBlocks } from "@/data/trikalaSurveyInsights";
 import { getTrikalaSegmentInsights } from "@/services/trikalaSurveyParser";
 
-export type TrikalaEvidenceType = "image" | "pdf" | "narrative" | "insight";
+import type { TrikalaPilotId } from "@/lib/trikalaMapConfig";
+
+export type TrikalaEvidenceType = "image" | "pdf" | "narrative" | "insight" | "iframe";
 
 export interface TrikalaEvidenceFallback {
   type: "narrative";
@@ -10,10 +12,11 @@ export interface TrikalaEvidenceFallback {
 
 export interface TrikalaEvidenceEntry {
   id: string;
-  pilotId: "tri-p1";
+  pilotId: TrikalaPilotId;
   title: string;
   type: TrikalaEvidenceType;
   path?: string;
+  embedUrl?: string;
   metric?: string;
   linkedDatasetIds: string[];
   linkedMethods: string[];

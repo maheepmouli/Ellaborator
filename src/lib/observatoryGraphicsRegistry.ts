@@ -86,7 +86,26 @@ const PILOT_GRAPHIC_OVERRIDES: Record<string, PilotGraphicOverride> = {
   "zar-p1": { header: { "kpi1.2": "areaPolygonSchematic" } },
   "tri-p1": {
     header: { "kpi4.1": "areaPolygonSchematic" },
-    kpiAnalysis: { "kpi4.1": "likertRadar", "kpi2.1": "likertRadar", "kpi4.2": "accessibilityBars" },
+    overview: { "kpi1.2": "modeShareBars" },
+    kpiAnalysis: {
+      "kpi1.2": "segmentModeShare",
+      "kpi4.1": "likertRadar",
+      "kpi2.1": "likertRadar",
+      "kpi4.2": "accessibilityBars",
+      "kpi3.2": "climateComparison",
+    },
+  },
+  "issy-p3": {
+    kpiAnalysis: { "kpi4.1": "likertRadar", "kpi4.2": "accessibilityBars" },
+  },
+  "tri-p2": {
+    header: { "kpi3.1": "areaPolygonSchematic" },
+    overview: { "kpi1.2": "modeShareBars" },
+    kpiAnalysis: { "kpi1.2": "modeShareBars", "kpi3.1": "accessibilityBars" },
+  },
+  "tri-p3": {
+    header: { "kpi2.1": "streetSegmentSchematic" },
+    kpiAnalysis: { "kpi2.1": "likertRadar", "kpi4.2": "accessibilityBars" },
   },
 };
 
@@ -117,7 +136,7 @@ const KPI_STATUS_CAPTIONS: Record<
     },
     "kpi4.1": {
       primary: "Citizen sentiment gauge",
-      secondary: "Survey-derived perception samples",
+      secondary: "Mock GecoAir survey samples on corridor arms",
       tertiary: "Post-intervention monitoring",
     },
     "kpi4.2": {
@@ -262,9 +281,40 @@ export function resolveObservatoryGraphic(
   observatoryType: ObservatoryType,
   kpiId: string,
   zone: ObservatoryGraphicZone,
-  pilotId?: string | null
+  pilotId?: string | null,
+  selectedSegmentId?: string | null
 ): ObservatoryGraphicSpec | null {
   const kpi = kpiId as KPIFrameworkId;
+  const trikalaSegmentHover =
+    pilotId?.startsWith("tri-") &&
+    selectedSegmentId &&
+    !selectedSegmentId.endsWith("-environmental-fleet") &&
+    !selectedSegmentId.endsWith("-environmental-sensor");
+
+  if (trikalaSegmentHover && zone === "header") {
+    if (pilotId === "tri-p3") {
+      return { graphicId: "streetSegmentSchematic", kind: "schematic", variant: "compact" };
+    }
+    if (pilotId === "tri-p2") {
+      return { graphicId: "areaPolygonSchematic", kind: "schematic", variant: "compact" };
+    }
+    if (["kpi4.1", "kpi2.1", "kpi4.2", "kpi3.2"].includes(kpiId)) {
+      return { graphicId: "streetSegmentSchematic", kind: "schematic", variant: "compact" };
+    }
+  }
+
+  if (trikalaSegmentHover && zone === "kpiAnalysis") {
+    if (kpiId === "kpi4.1" || kpiId === "kpi2.1") {
+      return { graphicId: "likertRadar", kind: "chart", variant: "expanded" };
+    }
+    if (kpiId === "kpi4.2") {
+      return { graphicId: "accessibilityBars", kind: "chart", variant: "expanded" };
+    }
+    if (kpiId === "kpi3.2") {
+      return { graphicId: "climateComparison", kind: "chart", variant: "expanded" };
+    }
+  }
+
   const pilotOverride = pilotId ? PILOT_GRAPHIC_OVERRIDES[pilotId]?.[zone]?.[kpi] : undefined;
 
   if (zone === "header") {

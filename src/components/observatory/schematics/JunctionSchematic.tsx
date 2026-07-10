@@ -68,9 +68,7 @@ export function JunctionSchematic({ payload, expanded }: JunctionSchematicProps)
       <polygon points={`${cx - 4},${cy + roadW / 2 + 28} ${cx + 4},${cy + roadW / 2 + 28} ${cx},${cy + roadW / 2 + 18}`} fill="#ffffff55" />
       <polygon points={`${cx + roadW / 2 + 18},${cy - 4} ${cx + roadW / 2 + 18},${cy + 4} ${cx + roadW / 2 + 28},${cy}`} fill="#ffffff55" />
       <polygon points={`${cx - roadW / 2 - 28},${cy - 4} ${cx - roadW / 2 - 28},${cy + 4} ${cx - roadW / 2 - 18},${cy}`} fill="#ffffff55" />
-      <SensorDot cx={cx - roadW / 4} cy={cy - roadW / 2 - 22} />
-      <SensorDot cx={cx + roadW / 4} cy={cy + roadW / 2 + 22} />
-      <SensorDot cx={cx + roadW / 2 + 22} cy={cy + roadW / 4} />
+      <SensorDot cx={cx} cy={cy - roadW / 2 - 22} />
       {streetEW ? (
         <text x={size / 2} y={cy - roadW / 2 - 6} textAnchor="middle" fill="#ffffff70" fontSize="7" fontFamily="sans-serif">
           {streetEW.length > 22 ? `${streetEW.slice(0, 20)}…` : streetEW}

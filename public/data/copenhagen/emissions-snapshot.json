@@ -1,0 +1,371 @@
+{
+  "generatedAt": "2026-07-09T13:49:31.192Z",
+  "sourceFiles": [
+    "OpenTrafficCam Counts 2024 and 2025/Countings_Norreport_sortet.xlsx",
+    "OpenTrafficCam Counts 2024 and 2025/Countings_Vandkunsten_sortet.xlsx",
+    "OpenTrafficCam Counts 2024 and 2025/Countings_Gammeltorv_sortet.xlsx",
+    "OpenTrafficCam Counts 2024 and 2025/Countings_Stormgade_sortet.xlsx",
+    "OpenTrafficCam Counts 2024 and 2025/Countings_Hojbro.xlsx"
+  ],
+  "modelLabel": "COPERT-lite urban fleet factors (modelled)",
+  "flows": [
+    {
+      "siteName": "Norregade/Norre Volgade",
+      "lat": 55.682312,
+      "lon": 12.570922,
+      "flow": "Norregade south",
+      "preCo2GPerHour": 190098,
+      "postCo2GPerHour": 204462,
+      "preBreakdown": {
+        "car": 136239,
+        "van": 16087,
+        "bus": 5400,
+        "truck": 16406,
+        "motorcycle": 15961,
+        "scooter": 5
+      },
+      "postBreakdown": {
+        "car": 161778,
+        "van": 23957,
+        "bus": 8880,
+        "truck": 4309,
+        "motorcycle": 5527,
+        "scooter": 11
+      }
+    },
+    {
+      "siteName": "Norregade/Norre Volgade",
+      "lat": 55.682312,
+      "lon": 12.570922,
+      "flow": "Norregade north",
+      "preCo2GPerHour": 237971,
+      "postCo2GPerHour": 287466,
+      "preBreakdown": {
+        "car": 221284,
+        "van": 6775,
+        "bus": 480,
+        "truck": 5386,
+        "motorcycle": 4030,
+        "scooter": 16
+      },
+      "postBreakdown": {
+        "car": 256869,
+        "van": 25905,
+        "bus": 720,
+        "truck": 2900,
+        "motorcycle": 1072,
+        "scooter": 0
+      }
+    },
+    {
+      "siteName": "Vandkunsten/Radhuusstraede",
+      "lat": 55.677575,
+      "lon": 12.579961,
+      "flow": "Radhuusstraede North --> Radhuusstraede South",
+      "preCo2GPerHour": 85476,
+      "postCo2GPerHour": 19929,
+      "preBreakdown": {
+        "car": 47082,
+        "van": 9352,
+        "bus": 9300,
+        "truck": 14583,
+        "motorcycle": 4871,
+        "scooter": 288
+      },
+      "postBreakdown": {
+        "car": 8304,
+        "van": 1828,
+        "bus": 1102,
+        "truck": 1015,
+        "motorcycle": 7580,
+        "scooter": 100
+      }
+    },
+    {
+      "siteName": "Vandkunsten/Radhuusstraede",
+      "lat": 55.677575,
+      "lon": 12.579961,
+      "flow": "Radhuusstraede South --> Radhuusstraede North",
+      "preCo2GPerHour": 170311,
+      "postCo2GPerHour": 172821,
+      "preBreakdown": {
+        "car": 134233,
+        "van": 16736,
+        "bus": 2700,
+        "truck": 12097,
+        "motorcycle": 4491,
+        "scooter": 54
+      },
+      "postBreakdown": {
+        "car": 117145,
+        "van": 31986,
+        "bus": 5670,
+        "truck": 6308,
+        "motorcycle": 11695,
+        "scooter": 19
+      }
+    },
+    {
+      "siteName": "Gammeltorv/Vestergade",
+      "lat": 55.678437,
+      "lon": 12.572236,
+      "flow": "Vestergade east",
+      "preCo2GPerHour": 103390,
+      "postCo2GPerHour": 94543,
+      "preBreakdown": {
+        "car": 87337,
+        "van": 12658,
+        "bus": 480,
+        "truck": 1326,
+        "motorcycle": 1568,
+        "scooter": 22
+      },
+      "postBreakdown": {
+        "car": 74891,
+        "van": 12875,
+        "bus": 280,
+        "truck": 967,
+        "motorcycle": 5518,
+        "scooter": 13
+      }
+    },
+    {
+      "siteName": "Gammeltorv/Vestergade",
+      "lat": 55.678437,
+      "lon": 12.572236,
+      "flow": "Vestergade west",
+      "preCo2GPerHour": 21887,
+      "postCo2GPerHour": 10210,
+      "preBreakdown": {
+        "car": 21257,
+        "van": 61,
+        "bus": 0,
+        "truck": 166,
+        "motorcycle": 399,
+        "scooter": 5
+      },
+      "postBreakdown": {
+        "car": 7473,
+        "van": 95,
+        "bus": 0,
+        "truck": 0,
+        "motorcycle": 2604,
+        "scooter": 38
+      }
+    },
+    {
+      "siteName": "Gammeltorv/Vestergade",
+      "lat": 55.678437,
+      "lon": 12.572236,
+      "flow": "Gammeltorv south",
+      "preCo2GPerHour": 43499,
+      "postCo2GPerHour": 40995,
+      "preBreakdown": {
+        "car": 25370,
+        "van": 5355,
+        "bus": 9840,
+        "truck": 1657,
+        "motorcycle": 1249,
+        "scooter": 27
+      },
+      "postBreakdown": {
+        "car": 19352,
+        "van": 4165,
+        "bus": 7980,
+        "truck": 2707,
+        "motorcycle": 6779,
+        "scooter": 13
+      }
+    },
+    {
+      "siteName": "Gammeltorv/Vestergade",
+      "lat": 55.678437,
+      "lon": 12.572236,
+      "flow": "Gammeltorv north",
+      "preCo2GPerHour": 82319,
+      "postCo2GPerHour": 102993,
+      "preBreakdown": {
+        "car": 52443,
+        "van": 15417,
+        "bus": 1080,
+        "truck": 9611,
+        "motorcycle": 3702,
+        "scooter": 65
+      },
+      "postBreakdown": {
+        "car": 54988,
+        "van": 25607,
+        "bus": 280,
+        "truck": 11213,
+        "motorcycle": 10891,
+        "scooter": 13
+      }
+    },
+    {
+      "siteName": "Frederiksholmskanal/Stormgade",
+      "lat": 55.675535,
+      "lon": 12.575545,
+      "flow": "Frederiksholmskanal north",
+      "preCo2GPerHour": 427835,
+      "postCo2GPerHour": 345861,
+      "preBreakdown": {
+        "car": 332406,
+        "van": 68424,
+        "bus": 13320,
+        "truck": 13423,
+        "motorcycle": 230,
+        "scooter": 33
+      },
+      "postBreakdown": {
+        "car": 205104,
+        "van": 52185,
+        "bus": 44520,
+        "truck": 34800,
+        "motorcycle": 9176,
+        "scooter": 76
+      }
+    },
+    {
+      "siteName": "Frederiksholmskanal/Stormgade",
+      "lat": 55.675535,
+      "lon": 12.575545,
+      "flow": "Frederiksholmskanal South",
+      "preCo2GPerHour": 221145,
+      "postCo2GPerHour": 0,
+      "preBreakdown": {
+        "car": 129075,
+        "van": 25398,
+        "bus": 62100,
+        "truck": 4391,
+        "motorcycle": 159,
+        "scooter": 22
+      },
+      "postBreakdown": {}
+    },
+    {
+      "siteName": "Frederiksholmskanal/Stormgade",
+      "lat": 55.675535,
+      "lon": 12.575545,
+      "flow": "Stormgade west",
+      "preCo2GPerHour": 596712,
+      "postCo2GPerHour": 803082,
+      "preBreakdown": {
+        "car": 412528,
+        "van": 55238,
+        "bus": 117000,
+        "truck": 11849,
+        "motorcycle": 97,
+        "scooter": 0
+      },
+      "postBreakdown": {
+        "car": 481715,
+        "van": 80254,
+        "bus": 175000,
+        "truck": 47753,
+        "motorcycle": 18176,
+        "scooter": 184
+      }
+    },
+    {
+      "siteName": "Frederiksholmskanal/Stormgade",
+      "lat": 55.675535,
+      "lon": 12.575545,
+      "flow": "Stormgade east",
+      "preCo2GPerHour": 536745,
+      "postCo2GPerHour": 997514,
+      "preBreakdown": {
+        "car": 324500,
+        "van": 69702,
+        "bus": 117120,
+        "truck": 25189,
+        "motorcycle": 213,
+        "scooter": 22
+      },
+      "postBreakdown": {
+        "car": 587640,
+        "van": 124936,
+        "bus": 191660,
+        "truck": 82650,
+        "motorcycle": 10571,
+        "scooter": 57
+      }
+    },
+    {
+      "siteName": "Frederiksholmskanal/Stormgade",
+      "lat": 55.675535,
+      "lon": 12.575545,
+      "flow": "Frederiksholmskanal south",
+      "preCo2GPerHour": 0,
+      "postCo2GPerHour": 222075,
+      "preBreakdown": {},
+      "postBreakdown": {
+        "car": 111687,
+        "van": 29086,
+        "bus": 51590,
+        "truck": 21653,
+        "motorcycle": 8039,
+        "scooter": 19
+      }
+    },
+    {
+      "siteName": "Hojbro/Vindebrogade",
+      "lat": 55.677575,
+      "lon": 12.579961,
+      "flow": "Hojbro south",
+      "preCo2GPerHour": 84445,
+      "postCo2GPerHour": 93746,
+      "preBreakdown": {
+        "car": 56050,
+        "van": 11969,
+        "bus": 9420,
+        "truck": 6794,
+        "motorcycle": 213,
+        "scooter": 0
+      },
+      "postBreakdown": {
+        "car": 55598,
+        "van": 11691,
+        "bus": 20020,
+        "truck": 4930,
+        "motorcycle": 1488,
+        "scooter": 19
+      }
+    },
+    {
+      "siteName": "Hojbro/Vindebrogade",
+      "lat": 55.677575,
+      "lon": 12.579961,
+      "flow": "Hojbro north",
+      "preCo2GPerHour": 202953,
+      "postCo2GPerHour": 197405,
+      "preBreakdown": {
+        "car": 141735,
+        "van": 33471,
+        "bus": 1740,
+        "truck": 25686,
+        "motorcycle": 283,
+        "scooter": 38
+      },
+      "postBreakdown": {
+        "car": 145415,
+        "van": 34482,
+        "bus": 3990,
+        "truck": 11697,
+        "motorcycle": 1808,
+        "scooter": 13
+      }
+    }
+  ],
+  "emissionFactorsGCo2PerVehicleHour": {
+    "car": 1180,
+    "van": 1420,
+    "bus": 4200,
+    "truck": 5800,
+    "motorcycle": 620,
+    "scooter": 380
+  },
+  "notes": [
+    "Modelled g CO₂/h from OTC mode counts — not measured ambient CO₂.",
+    "Uses weekday-equivalent normalisation aligned with OTC period scaling."
+  ]
+}

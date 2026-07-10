@@ -1,0 +1,141 @@
+{
+  "generatedAt": "2026-07-09T12:54:40.450Z",
+  "sourceFile": "1. BASELINE DATA from Issy/baseline_evaluation_data_light_emitting_marking_solution.xlsx",
+  "datasetId": "issy-wintics-baseline-xlsx",
+  "locationLabel": "Living-lab site · Wintics camera (Pont d'Issy)",
+  "period": "2024-11-01 – 2024-11-30",
+  "notes": [
+    "Point measurement at the luminous-markings pilot site — not zone OD CSV.",
+    "Operating speeds sourced from Issy open-data portal upstream of the living lab."
+  ],
+  "overall": {
+    "meanSpeedKmh": 19.14,
+    "p85SpeedKmh": 22.18,
+    "trafficFlowPerHour": {
+      "motorcycles": 57,
+      "buses": 13,
+      "trucks": 11,
+      "pedestrians": 15,
+      "scooters": 2,
+      "cyclists": 99,
+      "cars": 264,
+      "lcv": 20
+    },
+    "modalSharePct": {
+      "motorcycles": 11.88,
+      "buses": 2.65,
+      "trucks": 2.32,
+      "pedestrians": 3.2,
+      "scooters": 0.49,
+      "cyclists": 20.52,
+      "cars": 54.83,
+      "lcv": 4.12
+    }
+  },
+  "timeBands": [
+    {
+      "id": "morning",
+      "label": "8:00-11:59",
+      "meanSpeedKmh": 16.97,
+      "p85SpeedKmh": 20.31,
+      "trafficFlowPerHour": {
+        "motorcycles": 86,
+        "buses": 18,
+        "trucks": 29,
+        "pedestrians": 26,
+        "scooters": 8,
+        "cyclists": 231,
+        "cars": 333,
+        "lcv": 44
+      },
+      "modalSharePct": {
+        "motorcycles": 11.12,
+        "buses": 2.38,
+        "trucks": 3.8,
+        "pedestrians": 3.3,
+        "scooters": 1.01,
+        "cyclists": 29.81,
+        "cars": 42.95,
+        "lcv": 5.62
+      }
+    },
+    {
+      "id": "afternoon",
+      "label": "12:00-16:59",
+      "meanSpeedKmh": 17.68,
+      "p85SpeedKmh": 18.32,
+      "trafficFlowPerHour": {
+        "motorcycles": 81,
+        "buses": 17,
+        "trucks": 14,
+        "pedestrians": 26,
+        "scooters": 4,
+        "cyclists": 112,
+        "cars": 360,
+        "lcv": 37
+      },
+      "modalSharePct": {
+        "motorcycles": 12.49,
+        "buses": 2.57,
+        "trucks": 2.17,
+        "pedestrians": 3.96,
+        "scooters": 0.56,
+        "cyclists": 17.18,
+        "cars": 55.31,
+        "lcv": 5.76
+      }
+    },
+    {
+      "id": "evening",
+      "label": "17:00-20:59",
+      "meanSpeedKmh": 16.82,
+      "p85SpeedKmh": 17.88,
+      "trafficFlowPerHour": {
+        "motorcycles": 96,
+        "buses": 17,
+        "trucks": 6,
+        "pedestrians": 24,
+        "scooters": 1,
+        "cyclists": 155,
+        "cars": 469,
+        "lcv": 12
+      },
+      "modalSharePct": {
+        "motorcycles": 12.31,
+        "buses": 2.15,
+        "trucks": 0.76,
+        "pedestrians": 3.11,
+        "scooters": 0.13,
+        "cyclists": 19.87,
+        "cars": 60.1,
+        "lcv": 1.57
+      }
+    },
+    {
+      "id": "night",
+      "label": "21:00-7:59",
+      "meanSpeedKmh": 21.43,
+      "p85SpeedKmh": 23.37,
+      "trafficFlowPerHour": {
+        "motorcycles": 22,
+        "buses": 7,
+        "trucks": 5,
+        "pedestrians": 4,
+        "scooters": 0,
+        "cyclists": 24,
+        "cars": 121,
+        "lcv": 6
+      },
+      "modalSharePct": {
+        "motorcycles": 11.37,
+        "buses": 3.93,
+        "trucks": 2.67,
+        "pedestrians": 2.01,
+        "scooters": 0.14,
+        "cyclists": 12.87,
+        "cars": 63.89,
+        "lcv": 3.11
+      }
+    }
+  ]
+}

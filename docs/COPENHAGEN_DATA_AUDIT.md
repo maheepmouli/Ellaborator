@@ -128,9 +128,16 @@ Trust badges: `Exact` · `Observed` · `Per direction` · `Pre + Post`.
 - **ELABORATOR mode lexicon.** The current bucket mapping covers the dominant
   classes; cross-validation against the official ELABORATOR mode taxonomy is still
   needed for edge categories (e.g. `delivery_van_with_trailer`, `train`).
-- **Time-of-day / weekday normalisation.** Pre vs Post periods have different
-  length and day-of-week mix. We currently sum totals over the whole period;
-  a 7-day-equivalent normalisation across all four cameras is the next step.
+- **Time-of-day / weekday normalisation.** Implemented in `copenhagenMethodology.ts`
+  (`normalizeCphPrePost`): distinct observation days counted per pre/post period
+  (Fridays excluded), scaled to **5 weekday-equivalent days**. Raw totals remain in
+  `otc-directional-observed.json` as `pre`/`post`; display uses `preNormalized`/
+  `postNormalized` with `periodMeta`.
+- **Near encounters (CPHK3).** `near-encounters-snapshot.json` ships an OTC-derived
+  encounter-pressure proxy (mixed vulnerable + motor 15-min bins). Partner ingest:
+  columns `site`, `lat`, `lon`, `period`, `encounter_count`.
+- **KPI 3.2 emissions.** `emissions-snapshot.json` — COPERT-lite urban g CO₂/h per
+  flow from normalised OTC mode counts (`emissionFactorsGCo2PerVehicleHour` in snapshot).
 - **Pivot sheet cross-check.** Danish-header pivot sheets are not currently
   parsed; they could be used as an integrity check on the raw aggregation.
 - **Camera-view artefacts** noted in the Overview comments (e.g. Stormgade pre/post

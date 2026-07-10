@@ -10,7 +10,7 @@ export const SHAREPOINT_CITY_DATASETS: SharepointDataset[] = [
   {
     city: "Copenhagen",
     sourceFolder: "/sharepoint-data/Copenhagen",
-    fileCount: 4,
+    fileCount: 24,
     sampleFile:
       "/sharepoint-data/Copenhagen/OpenTrafficCam Counts 2024 and 2025/Countings_Norreport_sortet.xlsx",
     manifestProbe: "/sharepoint-data/_manifest.json",
@@ -24,22 +24,24 @@ export const SHAREPOINT_CITY_DATASETS: SharepointDataset[] = [
   },
   {
     city: "Issy",
-    sourceFolder:
-      "/public/data/issy (bundled); full mirror at /sharepoint-data/Issy-20260427T130625Z-3-001/Issy",
-    fileCount: 4,
-    sampleFile: "/data/issy/ISSY1_post_intervention_traffic_data_november_2025.csv",
+    sourceFolder: "/sharepoint-data/Issy-20260625T113904Z-3-001/Issy",
+    fileCount: 14,
+    sampleFile:
+      "/sharepoint-data/Issy-20260625T113904Z-3-001/Issy/1. BASELINE DATA from Issy/ISSY1 - detailed traffic data/ISSY1_baseline_traffic_data_november_2024.csv",
+    manifestProbe: "/sharepoint-data/_manifest.json",
   },
   {
     city: "Milan",
     sourceFolder: "/sharepoint-data/Milan",
-    fileCount: 175,
+    fileCount: 9,
     sampleFile:
       "/sharepoint-data/Milan/8. Data - accessibility features/Milan_Accessibility_Features_DSS_Analysis_CIRCE.xlsx",
+    manifestProbe: "/sharepoint-data/_manifest.json",
   },
   {
     city: "Zaragoza",
     sourceFolder: "/sharepoint-data/Zaragoza",
-    fileCount: 11,
+    fileCount: 12,
     sampleFile:
       "/sharepoint-data/Zaragoza/3. Mobility (KPI1.2) assessment/KPI1.2-AYZG1-before.xlsx",
     manifestProbe: "/sharepoint-data/_manifest.json",
@@ -47,7 +49,7 @@ export const SHAREPOINT_CITY_DATASETS: SharepointDataset[] = [
   {
     city: "Trikala",
     sourceFolder: "/sharepoint-data/Trikala",
-    fileCount: 50,
+    fileCount: 10,
     sampleFile:
       "/sharepoint-data/Trikala/baseline data of the smart crossing on line survey_english.xlsx",
     manifestProbe: "/sharepoint-data/_manifest.json",

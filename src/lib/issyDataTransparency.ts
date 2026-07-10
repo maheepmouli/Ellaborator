@@ -34,7 +34,7 @@ export function kpiPrimaryIssySource(kpiId: string): IssyDataSourceKind {
     case "kpi4.1":
       return "mock";
     case "kpi4.2":
-      return "derived-proxy";
+      return "mock";
     default:
       return "derived-proxy";
   }

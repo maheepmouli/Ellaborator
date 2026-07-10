@@ -17,6 +17,28 @@
       "motorised": 11517,
       "ptw": 813,
       "total": 52982
+    },
+    "preNormalized": {
+      "bike": 19805.714285714286,
+      "pedestrian": 12028.57142857143,
+      "motorised": 7513.571428571428,
+      "ptw": 1476.4285714285716,
+      "total": 41135.71428571429
+    },
+    "postNormalized": {
+      "bike": 17127.14285714286,
+      "pedestrian": 11835.714285714286,
+      "motorised": 8226.428571428572,
+      "ptw": 580.7142857142858,
+      "total": 37844.28571428572
+    },
+    "periodMeta": {
+      "normalizationMethod": "weekday-equivalent-scaling",
+      "referenceWeekdays": 5,
+      "weekdaysObservedPre": 7,
+      "weekdaysObservedPost": 7,
+      "preScaleFactor": 0.7142857142857143,
+      "postScaleFactor": 0.7142857142857143
     }
   },
   {
@@ -37,6 +59,28 @@
       "motorised": 18777,
       "ptw": 163,
       "total": 43682
+    },
+    "preNormalized": {
+      "bike": 15123.57142857143,
+      "pedestrian": 12724.285714285714,
+      "motorised": 10960,
+      "ptw": 354.2857142857143,
+      "total": 39228.57142857143
+    },
+    "postNormalized": {
+      "bike": 10416.428571428572,
+      "pedestrian": 7035,
+      "motorised": 13412.142857142857,
+      "ptw": 116.42857142857143,
+      "total": 31201.428571428572
+    },
+    "periodMeta": {
+      "normalizationMethod": "weekday-equivalent-scaling",
+      "referenceWeekdays": 5,
+      "weekdaysObservedPre": 7,
+      "weekdaysObservedPost": 7,
+      "preScaleFactor": 0.7142857142857143,
+      "postScaleFactor": 0.7142857142857143
     }
   },
   {
@@ -57,6 +101,28 @@
       "motorised": 749,
       "ptw": 1253,
       "total": 44286
+    },
+    "preNormalized": {
+      "bike": 8075,
+      "pedestrian": 11152.142857142857,
+      "motorised": 2950,
+      "ptw": 560,
+      "total": 22875
+    },
+    "postNormalized": {
+      "bike": 10973.75,
+      "pedestrian": 15351.875,
+      "motorised": 468.125,
+      "ptw": 783.125,
+      "total": 27678.75
+    },
+    "periodMeta": {
+      "normalizationMethod": "weekday-equivalent-scaling",
+      "referenceWeekdays": 5,
+      "weekdaysObservedPre": 7,
+      "weekdaysObservedPost": 8,
+      "preScaleFactor": 0.7142857142857143,
+      "postScaleFactor": 0.625
     }
   },
   {
@@ -77,6 +143,28 @@
       "motorised": 12509,
       "ptw": 1961,
       "total": 51890
+    },
+    "preNormalized": {
+      "bike": 6425.714285714286,
+      "pedestrian": 9678.57142857143,
+      "motorised": 7550,
+      "ptw": 455.7142857142857,
+      "total": 24249.285714285714
+    },
+    "postNormalized": {
+      "bike": 9440.625,
+      "pedestrian": 13882.5,
+      "motorised": 7818.125,
+      "ptw": 1225.625,
+      "total": 32431.25
+    },
+    "periodMeta": {
+      "normalizationMethod": "weekday-equivalent-scaling",
+      "referenceWeekdays": 5,
+      "weekdaysObservedPre": 7,
+      "weekdaysObservedPost": 8,
+      "preScaleFactor": 0.7142857142857143,
+      "postScaleFactor": 0.625
     }
   },
   {
@@ -97,6 +185,28 @@
       "motorised": 2428,
       "ptw": 314,
       "total": 16646
+    },
+    "preNormalized": {
+      "bike": 17557.14285714286,
+      "pedestrian": 12315,
+      "motorised": 3848.5714285714284,
+      "ptw": 152.85714285714286,
+      "total": 33906.42857142857
+    },
+    "postNormalized": {
+      "bike": 15083.333333333334,
+      "pedestrian": 7946.666666666667,
+      "motorised": 4046.666666666667,
+      "ptw": 523.3333333333334,
+      "total": 27743.333333333336
+    },
+    "periodMeta": {
+      "normalizationMethod": "weekday-equivalent-scaling",
+      "referenceWeekdays": 5,
+      "weekdaysObservedPre": 7,
+      "weekdaysObservedPost": 3,
+      "preScaleFactor": 0.7142857142857143,
+      "postScaleFactor": 1.6666666666666667
     }
   },
   {
@@ -117,6 +227,28 @@
       "motorised": 19,
       "ptw": 173,
       "total": 15017
+    },
+    "preNormalized": {
+      "bike": 16815,
+      "pedestrian": 11803.57142857143,
+      "motorised": 27.857142857142858,
+      "ptw": 35,
+      "total": 28700.714285714286
+    },
+    "postNormalized": {
+      "bike": 15153.333333333334,
+      "pedestrian": 9388.333333333334,
+      "motorised": 31.666666666666668,
+      "ptw": 288.33333333333337,
+      "total": 25028.333333333336
+    },
+    "periodMeta": {
+      "normalizationMethod": "weekday-equivalent-scaling",
+      "referenceWeekdays": 5,
+      "weekdaysObservedPre": 7,
+      "weekdaysObservedPost": 3,
+      "preScaleFactor": 0.7142857142857143,
+      "postScaleFactor": 1.6666666666666667
     }
   },
   {
@@ -137,6 +269,28 @@
       "motorised": 548,
       "ptw": 396,
       "total": 22175
+    },
+    "preNormalized": {
+      "bike": 18022.14285714286,
+      "pedestrian": 28727.14285714286,
+      "motorised": 1145,
+      "ptw": 127.14285714285714,
+      "total": 48187.142857142855
+    },
+    "postNormalized": {
+      "bike": 17436.666666666668,
+      "pedestrian": 17873.333333333336,
+      "motorised": 913.3333333333334,
+      "ptw": 660,
+      "total": 36958.333333333336
+    },
+    "periodMeta": {
+      "normalizationMethod": "weekday-equivalent-scaling",
+      "referenceWeekdays": 5,
+      "weekdaysObservedPre": 7,
+      "weekdaysObservedPost": 3,
+      "preScaleFactor": 0.7142857142857143,
+      "postScaleFactor": 1.6666666666666667
     }
   },
   {
@@ -157,6 +311,28 @@
       "motorised": 2032,
       "ptw": 672,
       "total": 24359
+    },
+    "preNormalized": {
+      "bike": 14701.428571428572,
+      "pedestrian": 29545,
+      "motorised": 2748.5714285714284,
+      "ptw": 363.57142857142856,
+      "total": 47590.71428571429
+    },
+    "postNormalized": {
+      "bike": 16708.333333333336,
+      "pedestrian": 19275,
+      "motorised": 3386.666666666667,
+      "ptw": 1120,
+      "total": 40598.333333333336
+    },
+    "periodMeta": {
+      "normalizationMethod": "weekday-equivalent-scaling",
+      "referenceWeekdays": 5,
+      "weekdaysObservedPre": 7,
+      "weekdaysObservedPost": 3,
+      "preScaleFactor": 0.7142857142857143,
+      "postScaleFactor": 1.6666666666666667
     }
   },
   {
@@ -177,6 +353,28 @@
       "motorised": 16537,
       "ptw": 1225,
       "total": 61567
+    },
+    "preNormalized": {
+      "bike": 6102.857142857143,
+      "pedestrian": 8029.285714285715,
+      "motorised": 19266.428571428572,
+      "ptw": 25,
+      "total": 33429.28571428572
+    },
+    "postNormalized": {
+      "bike": 13865,
+      "pedestrian": 22517.5,
+      "motorised": 13780.833333333334,
+      "ptw": 1020.8333333333334,
+      "total": 51305.833333333336
+    },
+    "periodMeta": {
+      "normalizationMethod": "weekday-equivalent-scaling",
+      "referenceWeekdays": 5,
+      "weekdaysObservedPre": 7,
+      "weekdaysObservedPost": 6,
+      "preScaleFactor": 0.7142857142857143,
+      "postScaleFactor": 0.8333333333333334
     }
   },
   {
@@ -197,6 +395,28 @@
       "motorised": 0,
       "ptw": 0,
       "total": 0
+    },
+    "preNormalized": {
+      "bike": 4755.714285714286,
+      "pedestrian": 8164.285714285715,
+      "motorised": 7978.571428571428,
+      "ptw": 18.571428571428573,
+      "total": 20920.714285714286
+    },
+    "postNormalized": {
+      "bike": 0,
+      "pedestrian": 0,
+      "motorised": 0,
+      "ptw": 0,
+      "total": 0
+    },
+    "periodMeta": {
+      "normalizationMethod": "weekday-equivalent-scaling",
+      "referenceWeekdays": 5,
+      "weekdaysObservedPre": 7,
+      "weekdaysObservedPost": 6,
+      "preScaleFactor": 0.7142857142857143,
+      "postScaleFactor": 0.8333333333333334
     }
   },
   {
@@ -217,6 +437,28 @@
       "motorised": 39891,
       "ptw": 2266,
       "total": 91713
+    },
+    "preNormalized": {
+      "bike": 3348.5714285714284,
+      "pedestrian": 1109.2857142857142,
+      "motorised": 24380.714285714286,
+      "ptw": 9.285714285714286,
+      "total": 28849.285714285714
+    },
+    "postNormalized": {
+      "bike": 23640.833333333336,
+      "pedestrian": 17565,
+      "motorised": 33242.5,
+      "ptw": 1888.3333333333335,
+      "total": 76427.5
+    },
+    "periodMeta": {
+      "normalizationMethod": "weekday-equivalent-scaling",
+      "referenceWeekdays": 5,
+      "weekdaysObservedPre": 7,
+      "weekdaysObservedPost": 6,
+      "preScaleFactor": 0.7142857142857143,
+      "postScaleFactor": 0.8333333333333334
     }
   },
   {
@@ -237,6 +479,28 @@
       "motorised": 49850,
       "ptw": 1325,
       "total": 92858
+    },
+    "preNormalized": {
+      "bike": 7895.714285714286,
+      "pedestrian": 1930.7142857142858,
+      "motorised": 20373.571428571428,
+      "ptw": 22.142857142857142,
+      "total": 30227.857142857145
+    },
+    "postNormalized": {
+      "bike": 17615.833333333336,
+      "pedestrian": 17041.666666666668,
+      "motorised": 41541.66666666667,
+      "ptw": 1104.1666666666667,
+      "total": 77381.66666666667
+    },
+    "periodMeta": {
+      "normalizationMethod": "weekday-equivalent-scaling",
+      "referenceWeekdays": 5,
+      "weekdaysObservedPre": 7,
+      "weekdaysObservedPost": 6,
+      "preScaleFactor": 0.7142857142857143,
+      "postScaleFactor": 0.8333333333333334
     }
   },
   {
@@ -257,6 +521,28 @@
       "motorised": 9399,
       "ptw": 1070,
       "total": 59184
+    },
+    "preNormalized": {
+      "bike": 0,
+      "pedestrian": 0,
+      "motorised": 0,
+      "ptw": 0,
+      "total": 0
+    },
+    "postNormalized": {
+      "bike": 14526.666666666668,
+      "pedestrian": 25969.166666666668,
+      "motorised": 7832.5,
+      "ptw": 891.6666666666667,
+      "total": 49320
+    },
+    "periodMeta": {
+      "normalizationMethod": "weekday-equivalent-scaling",
+      "referenceWeekdays": 5,
+      "weekdaysObservedPre": 7,
+      "weekdaysObservedPost": 6,
+      "preScaleFactor": 0.7142857142857143,
+      "postScaleFactor": 0.8333333333333334
     }
   },
   {
@@ -277,6 +563,28 @@
       "motorised": 4602,
       "ptw": 220,
       "total": 44755
+    },
+    "preNormalized": {
+      "bike": 4761.428571428572,
+      "pedestrian": 9638.57142857143,
+      "motorised": 3171.4285714285716,
+      "ptw": 17.857142857142858,
+      "total": 17634.285714285714
+    },
+    "postNormalized": {
+      "bike": 7056.666666666667,
+      "pedestrian": 25957.5,
+      "motorised": 3835,
+      "ptw": 183.33333333333334,
+      "total": 37295.833333333336
+    },
+    "periodMeta": {
+      "normalizationMethod": "weekday-equivalent-scaling",
+      "referenceWeekdays": 5,
+      "weekdaysObservedPre": 7,
+      "weekdaysObservedPost": 6,
+      "preScaleFactor": 0.7142857142857143,
+      "postScaleFactor": 0.8333333333333334
     }
   },
   {
@@ -297,6 +605,28 @@
       "motorised": 11375,
       "ptw": 248,
       "total": 54773
+    },
+    "preNormalized": {
+      "bike": 5500,
+      "pedestrian": 14200.714285714286,
+      "motorised": 8292.857142857143,
+      "ptw": 34.285714285714285,
+      "total": 28068.571428571428
+    },
+    "postNormalized": {
+      "bike": 9430,
+      "pedestrian": 26260,
+      "motorised": 9479.166666666668,
+      "ptw": 206.66666666666669,
+      "total": 45644.16666666667
+    },
+    "periodMeta": {
+      "normalizationMethod": "weekday-equivalent-scaling",
+      "referenceWeekdays": 5,
+      "weekdaysObservedPre": 7,
+      "weekdaysObservedPost": 6,
+      "preScaleFactor": 0.7142857142857143,
+      "postScaleFactor": 0.8333333333333334
     }
   }
 ]

@@ -12,6 +12,45 @@ interface TrikalaEvidencePanelProps {
 
 function EvidenceBlock({ entry }: { entry: TrikalaEvidenceEntry }) {
   const [imgError, setImgError] = useState(false);
+  const [iframeError, setIframeError] = useState(false);
+
+  if (entry.type === "iframe") {
+    if (!entry.embedUrl || iframeError) {
+      return (
+        <div className="rounded-lg border border-white/10 bg-white/5 p-3">
+          <p className="text-[11px] font-medium text-white/90">{entry.title}</p>
+          <p className="mt-1.5 text-[11px] leading-relaxed text-white/65">
+            {entry.fallback?.text ?? "Interactive workshop map unavailable."}
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="rounded-lg border border-white/10 bg-white/5 p-3">
+        <p className="text-[11px] font-medium text-white/90">{entry.title}</p>
+        {entry.caption && (
+          <p className="mt-1 text-[10px] leading-relaxed text-white/60">{entry.caption}</p>
+        )}
+        <div className="relative mt-2 w-full min-h-[280px] aspect-[4/3] overflow-hidden rounded border border-white/10">
+          <iframe
+            src={entry.embedUrl}
+            title={entry.title}
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            allowFullScreen
+            className="absolute inset-0 h-full w-full border-0"
+            onError={() => setIframeError(true)}
+          />
+        </div>
+        {entry.linkedDatasetIds.length > 0 && (
+          <p className="mt-2 text-[10px] text-white/45">
+            Datasets: {entry.linkedDatasetIds.join(" · ")}
+          </p>
+        )}
+      </div>
+    );
+  }
 
   if (entry.type === "insight" || entry.type === "narrative" || (!entry.path && entry.fallback)) {
     return (

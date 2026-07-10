@@ -1,6 +1,11 @@
 import L from "leaflet";
 import type { SegmentInteractionHandlers } from "@/lib/wireMapSegmentInteraction";
 import { wirePolylineSegment } from "@/lib/wireMapSegmentInteraction";
+import {
+  CPH_LINE_FOCUS_DIM,
+  CPH_PARKING_LOD_ZOOM,
+  getCopenhagenParkingLineStyles,
+} from "./copenhagenFlowStyles";
 
 export const CPH_PARKING_POPUP_CLASS = "cph-parking-popup";
 
@@ -118,9 +123,12 @@ export function renderCopenhagenParkingPolygons(
   polylinesOut: L.Polyline[],
   selectedKpi: string,
   segmentHandlers: SegmentInteractionHandlers,
-  selectedSegmentId?: string | null
+  selectedSegmentId?: string | null,
+  zoom = map.getZoom()
 ): void {
-  const fillOpacity = selectedKpi === "kpi4.2" ? 0.28 : 0.18;
+  if (zoom < CPH_PARKING_LOD_ZOOM) {
+    return;
+  }
 
   parkingGeoJson.features.forEach((feature) => {
     const props = feature.properties ?? {};
@@ -128,31 +136,14 @@ export function renderCopenhagenParkingPolygons(
     const color = resolveParkingCategoryColor(type);
     const popupHtml = buildParkingPopupHtml(props);
     const { segmentId, segmentName } = parkingSegmentDetailFromProps(props, selectedKpi);
+    const lineStyles = getCopenhagenParkingLineStyles(color, selectedKpi);
 
     const glow = L.geoJSON(feature, {
-      style: {
-        color,
-        weight: 10,
-        opacity: 0.48,
-        fillOpacity: 0,
-        lineCap: "round",
-        lineJoin: "round",
-        interactive: false,
-        className: "cph-parking-glow",
-      },
+      style: { ...lineStyles.glow, className: "cph-parking-glow" },
     }).addTo(map);
 
     const core = L.geoJSON(feature, {
-      style: {
-        color,
-        weight: 3,
-        opacity: 1,
-        fillOpacity,
-        fillColor: color,
-        lineCap: "round",
-        lineJoin: "round",
-        className: "cph-parking-core",
-      },
+      style: { ...lineStyles.core, className: "cph-parking-core" },
     }).addTo(map);
 
     pushPolylineLayers(glow, polylinesOut);
@@ -162,27 +153,16 @@ export function renderCopenhagenParkingPolygons(
         maxWidth: 300,
         closeButton: false,
       });
-      const baseStyle: L.PathOptions = {
-        color,
-        weight: 3,
-        opacity: 1,
-        fillOpacity,
-        fillColor: color,
-      };
+      const baseStyle: L.PathOptions = { ...lineStyles.core };
       wirePolylineSegment(
         line,
         { segmentId, segmentName, speed: null, congestion: null },
         segmentHandlers,
         {
           baseStyle,
-          highlightStyle: {
-            color,
-            weight: 4.5,
-            opacity: 1,
-            fillOpacity: Math.min(0.45, fillOpacity + 0.12),
-            fillColor: color,
-          },
+          highlightStyle: lineStyles.highlight,
           selectedSegmentId,
+          focusDim: CPH_LINE_FOCUS_DIM,
         }
       );
     });

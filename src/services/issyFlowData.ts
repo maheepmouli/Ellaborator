@@ -38,13 +38,15 @@ export interface IssyZoneCentroid {
   layoutApproximation: boolean;
 }
 
-/** Bundled for Vercel/demo (~220 KB total). Legacy path kept as fallback when developing with full SharePoint mirror. */
+/** Bundled for Vercel/demo. June 2026 SharePoint mirror is the canonical drop path when extracted locally. */
 const ISSY_BASELINE_URLS = [
+  "/sharepoint-data/Issy-20260625T113904Z-3-001/Issy/1. BASELINE DATA from Issy/ISSY1 - detailed traffic data/ISSY1_baseline_traffic_data_november_2024.csv",
   "/data/issy/ISSY1_baseline_traffic_data_november_2024.csv",
   "/sharepoint-data/Issy-20260427T130625Z-3-001/Issy/1. BASELINE DATA from Issy/ISSY1 - detailed traffic data/ISSY1_baseline_traffic_data_november_2024.csv",
 ];
 
 const ISSY_POST_URLS = [
+  "/sharepoint-data/Issy-20260625T113904Z-3-001/Issy/2. POST IMPLEMENTATION DATA from Issy/ISSY1 - detailed traffic_data/ISSY1_post_intervention_traffic_data_november_2025.csv",
   "/data/issy/ISSY1_post_intervention_traffic_data_november_2025.csv",
   "/sharepoint-data/Issy-20260427T130625Z-3-001/Issy/2. POST IMPLEMENTATION DATA from Issy/ISSY1 - detailed traffic_data/ISSY1_post_intervention_traffic_data_november_2025.csv",
 ];

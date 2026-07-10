@@ -1,5 +1,4 @@
 import type { CopenhagenPilotId } from "@/data/copenhagenLocationRegistry";
-import { COPENHAGEN_TELRAAM_VESTERGADE_OUTCOME } from "@/data/copenhagenLocationRegistry";
 
 export type CopenhagenEvaluationFocus = "mobility" | "safety" | "infrastructure";
 
@@ -14,8 +13,6 @@ export interface CopenhagenPilotIntervention {
   summary: string;
   sites: string[];
   status: CopenhagenInterventionStatus;
-  spatialMetrics?: string;
-  deploymentFacts?: string[];
 }
 
 export interface CopenhagenPilotEvaluation {
@@ -23,7 +20,6 @@ export interface CopenhagenPilotEvaluation {
   methods: string[];
   datasets: string[];
   caveats: string[];
-  expectedOutcome?: string;
 }
 
 export interface CopenhagenPilotRecord {
@@ -77,9 +73,6 @@ export const COPENHAGEN_PILOT_REGISTRY: Record<CopenhagenPilotId, CopenhagenPilo
         "Højbro",
       ],
       status: "monitoring",
-      spatialMetrics:
-        "6,250 m² public space reallocated by removing ~500 regular parking bays (2.5 m × 5.0 m standard footprint).",
-      deploymentFacts: ["500 regular parking bays removed", "6,250 m² street space repurposed"],
     },
     evaluation: {
       focus: "mobility",
@@ -106,9 +99,8 @@ export const COPENHAGEN_PILOT_REGISTRY: Record<CopenhagenPilotId, CopenhagenPilo
         "Telraam pedestrians are undercounted; use relative change only or exclude pedestrians.",
         "Exclude counts affected by scaffold, sun cover, or construction bias.",
       ],
-      expectedOutcome: `Vestergade Telraam pilot (partner-reported): ${COPENHAGEN_TELRAAM_VESTERGADE_OUTCOME.motorizedPctChange}% motorized, ${COPENHAGEN_TELRAAM_VESTERGADE_OUTCOME.bicyclePctChange > 0 ? "+" : ""}${COPENHAGEN_TELRAAM_VESTERGADE_OUTCOME.bicyclePctChange}% bicycle, ${COPENHAGEN_TELRAAM_VESTERGADE_OUTCOME.pedestrianPctChange > 0 ? "+" : ""}${COPENHAGEN_TELRAAM_VESTERGADE_OUTCOME.pedestrianPctChange}% pedestrian.`,
     },
-    primaryKpis: ["kpi1.1", "kpi1.2", "kpi3.2", "kpi4.1"],
+    primaryKpis: ["kpi1.2", "kpi3.2", "kpi4.1"],
     primaryDatasetIds: [
       "cph-otc-counts",
       "cph-flow-cameras",
@@ -139,13 +131,6 @@ export const COPENHAGEN_PILOT_REGISTRY: Record<CopenhagenPilotId, CopenhagenPilo
       summary: "Deployment of enhanced bicycle parking infrastructure around Vandkunsten.",
       sites: ["Vandkunsten / Rådhusstræde"],
       status: "completed",
-      spatialMetrics:
-        "1,250 m² conversion footprint for new 90-degree bicycle parking racks.",
-      deploymentFacts: [
-        "1,080 new bicycle parking spaces",
-        "80 cargo-bike spaces",
-        "1,250 m² footprint for rack layout",
-      ],
     },
     evaluation: {
       focus: "infrastructure",
@@ -168,7 +153,7 @@ export const COPENHAGEN_PILOT_REGISTRY: Record<CopenhagenPilotId, CopenhagenPilo
         "OTC directional counts provide corridor context but are not the primary KPI evidence.",
       ],
     },
-    primaryKpis: ["kpi3.1", "kpi4.2"],
+    primaryKpis: ["kpi3.1", "kpi4.1", "kpi4.2"],
     primaryDatasetIds: [
       "cph-bike-parking-inventory",
       "cph-bike-parking-photos",
@@ -228,7 +213,7 @@ export const COPENHAGEN_PILOT_REGISTRY: Record<CopenhagenPilotId, CopenhagenPilo
         "Apply site-specific mode and direction exclusions from partner counting notes.",
       ],
     },
-    primaryKpis: ["kpi2.1", "kpi3.1"],
+    primaryKpis: ["kpi1.2", "kpi2.1", "kpi3.1", "kpi4.1"],
     primaryDatasetIds: [
       "cph-otc-counts",
       "cph-near-encounters",

@@ -22,7 +22,7 @@ export const ISSY_P2_JUNCTION = {
   lat: 48.829725,
   lon: 2.261046,
   name: "Pont d'Issy × Quai du Président Roosevelt",
-  shortName: "Stalingrad junction",
+  shortName: "Pont d'Issy camera site",
   radiusMeters: 220,
 } as const;
 
@@ -137,8 +137,26 @@ export function filterMapSegmentsNearJunction<T extends { id?: string; coordinat
   return segments.filter((seg) => seg.id && allowed.has(seg.id));
 }
 
-export function isNearIssyJunction(lat: number, lon: number, radiusM = ISSY_P2_JUNCTION.radiusMeters): boolean {
+export function isNearIssyJunction(lat: number, lon: number, radiusM: number = ISSY_P2_JUNCTION.radiusMeters): boolean {
   return haversineMeters(ISSY_P2_JUNCTION.lat, ISSY_P2_JUNCTION.lon, lat, lon) <= radiusM;
+}
+
+/**
+ * Pilot-aware junction clip for point layers.
+ * - issy-p2: bypass clip (city-wide cycling hubs)
+ * - issy-p1: widen to 450 m school-corridor context
+ * - default / issy-p3: standard 220 m junction study radius
+ */
+export function getIssyJunctionClipRadiusM(pilotId: string | null | undefined): number | null {
+  if (pilotId === "issy-p2") return null;
+  if (pilotId === "issy-p1") return 450;
+  return ISSY_P2_JUNCTION.radiusMeters;
+}
+
+export function issyJunctionClipLabel(radiusM: number | null): string {
+  if (radiusM === null) return "city-wide (no clip)";
+  if (radiusM >= 400) return `${radiusM} m school-corridor clip`;
+  return `${radiusM} m junction clip`;
 }
 
 const ISSY_STUDY_PILOT_IDS = new Set(["issy-p1", "issy-p2", "issy-p3"]);

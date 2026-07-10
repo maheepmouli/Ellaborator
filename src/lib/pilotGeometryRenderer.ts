@@ -4,7 +4,7 @@ import {
   getPilotGeometryRecord,
   type PilotGeometryRecord,
 } from "@/lib/pilotGeometryContract";
-import { trikalaMapZoom } from "@/lib/trikalaMapConfig";
+import { trikalaMapZoom, TRIKALA_MIN_MAP_ZOOM, TRIKALA_MAX_MAP_ZOOM } from "@/lib/trikalaMapConfig";
 
 export type RuntimeLinkage = "exact" | "matched" | "inferred";
 
@@ -218,16 +218,16 @@ export function resolvePilotGeometryRender(input: {
   const { pilot, runtimeLinkage } = input;
 
   if (pilot.renderEligibility === "dashboard_only") {
-    const lockedZoom = pilot.pilotId === "tri-p1" ? trikalaMapZoom() : 14;
-    const bounds = boundsFromFocus(pilot, lockedZoom);
-    const trikalaLocked = pilot.pilotId === "tri-p1";
+    const trikalaPilot = pilot.pilotId.startsWith("tri-");
+    const defaultZoom = trikalaPilot ? trikalaMapZoom() : 14;
+    const bounds = boundsFromFocus(pilot, defaultZoom);
     return {
-      bounds: bounds ? { ...bounds, zoom: lockedZoom } : null,
+      bounds: bounds ? { ...bounds, zoom: defaultZoom } : null,
       visualizationMode: "generic-points",
       interactionModel: "dashboard_only",
       flyToAllowed: !!bounds,
-      minZoom: trikalaLocked ? lockedZoom : undefined,
-      maxZoom: trikalaLocked ? lockedZoom : 14,
+      minZoom: trikalaPilot ? TRIKALA_MIN_MAP_ZOOM : undefined,
+      maxZoom: trikalaPilot ? TRIKALA_MAX_MAP_ZOOM : 14,
       labelStyle: "aggregate",
       uncertaintyLevel: "high",
       legendHint: "Survey observatory cluster — inferred anchor geometry.",

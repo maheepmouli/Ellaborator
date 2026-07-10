@@ -29,7 +29,7 @@ export const STORY_PINS: StoryPin[] = [
     pilotIds: ["mil-p2"],
     lat: 45.4595,
     lng: 9.178,
-    title: "Protected cycling corridor",
+    title: "Tactical intervention at stadium",
     body: "Policy story: corridor links hubs and schools. Compare segment KPI with city card; Milan AMAT-derived layers underpin safety and environment views.",
   },
   {
@@ -182,10 +182,10 @@ export const PILOT_SCROLL_STORIES: Record<string, PilotScrollStoryStep[]> = {
   "mil-p2": [
     {
       id: "s1",
-      eyebrow: "Protected cycling corridor",
+      eyebrow: "Tactical intervention at stadium",
       title: "Context",
       narrative:
-        "Pilot 2 tests a protected corridor between mobility hubs and schools. AMAT speed segments and KPI 3.2 environmental pressure ribbons show where stress concentrates before quoting mode shifts.",
+        "Pilot 2 tests tactical cycle infrastructure around the stadium area. AMAT speed segments and KPI 3.2 environmental pressure ribbons show where stress concentrates before quoting mode shifts.",
       bullets: [
         "Corridor KPIs aggregate along matched segments — not every side street carries the same numerator.",
       ],
@@ -287,10 +287,10 @@ export const PILOT_SCROLL_STORIES: Record<string, PilotScrollStoryStep[]> = {
   "issy-p1": [
     {
       id: "i1-zone",
-      eyebrow: "Luminous bicycle markings",
-      title: "Zone-to-zone storytelling",
+      eyebrow: "Pont d'Issy camera site",
+      title: "ISSY1 OD flow storytelling",
       narrative:
-        "Issy Pilot 1 (light-emitting pavement markings) uses zone-to-zone OD CSV for KPI 1.2. Arcs are origin–destination flows — not measured values on individual street segments.",
+        "Issy Pilot 1 (light-emitting markings at Pont d'Issy) is the camera flagship: zone-to-zone OD CSV (Nov 2024 baseline · Nov 2025 post) powers KPI 1.2. Arcs are origin–destination flows — not measured values on individual street segments.",
       bullets: [
         "comparison mode emphasizes green ribbons for sustainable-mode uplift, purple otherwise.",
         "Zoom in early — distant views hide directional cues anchored at centroid markers.",
@@ -319,9 +319,9 @@ export const PILOT_SCROLL_STORIES: Record<string, PilotScrollStoryStep[]> = {
     {
       id: "i2-cycle",
       eyebrow: "Mobility observatory",
-      title: "OD flows vs segment API",
+      title: "Platform vs segment API",
       narrative:
-        "Pilot 2 is the mobility observatory: KPI 1.2 mode share from observed OD CSV in city view; junction arms show traficissy segment speed/congestion only. Do not read CSV shares onto each arm.",
+        "Pilot 2 is the mobility observatory platform: city-wide monitoring canvas with traficissy segment speed/congestion context. Junction arms show segment traffic only — do not read ISSY1 OD CSV shares onto each arm.",
       bullets: [
         "Cross-check KPI 3.1 (infrastructure continuity) narratives with mapped cycle assets when exposed.",
         "Use Data Summary before claiming observed-only percentages from the headline card.",

@@ -1,13 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import {
-  fetchCyclingInfrastructureData,
-  fetchCyclingInfrastructureDataPaginated,
-  type CyclingInfrastructureAPIParams,
-} from "@/services/cyclingInfrastructureApi";
-import { ISSY_OPENDATA_MAX_LIMIT } from "@/lib/issy-opendata";
+import { loadIssyCyclingInfrastructureSnapshot } from "@/services/issyLocalSnapshots";
+import type { CyclingInfrastructureAPIParams } from "@/types/cycling-infrastructure";
 
 /**
- * Hook to fetch cycling infrastructure data
+ * Hook to fetch cycling infrastructure data (Issy: bundled snapshot only).
  */
 export function useCyclingInfrastructureData(
   cityName: string,
@@ -23,17 +19,16 @@ export function useCyclingInfrastructureData(
       params.offset,
       params.where,
       params.refine,
+      "local-snapshot",
     ],
-    queryFn: () => fetchCyclingInfrastructureData(params),
-    enabled: isIssy, // Only fetch for Issy-les-Moulineaux
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
+    queryFn: () => loadIssyCyclingInfrastructureSnapshot(),
+    enabled: isIssy,
+    staleTime: 30 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
   });
 }
 
-/**
- * Hook to fetch latest cycling infrastructure data (all records)
- */
+/** Bundled cycling infrastructure snapshot for Issy-les-Moulineaux. */
 export function useLatestCyclingInfrastructure(
   cityName: string,
   limit: number = 515
@@ -41,26 +36,14 @@ export function useLatestCyclingInfrastructure(
   const isIssy = cityName.toLowerCase().includes("issy");
 
   return useQuery({
-    queryKey: ["cycling-infrastructure", "latest", cityName, limit],
-    queryFn: () => {
-      const params = {
-        limit: Math.min(limit, ISSY_OPENDATA_MAX_LIMIT),
-        offset: 0,
-        order_by: "longueur_m desc",
-      };
-      return limit > ISSY_OPENDATA_MAX_LIMIT
-        ? fetchCyclingInfrastructureDataPaginated(params, limit)
-        : fetchCyclingInfrastructureData(params);
-    },
+    queryKey: ["cycling-infrastructure", "latest", cityName, limit, "local-snapshot"],
+    queryFn: () => loadIssyCyclingInfrastructureSnapshot(),
     enabled: isIssy,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+    staleTime: 30 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
   });
 }
 
-/**
- * Hook to fetch cycling infrastructure by type
- */
 export function useCyclingInfrastructureByType(
   cityName: string,
   type: string,
@@ -75,9 +58,6 @@ export function useCyclingInfrastructureByType(
   });
 }
 
-/**
- * Hook to fetch cycling infrastructure by location
- */
 export function useCyclingInfrastructureByLocation(
   cityName: string,
   location: string,

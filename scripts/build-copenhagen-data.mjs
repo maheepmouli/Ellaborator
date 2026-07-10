@@ -120,12 +120,7 @@ function buildAccessibilityJson() {
       interventionCategories,
       netBikeBays: interventionBike - baselineBike,
       netCarBaysRemoved: baselineCar - interventionCar,
-      cargoBikeBays: cargoBikeBays || 80,
-      partnerCrossCheck: {
-        bikeSpaces: 1080,
-        cargoSpaces: 80,
-        footprintSqM: 1250,
-      },
+      cargoBikeBays: cargoBikeBays,
       source: "I100275_P-pladser_Oversigt.xlsx (Eksisterende forhold vs Udført)",
     };
   } catch {
@@ -333,7 +328,7 @@ function buildEvidenceManifest(mediaFiles) {
         "Installed 90-degree bicycle racks accommodating active cargo-bike dimensions near Vandkunsten hub, captured May 2024.",
       fallback: {
         type: "narrative",
-        text: "Photo asset unavailable — see I100275 Udført sheet and partner deployment facts (1,080 bike + 80 cargo spaces).",
+        text: "Photo asset unavailable — see I100275 Udført sheet and parking inventory on the map.",
       },
     },
     {
@@ -378,12 +373,14 @@ function buildEvidenceManifest(mediaFiles) {
       id: "cph-p3-near-encounters",
       pilotId: "cph-p3",
       title: "Near encounters & conflict analysis",
-      type: "narrative",
+      type: "dataset",
+      path: "/data/copenhagen/near-encounters-snapshot.json",
       linkedDatasetIds: ["cph-near-encounters", "cph-conflict-analysis"],
       linkedMethods: ["Near encounters", "Conflict analysis"],
+      caption: "OTC-derived encounter-pressure proxy (partner structured export pending).",
       fallback: {
         type: "narrative",
-        text: "Near-encounter and conflict datasets were not delivered as structured files. Safety context uses iRAP counts, OTC flows, and perceived-safety surveys.",
+        text: "Near-encounter proxy from OTC mixed-mode 15-min bins. Partner CSV/xlsx replaces proxy when delivered.",
       },
     },
     {
@@ -437,6 +434,49 @@ function parseCoords(raw) {
   return { lat: parts[0], lon: parts[1] };
 }
 
+function parseCphOccurrenceDateMjs(row) {
+  const raw =
+    row["start occurrence date"] ??
+    row["start occurrence time"] ??
+    row["start time"] ??
+    row["end occurrence date"];
+  if (raw instanceof Date && !Number.isNaN(raw.getTime())) return raw;
+  const text = String(raw ?? "").trim();
+  if (!text) return null;
+  const parsed = new Date(text);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function shouldExcludeFridayMjs(row) {
+  const date = parseCphOccurrenceDateMjs(row);
+  if (!date) return false;
+  return date.getDay() === 5;
+}
+
+function countDistinctDaysMjs(rows) {
+  const dates = new Set();
+  for (const row of rows) {
+    if (shouldExcludeFridayMjs(row)) continue;
+    const date = parseCphOccurrenceDateMjs(row);
+    if (!date) continue;
+    dates.add(date.toISOString().slice(0, 10));
+  }
+  return Math.max(1, dates.size);
+}
+
+function scaleAggMjs(agg, factor) {
+  if (factor === 1) return { ...agg };
+  return {
+    bike: agg.bike * factor,
+    pedestrian: agg.pedestrian * factor,
+    motorised: agg.motorised * factor,
+    ptw: agg.ptw * factor,
+    total: agg.total * factor,
+  };
+}
+
+const CPH_REFERENCE_WEEKDAYS = 5;
+
 function aggregateOtcRows(rows) {
   const byFlow = new Map();
   for (const row of rows) {
@@ -479,17 +519,281 @@ function buildOtcJson() {
       const postRows = postSheet ? XLSX.utils.sheet_to_json(wb.Sheets[postSheet], { defval: null }) : [];
       const preByFlow = aggregateOtcRows(preRows);
       const postByFlow = aggregateOtcRows(postRows);
+      const preDays = countDistinctDaysMjs(preRows);
+      const postDays = countDistinctDaysMjs(postRows);
+      const preFactor = CPH_REFERENCE_WEEKDAYS / preDays;
+      const postFactor = CPH_REFERENCE_WEEKDAYS / postDays;
+      const periodMeta = {
+        normalizationMethod: "weekday-equivalent-scaling",
+        referenceWeekdays: CPH_REFERENCE_WEEKDAYS,
+        weekdaysObservedPre: preDays,
+        weekdaysObservedPost: postDays,
+        preScaleFactor: preFactor,
+        postScaleFactor: postFactor,
+      };
+      console.log(
+        `  OTC ${siteName}: pre ${preDays}d (×${preFactor.toFixed(2)}), post ${postDays}d (×${postFactor.toFixed(2)})`
+      );
       const flows = new Set([...preByFlow.keys(), ...postByFlow.keys()]);
       for (const flow of flows) {
         const pre = preByFlow.get(flow) ?? { bike: 0, pedestrian: 0, motorised: 0, ptw: 0, total: 0 };
         const post = postByFlow.get(flow) ?? { bike: 0, pedestrian: 0, motorised: 0, ptw: 0, total: 0 };
-        out.push({ siteName, lat: coords.lat, lon: coords.lon, flow, pre, post });
+        out.push({
+          siteName,
+          lat: coords.lat,
+          lon: coords.lon,
+          flow,
+          pre,
+          post,
+          preNormalized: scaleAggMjs(pre, preFactor),
+          postNormalized: scaleAggMjs(post, postFactor),
+          periodMeta,
+        });
       }
     } catch {
       // skip missing workbook
     }
   }
   return out;
+}
+
+const CPH_SITE_REGISTRY = {
+  norreport: { siteId: "ic-norreport", name: "Norregade/Norre Volgade" },
+  vandkunsten: { siteId: "wb-vandkunsten", name: "Vandkunsten / Rådhusstræde" },
+  gammeltorv: { siteId: "ic-gammeltorv", name: "Gammeltorv" },
+  stormgade: { siteId: "ic-stormgade", name: "Stormgade" },
+  hojbro: { siteId: "ic-hojbro", name: "Højbro" },
+};
+
+function inferSiteKey(siteName) {
+  const s = String(siteName || "").toLowerCase();
+  if (s.includes("norre") || s.includes("nørre")) return "norreport";
+  if (s.includes("vandkunsten") || s.includes("rådhus") || s.includes("radhuus")) return "vandkunsten";
+  if (s.includes("gammeltorv")) return "gammeltorv";
+  if (s.includes("stormgade")) return "stormgade";
+  if (s.includes("hojbro") || s.includes("højbro")) return "hojbro";
+  return null;
+}
+
+function encounterBinKey(row) {
+  const flow = String(row.flow || "").trim();
+  const date = parseCphOccurrenceDateMjs(row);
+  const time =
+    row["start occurrence time"] ??
+    row["start time"] ??
+    row["end occurrence time"] ??
+    "";
+  const datePart = date ? date.toISOString().slice(0, 10) : "unknown";
+  return `${flow}::${datePart}::${String(time)}`;
+}
+
+function computeEncounterPressure(rows) {
+  const bins = new Map();
+  for (const row of rows) {
+    if (shouldExcludeFridayMjs(row)) continue;
+    const cls = String(row.classification || "").toLowerCase();
+    const count = parseNum(row.count);
+    if (!count) continue;
+    const key = encounterBinKey(row);
+    const agg = bins.get(key) ?? { vulnerable: 0, motor: 0 };
+    if (cls.includes("bicycl") || cls.includes("cargo_bike") || cls.includes("pedestrian")) {
+      agg.vulnerable += count;
+    } else if (
+      cls.includes("car") ||
+      cls.includes("bus") ||
+      cls.includes("truck") ||
+      cls.includes("van") ||
+      cls.includes("train") ||
+      cls.includes("motorcycl") ||
+      cls.includes("scooter")
+    ) {
+      agg.motor += count;
+    }
+    bins.set(key, agg);
+  }
+  let encounterCount = 0;
+  let exposureBins = 0;
+  for (const bin of bins.values()) {
+    if (bin.vulnerable > 0 && bin.motor > 0) {
+      exposureBins += 1;
+      encounterCount += Math.min(bin.vulnerable, bin.motor);
+    }
+  }
+  return { encounterCount: Math.round(encounterCount), exposureBins };
+}
+
+/** COPERT-lite urban g CO₂ per vehicle-hour (modelled, not measured). */
+const EMISSION_G_CO2_PER_VEHICLE_HOUR = {
+  car: 1180,
+  van: 1420,
+  bus: 4200,
+  truck: 5800,
+  motorcycle: 620,
+  scooter: 380,
+};
+
+function classifyEmissionBucket(classification) {
+  const cls = String(classification || "").toLowerCase();
+  if (cls.includes("bus")) return "bus";
+  if (cls.includes("truck")) return "truck";
+  if (cls.includes("van")) return "van";
+  if (cls.includes("motorcycl")) return "motorcycle";
+  if (cls.includes("scooter")) return "scooter";
+  if (cls.includes("car") || cls.includes("train")) return "car";
+  return null;
+}
+
+function co2GPerHourFromRows(rows, scaleFactor = 1) {
+  const buckets = { car: 0, van: 0, bus: 0, truck: 0, motorcycle: 0, scooter: 0 };
+  for (const row of rows) {
+    if (shouldExcludeFridayMjs(row)) continue;
+    const bucket = classifyEmissionBucket(row.classification);
+    const count = parseNum(row.count);
+    if (!bucket || !count) continue;
+    buckets[bucket] += count;
+  }
+  const motorTotal = Object.values(buckets).reduce((a, b) => a + b, 0);
+  if (motorTotal <= 0) return { totalCo2GPerHour: 0, breakdown: {} };
+  const normalizedTotal = motorTotal * scaleFactor;
+  const avgHourlyVehicles = normalizedTotal / (CPH_REFERENCE_WEEKDAYS * 10);
+  let total = 0;
+  const breakdown = {};
+  for (const [key, count] of Object.entries(buckets)) {
+    const share = count / motorTotal;
+    const co2 = avgHourlyVehicles * share * EMISSION_G_CO2_PER_VEHICLE_HOUR[key];
+    breakdown[key] = Math.round(co2);
+    total += co2;
+  }
+  return { totalCo2GPerHour: Math.round(total), breakdown };
+}
+
+function buildNearEncountersSnapshot() {
+  const records = [];
+  const sourceFiles = [];
+  for (const rel of OTC_FILES) {
+    const filePath = path.join(SP, rel);
+    try {
+      const wb = XLSX.readFile(filePath);
+      sourceFiles.push(rel);
+      const overview = XLSX.utils.sheet_to_json(wb.Sheets.Overview || wb.Sheets[wb.SheetNames[0]], {
+        header: 1,
+        defval: null,
+      });
+      const coordRow = overview.find((r) => String(r?.[0] || "").toLowerCase().includes("coordinates"));
+      const siteRow = overview.find((r) => String(r?.[0] || "").toLowerCase().includes("site"));
+      const coords = parseCoords(coordRow?.[1]);
+      const siteName = String(siteRow?.[1] || "Copenhagen camera");
+      const siteKey = inferSiteKey(siteName);
+      const registry = siteKey ? CPH_SITE_REGISTRY[siteKey] : null;
+      const preSheet = wb.SheetNames.find((n) => /^data_/i.test(n) && /pre/i.test(n));
+      const postSheet = wb.SheetNames.find((n) => /^data_/i.test(n) && /post/i.test(n));
+      const preRows = preSheet ? XLSX.utils.sheet_to_json(wb.Sheets[preSheet], { defval: null }) : [];
+      const postRows = postSheet ? XLSX.utils.sheet_to_json(wb.Sheets[postSheet], { defval: null }) : [];
+      for (const period of [
+        { period: "pre", rows: preRows },
+        { period: "post", rows: postRows },
+      ]) {
+        const { encounterCount, exposureBins } = computeEncounterPressure(period.rows);
+        records.push({
+          id: `cph-encounter-${siteKey ?? siteName}-${period.period}`,
+          siteId: registry?.siteId ?? siteKey ?? siteName,
+          siteName: registry?.name ?? siteName,
+          lat: coords?.lat ?? 55.676,
+          lon: coords?.lon ?? 12.57,
+          pilotId: "cph-p3",
+          period: period.period,
+          encounterCount,
+          exposureBins,
+          sourceKind: "proxy",
+          method:
+            "Derived encounter-pressure index from OTC 15-min bins with co-occurring vulnerable (bike+ped) and motor traffic — not observed near-miss counts.",
+        });
+      }
+    } catch {
+      // skip
+    }
+  }
+  return {
+    generatedAt: new Date().toISOString(),
+    sourceFiles,
+    records,
+    notes: [
+      "Proxy index until partner delivers structured near-encounter export.",
+      "Partner ingest path: columns site, lat, lon, period, encounter_count.",
+    ],
+  };
+}
+
+function buildEmissionsSnapshot() {
+  const flows = [];
+  const sourceFiles = [];
+  for (const rel of OTC_FILES) {
+    const filePath = path.join(SP, rel);
+    try {
+      const wb = XLSX.readFile(filePath);
+      sourceFiles.push(rel);
+      const overview = XLSX.utils.sheet_to_json(wb.Sheets.Overview || wb.Sheets[wb.SheetNames[0]], {
+        header: 1,
+        defval: null,
+      });
+      const coordRow = overview.find((r) => String(r?.[0] || "").toLowerCase().includes("coordinates"));
+      const coords = parseCoords(coordRow?.[1]);
+      const siteRow = overview.find((r) => String(r?.[0] || "").toLowerCase().includes("site"));
+      const siteName = String(siteRow?.[1] || "Copenhagen camera");
+      const preSheet = wb.SheetNames.find((n) => /^data_/i.test(n) && /pre/i.test(n));
+      const postSheet = wb.SheetNames.find((n) => /^data_/i.test(n) && /post/i.test(n));
+      const preRows = preSheet ? XLSX.utils.sheet_to_json(wb.Sheets[preSheet], { defval: null }) : [];
+      const postRows = postSheet ? XLSX.utils.sheet_to_json(wb.Sheets[postSheet], { defval: null }) : [];
+      const preDays = countDistinctDaysMjs(preRows);
+      const postDays = countDistinctDaysMjs(postRows);
+      const preFactor = CPH_REFERENCE_WEEKDAYS / preDays;
+      const postFactor = CPH_REFERENCE_WEEKDAYS / postDays;
+      const byFlowPre = new Map();
+      const byFlowPost = new Map();
+      for (const row of preRows) {
+        const flow = String(row.flow || "").trim();
+        if (!flow) continue;
+        const list = byFlowPre.get(flow) ?? [];
+        list.push(row);
+        byFlowPre.set(flow, list);
+      }
+      for (const row of postRows) {
+        const flow = String(row.flow || "").trim();
+        if (!flow) continue;
+        const list = byFlowPost.get(flow) ?? [];
+        list.push(row);
+        byFlowPost.set(flow, list);
+      }
+      const allFlows = new Set([...byFlowPre.keys(), ...byFlowPost.keys()]);
+      for (const flow of allFlows) {
+        const preCo2 = co2GPerHourFromRows(byFlowPre.get(flow) ?? [], preFactor);
+        const postCo2 = co2GPerHourFromRows(byFlowPost.get(flow) ?? [], postFactor);
+        flows.push({
+          siteName,
+          lat: coords?.lat ?? 55.676,
+          lon: coords?.lon ?? 12.57,
+          flow,
+          preCo2GPerHour: preCo2.totalCo2GPerHour,
+          postCo2GPerHour: postCo2.totalCo2GPerHour,
+          preBreakdown: preCo2.breakdown,
+          postBreakdown: postCo2.breakdown,
+        });
+      }
+    } catch {
+      // skip
+    }
+  }
+  return {
+    generatedAt: new Date().toISOString(),
+    sourceFiles,
+    modelLabel: "COPERT-lite urban fleet factors (modelled)",
+    flows,
+    emissionFactorsGCo2PerVehicleHour: EMISSION_G_CO2_PER_VEHICLE_HOUR,
+    notes: [
+      "Modelled g CO₂/h from OTC mode counts — not measured ambient CO₂.",
+      "Uses weekday-equivalent normalisation aligned with OTC period scaling.",
+    ],
+  };
 }
 
 function buildTelraamJson() {
@@ -795,6 +1099,8 @@ async function main() {
     "parking-polygons-wgs84.geojson": await buildParkingWgs84GeoJson(parkingUtm),
     "accessibility-inventory.json": buildAccessibilityJson(),
     "platomo-sites.json": buildPlatomoJson(),
+    "near-encounters-snapshot.json": buildNearEncountersSnapshot(),
+    "emissions-snapshot.json": buildEmissionsSnapshot(),
     "evidence-manifest.json": buildEvidenceManifest(mediaFiles),
   };
   for (const [name, data] of Object.entries(bundles)) {

@@ -80,7 +80,7 @@ export const CITY_INTEGRATION_ROWS: CityIntegrationRow[] = [
     integrationStatus: "integrated",
     runtimeStatus: "bundled_preferred",
     confidence: "high",
-    notes: "Bundled OD CSV preferred; SharePoint mirror optional. Live traficissy API.",
+    notes: "Bundled OD CSV + local API snapshots under /data/issy/; SharePoint June 2026 mirror preferred when extracted.",
   },
   {
     city: "Zaragoza",
@@ -109,11 +109,11 @@ export const KPI_SOURCE_MATRIX: KpiSourceRow[] = [
   {
     city: "Copenhagen",
     kpi1_2: "OTC counts",
-    kpi2_1: "Flow pressure",
-    kpi3_1: "—",
-    kpi3_2: "Motor intensity",
-    kpi4_1: "—",
-    kpi4_2: "—",
+    kpi2_1: "Near encounters proxy",
+    kpi3_1: "Parking inventory",
+    kpi3_2: "Modelled CO₂",
+    kpi4_1: "Surveys",
+    kpi4_2: "A11y proxy",
   },
   {
     city: "Helsinki",
@@ -225,11 +225,26 @@ export const DROP_PIPELINE_ROWS: DropPipelineRow[] = [
     id: "issy-lighthouse",
     label: "Issy (Paris) Lighthouse zip",
     available: "yes",
-    extracted: "partial",
+    extracted: "yes",
     parsed: "yes",
     displayed: "yes",
-    manifestLabels: ["issy-baseline-csv", "issy-post-csv"],
-    notes: "Bundled /data/issy CSV preferred at runtime.",
+    manifestLabels: [
+      "issy-baseline-csv",
+      "issy-post-csv",
+      "issy-baseline-csv-legacy",
+      "issy-post-csv-legacy",
+      "issy-wintics-baseline-xlsx",
+      "issy-classeur-emissions-xlsx",
+      "issy-data-requirements-xlsx",
+      "issy-metadata-records-xlsx",
+      "issy-evaluation-plan-docx",
+      "issy-flowell-synthesis-pdf",
+      "issy-baseline-readme-docx",
+      "issy-post-readme-docx",
+      "issy-engagements-bundle",
+      "issy-media-gallery",
+    ],
+    notes: "21 files in zip; 2 OD CSVs + Wintics + Classeur workbooks parsed to /data/issy snapshots; xlsx catalogued; videos need --include-issy-media.",
   },
   {
     id: "zar-lighthouse",
@@ -393,6 +408,18 @@ export const EXTRACTED_FILE_APPENDIX: ExtractedFileRow[] = [
     parser: "npm run build-copenhagen-data",
   },
   {
+    label: "cph-near-encounters-snapshot",
+    publicPath: "/data/copenhagen/near-encounters-snapshot.json",
+    sourceZip: "Derived",
+    parser: "build-copenhagen-data.mjs → nearEncounterRecords",
+  },
+  {
+    label: "cph-emissions-snapshot",
+    publicPath: "/data/copenhagen/emissions-snapshot.json",
+    sourceZip: "Derived",
+    parser: "build-copenhagen-data.mjs → emissionsRecords",
+  },
+  {
     label: "hel-telraam-1",
     publicPath: "/sharepoint-data/Helsinki/Telraam/raw-data-9000007091-16eb11c.xlsx",
     sourceZip: "Helsinki Lighthouse",
@@ -431,16 +458,49 @@ export const EXTRACTED_FILE_APPENDIX: ExtractedFileRow[] = [
   {
     label: "issy-baseline-csv",
     publicPath:
-      "/sharepoint-data/Issy-20260427T130625Z-3-001/Issy/1. BASELINE DATA from Issy/ISSY1 - detailed traffic data/ISSY1_baseline_traffic_data_november_2024.csv",
-    sourceZip: "Issy Lighthouse",
+      "/sharepoint-data/Issy-20260625T113904Z-3-001/Issy/1. BASELINE DATA from Issy/ISSY1 - detailed traffic data/ISSY1_baseline_traffic_data_november_2024.csv",
+    sourceZip: "Issy Lighthouse June 2026",
     parser: "issyFlowData (bundled /data/issy preferred)",
   },
   {
     label: "issy-post-csv",
     publicPath:
-      "/sharepoint-data/Issy-20260427T130625Z-3-001/Issy/2. POST IMPLEMENTATION DATA from Issy/ISSY1 - detailed traffic_data/ISSY1_post_intervention_traffic_data_november_2025.csv",
-    sourceZip: "Issy Lighthouse",
+      "/sharepoint-data/Issy-20260625T113904Z-3-001/Issy/2. POST IMPLEMENTATION DATA from Issy/ISSY1 - detailed traffic_data/ISSY1_post_intervention_traffic_data_november_2025.csv",
+    sourceZip: "Issy Lighthouse June 2026",
     parser: "issyFlowData (bundled /data/issy preferred)",
+  },
+  {
+    label: "issy-wintics-baseline-xlsx",
+    publicPath:
+      "/sharepoint-data/Issy-20260625T113904Z-3-001/Issy/1. BASELINE DATA from Issy/baseline_evaluation_data_light_emitting_marking_solution.xlsx",
+    sourceZip: "Issy Lighthouse June 2026",
+    parser: "build-issy-catalogue → planned Pilot 1 parser",
+  },
+  {
+    label: "issy-classeur-emissions-xlsx",
+    publicPath:
+      "/sharepoint-data/Issy-20260625T113904Z-3-001/Issy/1. BASELINE DATA from Issy/Classeur.xlsx",
+    sourceZip: "Issy Lighthouse June 2026",
+    parser: "build-issy-catalogue → planned KPI 3.2 model",
+  },
+  {
+    label: "issy-data-requirements-xlsx",
+    publicPath:
+      "/sharepoint-data/Issy-20260625T113904Z-3-001/Issy/Pre-intervention evaluation - data requirements.xlsx",
+    sourceZip: "Issy Lighthouse June 2026",
+    parser: "build-issy-catalogue-snapshot",
+  },
+  {
+    label: "issy-engagements-bundle",
+    publicPath: "/sharepoint-data/Issy-20260625T113904Z-3-001/Issy/3. City engagements & Meetings/",
+    sourceZip: "Issy Lighthouse June 2026",
+    parser: "catalogue only",
+  },
+  {
+    label: "issy-media-gallery",
+    publicPath: "/sharepoint-data/Issy-20260625T113904Z-3-001/Issy/media/",
+    sourceZip: "Issy Lighthouse June 2026",
+    parser: "build-issy-bundle → /data/issy/media/",
   },
   {
     label: "zar-intervention-centroids",

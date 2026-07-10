@@ -1,0 +1,761 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "BREMERHOLM 39",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.584427,
+          55.677481
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "BREMERHOLM nord for Holmens Kanal",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.584427,
+          55.677481
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "BRYGHUSPLADSEN 1",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.578205,
+          55.672351
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "CHRISTIAN IX's GADE",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.5810183,
+          55.6820492
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "CHRISTIAN IX's GADE 7",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.580682,
+          55.682284
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "CHRISTIANSBORG SLOTSPLADS 5 øst for Højbro",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.580714,
+          55.67634
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "FARVERGADE nord for Vester Voldgade (ud for husnr. 17)",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.572713,
+          55.67593
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "FIOLSTRÆDE 44",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.571851,
+          55.682607
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "FREDERIKSBORGGADE 10",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.573098,
+          55.683151
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "FREDERIKSHOLMS KANAL 12 sydøst for Stormgade",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.576016,
+          55.675016
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "FREDERIKSHOLMS KANAL 6 nordvest for Stormgade",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.5755308,
+          55.6757756
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "FREDRIKSHOLMS KANAL 29 nordvest for Christians Brygge",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.579503,
+          55.673238
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "GRØNNEGADE 36",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.583502,
+          55.681541
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "GRØNNEGADE syd for Gothersgade",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.583492,
+          55.681818
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "HOVEDVAGTSGADE 4",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.584115,
+          55.680853
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "HØJBRO",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.5799719,
+          55.6776844
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "KNABROSTRÆDE 8A",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.574162,
+          55.677995
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "LANDEMÆRKET",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.5776048,
+          55.682807
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "LARSLEJSSTRÆDE 5",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.569634,
+          55.679738
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "LAVENDELSTRÆDE nord for Vester Voldgade (ud for husnr. 16)",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.571017,
+          55.676115
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "LILLE KONGENSGADE 4",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.584526,
+          55.679738
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "LØNGANGSTRÆDE nord for Vester Voldgade (ud for husnr. 37)",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.572428,
+          55.675243
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "LØNPORTEN 2",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.578848,
+          55.682801
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "MØNTERGADE 19",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.579844,
+          55.682207
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "NIKOLAJGADE 25",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.583481,
+          55.677482
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "NY ADELGADE",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.584196,
+          55.681236
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "NY KONGENSGADE nord for Vester Voldgade (ud for husnr. 15)",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.575975,
+          55.673517
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "NY VESTERGADE nord for Vester Voldgade (ud for husnr. 17)",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.574626,
+          55.674
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "NØRREGADE 40",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.571108,
+          55.682278
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "NØRREGADE sydøst for Nørre Voldgade",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.570781,
+          55.682256
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "RIGSDAGSGÅRDEN 1",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.581432,
+          55.675611
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ROSENBORGGADE 15",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.574384,
+          55.683858
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "ROSENBORGGADE 19",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.57477,
+          55.684086
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "SANKT PEDERS STRÆDE 18",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.568499,
+          55.679095
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "SANKT PEDERS STRÆDE 34",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.567178,
+          55.678827
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "SJÆLEBODERNE 4",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.579861,
+          55.68262
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "STORE REGNEGADE",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.582115,
+          55.6817056
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "STORE REGNEGADE syd for Gothersgade",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.582528,
+          55.682094
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "STRØGET VEST (Frederiksberggade 27)",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.569856,
+          55.676602
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "STRØGET ØST (Østergade 16)",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.583829,
+          55.680151
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "STUDIESTRÆDE 47B",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.567492,
+          55.67781
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "STUDIESTRÆDE øst for Vester Voldgade (ud for husnr. 40)",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.567532,
+          55.67801
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "TEGLGÅRDSTRÆDE 15",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.567937,
+          55.679766
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "TORNEBUSKEGADE 7",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.573778,
+          55.683885
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "VED STRANDEN 2",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.582456,
+          55.676936
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "VESTERGADE 5",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.571005,
+          55.677906
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "VESTERGADE nord for Vester Voldgade (ud for husnr. 37)",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.568904,
+          55.676798
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "VOGNMAGERGADE 8",
+        "source": "manual"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.57885,
+          55.682486
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Frederiksholmskanal",
+        "source": "otc"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.575545,
+          55.675535
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Gammeltorv",
+        "source": "otc"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.572236,
+          55.678437
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Hojbro",
+        "source": "otc"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.579961,
+          55.677575
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Norreport",
+        "source": "otc"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.570922,
+          55.682312
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Skindergade",
+        "source": "otc"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.572236,
+          55.678437
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Stormgade",
+        "source": "otc"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.575545,
+          55.675535
+        ]
+      }
+    }
+  ]
+}

@@ -316,6 +316,7 @@ export function resolveRenderIntent(
   kpiId: string,
   options?: SpatialResolveOptions & { pilotId?: string | null }
 ): "point" | "segment" | "polygon" | "hex" {
+  if (cityName.toLowerCase().includes("zaragoza")) return "polygon";
   const system = resolveSpatialSystem(cityName, kpiId, options);
   if (system === "segments" || system === "flows") return "segment";
   if (system === "climate-hex") return "hex";

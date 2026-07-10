@@ -11,6 +11,9 @@ import XLSX from "xlsx";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SP = path.join(ROOT, "public", "sharepoint-data", "Trikala");
 const OUT = path.join(ROOT, "public", "data", "trikala");
+/** Keep in sync with src/lib/trikalaMapConfig.ts TRIKALA_WORKSHOP_MAP_EMBED_URL */
+const TRIKALA_WORKSHOP_MAP_EMBED_URL =
+  "https://www.google.com/maps/d/embed?mid=1ka243QkLKE2l0RjGcAtum9YF1BbgP0Y&ehbc=2E312F";
 /** GitHub rejects blobs over 100 MB — skip oversized docs when building committed bundles. */
 const MAX_BUNDLE_BYTES = 95 * 1024 * 1024;
 
@@ -209,15 +212,43 @@ function buildEvidenceManifest(mediaFiles, docFiles) {
       },
     },
     {
+      id: "tri-p2-park-ride-geodata",
+      pilotId: "tri-p2",
+      title: "Park & Ride hub polygons (SMY · DEH · GiSeMi)",
+      type: "narrative",
+      linkedDatasetIds: ["tri-partner-map-locations"],
+      linkedMethods: ["Partner My Maps P+R polygons", "Municipal parking inventory"],
+      fallback: {
+        type: "narrative",
+        text: "Partner polygon geodata integrated on the map. Structured P+R occupancy survey and mode-share counts pending the June 2026 partner drop — observatory mode-share values are illustrative intermodal proxies until then.",
+      },
+    },
+    {
+      id: "tri-p3-bike-lane-geodata",
+      pilotId: "tri-p3",
+      title: "Bike-lane sensor registry",
+      type: "narrative",
+      linkedDatasetIds: [
+        "tri-partner-map-locations",
+        "tri-bike-lane-baseline",
+        "tri-bike-lane-post",
+      ],
+      linkedMethods: ["Redesigned bike lanes", "Bike safety survey baseline + post"],
+      fallback: {
+        type: "narrative",
+        text: "30 partner bike-lane sensor nodes and paired safety surveys (n≈310 baseline). Per-sensor time-series not yet linked — map shows registry positions with survey aggregates at pilot anchor.",
+      },
+    },
+    {
       id: "tri-p1-park-ride-pending",
       pilotId: "tri-p1",
       title: "Park & Ride (2nd intervention)",
       type: "narrative",
-      linkedDatasetIds: [],
+      linkedDatasetIds: ["tri-park-ride-locations"],
       linkedMethods: ["Park & Ride intervention"],
       fallback: {
         type: "narrative",
-        text: "2nd Intervention_Park & Ride folder present in zip inventory but no structured workbook or survey file delivered in the June 2026 drop.",
+        text: "SMY, DEH, and GiSeMi Park&Ride hubs mapped from partner My Maps — survey workbook still pending in SharePoint drop.",
       },
     },
     {
@@ -242,6 +273,21 @@ function buildEvidenceManifest(mediaFiles, docFiles) {
       fallback: {
         type: "narrative",
         text: "17-row meeting attendance workbook documents ELABORATOR–E-Trikala engagement sessions (administrative, not mapped to KPI geometry).",
+      },
+    },
+    {
+      id: "tri-p1-women-workshop-maps",
+      pilotId: "tri-p1",
+      title: "Women workshops — route maps",
+      type: "iframe",
+      embedUrl: TRIKALA_WORKSHOP_MAP_EMBED_URL,
+      linkedDatasetIds: ["tri-women-mobility-survey", "tri-docs-bundle"],
+      linkedMethods: ["Participatory mapping"],
+      caption:
+        "Interactive e-Trikala workshop map — Park & Ride hubs, smart crossing corridors, and environmental sensor nodes.",
+      fallback: {
+        type: "narrative",
+        text: "Interactive workshop route map unavailable — open the Google My Maps layer from the partner document portal.",
       },
     },
   ];
@@ -343,7 +389,7 @@ function buildEvidenceManifest(mediaFiles, docFiles) {
       datasets: ["tri-women-mobility-survey", "tri-docs-bundle"],
     },
     {
-      test: /map.*pdf|participants.daily.routes/i,
+      test: /participants\.daily\.routes/i,
       id: "tri-p1-women-workshop-maps",
       title: "Women workshops — route maps",
       methods: ["Participatory mapping"],

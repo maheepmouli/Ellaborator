@@ -1,0 +1,1465 @@
+{
+  "generatedAt": "2026-07-10T09:26:58.639Z",
+  "sourceKml": "scripts/data/trikala-partner-map/doc.kml",
+  "locationCount": 57,
+  "sensorJoinCount": 7,
+  "pilotAnchors": {
+    "tri-p1": {
+      "lat": 39.5540151,
+      "lng": 21.7759437,
+      "label": "Smart crossing — Military School"
+    },
+    "tri-p2": {
+      "lat": 39.55446876800001,
+      "lng": 21.768751744,
+      "label": "Park & Ride stations"
+    },
+    "tri-p3": {
+      "lat": 39.555401475675694,
+      "lng": 21.7658518027027,
+      "label": "Redesigned bike lanes"
+    }
+  },
+  "locations": [
+    {
+      "id": "tri-loc-smy",
+      "kind": "park_and_ride",
+      "name": "SMY",
+      "lat": 39.55377222,
+      "lng": 21.77565618,
+      "geometryType": "polygon",
+      "ring": [
+        [
+          39.5536436,
+          21.775418
+        ],
+        [
+          39.5536891,
+          21.7760832
+        ],
+        [
+          39.5539807,
+          21.7760671
+        ],
+        [
+          39.5539041,
+          21.7752946
+        ],
+        [
+          39.5536436,
+          21.775418
+        ]
+      ],
+      "folderPath": [
+        "Park & Ride"
+      ],
+      "pilotId": "tri-p2",
+      "linkedKpis": [
+        "kpi1.2",
+        "kpi3.1",
+        "kpi4.1"
+      ],
+      "segmentId": "tri-p2-park-ride",
+      "matchTokens": [
+        "SMY"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-deh",
+      "kind": "park_and_ride",
+      "name": "DEH",
+      "lat": 39.55849962,
+      "lng": 21.773393719999998,
+      "geometryType": "polygon",
+      "ring": [
+        [
+          39.5584682,
+          21.773034
+        ],
+        [
+          39.5582562,
+          21.7737891
+        ],
+        [
+          39.5585571,
+          21.7739031
+        ],
+        [
+          39.5587484,
+          21.7732084
+        ],
+        [
+          39.5584682,
+          21.773034
+        ]
+      ],
+      "folderPath": [
+        "Park & Ride"
+      ],
+      "pilotId": "tri-p2",
+      "linkedKpis": [
+        "kpi1.2",
+        "kpi3.1",
+        "kpi4.1"
+      ],
+      "segmentId": "tri-p2-park-ride",
+      "matchTokens": [
+        "DEH"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-gisemi",
+      "kind": "park_and_ride",
+      "name": "GiSeMi",
+      "lat": 39.56675984,
+      "lng": 21.758191540000002,
+      "geometryType": "polygon",
+      "ring": [
+        [
+          39.56683,
+          21.7582267
+        ],
+        [
+          39.5667908,
+          21.7580677
+        ],
+        [
+          39.5666507,
+          21.7581389
+        ],
+        [
+          39.5666977,
+          21.7582977
+        ],
+        [
+          39.56683,
+          21.7582267
+        ]
+      ],
+      "folderPath": [
+        "Park & Ride"
+      ],
+      "pilotId": "tri-p2",
+      "linkedKpis": [
+        "kpi1.2",
+        "kpi3.1",
+        "kpi4.1"
+      ],
+      "segmentId": "tri-p2-park-ride",
+      "matchTokens": [
+        "GISEMI"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-vasili-tsitsani-str-military-school",
+      "kind": "smart_crossing_site",
+      "name": "Vasili Tsitsani str, Military School",
+      "lat": 39.5540151,
+      "lng": 21.7759437,
+      "geometryType": "point",
+      "folderPath": [
+        "Smart Crossing"
+      ],
+      "pilotId": "tri-p1",
+      "linkedKpis": [
+        "kpi2.1",
+        "kpi4.2"
+      ],
+      "segmentId": "tri-p1-smart-crossing",
+      "matchTokens": [
+        "VASILI",
+        "TSITSANI",
+        "STR",
+        "MILITARY",
+        "SCHOOL"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-laiki",
+      "kind": "air_quality_sensor",
+      "name": "LAIKI",
+      "lat": 39.5558483,
+      "lng": 21.7690573,
+      "geometryType": "point",
+      "folderPath": [
+        "Air Quality Sensors"
+      ],
+      "pilotId": "tri-p1",
+      "linkedKpis": [
+        "kpi3.2"
+      ],
+      "segmentId": "tri-p1-environmental-sensor",
+      "matchTokens": [
+        "LAIKI"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-military-school",
+      "kind": "air_quality_sensor",
+      "name": "MILITARY SCHOOL",
+      "lat": 39.5514744,
+      "lng": 21.7776555,
+      "geometryType": "point",
+      "folderPath": [
+        "Air Quality Sensors"
+      ],
+      "pilotId": "tri-p1",
+      "linkedKpis": [
+        "kpi3.2"
+      ],
+      "segmentId": "tri-p1-environmental-sensor",
+      "matchTokens": [
+        "MILITARY",
+        "SCHOOL"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-traffic-lights",
+      "kind": "traffic_signal",
+      "name": "TRAFFIC LIGHTS",
+      "lat": 39.5526115,
+      "lng": 21.7664723,
+      "geometryType": "point",
+      "folderPath": [
+        "Air Quality Sensors"
+      ],
+      "pilotId": "tri-p1",
+      "linkedKpis": [
+        "kpi2.1",
+        "kpi4.2"
+      ],
+      "segmentId": "tri-p1-smart-crossing",
+      "matchTokens": [
+        "TRAFFIC",
+        "LIGHTS"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-tzami",
+      "kind": "traffic_signal",
+      "name": "TZAMI",
+      "lat": 39.5509517,
+      "lng": 21.770736,
+      "geometryType": "point",
+      "folderPath": [
+        "Air Quality Sensors"
+      ],
+      "pilotId": "tri-p1",
+      "linkedKpis": [
+        "kpi2.1",
+        "kpi4.2"
+      ],
+      "segmentId": "tri-p1-smart-crossing",
+      "matchTokens": [
+        "TZAMI"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-ote-square",
+      "kind": "air_quality_sensor",
+      "name": "OTE SQUARE",
+      "lat": 39.5570004,
+      "lng": 21.7666363,
+      "geometryType": "point",
+      "folderPath": [
+        "Air Quality Sensors"
+      ],
+      "pilotId": "tri-p1",
+      "linkedKpis": [
+        "kpi3.2"
+      ],
+      "segmentId": "tri-p1-environmental-sensor",
+      "matchTokens": [
+        "OTE",
+        "SQUARE"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-fanari-karditsis",
+      "kind": "air_quality_sensor",
+      "name": "FANARI KARDITSIS",
+      "lat": 39.5453798,
+      "lng": 21.77535,
+      "geometryType": "point",
+      "folderPath": [
+        "Air Quality Sensors"
+      ],
+      "pilotId": "tri-p1",
+      "linkedKpis": [
+        "kpi3.2"
+      ],
+      "segmentId": "tri-p1-environmental-sensor",
+      "matchTokens": [
+        "FANARI",
+        "KARDITSIS"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-train-station",
+      "kind": "air_quality_sensor",
+      "name": "TRAIN STATION",
+      "lat": 39.5465678,
+      "lng": 21.7633497,
+      "geometryType": "point",
+      "folderPath": [
+        "Air Quality Sensors"
+      ],
+      "pilotId": "tri-p1",
+      "linkedKpis": [
+        "kpi3.2"
+      ],
+      "segmentId": "tri-p1-environmental-sensor",
+      "matchTokens": [
+        "TRAIN",
+        "STATION"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-parking-courthouse",
+      "kind": "air_quality_sensor",
+      "name": "PARKING COURTHOUSE",
+      "lat": 39.5556942,
+      "lng": 21.7715845,
+      "geometryType": "point",
+      "folderPath": [
+        "Air Quality Sensors"
+      ],
+      "pilotId": "tri-p1",
+      "linkedKpis": [
+        "kpi3.2"
+      ],
+      "segmentId": "tri-p1-environmental-sensor",
+      "matchTokens": [
+        "PARKING",
+        "COURTHOUSE"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-matsopoulos",
+      "kind": "air_quality_sensor",
+      "name": "MATSOPOULOS",
+      "lat": 39.5460135,
+      "lng": 21.7588172,
+      "geometryType": "point",
+      "folderPath": [
+        "Air Quality Sensors"
+      ],
+      "pilotId": "tri-p1",
+      "linkedKpis": [
+        "kpi3.2"
+      ],
+      "segmentId": "tri-p1-environmental-sensor",
+      "matchTokens": [
+        "MATSOPOULOS"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-underground-municipal-parking",
+      "kind": "parking_station",
+      "name": "Underground Municipal Parking",
+      "lat": 39.55567,
+      "lng": 21.77166,
+      "geometryType": "point",
+      "folderPath": [
+        "Parking Stations"
+      ],
+      "pilotId": "tri-p2",
+      "linkedKpis": [
+        "kpi3.1",
+        "kpi1.2"
+      ],
+      "segmentId": "tri-p2-park-ride",
+      "matchTokens": [
+        "UNDERGROUND",
+        "MUNICIPAL",
+        "PARKING"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-municipal-parking",
+      "kind": "parking_station",
+      "name": "Municipal Parking",
+      "lat": 39.555114,
+      "lng": 21.765877,
+      "geometryType": "point",
+      "folderPath": [
+        "Parking Stations"
+      ],
+      "pilotId": "tri-p2",
+      "linkedKpis": [
+        "kpi3.1",
+        "kpi1.2"
+      ],
+      "segmentId": "tri-p2-park-ride",
+      "matchTokens": [
+        "MUNICIPAL",
+        "PARKING"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-underground-parking-lanara",
+      "kind": "parking_station",
+      "name": "Underground Parking - Lanara",
+      "lat": 39.55873,
+      "lng": 21.767141,
+      "geometryType": "point",
+      "folderPath": [
+        "Parking Stations"
+      ],
+      "pilotId": "tri-p2",
+      "linkedKpis": [
+        "kpi3.1",
+        "kpi1.2"
+      ],
+      "segmentId": "tri-p2-park-ride",
+      "matchTokens": [
+        "UNDERGROUND",
+        "PARKING",
+        "LANARA"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-openair-municipal-parking",
+      "kind": "parking_station",
+      "name": "Openair Municipal Parking",
+      "lat": 39.553757,
+      "lng": 21.775541,
+      "geometryType": "point",
+      "folderPath": [
+        "Parking Stations"
+      ],
+      "pilotId": "tri-p2",
+      "linkedKpis": [
+        "kpi3.1",
+        "kpi1.2"
+      ],
+      "segmentId": "tri-p2-park-ride",
+      "matchTokens": [
+        "OPENAIR",
+        "MUNICIPAL",
+        "PARKING"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-free-municipal-parking",
+      "kind": "parking_station",
+      "name": "Free Municipal Parking",
+      "lat": 39.550992,
+      "lng": 21.767673,
+      "geometryType": "point",
+      "folderPath": [
+        "Parking Stations"
+      ],
+      "pilotId": "tri-p2",
+      "linkedKpis": [
+        "kpi3.1",
+        "kpi1.2"
+      ],
+      "segmentId": "tri-p2-park-ride",
+      "matchTokens": [
+        "FREE",
+        "MUNICIPAL",
+        "PARKING"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-free-parking",
+      "kind": "parking_station",
+      "name": "Free Parking",
+      "lat": 39.545944,
+      "lng": 21.773094,
+      "geometryType": "point",
+      "folderPath": [
+        "Parking Stations"
+      ],
+      "pilotId": "tri-p2",
+      "linkedKpis": [
+        "kpi3.1",
+        "kpi1.2"
+      ],
+      "segmentId": "tri-p2-park-ride",
+      "matchTokens": [
+        "FREE",
+        "PARKING"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-parking-mill-of-matsopoulos",
+      "kind": "parking_station",
+      "name": "Parking Mill of Matsopoulos",
+      "lat": 39.545449,
+      "lng": 21.75929,
+      "geometryType": "point",
+      "folderPath": [
+        "Parking Stations"
+      ],
+      "pilotId": "tri-p2",
+      "linkedKpis": [
+        "kpi3.1",
+        "kpi1.2"
+      ],
+      "segmentId": "tri-p2-park-ride",
+      "matchTokens": [
+        "PARKING",
+        "MILL",
+        "OF",
+        "MATSOPOULOS"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-bike-station",
+      "kind": "bike_station",
+      "name": "BIKE STATION - Μύλος Ματσόπουλου",
+      "lat": 39.545817,
+      "lng": 21.76046,
+      "geometryType": "point",
+      "folderPath": [
+        "Bike Stations"
+      ],
+      "pilotId": "tri-p3",
+      "linkedKpis": [
+        "kpi1.2",
+        "kpi3.1",
+        "kpi4.1"
+      ],
+      "segmentId": "tri-p3-bike-lane",
+      "matchTokens": [
+        "BIKE",
+        "STATION"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-bike-station-parking",
+      "kind": "bike_station",
+      "name": "BIKE STATION - Parking Ασκληπιού",
+      "lat": 39.547264,
+      "lng": 21.764114,
+      "geometryType": "point",
+      "folderPath": [
+        "Bike Stations"
+      ],
+      "pilotId": "tri-p3",
+      "linkedKpis": [
+        "kpi1.2",
+        "kpi3.1",
+        "kpi4.1"
+      ],
+      "segmentId": "tri-p3-bike-lane",
+      "matchTokens": [
+        "BIKE",
+        "STATION",
+        "PARKING"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-bike-station",
+      "kind": "bike_station",
+      "name": "BIKE STATION - Μουσείο Τσιτσάνη",
+      "lat": 39.550809,
+      "lng": 21.769889,
+      "geometryType": "point",
+      "folderPath": [
+        "Bike Stations"
+      ],
+      "pilotId": "tri-p3",
+      "linkedKpis": [
+        "kpi1.2",
+        "kpi3.1",
+        "kpi4.1"
+      ],
+      "segmentId": "tri-p3-bike-lane",
+      "matchTokens": [
+        "BIKE",
+        "STATION"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-bike-station-parking",
+      "kind": "bike_station",
+      "name": "BIKE STATION - Parking Παπαστάθη",
+      "lat": 39.5538927,
+      "lng": 21.7754051,
+      "geometryType": "point",
+      "folderPath": [
+        "Bike Stations"
+      ],
+      "pilotId": "tri-p3",
+      "linkedKpis": [
+        "kpi1.2",
+        "kpi3.1",
+        "kpi4.1"
+      ],
+      "segmentId": "tri-p3-bike-lane",
+      "matchTokens": [
+        "BIKE",
+        "STATION",
+        "PARKING"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-bike-station-parking",
+      "kind": "bike_station",
+      "name": "BIKE STATION - Parking ΔΕΗ",
+      "lat": 39.5583264,
+      "lng": 21.7737664,
+      "geometryType": "point",
+      "folderPath": [
+        "Bike Stations"
+      ],
+      "pilotId": "tri-p3",
+      "linkedKpis": [
+        "kpi1.2",
+        "kpi3.1",
+        "kpi4.1"
+      ],
+      "segmentId": "tri-p3-bike-lane",
+      "matchTokens": [
+        "BIKE",
+        "STATION",
+        "PARKING"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-bike-station",
+      "kind": "bike_station",
+      "name": "BIKE STATION - Κονδύλη Τέρμα & Παλαιολόγου",
+      "lat": 39.564351,
+      "lng": 21.771553,
+      "geometryType": "point",
+      "folderPath": [
+        "Bike Stations"
+      ],
+      "pilotId": "tri-p3",
+      "linkedKpis": [
+        "kpi1.2",
+        "kpi3.1",
+        "kpi4.1"
+      ],
+      "segmentId": "tri-p3-bike-lane",
+      "matchTokens": [
+        "BIKE",
+        "STATION"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-bike-station-amberg",
+      "kind": "bike_station",
+      "name": "BIKE STATION - Πλατεία Amberg",
+      "lat": 39.56238,
+      "lng": 21.75327,
+      "geometryType": "point",
+      "folderPath": [
+        "Bike Stations"
+      ],
+      "pilotId": "tri-p3",
+      "linkedKpis": [
+        "kpi1.2",
+        "kpi3.1",
+        "kpi4.1"
+      ],
+      "segmentId": "tri-p3-bike-lane",
+      "matchTokens": [
+        "BIKE",
+        "STATION",
+        "AMBERG"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-jimmys-1",
+      "kind": "bike_lane_sensor",
+      "name": "JIMMYS 1",
+      "lat": 39.5527182,
+      "lng": 21.7663548,
+      "geometryType": "point",
+      "folderPath": [
+        "Bike Lanes Sensors"
+      ],
+      "pilotId": "tri-p3",
+      "linkedKpis": [
+        "kpi2.1",
+        "kpi4.2"
+      ],
+      "segmentId": "tri-p3-bike-lane",
+      "matchTokens": [
+        "JIMMYS",
+        "1"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-jimmys-2",
+      "kind": "bike_lane_sensor",
+      "name": "JIMMYS 2",
+      "lat": 39.552744,
+      "lng": 21.7663078,
+      "geometryType": "point",
+      "folderPath": [
+        "Bike Lanes Sensors"
+      ],
+      "pilotId": "tri-p3",
+      "linkedKpis": [
+        "kpi2.1",
+        "kpi4.2"
+      ],
+      "segmentId": "tri-p3-bike-lane",
+      "matchTokens": [
+        "JIMMYS",
+        "2"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-parking-1",
+      "kind": "bike_lane_sensor",
+      "name": "ΔΗΜΑΡΧΕΙΟ PARKING 1",
+      "lat": 39.552925,
+      "lng": 21.7660135,
+      "geometryType": "point",
+      "folderPath": [
+        "Bike Lanes Sensors"
+      ],
+      "pilotId": "tri-p3",
+      "linkedKpis": [
+        "kpi2.1",
+        "kpi4.2"
+      ],
+      "segmentId": "tri-p3-bike-lane",
+      "matchTokens": [
+        "PARKING",
+        "1"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-parking-2",
+      "kind": "bike_lane_sensor",
+      "name": "ΔΗΜΑΡΧΕΙΟ PARKING 2",
+      "lat": 39.5529437,
+      "lng": 21.7659805,
+      "geometryType": "point",
+      "folderPath": [
+        "Bike Lanes Sensors"
+      ],
+      "pilotId": "tri-p3",
+      "linkedKpis": [
+        "kpi2.1",
+        "kpi4.2"
+      ],
+      "segmentId": "tri-p3-bike-lane",
+      "matchTokens": [
+        "PARKING",
+        "2"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-parking-3",
+      "kind": "bike_lane_sensor",
+      "name": "ΔΗΜΑΡΧΕΙΟ PARKING 3",
+      "lat": 39.5529627,
+      "lng": 21.7659458,
+      "geometryType": "point",
+      "folderPath": [
+        "Bike Lanes Sensors"
+      ],
+      "pilotId": "tri-p3",
+      "linkedKpis": [
+        "kpi2.1",
+        "kpi4.2"
+      ],
+      "segmentId": "tri-p3-bike-lane",
+      "matchTokens": [
+        "PARKING",
+        "3"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-parking-4",
+      "kind": "bike_lane_sensor",
+      "name": "ΔΗΜΑΡΧΕΙΟ PARKING 4",
+      "lat": 39.5529828,
+      "lng": 21.7659106,
+      "geometryType": "point",
+      "folderPath": [
+        "Bike Lanes Sensors"
+      ],
+      "pilotId": "tri-p3",
+      "linkedKpis": [
+        "kpi2.1",
+        "kpi4.2"
+      ],
+      "segmentId": "tri-p3-bike-lane",
+      "matchTokens": [
+        "PARKING",
+        "4"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-1",
+      "kind": "bike_lane_sensor",
+      "name": "ΔΕΣΠΟΤΙΚΟ 1",
+      "lat": 39.5531465,
+      "lng": 21.7656375,
+      "geometryType": "point",
+      "folderPath": [
+        "Bike Lanes Sensors"
+      ],
+      "pilotId": "tri-p3",
+      "linkedKpis": [
+        "kpi2.1",
+        "kpi4.2"
+      ],
+      "segmentId": "tri-p3-bike-lane",
+      "matchTokens": [
+        "1"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-2",
+      "kind": "bike_lane_sensor",
+      "name": "ΔΕΣΠΟΤΙΚΟ 2",
+      "lat": 39.5531713,
+      "lng": 21.7655981,
+      "geometryType": "point",
+      "folderPath": [
+        "Bike Lanes Sensors"
+      ],
+      "pilotId": "tri-p3",
+      "linkedKpis": [
+        "kpi2.1",
+        "kpi4.2"
+      ],
+      "segmentId": "tri-p3-bike-lane",
+      "matchTokens": [
+        "2"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-3",
+      "kind": "bike_lane_sensor",
+      "name": "ΔΕΣΠΟΤΙΚΟ 3",
+      "lat": 39.5531967,
+      "lng": 21.7655583,
+      "geometryType": "point",
+      "folderPath": [
+        "Bike Lanes Sensors"
+      ],
+      "pilotId": "tri-p3",
+      "linkedKpis": [
+        "kpi2.1",
+        "kpi4.2"
+      ],
+      "segmentId": "tri-p3-bike-lane",
+      "matchTokens": [
+        "3"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-4",
+      "kind": "bike_lane_sensor",
+      "name": "ΔΕΣΠΟΤΙΚΟ 4",
+      "lat": 39.5532144,
+      "lng": 21.7655228,
+      "geometryType": "point",
+      "folderPath": [
+        "Bike Lanes Sensors"
+      ],
+      "pilotId": "tri-p3",
+      "linkedKpis": [
+        "kpi2.1",
+        "kpi4.2"
+      ],
+      "segmentId": "tri-p3-bike-lane",
+      "matchTokens": [
+        "4"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-5",
+      "kind": "bike_lane_sensor",
+      "name": "ΔΕΣΠΟΤΙΚΟ 5",
+      "lat": 39.5532395,
+      "lng": 21.765489,
+      "geometryType": "point",
+      "folderPath": [
+        "Bike Lanes Sensors"
+      ],
+      "pilotId": "tri-p3",
+      "linkedKpis": [
+        "kpi2.1",
+        "kpi4.2"
+      ],
+      "segmentId": "tri-p3-bike-lane",
+      "matchTokens": [
+        "5"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-6",
+      "kind": "bike_lane_sensor",
+      "name": "ΔΕΣΠΟΤΙΚΟ 6",
+      "lat": 39.5532646,
+      "lng": 21.765453,
+      "geometryType": "point",
+      "folderPath": [
+        "Bike Lanes Sensors"
+      ],
+      "pilotId": "tri-p3",
+      "linkedKpis": [
+        "kpi2.1",
+        "kpi4.2"
+      ],
+      "segmentId": "tri-p3-bike-lane",
+      "matchTokens": [
+        "6"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-7",
+      "kind": "bike_lane_sensor",
+      "name": "ΔΕΣΠΟΤΙΚΟ 7",
+      "lat": 39.5532921,
+      "lng": 21.7654028,
+      "geometryType": "point",
+      "folderPath": [
+        "Bike Lanes Sensors"
+      ],
+      "pilotId": "tri-p3",
+      "linkedKpis": [
+        "kpi2.1",
+        "kpi4.2"
+      ],
+      "segmentId": "tri-p3-bike-lane",
+      "matchTokens": [
+        "7"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-8",
+      "kind": "bike_lane_sensor",
+      "name": "ΔΕΣΠΟΤΙΚΟ 8",
+      "lat": 39.5533144,
+      "lng": 21.7653592,
+      "geometryType": "point",
+      "folderPath": [
+        "Bike Lanes Sensors"
+      ],
+      "pilotId": "tri-p3",
+      "linkedKpis": [
+        "kpi2.1",
+        "kpi4.2"
+      ],
+      "segmentId": "tri-p3-bike-lane",
+      "matchTokens": [
+        "8"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-cups-nine-1",
+      "kind": "bike_lane_sensor",
+      "name": "CUPS NINE 1",
+      "lat": 39.5533833,
+      "lng": 21.7652141,
+      "geometryType": "point",
+      "folderPath": [
+        "Bike Lanes Sensors"
+      ],
+      "pilotId": "tri-p3",
+      "linkedKpis": [
+        "kpi2.1",
+        "kpi4.2"
+      ],
+      "segmentId": "tri-p3-bike-lane",
+      "matchTokens": [
+        "CUPS",
+        "NINE",
+        "1"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-cups-nine-2",
+      "kind": "bike_lane_sensor",
+      "name": "CUPS NINE 2",
+      "lat": 39.5533817,
+      "lng": 21.7651854,
+      "geometryType": "point",
+      "folderPath": [
+        "Bike Lanes Sensors"
+      ],
+      "pilotId": "tri-p3",
+      "linkedKpis": [
+        "kpi2.1",
+        "kpi4.2"
+      ],
+      "segmentId": "tri-p3-bike-lane",
+      "matchTokens": [
+        "CUPS",
+        "NINE",
+        "2"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-cups-nine-3",
+      "kind": "bike_lane_sensor",
+      "name": "CUPS NINE 3",
+      "lat": 39.5533837,
+      "lng": 21.7651491,
+      "geometryType": "point",
+      "folderPath": [
+        "Bike Lanes Sensors"
+      ],
+      "pilotId": "tri-p3",
+      "linkedKpis": [
+        "kpi2.1",
+        "kpi4.2"
+      ],
+      "segmentId": "tri-p3-bike-lane",
+      "matchTokens": [
+        "CUPS",
+        "NINE",
+        "3"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-cups-nine-4",
+      "kind": "bike_lane_sensor",
+      "name": "CUPS NINE 4",
+      "lat": 39.5534047,
+      "lng": 21.7651082,
+      "geometryType": "point",
+      "folderPath": [
+        "Bike Lanes Sensors"
+      ],
+      "pilotId": "tri-p3",
+      "linkedKpis": [
+        "kpi2.1",
+        "kpi4.2"
+      ],
+      "segmentId": "tri-p3-bike-lane",
+      "matchTokens": [
+        "CUPS",
+        "NINE",
+        "4"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-cups-nine-5",
+      "kind": "bike_lane_sensor",
+      "name": "CUPS NINE 5",
+      "lat": 39.5534286,
+      "lng": 21.7650821,
+      "geometryType": "point",
+      "folderPath": [
+        "Bike Lanes Sensors"
+      ],
+      "pilotId": "tri-p3",
+      "linkedKpis": [
+        "kpi2.1",
+        "kpi4.2"
+      ],
+      "segmentId": "tri-p3-bike-lane",
+      "matchTokens": [
+        "CUPS",
+        "NINE",
+        "5"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-parking",
+      "kind": "bike_lane_sensor",
+      "name": "PARKING ΜΠΟΝΩΤΗ",
+      "lat": 39.5537287,
+      "lng": 21.7649046,
+      "geometryType": "point",
+      "folderPath": [
+        "Bike Lanes Sensors"
+      ],
+      "pilotId": "tri-p3",
+      "linkedKpis": [
+        "kpi2.1",
+        "kpi4.2"
+      ],
+      "segmentId": "tri-p3-bike-lane",
+      "matchTokens": [
+        "PARKING"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-1",
+      "kind": "bike_lane_sensor",
+      "name": "ΒΟΥΒΗΣ 1",
+      "lat": 39.5557729,
+      "lng": 21.7630869,
+      "geometryType": "point",
+      "folderPath": [
+        "Bike Lanes Sensors"
+      ],
+      "pilotId": "tri-p3",
+      "linkedKpis": [
+        "kpi2.1",
+        "kpi4.2"
+      ],
+      "segmentId": "tri-p3-bike-lane",
+      "matchTokens": [
+        "1"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-2",
+      "kind": "bike_lane_sensor",
+      "name": "ΒΟΥΒΗΣ 2",
+      "lat": 39.555935,
+      "lng": 21.7627984,
+      "geometryType": "point",
+      "folderPath": [
+        "Bike Lanes Sensors"
+      ],
+      "pilotId": "tri-p3",
+      "linkedKpis": [
+        "kpi2.1",
+        "kpi4.2"
+      ],
+      "segmentId": "tri-p3-bike-lane",
+      "matchTokens": [
+        "2"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-parking-1",
+      "kind": "bike_lane_sensor",
+      "name": "PARKING ΣΜΥ 1",
+      "lat": 39.5538938,
+      "lng": 21.7754694,
+      "geometryType": "point",
+      "folderPath": [
+        "Bike Lanes Sensors"
+      ],
+      "pilotId": "tri-p3",
+      "linkedKpis": [
+        "kpi2.1",
+        "kpi4.2"
+      ],
+      "segmentId": "tri-p3-bike-lane",
+      "matchTokens": [
+        "PARKING",
+        "1"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-parking-2",
+      "kind": "bike_lane_sensor",
+      "name": "PARKING ΣΜΥ 2",
+      "lat": 39.5538974,
+      "lng": 21.775509,
+      "geometryType": "point",
+      "folderPath": [
+        "Bike Lanes Sensors"
+      ],
+      "pilotId": "tri-p3",
+      "linkedKpis": [
+        "kpi2.1",
+        "kpi4.2"
+      ],
+      "segmentId": "tri-p3-bike-lane",
+      "matchTokens": [
+        "PARKING",
+        "2"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-parking-1",
+      "kind": "bike_lane_sensor",
+      "name": "PARKING ΔΕΗ 1",
+      "lat": 39.5583197,
+      "lng": 21.7736975,
+      "geometryType": "point",
+      "folderPath": [
+        "Bike Lanes Sensors"
+      ],
+      "pilotId": "tri-p3",
+      "linkedKpis": [
+        "kpi2.1",
+        "kpi4.2"
+      ],
+      "segmentId": "tri-p3-bike-lane",
+      "matchTokens": [
+        "PARKING",
+        "1"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-parking-2",
+      "kind": "bike_lane_sensor",
+      "name": "PARKING ΔΕΗ 2",
+      "lat": 39.5583259,
+      "lng": 21.773664,
+      "geometryType": "point",
+      "folderPath": [
+        "Bike Lanes Sensors"
+      ],
+      "pilotId": "tri-p3",
+      "linkedKpis": [
+        "kpi2.1",
+        "kpi4.2"
+      ],
+      "segmentId": "tri-p3-bike-lane",
+      "matchTokens": [
+        "PARKING",
+        "2"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-gisemi-1",
+      "kind": "bike_lane_sensor",
+      "name": "GiSeMi 1",
+      "lat": 39.5667944,
+      "lng": 21.7581435,
+      "geometryType": "point",
+      "folderPath": [
+        "Bike Lanes Sensors"
+      ],
+      "pilotId": "tri-p3",
+      "linkedKpis": [
+        "kpi2.1",
+        "kpi4.2"
+      ],
+      "segmentId": "tri-p3-bike-lane",
+      "matchTokens": [
+        "GISEMI",
+        "1"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-gisemi-2",
+      "kind": "bike_lane_sensor",
+      "name": "GiSeMi 2",
+      "lat": 39.5667711,
+      "lng": 21.758157,
+      "geometryType": "point",
+      "folderPath": [
+        "Bike Lanes Sensors"
+      ],
+      "pilotId": "tri-p3",
+      "linkedKpis": [
+        "kpi2.1",
+        "kpi4.2"
+      ],
+      "segmentId": "tri-p3-bike-lane",
+      "matchTokens": [
+        "GISEMI",
+        "2"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-gisemi-3",
+      "kind": "bike_lane_sensor",
+      "name": "GiSeMi 3",
+      "lat": 39.5667484,
+      "lng": 21.7581698,
+      "geometryType": "point",
+      "folderPath": [
+        "Bike Lanes Sensors"
+      ],
+      "pilotId": "tri-p3",
+      "linkedKpis": [
+        "kpi2.1",
+        "kpi4.2"
+      ],
+      "segmentId": "tri-p3-bike-lane",
+      "matchTokens": [
+        "GISEMI",
+        "3"
+      ],
+      "mapVisible": true
+    },
+    {
+      "id": "tri-loc-gisemi-4",
+      "kind": "bike_lane_sensor",
+      "name": "GiSeMi 4",
+      "lat": 39.5667293,
+      "lng": 21.7581865,
+      "geometryType": "point",
+      "folderPath": [
+        "Bike Lanes Sensors"
+      ],
+      "pilotId": "tri-p3",
+      "linkedKpis": [
+        "kpi2.1",
+        "kpi4.2"
+      ],
+      "segmentId": "tri-p3-bike-lane",
+      "matchTokens": [
+        "GISEMI",
+        "4"
+      ],
+      "mapVisible": true
+    }
+  ],
+  "sensorJoins": [
+    {
+      "sensorId": 17606,
+      "locationId": null,
+      "label": null,
+      "joinMethod": null
+    },
+    {
+      "sensorId": 17037,
+      "locationId": null,
+      "label": null,
+      "joinMethod": null
+    },
+    {
+      "sensorId": 17600,
+      "locationId": null,
+      "label": null,
+      "joinMethod": null
+    },
+    {
+      "sensorId": 17604,
+      "locationId": null,
+      "label": null,
+      "joinMethod": null
+    },
+    {
+      "sensorId": 18544,
+      "locationId": "tri-loc-fanari-karditsis",
+      "label": "FANARI KARDITSIS",
+      "joinMethod": "outdoor-index-fallback"
+    },
+    {
+      "sensorId": 18531,
+      "locationId": "tri-loc-laiki",
+      "label": "LAIKI",
+      "joinMethod": "outdoor-index-fallback"
+    },
+    {
+      "sensorId": 18543,
+      "locationId": "tri-loc-matsopoulos",
+      "label": "MATSOPOULOS",
+      "joinMethod": "outdoor-index-fallback"
+    },
+    {
+      "sensorId": 18617,
+      "locationId": "tri-loc-military-school",
+      "label": "MILITARY SCHOOL",
+      "joinMethod": "outdoor-index-fallback"
+    },
+    {
+      "sensorId": 18337,
+      "locationId": "tri-loc-ote-square",
+      "label": "OTE SQUARE",
+      "joinMethod": "outdoor-index-fallback"
+    },
+    {
+      "sensorId": 18313,
+      "locationId": "tri-loc-parking-courthouse",
+      "label": "PARKING COURTHOUSE",
+      "joinMethod": "outdoor-index-fallback"
+    },
+    {
+      "sensorId": 18317,
+      "locationId": "tri-loc-train-station",
+      "label": "TRAIN STATION",
+      "joinMethod": "outdoor-index-fallback"
+    },
+    {
+      "sensorId": 18316,
+      "locationId": null,
+      "label": null,
+      "joinMethod": null
+    },
+    {
+      "sensorId": 18409,
+      "locationId": null,
+      "label": null,
+      "joinMethod": null
+    },
+    {
+      "sensorId": 18330,
+      "locationId": null,
+      "label": null,
+      "joinMethod": null
+    },
+    {
+      "sensorId": 18339,
+      "locationId": null,
+      "label": null,
+      "joinMethod": null
+    },
+    {
+      "sensorId": 18346,
+      "locationId": null,
+      "label": null,
+      "joinMethod": null
+    },
+    {
+      "sensorId": 18345,
+      "locationId": null,
+      "label": null,
+      "joinMethod": null
+    },
+    {
+      "sensorId": 18344,
+      "locationId": null,
+      "label": null,
+      "joinMethod": null
+    },
+    {
+      "sensorId": 18348,
+      "locationId": null,
+      "label": null,
+      "joinMethod": null
+    }
+  ]
+}

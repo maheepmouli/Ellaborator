@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Database } from "lucide-react";
 import { getPilotById } from "@/data/pilotDefinitions";
 import { useLocalCityData } from "@/hooks/use-local-city-data";
@@ -31,6 +32,8 @@ import { ClimateComparisonChart } from "@/components/observatory/charts/ClimateC
 import { LikertDistributionChart } from "@/components/observatory/charts/LikertDistributionChart";
 import { DirectionBreakdownPanel } from "@/components/observatory/charts/DirectionBreakdownPanel";
 import { StatCardsChart } from "@/components/observatory/charts/StatCardsChart";
+import { getTrikalaSegmentInsights, getTrikalaWomenMobilityModeShareRows } from "@/services/trikalaSurveyParser";
+import { loadTrikalaLocationsBundle } from "@/data/trikalaLocationRegistry";
 
 function SourceTag({ label }: { label: string }) {
   return (
@@ -51,6 +54,17 @@ function MockDisclaimer() {
       style={{ borderColor: "rgba(245,158,11,0.35)", background: "rgba(245,158,11,0.08)" }}
     >
       Registry mock data — link observed datasets to replace illustrative values.
+    </div>
+  );
+}
+
+function IllustrativeDisclaimer({ text }: { text: string }) {
+  return (
+    <div
+      className="rounded-lg border px-2.5 py-2 text-[10px] text-amber-100/90 leading-relaxed"
+      style={{ borderColor: "rgba(245,158,11,0.35)", background: "rgba(245,158,11,0.08)" }}
+    >
+      {text}
     </div>
   );
 }
@@ -157,8 +171,33 @@ export function ObservatoryGraphicSlot({
   headerMode,
 }: ObservatoryGraphicSlotProps) {
   const observatoryType = resolveObservatoryType(cityName, pilotId);
-  const spec = resolveObservatoryGraphic(observatoryType, selectedKpi, zone, pilotId);
+  const spec = resolveObservatoryGraphic(
+    observatoryType,
+    selectedKpi,
+    zone,
+    pilotId,
+    selectedSegmentId
+  );
   const cityCenter = useMemo(() => getCityCenter(cityName), [cityName]);
+  const isTrikala = cityName.toLowerCase().includes("trikala");
+  const { data: trikalaSegmentInsights = [] } = useQuery({
+    queryKey: ["trikala-segment-insights", pilotId],
+    queryFn: getTrikalaSegmentInsights,
+    enabled: isTrikala && selectedKpi === "kpi1.2",
+    staleTime: 120_000,
+  });
+  const { data: trikalaWomenMobilityModeShare = [] } = useQuery({
+    queryKey: ["trikala-women-mobility-mode-share-obs", pilotId, selectedSegmentId],
+    queryFn: () => getTrikalaWomenMobilityModeShareRows(selectedSegmentId),
+    enabled: isTrikala && selectedKpi === "kpi1.2" && pilotId !== "tri-p2",
+    staleTime: 120_000,
+  });
+  const { data: trikalaLocationsBundle } = useQuery({
+    queryKey: ["trikala-locations-bundle-observatory"],
+    queryFn: loadTrikalaLocationsBundle,
+    enabled: isTrikala,
+    staleTime: 600_000,
+  });
   const { data: points = [] } = useLocalCityData(
     cityName,
     selectedKpi,
@@ -182,6 +221,11 @@ export function ObservatoryGraphicSlot({
             selectedDirectionId,
             selectedSegmentId,
             spec,
+            trikalaSegmentInsights: isTrikala ? trikalaSegmentInsights : undefined,
+            trikalaLocations: isTrikala ? trikalaLocationsBundle?.locations : undefined,
+            trikalaSensorJoins: isTrikala ? trikalaLocationsBundle?.sensorJoins : undefined,
+            trikalaWomenMobilityModeShare:
+              isTrikala && pilotId !== "tri-p2" ? trikalaWomenMobilityModeShare : undefined,
           })
         : null,
     [
@@ -196,12 +240,22 @@ export function ObservatoryGraphicSlot({
       selectedModeTypes,
       selectedDirectionId,
       selectedSegmentId,
+      trikalaSegmentInsights,
+      trikalaWomenMobilityModeShare,
+      trikalaLocationsBundle?.locations,
+      trikalaLocationsBundle?.sensorJoins,
     ]
   );
 
   const pilot = getPilotById(cityName, pilotId);
   const missingNotice = getKpiMissingDataNotice(cityName, selectedKpi, pilot);
   const compact = zone === "header" || spec?.variant === "compact";
+  const showTrikalaPilot2Illustrative =
+    isTrikala &&
+    pilotId === "tri-p2" &&
+    selectedKpi === "kpi1.2" &&
+    zone !== "header" &&
+    (spec?.graphicId === "modeShareBars" || spec?.graphicId === "segmentModeShare");
 
   if (!spec || !payload) return null;
 
@@ -258,6 +312,9 @@ export function ObservatoryGraphicSlot({
         <span className="text-[9px] text-white/40">{dataClassLabel(payload.dataClass)}</span>
       </div>
       {payload.dataClass === "mock" && <MockDisclaimer />}
+      {showTrikalaPilot2Illustrative && (
+        <IllustrativeDisclaimer text="Illustrative intermodal proxy per P+R hub — partner occupancy survey pending (June 2026 drop)." />
+      )}
       {missingNotice && payload.dataClass !== "observed" && (
         <p className="text-[10px] text-amber-100/85 leading-relaxed">{missingNotice}</p>
       )}

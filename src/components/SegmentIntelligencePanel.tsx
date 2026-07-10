@@ -1,7 +1,7 @@
 /**
  * SegmentIntelligencePanel
  *
- * Issy monitored corridor observatory (all study pilots) at Stalingrad / Issy study coordinates.
+ * Issy monitored corridor observatory (all study pilots) at Pont d'Issy / ISSY1 camera site.
  * KPI 1.2 mode share: observed OD CSV at city level; corridor = traficissy segment context only.
  *
  * Coordinates: 48.829725, 2.261046
@@ -50,6 +50,7 @@ import {
   pickDefaultSegment,
   type JunctionStudyView,
 } from "@/lib/issyJunctionAnalytics";
+import { ISSY_CLIMATE_HEX_PREFIX } from "@/lib/issyClimateHexObservatory";
 import type { TrafficSegment } from "@/types/traffic";
 import {
   defaultObservatoryTab,
@@ -930,6 +931,7 @@ function InsightsTab({
 
 function ClimateFieldTab({ view }: { view: JunctionStudyView }) {
   const { baseline, intervention } = view;
+  const isHexCell = view.segmentApiId.startsWith(ISSY_CLIMATE_HEX_PREFIX);
   const baselinePressure = Math.round(baseline.peakCongestion * 100);
   const interventionPressure = Math.round(intervention.peakCongestion * 100);
   const reductionPct = Math.max(
@@ -976,8 +978,9 @@ function ClimateFieldTab({ view }: { view: JunctionStudyView }) {
       </TransparencyNotice>
       <GlassCard className="px-4 py-3">
         <p className="text-[11px] text-white/55 leading-relaxed">
-          Climate view for this monitored corridor — derived environmental pressure aligned with the map hex
-          field. No modal-share or per-street OD CSV values here.
+          {isHexCell
+            ? `Values for ${view.name} — hover or click each climate hex on the map to compare cells. Derived environmental pressure only, not measured CO₂.`
+            : "Climate view for this monitored corridor — derived environmental pressure aligned with the map hex field. Hover a hex cell on the map for per-circle values."}
         </p>
       </GlassCard>
       <div className="grid grid-cols-2 gap-2.5">
@@ -993,10 +996,13 @@ function ClimateFieldTab({ view }: { view: JunctionStudyView }) {
         ))}
       </div>
       <GlassCard className="px-4 py-3">
-        <p className="text-[11px] font-semibold text-white/60 mb-2">Influence field</p>
+        <p className="text-[11px] font-semibold text-white/60 mb-2">
+          {isHexCell ? "Hex cell" : "Influence field"}
+        </p>
         <p className="text-[11px] text-white/55 leading-relaxed">
-          Map buffer ~{280} m around {view.shortName} — soft concentric field replaces the old dashed
-          intervention disc. Hex cells inside show scenario-specific environmental pressure.
+          {isHexCell
+            ? `Cell ${view.armLabel} at ~${view.distanceMetres ?? 0} m from junction centre. Colour encodes pressure index ${view.kpiValue}%.`
+            : `Map buffer ~${280} m around ${view.shortName} — hover a hex cell for its pressure, CO₂ proxy, and congestion-linked values.`}
         </p>
       </GlassCard>
     </div>
@@ -1520,7 +1526,7 @@ export default function SegmentIntelligencePanel({
   const observatoryKpiDef = useMemo(() => getKpiDefinition(selectedKpi), [selectedKpi]);
   const [activeRegistryTab, setActiveRegistryTab] = useState<ObservatoryTabId>("overview");
   const [expanded, setExpanded] = useState(false);
-  const isFlagship = pilotId === "issy-p2";
+  const isFlagship = pilotId === "issy-p1";
 
   const junctionArms = useMemo(
     () => segments.filter((s) => ISSY_JUNCTION_ARMS.some((a) => a.segmentId === s.id)),
@@ -1550,6 +1556,12 @@ export default function SegmentIntelligencePanel({
   const confidence = confidenceFromDataClass(dataClass, view?.dataConfidence ?? 0.6);
   const shellTitle = observatoryShellTitle(resolvedCity, pilotId);
   const corridorLabel = observatoryCorridorLabel(resolvedCity, pilotId);
+  const isTrikalaSegmentFocus =
+    pilotId?.startsWith("tri-") &&
+    !!selectedSegmentId &&
+    !selectedSegmentId.endsWith("-environmental-fleet");
+  const headerTitle = isTrikalaSegmentFocus ? view?.name ?? corridorLabel : corridorLabel;
+  const headerSubtitle = isTrikalaSegmentFocus ? corridorLabel : view?.name ?? "";
   const perfImprovement = useMemo(() => {
     if (!view?.intervention || !view?.baseline) return 18;
     const profile = getCityPilotProfile(pilotId);
@@ -1681,11 +1693,13 @@ export default function SegmentIntelligencePanel({
                 {shellTitle}
               </p>
               <h2 className="text-[17px] font-bold text-primary-foreground leading-tight mt-1">
-                {corridorLabel}
+                {headerTitle}
               </h2>
-              <p className={`text-[12px] mt-0.5 font-medium ${intelAccentValue}`}>
-                {view.name}
-              </p>
+              {headerSubtitle ? (
+                <p className={`text-[12px] mt-0.5 font-medium ${intelAccentValue}`}>
+                  {headerSubtitle}
+                </p>
+              ) : null}
               <p className="text-[11px] mt-0.5 text-white/45">
                 {observatoryConfig.subtitle}
               </p>
@@ -1719,7 +1733,7 @@ export default function SegmentIntelligencePanel({
                     color: "#9FE6FF",
                   }}
                 >
-                  Active monitored corridor · {view.segmentApiId}
+                  Active monitored corridor · {selectedSegmentId ?? view.segmentApiId}
                 </span>
                 <span
                   className="px-2 py-1 rounded-md text-[10px] font-medium border"

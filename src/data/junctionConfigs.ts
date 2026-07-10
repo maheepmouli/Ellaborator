@@ -97,58 +97,12 @@ function interventionType(pilotId: string): string {
 const ISSY_P1: JunctionConfig = {
   id: "issy-p1-junction",
   pilotId: "issy-p1",
-  name: "Rue Voltaire × Avenue de la République",
-  shortName: "Voltaire junction",
+  name: "Pont d'Issy × Quai du Président Roosevelt",
+  shortName: "Pont d'Issy camera site",
   pilot: pilotLabel("issy-p1"),
   interventionType: interventionType("issy-p1"),
   coordinates: coords("issy-p1"),
-  monitoringPeriod: "Sep 2024 — ongoing",
-  sensors: 2,
-  approachesCovered: 2,
-  totalApproaches: 4,
-  dataConfidence: 78,
-  streetNS: "Rue Voltaire",
-  streetEW: "Av. de la République",
-  segmentApiId: "mock-issy-p1-corridor",
-  baseline: period(
-    "Baseline",
-    "Sep – Nov 2024",
-    modeShare({ pedestrian: 32, cycle: 8, pt: 22, car: 34 }),
-    142,
-    0.38,
-    22.4,
-    186,
-    -10,
-    35
-  ),
-  intervention: period(
-    "Post-intervention",
-    "Dec 2024 — ongoing",
-    modeShare({ pedestrian: 36, cycle: 11, pt: 21, car: 28 }),
-    168,
-    0.29,
-    24.1,
-    162,
-    12,
-    -28
-  ),
-  timeline: [
-    { date: "Sep 2024", event: "School-zone baseline monitoring", status: "done" },
-    { date: "Nov 2024", event: "Luminous marking installation", status: "done" },
-    { date: "Dec 2024", event: "Post-intervention sensor activation", status: "active" },
-    { date: "Q2 2025", event: "Visibility & conflict evaluation", status: "upcoming" },
-  ],
-};
-
-const ISSY_P2: JunctionConfig = {
-  id: "issy-p2-junction",
-  pilotId: "issy-p2",
-  name: "Pont d'Issy × Quai du Président Roosevelt",
-  shortName: "Stalingrad junction",
-  pilot: pilotLabel("issy-p2"),
-  interventionType: interventionType("issy-p2"),
-  coordinates: coords("issy-p2"),
-  monitoringPeriod: "Jun 2024 — ongoing",
+  monitoringPeriod: "Nov 2024 — ongoing",
   sensors: 3,
   approachesCovered: 4,
   totalApproaches: 4,
@@ -156,6 +110,52 @@ const ISSY_P2: JunctionConfig = {
   streetNS: "Quai du Président Roosevelt",
   streetEW: "Pont d'Issy",
   segmentApiId: "#ILM_92130_5416",
+  baseline: period(
+    "Baseline (OD CSV)",
+    "Nov 2024",
+    modeShare({ pedestrian: 16, cycle: 10, pt: 20, car: 48 }),
+    198,
+    0.34,
+    21.8,
+    204,
+    -12,
+    42
+  ),
+  intervention: period(
+    "Post-intervention (OD CSV)",
+    "Nov 2025",
+    modeShare({ pedestrian: 18, cycle: 12, pt: 19, car: 45 }),
+    224,
+    0.26,
+    23.6,
+    188,
+    10,
+    -22
+  ),
+  timeline: [
+    { date: "Nov 2024", event: "ISSY1 OD flow baseline (CSV)", status: "done" },
+    { date: "Nov 2024", event: "Flowell luminous marking installation", status: "done" },
+    { date: "Nov 2025", event: "ISSY1 OD flow post-intervention (CSV)", status: "done" },
+    { date: "Q2 2025", event: "Visibility & conflict evaluation", status: "upcoming" },
+  ],
+};
+
+const ISSY_P2: JunctionConfig = {
+  id: "issy-p2-junction",
+  pilotId: "issy-p2",
+  name: "Issy mobility observatory — city monitoring canvas",
+  shortName: "Mobility observatory",
+  pilot: pilotLabel("issy-p2"),
+  interventionType: interventionType("issy-p2"),
+  coordinates: coords("issy-p2"),
+  monitoringPeriod: "Jun 2024 — ongoing",
+  sensors: 3,
+  approachesCovered: 4,
+  totalApproaches: 4,
+  dataConfidence: 74,
+  streetNS: "Quai du Président Roosevelt",
+  streetEW: "Pont d'Issy",
+  segmentApiId: "mock-issy-p2-observatory",
   baseline: period(
     "Baseline (derived)",
     "Jun – Aug 2024",
@@ -738,6 +738,98 @@ const TRI_P1: JunctionConfig = {
   ],
 };
 
+const TRI_P2: JunctionConfig = {
+  id: "tri-p2-park-ride",
+  pilotId: "tri-p2",
+  name: "SMY · DEH · GiSeMi P+R",
+  shortName: "Park & Ride hubs",
+  pilot: pilotLabel("tri-p2"),
+  interventionType: interventionType("tri-p2"),
+  coordinates: coords("tri-p2"),
+  monitoringPeriod: "Jun 2024 — ongoing",
+  sensors: 3,
+  approachesCovered: 3,
+  totalApproaches: 3,
+  dataConfidence: 62,
+  streetNS: "Peripheral corridors",
+  streetEW: "P+R network",
+  segmentApiId: "mock-tri-p2-area",
+  baseline: period(
+    "Baseline",
+    "Apr – Jun 2024",
+    modeShare({ pedestrian: 8, cycle: 6, pt: 42, car: 44 }),
+    96,
+    0.41,
+    18.2,
+    210,
+    -4,
+    28
+  ),
+  intervention: period(
+    "Post-intervention",
+    "Jul 2024 — ongoing",
+    modeShare({ pedestrian: 9, cycle: 8, pt: 44, car: 39 }),
+    104,
+    0.35,
+    19.4,
+    198,
+    6,
+    -18
+  ),
+  timeline: [
+    { date: "Apr 2024", event: "P+R baseline inventory", status: "done" },
+    { date: "Jul 2024", event: "Hub upgrades live", status: "done" },
+    { date: "Jun 2025", event: "Post-intervention monitoring", status: "active" },
+    { date: "Q3 2025", event: "Mode-shift evaluation", status: "upcoming" },
+  ],
+};
+
+const TRI_P3: JunctionConfig = {
+  id: "tri-p3-bike-lane",
+  pilotId: "tri-p3",
+  name: "Redesigned bike lane network",
+  shortName: "Bike lane corridors",
+  pilot: pilotLabel("tri-p3"),
+  interventionType: interventionType("tri-p3"),
+  coordinates: coords("tri-p3"),
+  monitoringPeriod: "May 2024 — ongoing",
+  sensors: 30,
+  approachesCovered: 12,
+  totalApproaches: 18,
+  dataConfidence: 74,
+  streetNS: "City bike corridors",
+  streetEW: "Sensor network",
+  segmentApiId: "mock-tri-p3-corridor",
+  baseline: period(
+    "Baseline",
+    "Mar – May 2024",
+    modeShare({ pedestrian: 14, cycle: 22, pt: 16, car: 48 }),
+    118,
+    0.44,
+    20.8,
+    165,
+    -12,
+    42
+  ),
+  intervention: period(
+    "Post-intervention",
+    "Jun 2024 — ongoing",
+    modeShare({ pedestrian: 15, cycle: 28, pt: 15, car: 42 }),
+    126,
+    0.36,
+    22.1,
+    148,
+    8,
+    -32
+  ),
+  timeline: [
+    { date: "Mar 2024", event: "Bike safety baseline survey", status: "done" },
+    { date: "Jun 2024", event: "Lane redesign completed", status: "done" },
+    { date: "Sep 2024", event: "Sensor fleet monitoring", status: "active" },
+    { date: "Q2 2025", event: "Post-intervention survey wave", status: "upcoming" },
+  ],
+};
+
 const ALL_CONFIGS: JunctionConfig[] = [
   ISSY_P1,
   ISSY_P2,
@@ -753,6 +845,8 @@ const ALL_CONFIGS: JunctionConfig[] = [
   MIL_P3,
   ZAR_P1,
   TRI_P1,
+  TRI_P2,
+  TRI_P3,
 ];
 
 export const JUNCTION_REGISTRY: Record<string, JunctionConfig[]> = ALL_CONFIGS.reduce(

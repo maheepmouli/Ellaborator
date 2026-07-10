@@ -1,4 +1,5 @@
 import { useRef, useState, useCallback, useEffect, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, Eye, X } from "lucide-react";
 import Header from "@/components/Header";
@@ -19,10 +20,18 @@ import { pickDefaultSegment, buildJunctionStudyView } from "@/lib/issyJunctionAn
 import { getPrimaryJunctionConfig } from "@/data/junctionConfigs";
 import { buildMockJunctionStudyView, mergeJunctionConfig } from "@/lib/junctionMockAnalytics";
 import { buildCityObservatoryView, buildSegmentScopedObservatoryView } from "@/lib/observatoryCityContent";
+import { buildTrikalaObservatoryView } from "@/lib/trikalaObservatoryView";
+import { loadTrikalaLocationsBundle } from "@/data/trikalaLocationRegistry";
 import { buildCopenhagenObservatoryView, filterCopenhagenObservatoryPoints } from "@/lib/copenhagenObservatoryView";
 import { useLocalCityData } from "@/hooks/use-local-city-data";
 import { isIssyCity } from "@/lib/issyMapRouting";
 import { getIssyPilotProfile } from "@/data/issyPilotProfiles";
+import { getIssySentimentMock, issySentimentKpiHeadline } from "@/data/issySentimentMock";
+import {
+  buildIssyClimateHexStudyView,
+  parseIssyClimateHexSegmentId,
+} from "@/lib/issyClimateHexObservatory";
+import { useIssyWorkbooks } from "@/hooks/use-issy-workbooks";
 import { canOpenObservatory } from "@/lib/observatoryAccess";
 import { isCopenhagenObservatoryContext } from "@/lib/copenhagenMapSelection";
 import { getCopenhagenPilotLatLngBounds } from "@/data/copenhagenCameraSites";
@@ -103,6 +112,7 @@ const MapContent = () => {
   const [selectedPilot, setSelectedPilot] = useState<SelectedPilot | null>(null);
   const issyJunctionStudy = isIssyStudyPilot(selectedPilot?.id);
   const isCopenhagenMap = isCopenhagenObservatoryContext(selectedCity, selectedPilot?.id);
+  const isTrikalaMap = isTrikalaCityName(selectedCity);
   const [selectedKpi, setSelectedKpi] = useState("kpi1.2");
   const [mapRef, setMapRef] = useState<any>(null);
   const [viewLevel, setViewLevel] = useState<ViewState>("EUROPE");
@@ -129,6 +139,8 @@ const MapContent = () => {
     selectedCity.toLowerCase().includes("issy") ? selectedCity : "",
     8
   );
+  const { classeur: issyClasseurQuery } = useIssyWorkbooks(isIssyCity(selectedCity));
+  const issyClasseur = issyClasseurQuery.data ?? null;
   const [isLegendOpen, setIsLegendOpen] = useState(true);
   const [mapContext, setMapContext] = useState<SegmentContext | null>(null);
   /** Pilot map highlights intervention streets by default — no toggle in the sidebar. */
@@ -170,6 +182,13 @@ const MapContent = () => {
     selectedPilot?.id,
     scenario
   );
+
+  const { data: trikalaLocationsBundle } = useQuery({
+    queryKey: ["trikala-locations-bundle"],
+    queryFn: loadTrikalaLocationsBundle,
+    enabled: isTrikalaMap,
+    staleTime: 600_000,
+  });
 
   const runtimeLinkage = useMemo(
     () => dominantRuntimeLinkage(localObservatoryPoints),
@@ -247,7 +266,9 @@ const MapContent = () => {
     setSelectedJunctionSegmentId(null);
     setFocusMode(false);
     patchSelection({ segmentId: null });
-    setIsObservatoryOpen(false);
+    if (!selectedCity.toLowerCase().includes("copenhagen")) {
+      setIsObservatoryOpen(false);
+    }
   }, [selectedPilot?.id, selectedCity, setSelectedJunctionSegmentId, setFocusMode, patchSelection]);
 
   useEffect(() => {
@@ -415,7 +436,7 @@ const MapContent = () => {
   ]);
 
   useEffect(() => {
-    if (!selectedPilot?.id || isIssyCity(selectedCity)) return;
+    if (!selectedPilot?.id || isIssyCity(selectedCity) || isTrikalaMap) return;
     const segmentIds = observatorySegments.map((s) => s.id);
     if (segmentIds.length > 0) {
       const defaultId = pickDefaultSegmentId(segmentIds);
@@ -449,6 +470,7 @@ const MapContent = () => {
     observatorySegments,
     scopedObservatoryPoints,
     patchSelection,
+    isTrikalaMap,
   ]);
 
   const junctionConfig = selectedPilot?.id ? getPrimaryJunctionConfig(selectedPilot.id) : null;
@@ -517,35 +539,100 @@ const MapContent = () => {
       );
     }
 
+    if (isTrikalaMap) {
+      const trikalaSelectionId = hoveredSegmentId ?? selectedJunctionSegmentId;
+      return buildTrikalaObservatoryView(
+        junctionConfig,
+        selectedCity,
+        selectedPilot.id,
+        selectedKpi,
+        scenario,
+        scopedObservatoryPoints,
+        {
+          hoverSelectionId: trikalaSelectionId,
+          segmentName: mapContext?.segmentName ?? null,
+          speed: mapContext?.speed ?? null,
+          congestion: mapContext?.congestion ?? null,
+          locations: trikalaLocationsBundle?.locations ?? [],
+          sensorJoins: trikalaLocationsBundle?.sensorJoins ?? [],
+        }
+      );
+    }
+
     const seg =
       observatorySegments.find((s) => s.id === selectedJunctionSegmentId) ??
       pickDefaultSegment(observatorySegments);
 
     if (seg && isIssyCity(selectedCity)) {
+      const issySelectionRaw = hoveredSegmentId ?? selectedJunctionSegmentId;
+      const issySelectionId = issySelectionRaw?.replace(/:arm-end$/, "") ?? null;
+      const climateCellId =
+        selectedKpi === "kpi3.2" ? parseIssyClimateHexSegmentId(issySelectionId) : null;
+
+      if (climateCellId && junctionConfig) {
+        const cityRow = CITY_DATA.find((c) => c.city === selectedCity);
+        const hexView = buildIssyClimateHexStudyView(climateCellId, junctionConfig, {
+          pilotLabel: label,
+          pilotId: selectedPilot.id,
+          scenario,
+          kpiRow: cityRow?.kpiData["kpi3.2"],
+          kpi32Year: emissionsIntensityYear,
+          rings: 3,
+          cellSizeM: 44,
+          classeur: issyClasseur,
+        });
+        if (hexView) {
+          return mergeJunctionConfig(hexView, junctionConfig);
+        }
+      }
+
+      const activeSeg =
+        (issySelectionId
+          ? observatorySegments.find((s) => s.id === issySelectionId)
+          : undefined) ?? seg;
       const junctionArms = observatorySegments.filter((s) =>
         ISSY_JUNCTION_SEGMENT_IDS.includes(s.id)
       );
       const real = buildJunctionStudyView(
-        seg,
-        junctionArms.length ? junctionArms : [seg],
+        activeSeg,
+        junctionArms.length ? junctionArms : [activeSeg],
         label,
         selectedKpi,
         intensity,
         scenario,
         selectedPilot.id
       );
+      if (selectedKpi === "kpi4.1") {
+        const sentimentMock = getIssySentimentMock(selectedPilot.id);
+        if (sentimentMock) {
+          const headline = issySentimentKpiHeadline(sentimentMock, scenario);
+          return mergeJunctionConfig(
+            {
+              ...real,
+              kpiValue: headline.mainValue,
+              dataSource: "mock",
+              dataClass: "mock",
+              sourceLabel: "Mock GecoAir satisfaction placeholder",
+              dataConfidence: sentimentMock.confidencePct,
+              monitoringPeriod: `${sentimentMock.samples.length} mock survey samples · corridor arms`,
+            },
+            junctionConfig
+          );
+        }
+      }
       return mergeJunctionConfig(real, junctionConfig);
     }
 
+    const activeSelectionId = hoveredSegmentId ?? selectedJunctionSegmentId;
     const activeSeg =
-      observatorySegments.find((s) => s.id === selectedJunctionSegmentId) ?? seg;
-    if (activeSeg && selectedJunctionSegmentId) {
+      observatorySegments.find((s) => s.id === activeSelectionId) ?? seg;
+    if (activeSeg && activeSelectionId) {
       const milanRecord =
         selectedCity === "Milan"
           ? (selectedKpi === "kpi3.2"
               ? milanEnvForObservatory?.records
               : milanSpeedForObservatory?.records
-            )?.find((r) => r.id === selectedJunctionSegmentId)
+            )?.find((r) => r.id === activeSelectionId)
           : undefined;
       return buildSegmentScopedObservatoryView(
         junctionConfig,
@@ -555,7 +642,7 @@ const MapContent = () => {
         scenario,
         scopedObservatoryPoints,
         {
-          segmentId: activeSeg.id,
+          segmentId: activeSelectionId,
           segmentName: mapContext?.segmentName ?? String(activeSeg.segment),
           speed: mapContext?.speed ?? activeSeg.vitesse_km_h ?? null,
           congestion: mapContext?.congestion ?? activeSeg.indice_de_congestion ?? null,
@@ -585,12 +672,18 @@ const MapContent = () => {
     scenario,
     issyKpi32Intensity,
     scopedObservatoryPoints,
+    emissionsIntensityYear,
     mapContext,
     milanSpeedForObservatory?.records,
     milanEnvForObservatory?.records,
     isCopenhagenMap,
+    isTrikalaMap,
+    trikalaLocationsBundle?.locations,
+    trikalaLocationsBundle?.sensorJoins,
+    focusMode,
     selectedModeTypes,
     hoveredSegmentId,
+    issyClasseur,
   ]);
 
   const mapLegendSpec = resolveMapLegend(selectedCity || "", selectedKpi, scenario, {
@@ -636,6 +729,18 @@ const MapContent = () => {
     return row?.city ?? pilot.cityId;
   }, []);
 
+  const resolvePilotDefaultKpi = useCallback((pilot: SelectedPilot | null, currentKpi: string) => {
+    if (!pilot) return currentKpi;
+    const issyProfile = getIssyPilotProfile(pilot.id);
+    if (issyProfile && pilot.supportedKpis.includes(issyProfile.defaultKpi)) {
+      return issyProfile.defaultKpi;
+    }
+    if (pilot.supportedKpis.length && !pilot.supportedKpis.includes(currentKpi)) {
+      return pilot.supportedKpis[0];
+    }
+    return currentKpi;
+  }, []);
+
   const handlePilotSelect = useCallback(
     (pilot: SelectedPilot | null) => {
       setSelectedPilot(pilot);
@@ -643,9 +748,12 @@ const MapContent = () => {
         const cityLabel = resolveCityLabelFromPilot(pilot);
         setSelectedCity(cityLabel);
         setIntelCity(cityLabel);
+        const nextKpi = resolvePilotDefaultKpi(pilot, selectedKpi);
+        setSelectedKpi(nextKpi);
+        setIntelKpiId(nextKpi);
       }
     },
-    [resolveCityLabelFromPilot, setIntelCity]
+    [resolveCityLabelFromPilot, setIntelCity, resolvePilotDefaultKpi, selectedKpi, setIntelKpiId]
   );
 
   const handleSegmentHover = useCallback(
@@ -657,19 +765,18 @@ const MapContent = () => {
     } | null) => {
       if (detail === null) {
         setHoveredSegmentId(null);
-        if (isCopenhagenMap) {
+        const preserveContext =
+          (isCopenhagenMap || isIssyCity(selectedCity) || isTrikalaMap) &&
+          selectedJunctionSegmentId;
+        if (!preserveContext) {
           setMapContext(null);
         }
         return;
       }
 
-      if (isCopenhagenMap) {
-        setHoveredSegmentId(detail.segmentId);
-        if (canOpenObservatory(selectedCity, selectedPilot?.id, selectedKpi)) {
-          setIsObservatoryOpen(true);
-        }
-      } else {
-        patchSelection({ segmentId: detail.segmentId });
+      setHoveredSegmentId(detail.segmentId);
+      if (canOpenObservatory(selectedCity, selectedPilot?.id, selectedKpi)) {
+        setIsObservatoryOpen(true);
       }
       setMapContext({
         segmentName: detail.segmentName,
@@ -678,29 +785,22 @@ const MapContent = () => {
       });
       setMapSelection((prev) => ({
         ...prev,
-        segmentId: isCopenhagenMap ? prev.segmentId : detail.segmentId,
+        segmentId: prev.segmentId,
         city: selectedCity,
         pilotId: selectedPilot?.id,
         kpi: selectedKpi,
       }));
     },
-    [
-      patchSelection,
-      selectedCity,
-      selectedPilot?.id,
-      selectedKpi,
-      isCopenhagenMap,
-    ]
+    [selectedCity, selectedPilot?.id, selectedKpi, isCopenhagenMap, isTrikalaMap, selectedJunctionSegmentId]
   );
 
   const handlePilotChange = (pilotId: string) => {
     const pilot = getPilotsByCity(selectedCity).find((p) => p.id === pilotId) || null;
     setSelectedPilot(pilot);
-    const profile = getIssyPilotProfile(pilotId);
-    if (profile && pilot?.supportedKpis.includes(profile.defaultKpi)) {
-      setSelectedKpi(profile.defaultKpi);
-    }
-    setMapSelection((prev) => ({ ...prev, pilotId, kpi: profile?.defaultKpi ?? prev.kpi }));
+    const nextKpi = resolvePilotDefaultKpi(pilot, selectedKpi);
+    setSelectedKpi(nextKpi);
+    setIntelKpiId(nextKpi);
+    setMapSelection((prev) => ({ ...prev, pilotId, kpi: nextKpi }));
   };
 
   return (
@@ -977,8 +1077,8 @@ const MapContent = () => {
         )}
       </AnimatePresence>
 
-      {/* Right-Side Map Controls - Minimal zoom only (hidden for Trikala — fixed zoom canvas) */}
-      {!showTour && !isTrikalaCityName(selectedCity) && (
+      {/* Right-Side Map Controls */}
+      {!showTour && (
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}

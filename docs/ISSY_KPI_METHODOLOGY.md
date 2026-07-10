@@ -11,9 +11,22 @@ This document describes how ELABORATOR currently computes Issy KPIs, which datas
 | **traficissy API** | Road segment traffic: segment ID, line geometry, speed (`vitesse_km_h`), congestion index (`indice_de_congestion`) | Segment (exact) | Observed segment-level traffic; junction approach arms; KPI 2.1 and segment context for other KPIs |
 | **Bicycle counting API** | Hourly counts at sensor stations | Point (exact) | Observed cycling activity; supplementary to mode share |
 | **Cycling infrastructure API** | Facility / network features | Segment / point (exact) | Observed infrastructure for KPI 3.1 |
+| **KPI 3.1 SharePoint** | — | — | **No ZEM facility workbook** in June 2026 zip; requirements matrix marks all pilots NA. App uses live API only (Pilot 2). |
 | **ISSY1 baseline/post CSV** | `vehicle_category`, `zone_in`, `zone_out`, `hour`, `day_category`, `avg_traffic` | Zone OD (matched centroids) | Observed zone-to-zone flow — **not** per-street measurement |
+| **Wintics baseline xlsx** | Speed (mean, 85th %ile), flows, modal share % by time band at LL site | Point (camera) | **Pilot 1 site counts** — catalogued, not yet parsed in map layers. **Not interchangeable with zone OD.** |
+| **Classeur.xlsx (ASIF)** | Modelled CO₂ from traffic flows + fleet emission factors | Segment (~50 m corridor) | **Pilot 1 / 3 emissions context** — planned parser; replaces congestion proxy when wired |
+| **Pre-intervention requirements xlsx** | KPI × intervention data readiness matrix | None | Data Catalogue readiness table |
+| **Partner docs / media** | Evaluation plan, FLOWELL synthesis PDF, engagement transcripts, site photo | Mixed | Evidence manifest & catalogue links — no KPI parsing |
 
 Bundled CSV paths (demo): `/public/data/issy/ISSY1_baseline_traffic_data_november_2024.csv`, `ISSY1_post_intervention_traffic_data_november_2025.csv`.
+
+SharePoint mirror (June 2026): `public/sharepoint-data/Issy-20260625T113904Z-3-001/Issy/` — see Data Catalogue → Issy SharePoint file inventory.
+
+### Wintics vs zone OD (important)
+
+- **Wintics** (`baseline_evaluation_data_light_emitting_marking_solution.xlsx`): single-camera measurement at the living-lab junction (Pilot 1). Example baseline cyclist modal share ~20.5% at site.
+- **ISSY1 OD CSV**: city-wide zones 1–6, hourly directional flows. Powers KPI 1.2 city view and sidebar aggregates.
+- Do **not** assign Wintics site shares to junction arms or zone OD arcs, or vice versa.
 
 ## B. KPI 1.2 — Mobility Mode Share
 
@@ -107,7 +120,9 @@ Pilot 3 (GecoAir) narrative is citizen / app-driven; map hex field remains proxy
 
 **Data type:** observed (when API loads)
 
-**Source:** cycling infrastructure API.
+**Primary source:** cycling infrastructure API (`issy-cycling-infra-api`). **No SharePoint file** in the June 2026 Issy Lighthouse drop — the pre-intervention requirements workbook lists KPI 3.1 (ZEM deployment) as NA for all three pilots.
+
+**Primary pilot:** Pilot 2 (mobility observatory).
 
 ```
 N_type = count(features where facility_type = type)

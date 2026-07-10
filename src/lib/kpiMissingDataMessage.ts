@@ -5,8 +5,10 @@ import type { DataLabel } from "@/config/kpiDefinitions";
 const KPI_SPECIFIC: Record<string, string> = {
   "kpi3.2":
     "No observed environmental dataset available for this pilot. Showing derived proxy from traffic intensity.",
-  "kpi4.1": "No live satisfaction survey feed for this view. Showing modelled perception samples.",
-  "kpi4.2": "Accessibility geometry is partial for this city. Reach bands use inferred facility points where needed.",
+  "kpi4.1":
+    "No live GecoAir survey feed — showing pilot-scoped mock satisfaction samples on corridor arms.",
+  "kpi4.2":
+    "Mock accessibility inventory for this pilot — structured like an audit but not EN 17210 verified. Feature points and reach bands are labelled Mock / demo.",
 };
 
 function requiredDatasetHint(city: string, kpiId: string): string {

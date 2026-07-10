@@ -19,6 +19,7 @@ import { getPilotsByCity, getPilotById, SelectedPilot, ViewState } from "@/data/
 import { getCityPilotProfile } from "@/data/cityPilotProfiles";
 import { useLocalCityData } from "@/hooks/use-local-city-data";
 import { useIssyFlowData } from "@/hooks/use-issy-flow-data";
+import { useIssyWorkbooks } from "@/hooks/use-issy-workbooks";
 import { getIssyZoneCentroid, getIssyZoneCentroids } from "@/services/issyFlowData";
 import { useMilanEnvironmentSegments, useMilanSpeedSegments } from "@/hooks/use-milan-segment-data";
 import { getStoryPointsForPilot } from "@/data/storyConfig";
@@ -31,6 +32,7 @@ import {
 import {
   segmentInteractionHandlers,
   wireCircleMarkerSegment,
+  wirePolygonSegment,
   wirePolylineSegment,
   type SegmentInteractionHandlers,
 } from "@/lib/wireMapSegmentInteraction";
@@ -43,7 +45,12 @@ import {
 import { renderCopenhagenMapLayers } from "@/lib/copenhagenMapLayers/renderCopenhagenMapLayers";
 import { renderTrikalaMapLayers } from "@/lib/trikalaMapLayers";
 import { getTrikalaSegmentInsights } from "@/services/trikalaSurveyParser";
-import { isTrikalaCityName, trikalaMapZoom } from "@/lib/trikalaMapConfig";
+import { isTrikalaCityName, getTrikalaPilotAnchor, trikalaMapZoom } from "@/lib/trikalaMapConfig";
+import {
+  filterTrikalaLocationsByKpi,
+  filterTrikalaLocationsByPilot,
+  loadTrikalaLocationsBundle,
+} from "@/data/trikalaLocationRegistry";
 import { loadCopenhagenParkingGeoJson, loadCopenhagenStreetsGeoJson } from "@/services/copenhagenExtendedParsers";
 import {
   ISSY_SEGMENT_KPIS,
@@ -56,20 +63,33 @@ import {
 } from "@/lib/spatialLayerRegistry";
 import { provenanceBadgesHtml } from "@/lib/dataProvenance";
 import { renderInfluenceField } from "@/lib/renderInfluenceField";
+import { resolveMapPointIconSpec } from "@/lib/mapPointIconTaxonomy";
+import { createMapPointDivIcon, addNeonPointMarker } from "@/lib/mapPointIcons";
 import {
   renderIssyAccessibilityField,
   renderIssyClimateHexField,
-  renderIssyFacilityPoints,
+  renderIssyFacilityLayers,
   renderIssySentimentField,
 } from "@/lib/issyMapLayers";
+import {
+  countIssyFacilityRenderables,
+  filterCyclingInfrastructureForIssy,
+} from "@/lib/issyFacilityMap";
 import type { IssyDayCategory } from "@/services/issyFlowData";
 import { DeckLeafletOverlay } from "@/components/map/DeckLeafletOverlay";
 import { getLocalCityDiagnostics, type LocalCityPoint } from "@/services/localCityData";
 import {
+  loadCopenhagenCountSitesGeoJson,
+  loadHelsinkiDangerousLocationsGeoJson,
+  loadHelsinkiInterventionLocationsGeoJson,
+  loadZaragozaInterventionAreasGeoJson,
+} from "@/services/staticGeoData";
+import {
   HELSINKI_GEO_LAYER_LABELS,
   loadHelsinkiGeoSample,
 } from "@/lib/helsinkiGeoLayers";
-import type { HelsinkiPilotId } from "@/data/helsinkiPilotProfiles";
+import { getIssyAccessibilityMock } from "@/data/issyAccessibilityMock";
+import { getIssySentimentMock } from "@/data/issySentimentMock";
 import { infrastructureChartLabelMatchesFeature } from "@/lib/infrastructureChartMapLink";
 import {
   areAllTravelModesSelected,
@@ -85,6 +105,7 @@ import { getKpi32TimeSeriesIntensity, resolveKpi32PolygonBaseIntensity } from "@
 import {
   dedupeTrafficBySegmentId,
   filterMapSegmentsNearJunction,
+  getIssyJunctionClipRadiusM,
   isIssyStudyPilot,
   isNearIssyJunction,
   ISSY_P2_JUNCTION,
@@ -207,6 +228,31 @@ function spreadPilotOverviewPositions(
   });
 }
 
+const COPENHAGEN_SITE_ALIASES: Array<{ key: string; patterns: string[] }> = [
+  { key: "hojbro", patterns: ["hojbro"] },
+  { key: "norreport", patterns: ["norreport", "norreport"] },
+  { key: "gammeltorv", patterns: ["gammeltorv"] },
+  { key: "stormgade", patterns: ["stormgade"] },
+  { key: "vandkunsten", patterns: ["vandkunsten"] },
+];
+
+function normalizeSiteName(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function resolveCopenhagenSiteKey(value: string): string | null {
+  const normalized = normalizeSiteName(value);
+  for (const alias of COPENHAGEN_SITE_ALIASES) {
+    if (alias.patterns.some((pattern) => normalized.includes(pattern))) return alias.key;
+  }
+  return null;
+}
+
 /** Resolve pilot coordinates with fallback grid, without mutating canonical pilot defs. */
 function pilotFallbackCoord(
   p: { lat?: number; lng?: number },
@@ -316,10 +362,14 @@ const HeroMap = ({
     void loadCopenhagenStreetsGeoJson().then(setCphStreetsGeo);
   }, [currentCity]);
 
+  const isCopenhagenCameraContext =
+    currentCity?.toLowerCase().includes("copenhagen") && isCopenhagenCameraKpi(selectedKpi);
   const segmentInteractionEnabled =
-    pilotGeometrySpec?.interactionModel !== "network";
+    isCopenhagenCameraContext ||
+    (pilotGeometrySpec?.interactionModel !== "network" &&
+      pilotGeometrySpec?.interactionModel !== "dashboard_only");
   const suppressMapSpatialLayers =
-    pilotGeometrySpec?.interactionModel === "dashboard_only";
+    pilotGeometrySpec?.interactionModel === "dashboard_only" && !isCopenhagenCameraContext;
 
   const badge = (label: string) => provenanceBadgesHtml([label]);
 
@@ -344,21 +394,64 @@ const HeroMap = ({
 
   const bicycleDataForMap = useMemo(() => {
     if (!bicycleData?.results?.length || !issyJunctionStudy) return bicycleData;
-    const results = bicycleData.results.filter((row) =>
-      isNearIssyJunction(row.coordinates.lat, row.coordinates.lon, 200)
-    );
+    const clipRadius = getIssyJunctionClipRadiusM(selectedPilotId);
+    const results = bicycleData.results.filter((row) => {
+      if (clipRadius === null) return true;
+      return isNearIssyJunction(row.coordinates.lat, row.coordinates.lon, clipRadius);
+    });
     return { ...bicycleData, results, total_count: results.length };
-  }, [bicycleData, issyJunctionStudy]);
+  }, [bicycleData, issyJunctionStudy, selectedPilotId]);
 
   const cyclingInfrastructureForMap = useMemo(() => {
-    if (!cyclingInfrastructureData?.results?.length || !issyJunctionStudy) return cyclingInfrastructureData;
-    const results = cyclingInfrastructureData.results.filter((row) => {
-      const pt = row.geo_point_2d;
-      if (!pt) return false;
-      return isNearIssyJunction(pt.lat, pt.lon, 200);
-    });
-    return { ...cyclingInfrastructureData, results, total_count: results.length };
-  }, [cyclingInfrastructureData, issyJunctionStudy]);
+    if (!cyclingInfrastructureData?.results?.length) return cyclingInfrastructureData;
+    if (!issyJunctionStudy) return cyclingInfrastructureData;
+    const slice = filterCyclingInfrastructureForIssy(
+      cyclingInfrastructureData,
+      selectedPilotId,
+      true
+    );
+    return {
+      ...cyclingInfrastructureData,
+      results: slice.results,
+      total_count: slice.total_count,
+    };
+  }, [cyclingInfrastructureData, issyJunctionStudy, selectedPilotId]);
+
+  const issyFacilityLayerStatus = useMemo(() => {
+    if (!isIssyCity(currentCity || "") || selectedKpi !== "kpi3.1") return null;
+    const slice = filterCyclingInfrastructureForIssy(
+      cyclingInfrastructureData,
+      selectedPilotId,
+      issyJunctionStudy
+    );
+    const { lines, points } = countIssyFacilityRenderables(slice.results);
+    let statusMessage = "";
+    if (isLoadingCyclingInfra) {
+      statusMessage = "Loading bundled cycling infrastructure snapshot…";
+    } else if (slice.apiTotal === 0) {
+      statusMessage = "Bundled snapshot contains no facility records for Issy-les-Moulineaux.";
+    } else if (slice.results.length === 0) {
+      statusMessage = `All ${slice.apiTotal} API records fall outside the ${slice.clipLabel}. Try Pilot 2 (Intermodal) for city-wide corridors.`;
+    } else {
+      statusMessage = `${lines} corridor${lines === 1 ? "" : "s"}, ${points} node${points === 1 ? "" : "s"} within ${slice.clipLabel}.`;
+    }
+    return {
+      apiTotal: slice.apiTotal,
+      visibleLines: lines,
+      visiblePoints: points,
+      clipLabel: slice.clipLabel,
+      statusMessage,
+      loading: isLoadingCyclingInfra,
+      isEmpty: !isLoadingCyclingInfra && lines + points === 0,
+    };
+  }, [
+    currentCity,
+    selectedKpi,
+    cyclingInfrastructureData,
+    selectedPilotId,
+    issyJunctionStudy,
+    isLoadingCyclingInfra,
+  ]);
 
   const { data: localCityPoints } = useLocalCityData(
     currentCity || "",
@@ -375,10 +468,30 @@ const HeroMap = ({
     staleTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
+  const { data: trikalaLocationsBundle } = useQuery({
+    queryKey: ["trikala-locations-bundle"],
+    queryFn: loadTrikalaLocationsBundle,
+    enabled: isTrikalaCity,
+    staleTime: 60 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+  const trikalaInfrastructureLocations = useMemo(() => {
+    const byKpi = filterTrikalaLocationsByKpi(
+      trikalaLocationsBundle?.locations ?? [],
+      selectedKpi
+    );
+    return filterTrikalaLocationsByPilot(byKpi, selectedPilotId);
+  }, [trikalaLocationsBundle?.locations, selectedKpi, selectedPilotId]);
   const { data: issyFlows } = useIssyFlowData(
     issyFlowDayCategory,
     !!currentCity && isIssyCity(currentCity) && selectedKpi === "kpi1.2"
   );
+  const issyWorkbooksEnabled = !!currentCity && isIssyCity(currentCity);
+  const { classeur: issyClasseurQuery, wintics: issyWinticsQuery } = useIssyWorkbooks(
+    issyWorkbooksEnabled
+  );
+  const issyClasseur = issyClasseurQuery.data ?? null;
+  const issyWintics = issyWinticsQuery.data ?? null;
   const milanPilotId: "mil-p1" | "mil-p2" | "mil-p3" =
     selectedPilotId === "mil-p1" || selectedPilotId === "mil-p2" || selectedPilotId === "mil-p3"
       ? selectedPilotId
@@ -537,6 +650,9 @@ const HeroMap = ({
   // Add city boundary polygon
   const addCityBoundary = useCallback((cityData: { lat: number; lon: number; city: string }) => {
     if (!mapRef.current || cityBoundaryRef.current) return;
+    const isCopenhagenPilot =
+      cityData.city.toLowerCase().includes("copenhagen") && selectedPilotId?.startsWith("cph-");
+    if (isCopenhagenPilot) return;
 
     // Create a simple rectangular boundary around the city center
     // For a more accurate boundary, you would use Overpass API or GeoJSON data
@@ -563,7 +679,7 @@ const HeroMap = ({
         <p style="font-size: 12px; font-weight: 600; color: #2F1B6D; margin: 0;">${cityData.city} Boundary</p>
       </div>
     `);
-  }, []);
+  }, [selectedPilotId]);
 
   const getValueColor = (value: number, isGradient: boolean = false, infrastructureType?: string) => {
     // Special color scheme for cycling infrastructure (KPI3.1)
@@ -699,17 +815,20 @@ const HeroMap = ({
         return;
       }
 
-      // Add city boundary
-      addCityBoundary(cityData);
+      // Add city boundary (skip for Trikala survey/infrastructure canvas)
+      if (!suppressMapSpatialLayers) {
+        addCityBoundary(cityData);
+      }
 
       if (suppressMapSpatialLayers) {
-        const anchorLat = cityData.lat;
-        const anchorLon = cityData.lon;
+        const anchor = getTrikalaPilotAnchor(selectedPilotId);
         renderTrikalaMapLayers({
           map: mapRef.current!,
-          anchor: { lat: anchorLat, lng: anchorLon },
+          anchor,
+          selectedPilotId,
           records: filterPointsInPilotZone(localCityPoints ?? [], cityName, selectedPilotId),
           segmentInsights: trikalaSegmentInsights,
+          infrastructureLocations: trikalaInfrastructureLocations,
           selectedKpi,
           scenario,
           selectedSegmentId: activeMapSegmentId,
@@ -719,6 +838,7 @@ const HeroMap = ({
           markersOut: markersRef.current,
           circlesOut: circlesRef.current,
           polylinesOut: polylinesRef.current,
+          polygonsOut: polygonsRef.current,
           wireCircleMarker: wireCircleMarkerSegment,
         });
         return;
@@ -738,7 +858,7 @@ const HeroMap = ({
         renderInfluenceField(mapRef.current, circlesRef.current, {
           center: [ISSY_P2_JUNCTION.lat, ISSY_P2_JUNCTION.lon],
           radiusMeters: ISSY_P2_JUNCTION.radiusMeters,
-          flagship: selectedPilotId === "issy-p2" || selectedPilotId === "issy-p3",
+          flagship: selectedPilotId === "issy-p1" || selectedPilotId === "issy-p3",
         });
       };
       const kpiDefinition = getKpiDefinition(selectedKpi);
@@ -823,7 +943,8 @@ const HeroMap = ({
               junctionTrafficRows,
               emitJunctionObservatory,
               ll.lat,
-              ll.lng
+              ll.lng,
+              segmentHandlers
             );
           }
           for (const layer of issyLayerRefs.polygons) {
@@ -834,7 +955,8 @@ const HeroMap = ({
               junctionTrafficRows,
               emitJunctionObservatory,
               center.lat,
-              center.lng
+              center.lng,
+              segmentHandlers
             );
           }
         };
@@ -847,18 +969,24 @@ const HeroMap = ({
             kpi32Year: kpi32SelectedYear,
             filterRange,
             scenario,
+            segmentHandlers,
+            selectedSegmentId: selectedJunctionSegmentId,
+            classeur: issyClasseur,
           });
-          addIssyInfluenceField();
-          wireJunctionFeatureClicks();
-          addInterventionLayer(cityData, showInterventionLayer, true);
           return;
         }
 
-        if (selectedKpi === "kpi3.1" && cyclingInfrastructureForMap?.results?.length) {
-          renderIssyFacilityPoints(mapRef.current!, cyclingInfrastructureForMap.results, issyLayerRefs, {
-            filterRange,
-            categoryFocus: infrastructureCategoryFocus,
-          });
+        if (selectedKpi === "kpi3.1") {
+          renderIssyFacilityLayers(
+            mapRef.current!,
+            cyclingInfrastructureForMap?.results ?? [],
+            issyLayerRefs,
+            {
+              filterRange,
+              categoryFocus: infrastructureCategoryFocus,
+              segmentHandlers,
+            }
+          );
           addIssyInfluenceField();
           wireJunctionFeatureClicks();
           addInterventionLayer(cityData, showInterventionLayer, true);
@@ -866,9 +994,18 @@ const HeroMap = ({
         }
 
         if (selectedKpi === "kpi4.1") {
+          const issySentimentMock = getIssySentimentMock(selectedPilotId);
           renderIssySentimentField(mapRef.current!, cityData, issyLayerRefs, {
-            localPoints: localCityPoints?.map((p) => ({ lat: p.lat, lon: p.lon, value: p.value })),
+            localPoints: localCityPoints?.map((p) => ({
+              lat: p.lat,
+              lon: p.lon,
+              value: p.value,
+              id: p.id,
+            })),
             filterRange,
+            segmentHandlers,
+            selectedSegmentId: selectedJunctionSegmentId,
+            mockProfile: issySentimentMock,
           });
           addIssyInfluenceField();
           wireJunctionFeatureClicks();
@@ -877,13 +1014,19 @@ const HeroMap = ({
         }
 
         if (selectedKpi === "kpi4.2") {
+          const issyA11yMock = getIssyAccessibilityMock(selectedPilotId);
           renderIssyAccessibilityField(
             mapRef.current!,
             jLat,
             jLon,
             issyLayerRefs,
-            cityData.kpiData["kpi4.2"]?.mainValue ?? 55,
-            { filterRange }
+            issyA11yMock?.reachScore ?? cityData.kpiData["kpi4.2"]?.mainValue ?? 55,
+            {
+              filterRange,
+              segmentHandlers,
+              selectedSegmentId: selectedJunctionSegmentId,
+              mockProfile: issyA11yMock,
+            }
           );
           addIssyInfluenceField();
           wireJunctionFeatureClicks();
@@ -917,6 +1060,7 @@ const HeroMap = ({
                 scenario,
                 filterRange,
                 onSegmentHover,
+                segmentHandlers,
                 modeAccent:
                   selectedKpi === "kpi1.2"
                     ? resolveJunctionModeAccent(selectedModeTypes)
@@ -1111,6 +1255,28 @@ const HeroMap = ({
           `;
           line.bindPopup(tooltip);
           directionDot.bindPopup(tooltip);
+          if (segmentHandlers) {
+            const flowDetail = {
+              segmentId: `issy-od:${flow.fromZone}->${flow.toZone}:${flow.vehicleCategory}`,
+              segmentName: `Zone ${flow.fromZone} → ${flow.toZone} · ${flow.vehicleCategory}`,
+              speed: null as number | null,
+              congestion: null as number | null,
+            };
+            wirePolylineSegment(line, flowDetail, segmentHandlers, {
+              baseStyle: {
+                color,
+                weight: thickness,
+                opacity: scenario === "comparison" ? Math.min(0.72, 0.42 + thickness * 0.05) : 0.74,
+              },
+              highlightStyle: { weight: thickness + 2.5, opacity: 0.95 },
+              selectedSegmentId: selectedJunctionSegmentId,
+            });
+            wireCircleMarkerSegment(directionDot, flowDetail, segmentHandlers, {
+              baseRadius: Math.max(3, Math.min(7, thickness * 0.55)),
+              highlightRadius: Math.max(5, Math.min(9, thickness * 0.65)),
+              selectedSegmentId: selectedJunctionSegmentId,
+            });
+          }
           polylinesRef.current.push(line);
           circlesRef.current.push(directionDot);
         });
@@ -1122,32 +1288,49 @@ const HeroMap = ({
       if (isIssy && selectedKpi === "kpi3.2") {
         setMilanLayerQa(null);
         renderIssyClimateHexField(mapRef.current!, ISSY_P2_JUNCTION.lat, ISSY_P2_JUNCTION.lon, issyLayerRefs, {
-          rings: 4,
+          rings: 3,
           cellSizeM: 44,
           kpiRow: cityData.kpiData["kpi3.2"],
           kpi32Year: kpi32SelectedYear,
           filterRange,
           scenario,
+          segmentHandlers,
+          selectedSegmentId: selectedJunctionSegmentId,
+          classeur: issyClasseur,
         });
-        addIssyInfluenceField();
         return;
       }
 
-      if (isIssy && selectedKpi === "kpi3.1" && cyclingInfrastructureForMap?.results?.length) {
+      if (isIssy && selectedKpi === "kpi3.1") {
         setMilanLayerQa(null);
-        renderIssyFacilityPoints(mapRef.current!, cyclingInfrastructureForMap.results, issyLayerRefs, {
-          filterRange,
-          categoryFocus: infrastructureCategoryFocus,
-        });
+        renderIssyFacilityLayers(
+          mapRef.current!,
+          cyclingInfrastructureForMap?.results ?? [],
+          issyLayerRefs,
+          {
+            filterRange,
+            categoryFocus: infrastructureCategoryFocus,
+            segmentHandlers,
+          }
+        );
         addIssyInfluenceField();
         return;
       }
 
       if (isIssy && selectedKpi === "kpi4.1") {
         setMilanLayerQa(null);
+        const issySentimentMock = getIssySentimentMock(selectedPilotId);
         renderIssySentimentField(mapRef.current!, cityData, issyLayerRefs, {
-          localPoints: localCityPoints?.map((p) => ({ lat: p.lat, lon: p.lon, value: p.value })),
+          localPoints: localCityPoints?.map((p) => ({
+            lat: p.lat,
+            lon: p.lon,
+            value: p.value,
+            id: p.id,
+          })),
           filterRange,
+          segmentHandlers,
+          selectedSegmentId: selectedJunctionSegmentId,
+          mockProfile: issySentimentMock,
         });
         addIssyInfluenceField();
         return;
@@ -1155,13 +1338,19 @@ const HeroMap = ({
 
       if (isIssy && selectedKpi === "kpi4.2") {
         setMilanLayerQa(null);
+        const issyA11yMock = getIssyAccessibilityMock(selectedPilotId);
         renderIssyAccessibilityField(
           mapRef.current!,
           ISSY_P2_JUNCTION.lat,
           ISSY_P2_JUNCTION.lon,
           issyLayerRefs,
-          cityData.kpiData["kpi4.2"]?.mainValue ?? 55,
-          { filterRange }
+          issyA11yMock?.reachScore ?? cityData.kpiData["kpi4.2"]?.mainValue ?? 55,
+          {
+            filterRange,
+            segmentHandlers,
+            selectedSegmentId: selectedJunctionSegmentId,
+            mockProfile: issyA11yMock,
+          }
         );
         addIssyInfluenceField();
         return;
@@ -1694,6 +1883,244 @@ const HeroMap = ({
         return;
       }
 
+      if (cityName.toLowerCase().includes("copenhagen") && selectedKpi === "kpi1.2") {
+        const countValueBySite = new Map<string, { baseline?: number; intervention?: number; comparison?: number }>();
+        (localCityPoints ?? []).forEach((point) => {
+          const siteName = String(point.properties?.streetName ?? point.properties?.siteName ?? "");
+          const siteKey = resolveCopenhagenSiteKey(siteName);
+          if (!siteKey) return;
+          const existing = countValueBySite.get(siteKey) ?? {};
+          const baseline =
+            typeof point.properties?.baselineValue === "number"
+              ? Number(point.properties.baselineValue)
+              : undefined;
+          const intervention =
+            typeof point.properties?.interventionValue === "number"
+              ? Number(point.properties.interventionValue)
+              : undefined;
+          const comparison =
+            typeof point.properties?.comparisonValue === "number"
+              ? Number(point.properties.comparisonValue)
+              : intervention !== undefined && baseline !== undefined
+                ? intervention - baseline
+                : undefined;
+          countValueBySite.set(siteKey, {
+            baseline: existing.baseline ?? baseline,
+            intervention: existing.intervention ?? intervention,
+            comparison: existing.comparison ?? comparison,
+          });
+        });
+
+        void loadCopenhagenCountSitesGeoJson().then((geojson) => {
+          if (!mapRef.current) return;
+          geojson.features.forEach((feature) => {
+            const coordinates = feature.geometry.coordinates as [number, number];
+            const source = String(feature.properties.source || "manual").toLowerCase();
+            const isOtc = source === "otc";
+            const marker = L.circleMarker([coordinates[1], coordinates[0]], {
+              radius: isOtc ? 8 : 6.5,
+              fillColor: isOtc ? "#00ffff" : "#f59e0b",
+              fillOpacity: isOtc ? 0.86 : 0.74,
+              color: isOtc ? "#cffafe" : "#fde68a",
+              weight: 1.5,
+              opacity: 0.98,
+            }).addTo(mapRef.current!);
+
+            const siteName = String(feature.properties.name ?? "Copenhagen count site");
+            marker.bindTooltip(siteName, {
+              direction: "top",
+              opacity: 1,
+              className: "tri-segment-tooltip",
+            });
+            const siteKey = resolveCopenhagenSiteKey(siteName);
+            const observed = siteKey ? countValueBySite.get(siteKey) : undefined;
+            const observedHtml =
+              observed && (observed.baseline !== undefined || observed.intervention !== undefined)
+                ? `
+                  ${observed.baseline !== undefined ? `<p style="font-size:10px;color:#96C2EF;margin:2px 0;">Baseline: ${observed.baseline.toFixed(1)}%</p>` : ""}
+                  ${observed.intervention !== undefined ? `<p style="font-size:10px;color:#96C2EF;margin:2px 0;">Intervention: ${observed.intervention.toFixed(1)}%</p>` : ""}
+                  ${observed.comparison !== undefined ? `<p style="font-size:10px;color:${observed.comparison >= 0 ? "#22C55E" : "#F97316"};margin:2px 0;">Δ ${observed.comparison >= 0 ? "+" : ""}${observed.comparison.toFixed(1)}%</p>` : ""}
+                `
+                : `<p style="font-size:10px;color:#96C2EF;margin:2px 0;">Monitored location</p>`;
+
+            marker.bindPopup(`
+              <div style="font-family:'DM Sans',sans-serif;padding:8px;min-width:180px;">
+                <p style="font-size:10px;color:#8578C3;margin:0 0 4px 0;text-transform:uppercase;">Copenhagen count site</p>
+                <p style="font-size:14px;font-weight:700;color:#2F1B6D;margin:0 0 6px 0;">${siteName}</p>
+                <p style="font-size:10px;color:#96C2EF;margin:0 0 4px 0;">Source: ${isOtc ? "OpenTrafficCam" : "Manual counting"}</p>
+                ${observedHtml}
+              </div>
+            `);
+            circlesRef.current.push(marker);
+          });
+        });
+        addInterventionLayer(cityData, showInterventionLayer);
+        return;
+      }
+
+      if (cityName.toLowerCase().includes("helsinki") && selectedKpi === "kpi2.1") {
+        void Promise.all([
+          loadHelsinkiDangerousLocationsGeoJson(),
+          loadHelsinkiInterventionLocationsGeoJson(),
+        ]).then(([dangerousGeoJson, interventionGeoJson]) => {
+          if (!mapRef.current) return;
+          const hazardCount = Math.max(1, dangerousGeoJson.features.length);
+          dangerousGeoJson.features.forEach((feature, index) => {
+            const coordinates = feature.geometry.coordinates as [number, number];
+            const percentile = index / hazardCount;
+            const marker = L.circleMarker([coordinates[1], coordinates[0]], {
+              radius: 2 + percentile * 4.2,
+              fillColor: "#7c3aed",
+              fillOpacity: 0.08 + percentile * 0.22,
+              color: "#a78bfa",
+              weight: 0.5,
+              opacity: 0.32,
+            }).addTo(mapRef.current!);
+            circlesRef.current.push(marker);
+          });
+
+          const interventionLayer = L.geoJSON(interventionGeoJson as GeoJSON.GeoJsonObject, {
+            style: () => ({
+              color: "#22c55e",
+              weight: 2,
+              opacity: 0.78,
+              fillColor: "#16a34a",
+              fillOpacity: 0.12,
+            }),
+            onEachFeature: (feature, layerItem) => {
+              const areaName = String(
+                feature?.properties?.name ??
+                  feature?.properties?.Name ??
+                  feature?.properties?.pilot ??
+                  "Helsinki intervention area"
+              );
+              layerItem.bindPopup(`
+                <div style="font-family:'DM Sans',sans-serif;padding:8px;min-width:180px;">
+                  <p style="font-size:10px;color:#8578C3;margin:0 0 4px 0;text-transform:uppercase;">Helsinki intervention area</p>
+                  <p style="font-size:14px;font-weight:700;color:#2F1B6D;margin:0 0 6px 0;">${areaName}</p>
+                  <p style="font-size:10px;color:#96C2EF;margin:0;">Source: Helsinki intervention locations GPKG</p>
+                </div>
+              `);
+              if (segmentInteractionEnabled && layerItem instanceof L.Polygon) {
+                wirePolygonSegment(
+                  layerItem,
+                  {
+                    segmentId: `hel-area:${areaName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+                    segmentName: areaName,
+                    speed: null,
+                    congestion: null,
+                  },
+                  segmentHandlers,
+                  {
+                    selectedSegmentId: activeMapSegmentId,
+                    baseStyle: {
+                      color: "#22c55e",
+                      weight: 2,
+                      opacity: 0.78,
+                      fillColor: "#16a34a",
+                      fillOpacity: 0.12,
+                    },
+                  }
+                );
+              }
+            },
+          }).addTo(mapRef.current!);
+          if (interventionLayer instanceof L.LayerGroup) {
+            interventionLayer.eachLayer((member) => {
+              if (member instanceof L.Polygon) polygonsRef.current.push(member);
+            });
+          }
+
+          const viikki = L.circleMarker([60.224599, 25.017236], {
+            radius: selectedPilotId === "hel-p3" ? 12 : 10,
+            fillColor: "#2ecc71",
+            fillOpacity: 0.92,
+            color: "#dcfce7",
+            weight: 2.5,
+            opacity: 1,
+          }).addTo(mapRef.current!);
+          viikki.bindPopup(`
+            <div style="font-family:'DM Sans',sans-serif;padding:8px;min-width:180px;">
+              <p style="font-size:10px;color:#8578C3;margin:0 0 4px 0;text-transform:uppercase;">Viikki anchor</p>
+              <p style="font-size:14px;font-weight:700;color:#2F1B6D;margin:0 0 6px 0;">Intersection safety at Viikki</p>
+              <p style="font-size:10px;color:#96C2EF;margin:0;">Dangerous locations loaded: ${dangerousGeoJson.features.length}</p>
+              <p style="font-size:10px;color:#96C2EF;margin:2px 0 0 0;">Intervention markers loaded: ${interventionGeoJson.features.length}</p>
+            </div>
+          `);
+          circlesRef.current.push(viikki);
+        });
+        addInterventionLayer(cityData, showInterventionLayer);
+        return;
+      }
+
+      if (cityName.toLowerCase().includes("zaragoza")) {
+        void loadZaragozaInterventionAreasGeoJson().then((geojson) => {
+          if (!mapRef.current) return;
+          const layer = L.geoJSON(geojson as GeoJSON.GeoJsonObject, {
+            style: (feature) => {
+              const pilotId = String(feature?.properties?.pilotId ?? "");
+              const isActive = !!selectedPilotId && pilotId === selectedPilotId;
+              return {
+                color: isActive ? "#2ecc71" : "#64748b",
+                weight: isActive ? 4 : 1.8,
+                opacity: isActive ? 0.98 : 0.72,
+                fillColor: isActive ? "#22c55e" : "#334155",
+                fillOpacity: isActive ? 0.24 : 0.08,
+              };
+            },
+            onEachFeature: (feature, layerItem) => {
+              const pilotId = String(feature.properties?.pilotId ?? "zaragoza-area");
+              const isActive = !!selectedPilotId && pilotId === selectedPilotId;
+              layerItem.bindPopup(`
+                <div style="font-family:'DM Sans',sans-serif;padding:8px;min-width:170px;">
+                  <p style="font-size:10px;color:#8578C3;margin:0 0 4px 0;text-transform:uppercase;">Zaragoza intervention area</p>
+                  <p style="font-size:14px;font-weight:700;color:#2F1B6D;margin:0 0 6px 0;">${pilotId.toUpperCase()}</p>
+                  <p style="font-size:10px;color:#96C2EF;margin:0;">${isActive ? "Active pilot highlight" : "Contextual outline"}</p>
+                </div>
+              `);
+              if (layerItem instanceof L.Polygon) {
+                if (segmentInteractionEnabled) {
+                  wirePolygonSegment(
+                    layerItem,
+                    {
+                      segmentId: pilotId,
+                      segmentName: `Zaragoza ${pilotId.toUpperCase()} intervention area`,
+                      speed: null,
+                      congestion: null,
+                    },
+                    segmentHandlers,
+                    {
+                      baseStyle: {
+                        color: isActive ? "#2ecc71" : "#64748b",
+                        weight: isActive ? 4 : 1.8,
+                        opacity: isActive ? 0.98 : 0.72,
+                        fillColor: isActive ? "#22c55e" : "#334155",
+                        fillOpacity: isActive ? 0.24 : 0.08,
+                      },
+                      highlightStyle: {
+                        weight: 5,
+                        opacity: 1,
+                        fillOpacity: isActive ? 0.32 : 0.2,
+                      },
+                      selectedSegmentId: activeMapSegmentId,
+                    }
+                  );
+                }
+                polygonsRef.current.push(layerItem);
+              }
+            },
+          }).addTo(mapRef.current);
+          if (layer instanceof L.LayerGroup) {
+            layer.eachLayer((member) => {
+              if (member instanceof L.Polygon && !polygonsRef.current.includes(member)) {
+                polygonsRef.current.push(member);
+              }
+            });
+          }
+        });
+        addInterventionLayer(cityData, showInterventionLayer);
+      }
+
       // Road safety is best represented as clustered hotspots with drill-in zoom.
       // Issy normally expects segment geometry from the traffic API; when it is empty, hotspots + scaled grid fallback read as real "data" rather than an empty map.
       if (
@@ -1959,15 +2386,18 @@ const HeroMap = ({
           // For cycling infrastructure, use a border to make points stand out
           const borderColor = selectedKpi === "kpi3.1" ? "#FFFFFF" : color;
           const borderWidth = selectedKpi === "kpi3.1" ? 1.5 : 2;
-
-          const circle = L.circleMarker([point.lat, point.lon], {
-            radius: size,
-            fillColor: color,
-            fillOpacity: opacity,
-            color: borderColor,
-            weight: borderWidth,
-            opacity: 0.9,
-          }).addTo(mapRef.current!);
+          const iconSpec = resolveMapPointIconSpec({
+            facilityCategory: props.facilityCategory ?? props.type_amgt_cycl,
+            category: props.category,
+            datasetKind: props.datasetKind,
+            type: props.type_amgt_cycl,
+            kind: props.kind,
+          });
+          const useNeonBadge =
+            selectedKpi === "kpi3.1" ||
+            iconSpec.key !== "generic" ||
+            !!props.dataOrigin ||
+            isIssy;
 
           const dataType = selectedKpi === "kpi1.2" ? "Bicycle Count" : 
                           selectedKpi === "kpi3.1" ? "Cycling Infrastructure" : 
@@ -2012,7 +2442,7 @@ const HeroMap = ({
               ${isCph ? cphHeader : `
               <p style="font-size: 11px; color: #8578C3; margin: 0 0 4px 0; text-transform: uppercase;">${dataType}</p>
               ${selectedKpi === "kpi3.1" && props.type_amgt_cycl ? (
-                `<p style="font-size: 18px; font-weight: bold; color: #2F1B6D; margin: 0 0 6px 0;">${props.type_amgt_cycl}</p>`
+                `<p style="font-size: 18px; font-weight: bold; color: #2F1B6D; margin: 0 0 6px 0;">${props.type_amgt_cycl}</p><p style="font-size: 10px; color: #96C2EF; margin: 0 0 6px 0;">Category: ${iconSpec.label}</p>`
               ) : (
                 `<p style="font-size: 18px; font-weight: bold; color: #2F1B6D; margin: 0 0 6px 0;">${point.value.toFixed(1)}${valueLabel}</p>`
               )}
@@ -2027,7 +2457,7 @@ const HeroMap = ({
                     : point.properties?.dataOrigin === "coverage-fallback"
                       ? "Coverage-expanded from local dataset"
                     : isIssy
-                      ? "Live data"
+                      ? "Bundled SharePoint snapshot"
                       : "Synthetic data"
                 }</p>
                 ${props.spatialNote ? `<p style="font-size: 9px; color: #96C2EF; margin: 2px 0 0 0;">${String(props.spatialNote)}</p>` : ""}
@@ -2036,26 +2466,51 @@ const HeroMap = ({
               </div>
             </div>
           `;
-          
-          circle.bindPopup(popupContent);
-          if (props.dataOrigin === "local-city-dataset" && !isCph) {
-            const segId = String(props.segmentId ?? point.id);
-            const segName = String(
-              props.streetName ?? props.siteId ?? props.localisation ?? "Intervention site"
-            );
-            wireCircleMarkerSegment(
-              circle,
+
+          const segId = String(props.segmentId ?? point.id);
+          const segName = `${iconSpec.label} · ${String(
+            props.streetName ?? props.siteId ?? props.localisation ?? "Intervention site"
+          )}`;
+          const segmentDetail = {
+            segmentId: segId,
+            segmentName: segName,
+            speed: null as number | null,
+            congestion: point.value / 100,
+          };
+
+          if (useNeonBadge && mapRef.current) {
+            const hitRadius = Math.max(10, Math.min(16, 8 + normalizedValue * 8));
+            const { visual, hit } = addNeonPointMarker(
+              mapRef.current,
+              point.lat,
+              point.lon,
+              iconSpec,
+              segmentDetail,
+              segmentInteractionEnabled ? segmentHandlers : undefined,
               {
-                segmentId: segId,
-                segmentName: segName,
-                speed: null,
-                congestion: point.value / 100,
-              },
-              segmentHandlers,
-              { baseRadius: size }
+                title: segName,
+                hitRadius,
+                selectedSegmentId: selectedJunctionSegmentId,
+                popupHtml: popupContent,
+              }
             );
+            markersRef.current.push(visual);
+            circlesRef.current.push(hit);
+          } else {
+            const circle = L.circleMarker([point.lat, point.lon], {
+              radius: size,
+              fillColor: color,
+              fillOpacity: opacity,
+              color: borderColor,
+              weight: borderWidth,
+              opacity: 0.9,
+            }).addTo(mapRef.current!);
+            circle.bindPopup(popupContent);
+            if (segmentInteractionEnabled) {
+              wireCircleMarkerSegment(circle, segmentDetail, segmentHandlers, { baseRadius: size });
+            }
+            circlesRef.current.push(circle);
           }
-          circlesRef.current.push(circle);
         });
       }
       // AREAS VISUALIZATION (Polygons) - for accessibility/catchment/coverage/emissions
@@ -2240,6 +2695,7 @@ const HeroMap = ({
       showInterventionLayer,
       localCityPoints,
       issyFlows,
+      issyClasseur,
       issyFlowDayCategory,
       infrastructureCategoryFocus,
       kpi32SelectedYear,
@@ -2260,6 +2716,7 @@ const HeroMap = ({
       cphParkingGeo,
       cphStreetsGeo,
       trikalaSegmentInsights,
+      trikalaInfrastructureLocations,
     ]
   );
 
@@ -2291,33 +2748,6 @@ const HeroMap = ({
       mapRef.current.setMinZoom(4);
     }
   }, [pilotGeometrySpec?.maxZoom, pilotGeometrySpec?.minZoom, isTrikalaCity]);
-
-  useEffect(() => {
-    if (!mapRef.current || !isTrikalaCity || viewLevel !== "PILOT_DATA") return;
-    const map = mapRef.current;
-    const lockedZoom = trikalaMapZoom();
-    map.scrollWheelZoom.disable();
-    map.doubleClickZoom.disable();
-    map.touchZoom.disable();
-
-    const enforceZoom = () => {
-      if (map.getZoom() !== lockedZoom) {
-        map.setZoom(lockedZoom, { animate: false });
-      }
-    };
-
-    enforceZoom();
-    map.on("zoomend", enforceZoom);
-
-    return () => {
-      map.off("zoomend", enforceZoom);
-      map.scrollWheelZoom.enable();
-      map.doubleClickZoom.enable();
-      map.touchZoom.enable();
-      map.setMinZoom(4);
-      map.setMaxZoom(19);
-    };
-  }, [isTrikalaCity, viewLevel]);
 
   useEffect(() => {
     if (!currentCity || !onDataQualitySummaryChange) return;
@@ -2410,9 +2840,88 @@ const HeroMap = ({
       });
       return;
     }
-    if (currentCity.toLowerCase().includes("issy") && selectedKpi === "kpi1.2" && issyFlows) {
+    if (currentCity.toLowerCase().includes("issy") && selectedKpi === "kpi3.1") {
+      const slice = filterCyclingInfrastructureForIssy(
+        cyclingInfrastructureData,
+        selectedPilotId,
+        issyJunctionStudy
+      );
+      const { lines, points } = countIssyFacilityRenderables(slice.results);
+      const rendered = lines + points;
       onDataQualitySummaryChange({
-        recordsLabel: `${issyFlows.length.toLocaleString()} zone flows`,
+        recordsLabel: isLoadingCyclingInfra
+          ? "Loading live facilities…"
+          : `${slice.apiTotal.toLocaleString()} API · ${rendered.toLocaleString()} on map`,
+        spatialQuality: slice.clipLabel,
+        dataType: "live cycling infrastructure (zero-emission mobility)",
+        temporalCoverage: slice.apiTotal > 0 ? "open-data catalogue" : "unavailable",
+        confidence:
+          isLoadingCyclingInfra || rendered === 0
+            ? "Low"
+            : lines > 0
+              ? "Medium"
+              : "Medium",
+        provenanceType: "observed",
+        geometryLinkage:
+          lines > 0 ? "linestring corridors" : points > 0 ? "facility centroids" : "none in clip",
+        spatialSystemHint: spatialPlan.legendHint,
+      });
+      return;
+    }
+    if (currentCity.toLowerCase().includes("issy") && selectedKpi === "kpi4.1") {
+      const mock = getIssySentimentMock(selectedPilotId);
+      onDataQualitySummaryChange({
+        recordsLabel: mock
+          ? `${mock.samples.length} mock survey samples`
+          : "No GecoAir survey feed",
+        spatialQuality: "junction corridor arms (mode-share segments)",
+        dataType: "mock GecoAir satisfaction placeholder",
+        temporalCoverage: "demo scenario",
+        confidence: "Low",
+        provenanceType: "mock",
+        geometryLinkage: "matched",
+        spatialSystemHint: spatialPlan.legendHint,
+      });
+      return;
+    }
+    if (currentCity.toLowerCase().includes("issy") && selectedKpi === "kpi4.2") {
+      const mock = getIssyAccessibilityMock(selectedPilotId);
+      onDataQualitySummaryChange({
+        recordsLabel: mock
+          ? `${mock.totalFeatures} mock accessibility features`
+          : "No accessibility inventory",
+        spatialQuality: "junction corridor arms (mode-share segments)",
+        dataType: "mock accessibility inventory",
+        temporalCoverage: "demo scenario",
+        confidence: "Low",
+        provenanceType: "mock",
+        geometryLinkage: "matched",
+        spatialSystemHint: spatialPlan.legendHint,
+      });
+      return;
+    }
+    if (currentCity.toLowerCase().includes("issy") && selectedKpi === "kpi3.2") {
+      onDataQualitySummaryChange({
+        recordsLabel: issyClasseur
+          ? `ASIF model · ${Math.round(issyClasseur.totalBaselineCo2G)} g CO₂/h baseline`
+          : "Derived congestion hex field",
+        spatialQuality: "climate hex grid at junction",
+        dataType: issyClasseur ? "modelled ASIF emissions (Classeur.xlsx)" : "derived traffic-pressure proxy",
+        temporalCoverage: issyClasseur ? "Nov 2024 baseline inputs" : "demo scenario",
+        confidence: issyClasseur ? "Medium" : "Low",
+        provenanceType: issyClasseur ? "modelled" : "derived",
+        geometryLinkage: "matched",
+        spatialSystemHint: spatialPlan.legendHint,
+      });
+      return;
+    }
+    if (currentCity.toLowerCase().includes("issy") && selectedKpi === "kpi1.2" && issyFlows) {
+      const winticsNote =
+        selectedPilotId === "issy-p1" && issyWintics
+          ? ` + Wintics site (${issyWintics.overall.modalSharePct.cyclists?.toFixed(1) ?? "?"}% cyclists at camera)`
+          : "";
+      onDataQualitySummaryChange({
+        recordsLabel: `${issyFlows.length.toLocaleString()} zone flows${winticsNote}`,
         spatialQuality: "zone-flow linkage",
         dataType: "observed baseline/post flows",
         temporalCoverage: "before-after",
@@ -2425,14 +2934,23 @@ const HeroMap = ({
     }
     if (currentCity.toLowerCase().includes("trikala")) {
       const total = localCityPoints?.length || 0;
+      const infraCount = trikalaInfrastructureLocations.length;
+      const spatialQuality =
+        infraCount > 0
+          ? `partner GIS (${infraCount} mapped features)`
+          : "inferred pilot anchor (survey aggregates)";
+      const recordsLabel =
+        infraCount > 0
+          ? `${infraCount.toLocaleString()} GIS features · ${total.toLocaleString()} survey aggregates`
+          : `${total.toLocaleString()} survey aggregates`;
       onDataQualitySummaryChange({
-        recordsLabel: `${total.toLocaleString()} survey aggregates`,
-        spatialQuality: "inferred pilot anchor (no intervention geometry)",
-        dataType: "observed survey Likert aggregates",
+        recordsLabel,
+        spatialQuality,
+        dataType: infraCount > 0 ? "observed GIS + survey aggregates" : "observed survey Likert aggregates",
         temporalCoverage: total > 0 ? "before-after" : "unavailable",
-        confidence: total > 0 ? "Medium" : "Low",
+        confidence: infraCount > 0 || total > 0 ? "Medium" : "Low",
         provenanceType: "observed",
-        geometryLinkage: "inferred",
+        geometryLinkage: infraCount > 0 ? "matched" : "inferred",
         spatialSystemHint: spatialPlan.legendHint,
       });
       return;
@@ -2455,11 +2973,16 @@ const HeroMap = ({
     selectedPilotId,
     milanSpeedSegments,
     issyFlows,
+    issyClasseur,
+    issyWintics,
     onDataQualitySummaryChange,
     issyJunctionStudy,
     scenario,
     pilotGeometrySpec,
     runtimeLinkage,
+    cyclingInfrastructureData,
+    isLoadingCyclingInfra,
+    trikalaInfrastructureLocations,
   ]);
 
   const addCityMarkers = useCallback(() => {
@@ -2585,6 +3108,94 @@ const HeroMap = ({
     setTimeout(() => addCityMarkers(), 500);
   }, [clearLayers, addCityMarkers, onCitySelect, onPilotSelect]);
 
+  const autoFitRenderedData = useCallback(() => {
+    if (!mapRef.current) return;
+    const map = mapRef.current;
+    const bounds = L.latLngBounds([]);
+    let hasGeometry = false;
+    const cityCenter = currentCity
+      ? CITY_DATA.find((city) => city.city === currentCity)
+      : undefined;
+    const focusLatLng =
+      selectedPilotMeta?.lat != null && selectedPilotMeta?.lng != null
+        ? L.latLng(selectedPilotMeta.lat, selectedPilotMeta.lng)
+        : cityCenter
+          ? L.latLng(cityCenter.lat, cityCenter.lon)
+          : null;
+    const focusRadiusM =
+      selectedPilotMeta?.scale === "street"
+        ? 7000
+        : selectedPilotMeta?.scale === "district"
+          ? 18000
+          : 45000;
+
+    const extendBounds = (lat: number, lon: number) => {
+      if (focusLatLng) {
+        const candidate = L.latLng(lat, lon);
+        if (focusLatLng.distanceTo(candidate) > focusRadiusM) return;
+      }
+      bounds.extend([lat, lon]);
+      hasGeometry = true;
+    };
+
+    markersRef.current.forEach((marker) => {
+      const latLng = marker.getLatLng?.();
+      if (!latLng) return;
+      extendBounds(latLng.lat, latLng.lng);
+    });
+
+    circlesRef.current.forEach((layer) => {
+      const circleBounds = (layer as L.Circle).getBounds?.();
+      if (circleBounds?.isValid()) {
+        const center = circleBounds.getCenter?.();
+        if (!focusLatLng || (center && focusLatLng.distanceTo(center) <= focusRadiusM)) {
+          bounds.extend(circleBounds.getSouthWest());
+          bounds.extend(circleBounds.getNorthEast());
+          hasGeometry = true;
+        }
+        return;
+      }
+      const latLng = (layer as L.CircleMarker).getLatLng?.();
+      if (latLng) extendBounds(latLng.lat, latLng.lng);
+    });
+
+    polylinesRef.current.forEach((line) => {
+      const lineBounds = line.getBounds?.();
+      if (!lineBounds?.isValid()) return;
+      const center = lineBounds.getCenter?.();
+      if (!focusLatLng || (center && focusLatLng.distanceTo(center) <= focusRadiusM)) {
+        bounds.extend(lineBounds.getSouthWest());
+        bounds.extend(lineBounds.getNorthEast());
+        hasGeometry = true;
+      }
+    });
+
+    polygonsRef.current.forEach((poly) => {
+      const polyBounds = poly.getBounds?.();
+      if (!polyBounds?.isValid()) return;
+      const center = polyBounds.getCenter?.();
+      if (!focusLatLng || (center && focusLatLng.distanceTo(center) <= focusRadiusM)) {
+        bounds.extend(polyBounds.getSouthWest());
+        bounds.extend(polyBounds.getNorthEast());
+        hasGeometry = true;
+      }
+    });
+
+    if (!hasGeometry || !bounds.isValid()) return;
+    map.fitBounds(bounds, {
+      padding: [48, 48],
+      maxZoom: pilotGeometrySpec?.maxZoom ?? 17,
+      animate: true,
+      duration: 0.6,
+    });
+  }, [
+    pilotGeometrySpec?.maxZoom,
+    currentCity,
+    selectedPilotMeta?.lat,
+    selectedPilotMeta?.lng,
+    selectedPilotMeta?.scale,
+  ]);
+
   // Expose reset action to parent (e.g., header logo click)
   useEffect(() => {
     onResetToEuropeReady?.(resetToEurope);
@@ -2679,6 +3290,38 @@ const HeroMap = ({
     selectedModeTypes,
     kpi32SelectedYear,
     infrastructureCategoryFocus,
+    selectedPilotId,
+    scenario,
+    localCityPoints,
+    trikalaInfrastructureLocations,
+    trikalaSegmentInsights,
+    selectedJunctionSegmentId,
+    hoveredJunctionSegmentId,
+  ]);
+
+  useEffect(() => {
+    if (viewLevel !== "PILOT_DATA" || !currentCity || !mapRef.current) return;
+    const timer = window.setTimeout(() => {
+      autoFitRenderedData();
+    }, 220);
+    return () => window.clearTimeout(timer);
+  }, [
+    viewLevel,
+    currentCity,
+    selectedPilotId,
+    selectedKpi,
+    filterRange,
+    selectedModeTypes,
+    scenario,
+    trafficData,
+    bicycleData,
+    cyclingInfrastructureData,
+    localCityPoints,
+    trikalaLocationsBundle,
+    trikalaInfrastructureLocations,
+    kpi32SelectedYear,
+    infrastructureCategoryFocus,
+    autoFitRenderedData,
   ]);
 
   useEffect(() => {
@@ -2767,6 +3410,45 @@ const HeroMap = ({
           <span className="inline-block h-2 w-6 rounded-full ml-1" style={{ background: "#8578C3" }} />
           <span>Other direction</span>
           <span className="text-white/50 hidden sm:inline">— thickness = magnitude of difference</span>
+        </div>
+      )}
+
+      {currentCity?.toLowerCase().includes("issy") &&
+        viewLevel === "PILOT_DATA" &&
+        selectedKpi === "kpi3.1" &&
+        issyFacilityLayerStatus && (
+        <div className="pointer-events-none absolute bottom-6 right-6 z-30 w-[300px] rounded-xl border border-white/25 bg-black/35 backdrop-blur-xl p-3 text-[11px] text-white">
+          <p className="font-semibold text-violet mb-2">Zero-emission facilities (KPI 3.1)</p>
+          <div className="space-y-1.5 mb-3">
+            <div className="flex items-center gap-2">
+              <span
+                className="inline-block h-1 w-10 rounded-full shadow-[0_0_8px_rgba(46,204,113,0.55)]"
+                style={{ backgroundColor: "#2ecc71" }}
+              />
+              <span>Cycling corridor (dual-pass track)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span
+                className="inline-block h-2.5 w-2.5 rounded-full border-2 border-white shadow-[0_0_10px_rgba(0,255,255,0.65)]"
+                style={{ backgroundColor: "#00ffff" }}
+              />
+              <span>Parking / hub node</span>
+            </div>
+          </div>
+          <div
+            className={`border-t border-white/20 pt-2 space-y-1 text-[10px] ${
+              issyFacilityLayerStatus.isEmpty ? "text-amber-200" : "text-white/90"
+            }`}
+          >
+            <p className="font-semibold text-violet">Live facility layer</p>
+            <p>Spatial boundary: {issyFacilityLayerStatus.clipLabel}</p>
+            <p>API records: {issyFacilityLayerStatus.apiTotal}</p>
+            <p>
+              Rendered: {issyFacilityLayerStatus.visibleLines} corridors ·{" "}
+              {issyFacilityLayerStatus.visiblePoints} nodes
+            </p>
+            <p>{issyFacilityLayerStatus.statusMessage}</p>
+          </div>
         </div>
       )}
 

@@ -20,8 +20,8 @@ export const ISSY_PILOT_PROFILES: Record<IssyPilotId, IssyPilotProfile> = {
     defaultKpi: "kpi2.1",
     primaryRenderer: "issy-junction-arms",
     heroCopy:
-      "Interactive pavement markings for cyclist visibility — the monitored intervention corridor shows observed traficissy segment context; KPI 1.2 mode share uses zone-to-zone OD CSV in city view.",
-    legendSubtitle: "Pilot 1 — luminous markings",
+      "Wintics camera corridor at Pont d'Issy (ISSY1) — zone-to-zone OD CSV powers KPI 1.2 in city view; traficissy segment context frames the monitored intervention corridor.",
+    legendSubtitle: "Pilot 1 — luminous markings (flagship)",
     schoolRadiusM: 450,
   },
   "issy-p2": {
@@ -30,8 +30,8 @@ export const ISSY_PILOT_PROFILES: Record<IssyPilotId, IssyPilotProfile> = {
     defaultKpi: "kpi1.2",
     primaryRenderer: "issy-junction-arms",
     heroCopy:
-      "Mobility observatory at the study junction — OD flow arcs in city view; the monitored intervention corridor shows observed segment traffic, not per-street mode-share measurement.",
-    legendSubtitle: "Pilot 2 — mobility observatory (flagship)",
+      "Mobility observatory platform — city-wide monitoring canvas with traficissy segment traffic context; KPI 1.2 aggregates at city scope when OD feeds are linked.",
+    legendSubtitle: "Pilot 2 — mobility observatory",
   },
   "issy-p3": {
     id: "issy-p3",

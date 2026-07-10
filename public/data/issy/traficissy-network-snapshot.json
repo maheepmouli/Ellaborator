@@ -1,0 +1,349 @@
+﻿{
+    "total_count":  8,
+    "results":  [
+                    {
+                        "id":  "#ILM_92130_1558",
+                        "segment":  "Bd Galieni vers Clamart",
+                        "type":  "Radial",
+                        "noeud_amont":  "3B Boulevard Gallieni, 92130 Issy-les-Moulineaux, France",
+                        "noeud_aval":  "114 Boulevard Gallieni",
+                        "geo_shape":  {
+                                          "type":  "Feature",
+                                          "geometry":  {
+                                                           "coordinates":  [
+                                                                               [
+                                                                                   2.2670208368952727,
+                                                                                   48.83365591874348
+                                                                               ],
+                                                                               [
+                                                                                   2.2679413712257146,
+                                                                                   48.822902169364134
+                                                                               ]
+                                                                           ],
+                                                           "type":  "LineString"
+                                                       },
+                                          "properties":  {
+
+                                                         }
+                                      },
+                        "date_et_heure_de_comptage_utc":  "2026-02-27T23:00:00+00:00",
+                        "distance_metres":  1223,
+                        "vitesse_km_h":  21.17,
+                        "temps_perdu_secondes":  0.0264525271610694,
+                        "indice_de_congestion":  0.0,
+                        "geo_point_2d":  {
+                                             "lon":  2.2674811040604936,
+                                             "lat":  48.82827904405381
+                                         }
+                    },
+                    {
+                        "id":  "#ILM_92130_5416",
+                        "segment":  "Quai d\u0027Issy vers Paris",
+                        "type":  "Radial",
+                        "noeud_amont":  "255 Quai de Stalingrad, 92130 Issy-les-Moulineaux, France",
+                        "noeud_aval":  "23 Quai d\u0027Issy-les-Moulineaux, 75015 Paris, France",
+                        "geo_shape":  {
+                                          "type":  "Feature",
+                                          "geometry":  {
+                                                           "coordinates":  [
+                                                                               [
+                                                                                   2.250940383815969,
+                                                                                   48.821896928458614
+                                                                               ],
+                                                                               [
+                                                                                   2.256515622138977,
+                                                                                   48.82412626999886
+                                                                               ],
+                                                                               [
+                                                                                   2.260347427142153,
+                                                                                   48.8272983906922
+                                                                               ],
+                                                                               [
+                                                                                   2.2615018496402284,
+                                                                                   48.83067586238169
+                                                                               ],
+                                                                               [
+                                                                                   2.265975771003008,
+                                                                                   48.835112421761416
+                                                                               ]
+                                                                           ],
+                                                           "type":  "LineString"
+                                                       },
+                                          "properties":  {
+
+                                                         }
+                                      },
+                        "date_et_heure_de_comptage_utc":  "2026-02-27T23:00:00+00:00",
+                        "distance_metres":  5374,
+                        "vitesse_km_h":  29.4,
+                        "temps_perdu_secondes":  -0.0204081632653015,
+                        "indice_de_congestion":  0.0,
+                        "geo_point_2d":  {
+                                             "lon":  2.2591076472154206,
+                                             "lat":  48.827665572711844
+                                         }
+                    },
+                    {
+                        "id":  "#ILM_92130_7789",
+                        "segment":  "Rue E Renan vers Clamart",
+                        "type":  "Radial",
+                        "noeud_amont":  "52 Rue d\u0027Oradour-sur-Glane, 75015 Paris, France",
+                        "noeud_aval":  "33 D71, 92130 Issy-les-Moulineaux, France",
+                        "geo_shape":  {
+                                          "type":  "Feature",
+                                          "geometry":  {
+                                                           "coordinates":  [
+                                                                               [
+                                                                                   2.284659039448189,
+                                                                                   48.83028288413174
+                                                                               ],
+                                                                               [
+                                                                                   2.279251707383838,
+                                                                                   48.82694211406163
+                                                                               ],
+                                                                               [
+                                                                                   2.281727923270256,
+                                                                                   48.824934719681025
+                                                                               ],
+                                                                               [
+                                                                                   2.2823846788531332,
+                                                                                   48.82281252412597
+                                                                               ],
+                                                                               [
+                                                                                   2.280878199978207,
+                                                                                   48.8209352305119
+                                                                               ]
+                                                                           ],
+                                                           "type":  "LineString"
+                                                       },
+                                          "properties":  {
+
+                                                         }
+                                      },
+                        "date_et_heure_de_comptage_utc":  "2026-02-27T23:00:00+00:00",
+                        "distance_metres":  509,
+                        "vitesse_km_h":  20.14,
+                        "temps_perdu_secondes":  0.0168818272095308,
+                        "indice_de_congestion":  0.0,
+                        "geo_point_2d":  {
+                                             "lon":  2.2815865388834364,
+                                             "lat":  48.826123736256804
+                                         }
+                    },
+                    {
+                        "id":  "#ILM_92130_7507",
+                        "segment":  "Bd Galieni vers Paris",
+                        "type":  "Radial",
+                        "noeud_amont":  "114 Boulevard Gallieni",
+                        "noeud_aval":  "3B Boulevard Gallieni, 92130 Issy-les-Moulineaux, France",
+                        "geo_shape":  {
+                                          "type":  "Feature",
+                                          "geometry":  {
+                                                           "coordinates":  [
+                                                                               [
+                                                                                   2.2679413712257146,
+                                                                                   48.822902169364134
+                                                                               ],
+                                                                               [
+                                                                                   2.2670208368952727,
+                                                                                   48.83365591874348
+                                                                               ]
+                                                                           ],
+                                                           "type":  "LineString"
+                                                       },
+                                          "properties":  {
+
+                                                         }
+                                      },
+                        "date_et_heure_de_comptage_utc":  "2026-02-27T23:00:00+00:00",
+                        "distance_metres":  1254,
+                        "vitesse_km_h":  20.15,
+                        "temps_perdu_secondes":  4.0,
+                        "indice_de_congestion":  0.018362282878412,
+                        "geo_point_2d":  {
+                                             "lon":  2.2674811040604936,
+                                             "lat":  48.82827904405381
+                                         }
+                    },
+                    {
+                        "id":  "#ILM_92130_4534",
+                        "segment":  "Bd Frères Voisins vers Boulogne",
+                        "type":  "Tangentiel",
+                        "noeud_amont":  "40 Boulevard du Lycée, 92170 Vanves, France",
+                        "noeud_aval":  "D50, 92100 Boulogne-Billancourt, France",
+                        "geo_shape":  {
+                                          "type":  "Feature",
+                                          "geometry":  {
+                                                           "coordinates":  [
+                                                                               [
+                                                                                   2.2815704707744544,
+                                                                                   48.82499642818823
+                                                                               ],
+                                                                               [
+                                                                                   2.279053756053031,
+                                                                                   48.8270548511908
+                                                                               ],
+                                                                               [
+                                                                                   2.273910594361177,
+                                                                                   48.82792860808336
+                                                                               ],
+                                                                               [
+                                                                                   2.2675352792310832,
+                                                                                   48.827775288541716
+                                                                               ],
+                                                                               [
+                                                                                   2.2579166440879517,
+                                                                                   48.83088842748948
+                                                                               ]
+                                                                           ],
+                                                           "type":  "LineString"
+                                                       },
+                                          "properties":  {
+
+                                                         }
+                                      },
+                        "date_et_heure_de_comptage_utc":  "2026-02-27T23:00:00+00:00",
+                        "distance_metres":  3714,
+                        "vitesse_km_h":  21.71,
+                        "temps_perdu_secondes":  0.0681713496085194,
+                        "indice_de_congestion":  0.0,
+                        "geo_point_2d":  {
+                                             "lon":  2.2699364836068185,
+                                             "lat":  48.828138246569985
+                                         }
+                    },
+                    {
+                        "id":  "#ILM_92130_4513",
+                        "segment":  "Rue Diderot vers Paris",
+                        "type":  "Radial",
+                        "noeud_amont":  "56 Rue de l\u0027Abbé Grégoire, 92130 Issy-les-Moulineaux, France",
+                        "noeud_aval":  "Porte d\u0027Issy, 92130 Issy-les-Moulineaux, France",
+                        "geo_shape":  {
+                                          "type":  "Feature",
+                                          "geometry":  {
+                                                           "coordinates":  [
+                                                                               [
+                                                                                   2.2736746661138385,
+                                                                                   48.82258448599355
+                                                                               ],
+                                                                               [
+                                                                                   2.2710986159280733,
+                                                                                   48.82660398722493
+                                                                               ],
+                                                                               [
+                                                                                   2.2803880722390124,
+                                                                                   48.83194836566141
+                                                                               ]
+                                                                           ],
+                                                           "type":  "LineString"
+                                                       },
+                                          "properties":  {
+
+                                                         }
+                                      },
+                        "date_et_heure_de_comptage_utc":  "2026-02-27T23:00:00+00:00",
+                        "distance_metres":  485,
+                        "vitesse_km_h":  17.82,
+                        "temps_perdu_secondes":  0.020202020202035,
+                        "indice_de_congestion":  0.0,
+                        "geo_point_2d":  {
+                                             "lon":  2.2747088648439986,
+                                             "lat":  48.82783328159406
+                                         }
+                    },
+                    {
+                        "id":  "#ILM_92130_5968",
+                        "segment":  "Quai d\u0027Issy vers Clamart",
+                        "type":  "Radial",
+                        "noeud_amont":  "37-45 Quai du Président Roosevelt, 75015 Issy-les-Moulineaux, France",
+                        "noeud_aval":  "L\u0027Autopont D\u0027Issy Les Moulineaux, 257 Place de la Résistance, 92130 Issy-les-Moulineaux, France",
+                        "geo_shape":  {
+                                          "type":  "Feature",
+                                          "geometry":  {
+                                                           "coordinates":  [
+                                                                               [
+                                                                                   2.265975771003008,
+                                                                                   48.835112421761416
+                                                                               ],
+                                                                               [
+                                                                                   2.2615018496402284,
+                                                                                   48.83067586238169
+                                                                               ],
+                                                                               [
+                                                                                   2.260347427142153,
+                                                                                   48.8272983906922
+                                                                               ],
+                                                                               [
+                                                                                   2.256515622138977,
+                                                                                   48.82412626999886
+                                                                               ],
+                                                                               [
+                                                                                   2.250940383815969,
+                                                                                   48.821896928458614
+                                                                               ]
+                                                                           ],
+                                                           "type":  "LineString"
+                                                       },
+                                          "properties":  {
+
+                                                         }
+                                      },
+                        "date_et_heure_de_comptage_utc":  "2026-02-27T23:00:00+00:00",
+                        "distance_metres":  5352,
+                        "vitesse_km_h":  28.09,
+                        "temps_perdu_secondes":  14.9918283963228,
+                        "indice_de_congestion":  0.0455678177287291,
+                        "geo_point_2d":  {
+                                             "lon":  2.2591076472154206,
+                                             "lat":  48.827665572711844
+                                         }
+                    },
+                    {
+                        "id":  "#ILM_92130_6148",
+                        "segment":  "Bd Frères Voisins vers Vanves",
+                        "type":  "Tangentiel",
+                        "noeud_amont":  "Quai du Point du Jour, 92100 Boulogne-Billancourt, France",
+                        "noeud_aval":  "47 Boulevard du Lycée, 92170 Vanves, France",
+                        "geo_shape":  {
+                                          "type":  "Feature",
+                                          "geometry":  {
+                                                           "coordinates":  [
+                                                                               [
+                                                                                   2.2579166440879517,
+                                                                                   48.83088842748948
+                                                                               ],
+                                                                               [
+                                                                                   2.2675352792310832,
+                                                                                   48.827775288541716
+                                                                               ],
+                                                                               [
+                                                                                   2.273910594361177,
+                                                                                   48.82792860808336
+                                                                               ],
+                                                                               [
+                                                                                   2.279053756053031,
+                                                                                   48.8270548511908
+                                                                               ],
+                                                                               [
+                                                                                   2.2815704707744544,
+                                                                                   48.82499642818823
+                                                                               ]
+                                                                           ],
+                                                           "type":  "LineString"
+                                                       },
+                                          "properties":  {
+
+                                                         }
+                                      },
+                        "date_et_heure_de_comptage_utc":  "2026-02-27T23:00:00+00:00",
+                        "distance_metres":  3752,
+                        "vitesse_km_h":  24.74,
+                        "temps_perdu_secondes":  2.96401439424233,
+                        "indice_de_congestion":  0.0109135004042038,
+                        "geo_point_2d":  {
+                                             "lon":  2.2699364836068177,
+                                             "lat":  48.82813824656998
+                                         }
+                    }
+                ]
+}

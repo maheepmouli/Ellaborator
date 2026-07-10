@@ -18,10 +18,16 @@ export function destinationLatLng(
 }
 
 /** Short EW micro-vector across Asklipiou at the smart-crossing junction anchor. */
-export function buildSmartCrossingPolyline(anchor: {
-  lat: number;
-  lng: number;
-}): [number, number][] {
+export function buildSmartCrossingPolyline(
+  anchor: { lat: number; lng: number },
+  end?: { lat: number; lng: number }
+): [number, number][] {
+  if (end && (Math.abs(end.lat - anchor.lat) > 0.00005 || Math.abs(end.lng - anchor.lng) > 0.00005)) {
+    return [
+      [anchor.lat, anchor.lng],
+      [end.lat, end.lng],
+    ];
+  }
   const west = destinationLatLng(anchor.lat, anchor.lng, ASKLIPIOU_BEARING_DEG + 180, CROSSING_HALF_LENGTH_M);
   const east = destinationLatLng(anchor.lat, anchor.lng, ASKLIPIOU_BEARING_DEG, CROSSING_HALF_LENGTH_M);
   return [west, [anchor.lat, anchor.lng], east];
