@@ -212,21 +212,25 @@ export const PILOT_SCROLL_STORIES: Record<string, PilotScrollStoryStep[]> = {
   ],
   "mil-p3": [
     {
-      id: "m3-lane",
-      eyebrow: "Transit priority pilot",
-      title: "Lanes, signals, and delay",
+      id: "m3-dss",
+      eyebrow: "CDM3 Decision Support System",
+      title: "OSM barriers, walk graph, and DSS evaluation",
       narrative:
-        "Pilot 3 models bus priority reallocations across network links. KPI 1.2 and greenhouse-style indicators still lean on pooled metrics — align claims with corridor-level shapes.",
-      kpiHints: ["kpi1.2", "kpi3.2", "kpi4.1"],
-      spotlight: "Transit reliability stories need corridor context, not just card deltas.",
+        "Pilot 3 implements the CDM3 DSS across West Axis and Olympic Routes — mapping OSM architectural barriers, running pre/post accessibility evaluation, and preparing a planner-facing web interface. Map layers combine the bundled walk_graph with illustrative corridor mock scores until camera-linked evaluation is published.",
+      kpiHints: ["kpi4.2", "kpi2.1", "kpi1.2", "kpi4.1"],
+      spotlight: "Activity 1 mapping + Activity 4 pre/post evaluation drive KPI 4.2 and safety star targets.",
     },
     {
-      id: "m3-next",
-      title: "Operational follow-ups",
+      id: "m3-outcomes",
+      title: "Expected intervention outcomes",
       narrative:
-        "Layer AMAT counting windows with stakeholder operating hours — weekends vs school terms change flows drastically.",
-      bullets: ["Use comparison mode sparingly unless both periods sampled equally.", "Log camera blind spots referenced in DSS metadata."],
-      spotlight: "Check temporal parity before asserting trend direction.",
+        "Targets include higher walking/cycling mode share, ≥3-star corridor safety ratings, improved accessibility for vulnerable users, and a replicable district model aligned with Milan environmental and mobility goals.",
+      bullets: [
+        "Mode share mock: ~25% → ~30% sustainable share across four corridor count sites.",
+        "Safety mock: 3.1 → 3.8 star average along six DSS nodes.",
+        "Accessibility mock: eight OSM-aligned barrier categories with pre/post DSS scores.",
+      ],
+      spotlight: "All mil-p3 demo values are illustrative — tagged MOCK in the data summary panel.",
     },
   ],
   "cph-p1": [

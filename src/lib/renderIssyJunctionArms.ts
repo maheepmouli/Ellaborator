@@ -12,7 +12,7 @@ import {
   getSegmentHighlight,
   segmentMetricKindForKpi,
 } from "@/lib/segmentHighlight";
-import { trimSegmentApproachFromJunction, outerApproachPoint } from "@/lib/junctionArmRendering";
+import { trimSegmentApproachFromJunction } from "@/lib/junctionArmRendering";
 import { createJunctionSampleDotIcon } from "@/lib/junctionSampleMarkers";
 import { junctionArmSeed } from "@/lib/junctionScenarioValues";
 import { issyModeColor } from "@/lib/issyMapRouting";
@@ -34,11 +34,9 @@ import {
 import { provenanceBadgesHtml } from "@/lib/dataProvenance";
 import {
   wireMarkerSegment,
-  wirePolylineSegment,
-  wireCircleMarkerSegment,
   type SegmentInteractionHandlers,
 } from "@/lib/wireMapSegmentInteraction";
-import { renderIssyCameraFovCones } from "@/lib/issyCameraFov";
+import { renderHubRipplePulseOverlay } from "@/lib/copenhagenMapLayers/copenhagenTrafficPulse";
 
 export type JunctionObservatoryClick = (detail: {
   segmentId: string;
@@ -139,8 +137,6 @@ export function renderIssyJunctionArms(
   const span = Math.max(maxScalar - minScalar, 1e-6);
   const rangeLowVal = minScalar + (span * range[0]) / 100;
   const rangeHighVal = minScalar + (span * range[1]) / 100;
-
-  renderIssyCameraFovCones(map, refs.polygons, options.selectedSegmentId);
 
   roadSegments.forEach((segment) => {
     if (!segment.coordinates || segment.coordinates.length < 2) return;
@@ -357,82 +353,6 @@ export function renderIssyJunctionArms(
     wire(hitLine);
 
     refs.polylines.push(glowPass, auraPass, visibleLine, hitLine);
-
-    if (arm) {
-      const hubLat = ISSY_P2_JUNCTION.lat;
-      const hubLon = ISSY_P2_JUNCTION.lon;
-      const outer = outerApproachPoint(segment.coordinates, arm.id);
-      const flowPath: [number, number][] = [
-        [hubLat, hubLon],
-        outer,
-      ];
-      const flowArm = L.polyline(flowPath, {
-        color: isSelected ? "#00ffff" : armAccent,
-        weight: isSelected ? 4.5 : 3,
-        opacity: isSelected ? 0.92 : 0.58,
-        dashArray: scenario === "baseline" ? "7 5" : undefined,
-        lineCap: "round",
-        className: isSelected ? "issy-flow-arm-animated" : undefined,
-        interactive: false,
-      }).addTo(map);
-      refs.polylines.push(flowArm);
-
-      const flowHit = L.polyline(flowPath, {
-        color: "#000000",
-        weight: 16,
-        opacity: 0,
-        lineCap: "round",
-        interactive: true,
-      }).addTo(map);
-      if (options.segmentHandlers) {
-        wirePolylineSegment(
-          flowHit,
-          {
-            segmentId: segment.id,
-            segmentName: `${segmentLabel} · flow arm`,
-            speed,
-            congestion,
-          },
-          options.segmentHandlers,
-          { selectedSegmentId: options.selectedSegmentId }
-        );
-      }
-      flowHit.on("click", onArmClick);
-      refs.polylines.push(flowHit);
-
-      const endpointDetail = {
-        segmentId: `${segment.id}:arm-end`,
-        segmentName: `${segmentLabel} · direction`,
-        speed: speed,
-        congestion: congestion,
-      };
-      const endpointColor = isSelected ? "#00ffff" : armAccent;
-      const endpointMarker = L.circleMarker([outer[0], outer[1]], {
-        radius: isSelected ? 7 : 5.5,
-        fillColor: endpointColor,
-        fillOpacity: 0.88,
-        color: "#E6E8FF",
-        weight: 1.5,
-        interactive: false,
-      }).addTo(map);
-      const endpointHit = L.circleMarker([outer[0], outer[1]], {
-        radius: 12,
-        fillOpacity: 0,
-        opacity: 0,
-        weight: 0,
-        interactive: true,
-      }).addTo(map);
-      if (options.segmentHandlers) {
-        wireCircleMarkerSegment(endpointHit, endpointDetail, options.segmentHandlers, {
-          baseRadius: 12,
-          highlightRadius: 14,
-          selectedSegmentId: options.selectedSegmentId,
-        });
-      }
-      endpointHit.bindTooltip(segmentLabel, { direction: "top", opacity: 0.92 });
-      refs.circles.push(endpointMarker);
-      refs.circles.push(endpointHit);
-    }
   });
 
   const [markerLat, markerLng] = junctionMarkerLatLng(roadSegments);
@@ -538,6 +458,33 @@ export function bindJunctionObservatoryLayer(
     if (!detail) return;
     onObservatoryClick(detail);
   });
+}
+
+/** Copenhagen-style ripple rings at the Issy junction camera hub. */
+export function renderIssyJunctionHubPulse(
+  map: L.Map,
+  roadSegments: MapSegment[],
+  refs: IssyJunctionLayerRefs
+): void {
+  let northSouth = 0;
+  let eastWest = 0;
+  roadSegments.forEach((segment) => {
+    const arm = getIssyJunctionArm(segment.id);
+    if (!arm) return;
+    const congestion = Number(segmentProps(segment).indice_de_congestion ?? 0);
+    if (arm.id === "north" || arm.id === "south") northSouth += congestion;
+    else eastWest += congestion;
+  });
+
+  renderHubRipplePulseOverlay(
+    map,
+    ISSY_P2_JUNCTION.lat,
+    ISSY_P2_JUNCTION.lon,
+    northSouth >= eastWest,
+    refs.markers,
+    refs.circles as L.CircleMarker[],
+    { showAnchorDot: false }
+  );
 }
 
 export function resolveJunctionModeAccent(selectedModeTypes: string[]): string {

@@ -24,8 +24,14 @@ export const MODE_COLORS: Record<string, string> = {
   ptw: "#a78bfa",
 };
 
+/** Tailwind opacity steps that exist in the build (avoid /72, /88, etc.). */
+export const obsTextHeading = "text-white/90";
+export const obsTextBody = "text-white/75";
+export const obsTextMuted = "text-white/65";
+export const obsTextCaption = "text-white/55";
+
 export function obsGlassCardClass(compact?: boolean): string {
-  return `rounded-xl border ${compact ? "px-3 py-2" : "px-4 py-3"}`;
+  return `rounded-xl border text-white ${compact ? "px-3 py-2" : "px-4 py-3"}`;
 }
 
 export function obsGlassCardStyle(glow?: string): React.CSSProperties {

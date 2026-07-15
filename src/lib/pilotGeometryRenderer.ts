@@ -221,6 +221,8 @@ export function resolvePilotGeometryRender(input: {
     const trikalaPilot = pilot.pilotId.startsWith("tri-");
     const defaultZoom = trikalaPilot ? trikalaMapZoom() : 14;
     const bounds = boundsFromFocus(pilot, defaultZoom);
+    const observedGis =
+      pilot.geometryTruth.status === "exact" && pilot.geometryTruth.source === "gis";
     return {
       bounds: bounds ? { ...bounds, zoom: defaultZoom } : null,
       visualizationMode: "generic-points",
@@ -228,9 +230,11 @@ export function resolvePilotGeometryRender(input: {
       flyToAllowed: !!bounds,
       minZoom: trikalaPilot ? TRIKALA_MIN_MAP_ZOOM : undefined,
       maxZoom: trikalaPilot ? TRIKALA_MAX_MAP_ZOOM : 14,
-      labelStyle: "aggregate",
-      uncertaintyLevel: "high",
-      legendHint: "Survey observatory cluster — inferred anchor geometry.",
+      labelStyle: observedGis ? "precise" : "aggregate",
+      uncertaintyLevel: observedGis ? "none" : "high",
+      legendHint: observedGis
+        ? "Partner GIS site anchors (My Maps) — some KPI overlays use simplified corridor graphics."
+        : "Survey observatory cluster — inferred anchor geometry.",
       reductionCaption: reductionCaption(pilot),
     };
   }

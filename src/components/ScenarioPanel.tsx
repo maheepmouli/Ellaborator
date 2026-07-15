@@ -5,6 +5,11 @@ import { getKpiFrameworkConfig } from "@/config/kpiFramework";
 import { getKpiDefinition } from "@/config/kpiDefinitions";
 import { getPilotById } from "@/data/pilotDefinitions";
 import { useLocalCityData } from "@/hooks/use-local-city-data";
+import { isCopenhagenCameraKpi } from "@/data/copenhagenCameraSites";
+import { useCopenhagenEmissions } from "@/hooks/use-copenhagen-emissions";
+import { resolveKpiProvenance, provenanceConfidenceLine } from "@/lib/kpiProvenance";
+import { formatConfidenceLine } from "@/lib/kpiMissingDataMessage";
+import { getLocalCityDiagnostics } from "@/services/localCityData";
 import type { PilotGeometryRenderSpec } from "@/lib/pilotGeometryRenderer";
 
 interface ScenarioPanelProps {
@@ -14,6 +19,13 @@ interface ScenarioPanelProps {
   selectedPilotName?: string;
   selectedPilotId?: string | null;
   pilotGeometrySpec?: PilotGeometryRenderSpec | null;
+  dataQualitySummary?: {
+    confidence?: "High" | "Medium" | "Low";
+    provenanceType?: string;
+    dataType?: string;
+    recordsLabel?: string;
+  } | null;
+  manifestAvailable?: boolean;
   onClose: () => void;
 }
 
@@ -24,6 +36,8 @@ const ScenarioPanel = ({
   selectedPilotName,
   selectedPilotId,
   pilotGeometrySpec = null,
+  dataQualitySummary = null,
+  manifestAvailable,
   onClose,
 }: ScenarioPanelProps) => {
   const cityData = CITY_DATA.find((c) => c.city === selectedCity);
@@ -33,16 +47,16 @@ const ScenarioPanel = ({
   const kpiDefinition = getKpiDefinition(selectedKpi);
   const selectedPilot = getPilotById(selectedCity, selectedPilotId);
   const isCopenhagenMobility = selectedCity === "Copenhagen" && selectedKpi === "kpi1.2";
+  const isCopenhagenCamera = selectedCity === "Copenhagen" && isCopenhagenCameraKpi(selectedKpi);
   const copenhagenCenter = cityData ? { lat: cityData.lat, lon: cityData.lon } : null;
   const { data: copenhagenPoints } = useLocalCityData(
     "Copenhagen",
     selectedKpi,
-    isCopenhagenMobility ? copenhagenCenter : null,
+    isCopenhagenCamera ? copenhagenCenter : isCopenhagenMobility ? copenhagenCenter : null,
     selectedPilotId,
     "intervention"
   );
-
-  if (!kpiDef || !kpiValue) return null;
+  const { snapshot: cphEmissions } = useCopenhagenEmissions();
 
   const copenhagenObserved = (() => {
     if (!isCopenhagenMobility || !copenhagenPoints?.length) return null;
@@ -70,6 +84,24 @@ const ScenarioPanel = ({
     return { baseline, intervention, change: intervention - baseline };
   })();
 
+  if (!kpiDef || !kpiValue) return null;
+
+  const diagnostics = getLocalCityDiagnostics(selectedCity, selectedKpi, selectedPilotId);
+  const mapUsesLocalDataset = Boolean(
+    copenhagenPoints?.some((p) => p.properties?.dataOrigin === "local-city-dataset")
+  );
+  const provenance = resolveKpiProvenance({
+    city: selectedCity,
+    kpiId: selectedKpi,
+    pilot: selectedPilot,
+    diagnostics,
+    dataQualitySummary,
+    manifestAvailable,
+    panelUsesObservedSlice: Boolean(copenhagenObserved),
+    mapUsesLocalDataset,
+    copenhagenEmissionsActive: selectedKpi === "kpi3.2" && Boolean(cphEmissions?.flows?.length),
+  });
+
   const baselineMainValue = copenhagenObserved
     ? copenhagenObserved.baseline
     : Math.max(0, Number(kpiValue.mainValue) - (kpiValue.change || 0));
@@ -79,18 +111,8 @@ const ScenarioPanel = ({
   const changeValue = copenhagenObserved?.change ?? kpiValue.change;
   const changeLabel = `${changeValue > 0 ? "+" : ""}${changeValue.toFixed(1)}${kpiDef.unit === "%" ? "pp" : ""}`;
   const methodLabel = kpiDefinition?.method || (kpiFramework?.isModelled ? "Modelled estimate" : "Observed / reported");
-  const typeLabel =
-    kpiFramework?.isMock
-      ? "mock"
-      : (kpiDefinition?.dataLabel?.toLowerCase() as "observed" | "derived" | "modelled" | undefined) ||
-        (kpiFramework?.isModelled ? "modelled" : "observed");
   const isHelsinkiObservedBeforeAfter = selectedCity === "Helsinki" && (selectedKpi === "kpi1.2" || selectedKpi === "kpi2.1");
   const isCopenhagenObservedBeforeAfter = isCopenhagenMobility;
-  const dataTypeLabel = isHelsinkiObservedBeforeAfter
-    ? (selectedKpi === "kpi2.1" ? "derived" : "observed")
-    : isCopenhagenObservedBeforeAfter
-      ? "observed"
-    : typeLabel;
   const temporalLabel = isHelsinkiObservedBeforeAfter || isCopenhagenObservedBeforeAfter ? "before-after" : "single-period";
   const spatialLabel =
     pilotGeometrySpec?.uncertaintyLevel === "high"
@@ -154,10 +176,26 @@ const ScenarioPanel = ({
               Spatial uncertainty
             </span>
           )}
-          <span className="px-2 py-0.5 rounded-full bg-white/10 border border-white/20">Method: {isHelsinkiObservedBeforeAfter ? "derived proxy" : isCopenhagenObservedBeforeAfter ? "Observed counts by camera direction and movement category" : dataTypeLabel}</span>
+          <span className="px-2 py-0.5 rounded-full bg-white/10 border border-white/20">Method: {isHelsinkiObservedBeforeAfter ? "derived proxy" : isCopenhagenObservedBeforeAfter ? "Observed counts by camera direction and movement category" : methodLabel}</span>
           <span className="px-2 py-0.5 rounded-full bg-white/10 border border-white/20">Temporal: {temporalLabel}</span>
-          <span className="px-2 py-0.5 rounded-full bg-white/10 border border-white/20">Source: {isHelsinkiObservedBeforeAfter ? "Local" : isCopenhagenObservedBeforeAfter ? "OpenTrafficCam Excel" : "API/Local"}</span>
+          <span className="px-2 py-0.5 rounded-full bg-white/10 border border-white/20">Source: {isHelsinkiObservedBeforeAfter ? "Local" : isCopenhagenObservedBeforeAfter ? "OpenTrafficCam Excel" : provenance.sourceLabel}</span>
+          {provenance.headlineSource === "mock" && (
+            <span className="px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-400/30 text-amber-100">
+              Illustrative
+            </span>
+          )}
         </div>
+
+        {provenance.degradedBanner && (
+          <div className="relative mx-6 mt-2 rounded-lg border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-[10px] text-amber-100/90 leading-relaxed">
+            {provenance.degradedBanner}
+          </div>
+        )}
+        {provenance.panelMapSplit && (
+          <div className="relative mx-6 mt-2 rounded-lg border border-sky-400/25 bg-sky-500/10 px-3 py-2 text-[10px] text-sky-100/90 leading-relaxed">
+            Panel uses illustrative KPI figures · Map shows local observed dataset for this selection.
+          </div>
+        )}
 
         {/* Content */}
         <div className="relative px-6 py-5 max-h-[50vh] overflow-y-auto space-y-4">
@@ -196,8 +234,9 @@ const ScenarioPanel = ({
           <div className="bg-white/[0.05] backdrop-blur-2xl rounded-xl border border-white/25 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.22)]">
             <p className="text-xs font-bold text-white mb-3">Data Transparency</p>
             <div className="grid grid-cols-2 gap-3 text-[11px] text-white/80">
-              <p><span className="text-white font-semibold">Data Type:</span> {dataTypeLabel}</p>
-              <p><span className="text-white font-semibold">Source:</span> {isHelsinkiObservedBeforeAfter ? "Telraam" : isCopenhagenObservedBeforeAfter ? "OpenTrafficCam Excel" : (kpiDefinition?.dataSource || "City-provided dataset")}</p>
+              <p><span className="text-white font-semibold">Data Type:</span> {isHelsinkiObservedBeforeAfter ? (selectedKpi === "kpi2.1" ? "derived" : "observed") : isCopenhagenObservedBeforeAfter ? "observed" : provenance.dataLabel}</p>
+              <p><span className="text-white font-semibold">Source:</span> {isHelsinkiObservedBeforeAfter ? "Telraam" : isCopenhagenObservedBeforeAfter ? "OpenTrafficCam Excel" : provenance.sourceLabel}</p>
+              <p><span className="text-white font-semibold">Confidence:</span> {provenanceConfidenceLine(provenance, formatConfidenceLine)}</p>
               <p><span className="text-white font-semibold">Spatial:</span> {spatialLabel}</p>
               <p><span className="text-white font-semibold">Temporal:</span> {temporalLabel}</p>
               <p><span className="text-white font-semibold">Method:</span> {isHelsinkiObservedBeforeAfter ? "Derived from Telraam flows" : isCopenhagenObservedBeforeAfter ? "Observed counts by camera direction and movement category" : methodLabel}</p>

@@ -5,6 +5,15 @@
 
 import { resolveSpatialSystem } from "@/lib/spatialLayerRegistry";
 import { CLIMATE_ZONE_ITEMS, ISSY_FLOW_MODE_ITEMS, SAFETY_SEGMENT_RAMP, SEGMENT_PRESSURE_ITEMS } from "@/lib/issyMapLegendItems";
+import {
+  CPH_ACCESSIBILITY_ITEMS,
+  CPH_CAMERA_REGISTRY_ITEMS,
+  CPH_EMISSIONS_ITEMS,
+  CPH_FACILITY_ITEMS,
+  CPH_RADAR_CORRIDOR_ITEMS,
+  CPH_SAFETY_SUPPLEMENT_ITEMS,
+  CPH_SURVEY_ITEMS,
+} from "@/lib/copenhagenMapLayers/copenhagenLegendItems";
 
 export type MapLegendMarker = "point" | "line" | "polygon" | "ramp" | "polygonRamp";
 
@@ -78,10 +87,10 @@ export function resolveMapLegend(
   city: string,
   kpiId: string,
   scenario: "baseline" | "intervention" | "comparison",
-  options?: { issyJunctionStudy?: boolean }
+  options?: { issyJunctionStudy?: boolean; milanIllustrativeLayer?: boolean }
 ): MapLegendSpec {
   const isIssy = city.toLowerCase().includes("issy");
-  const isMilan = city === "milan";
+  const isMilan = city.toLowerCase().includes("milan");
   const isCopenhagen = city.toLowerCase().includes("copenhagen");
   const isHelsinki = city.toLowerCase().includes("helsinki");
   const isZaragoza = city.toLowerCase().includes("zaragoza");
@@ -124,7 +133,7 @@ export function resolveMapLegend(
               hint:
                 kpiId === "kpi1.2"
                   ? "Junction study — dual-pass glowing corridors and directional flow arms from the camera hub; OD mode share uses bundled CSV in city view only."
-                  : "Junction study — observed segment arms with Copenhagen-style flow vectors, camera hub, and telemetry colour deltas on the monitored corridor.",
+                  : "",
             }
           : {
               marker: "line",
@@ -169,14 +178,48 @@ export function resolveMapLegend(
   if (isCopenhagen && kpiId === "kpi1.2") {
     return {
       marker: "line",
-      items: [
-        { label: "Inbound corridor", color: "#ef4444" },
-        { label: "Outbound corridor", color: "#38bdf8" },
-        { label: "Inbound pulse (dominant)", color: "#ef4444" },
-        { label: "Outbound pulse (dominant)", color: "#38bdf8" },
-        { label: "OTC count site (city view)", color: "#00ffff" },
-      ],
-      hint: "Radar-spoke layout with legacy corridor styling: red inbound, cyan outbound, dashed baseline arms, hub pulse rings, and FOV cone at camera sites.",
+      items: [...CPH_RADAR_CORRIDOR_ITEMS, ...CPH_CAMERA_REGISTRY_ITEMS],
+      hint: "Glowing street corridors coloured by flow rate with bidirectional arrows; radar spokes at camera hubs; registry markers at OTC sites.",
+    };
+  }
+
+  if (isCopenhagen && kpiId === "kpi2.1") {
+    return {
+      marker: "line",
+      items: [...CPH_RADAR_CORRIDOR_ITEMS, ...CPH_SAFETY_SUPPLEMENT_ITEMS, { label: "Workbook hub site", color: "#c4b5fd" }],
+      hint: "Flow-rate corridors and radar spokes; supplementary iRAP, near-encounter, and tube-speed markers only (camera clutter hidden).",
+    };
+  }
+
+  if (isCopenhagen && kpiId === "kpi3.2") {
+    return {
+      marker: "point",
+      items: CPH_EMISSIONS_ITEMS,
+      hint: "Modelled COPERT-lite emissions nodes (C badge) at OTC flow locations — intensity ramp shows relative pressure; not measured ambient CO₂.",
+    };
+  }
+
+  if (isCopenhagen && kpiId === "kpi3.1") {
+    return {
+      marker: "point",
+      items: CPH_FACILITY_ITEMS,
+      hint: "Parking bay inventory polygons and category logo markers for zero-emission facility deployment.",
+    };
+  }
+
+  if (isCopenhagen && kpiId === "kpi4.1") {
+    return {
+      marker: "point",
+      items: CPH_SURVEY_ITEMS,
+      hint: "Citizen survey logo markers (W) at pilot-area anchors — hover to open acceptability and safety perception in the observatory.",
+    };
+  }
+
+  if (isCopenhagen && kpiId === "kpi4.2") {
+    return {
+      marker: "polygonRamp",
+      items: CPH_ACCESSIBILITY_ITEMS,
+      hint: "Parking conversion polygons plus category markers (cycle, cargo, car removed) — infrastructure accessibility proxy, not an EN 17210 audit.",
     };
   }
 
@@ -269,10 +312,52 @@ export function resolveMapLegend(
     };
   }
   if (isMilan && kpiId === "kpi3.2") {
+    if (options?.milanIllustrativeLayer) {
+      return {
+        marker: "point",
+        items: [
+          { label: "Climate proxy (C)", color: "#f59e0b" },
+          { label: "Higher pressure", color: "#ef4444" },
+          { label: "Lower pressure", color: "#22c55e" },
+        ],
+        hint: "Illustrative zero-emission / climate proxy at 6–8 mode-share junction hubs — RETE segments unavailable for this pilot. Dim lines = KPI 2.1 safety network.",
+      };
+    }
     return {
       marker: "line",
       items: SEGMENT_PRESSURE_ITEMS,
       hint: "Network segments: bands are relative within the loaded RETE window.",
+    };
+  }
+  if (isMilan && kpiId === "kpi4.2") {
+    if (options?.milanIllustrativeLayer) {
+      return {
+        marker: "point",
+        items: [
+          { label: "Accessibility (A)", color: "#22c55e" },
+          { label: "Equal access score", color: "#63ccff" },
+        ],
+        hint: "Illustrative accessibility proxy at 6–8 mode-share junction hubs — DSS workbook has no pilot-scoped rows. Dim lines = KPI 2.1 safety network.",
+      };
+    }
+    return {
+      marker: "point",
+      items: [
+        { label: "DSS category", color: "#63ccff" },
+        { label: "Equal access %", color: "#22c55e" },
+      ],
+      hint: "DSS accessibility workbook categories mapped to pilot centroid (no point geometry in source file).",
+    };
+  }
+  if (isMilan && kpiId === "kpi1.2") {
+    return {
+      marker: "point",
+      items: [
+        { label: "Inbound approach (N/E)", color: "#ef4444" },
+        { label: "Outbound approach (S/W)", color: "#38bdf8" },
+        { label: "Hub pulse", color: "#a78bfa" },
+      ],
+      hint: "Illustrative Copenhagen-style radar at 6–8 KPI 2.1 junctions (mock mode-share). Dim lines = road safety network.",
     };
   }
 
@@ -311,11 +396,11 @@ export function resolveMapLegend(
       return {
         marker: "line",
         items: [
-          { label: "Active modes (inbound spoke)", color: "#ef4444" },
-          { label: "Car share (outbound spoke)", color: "#38bdf8" },
+          ...CPH_RADAR_CORRIDOR_ITEMS,
           { label: "Survey anchor (W)", color: "#00ffff" },
+          { label: "P+R hub (Pilot 2)", color: "#2ecc71" },
         ],
-        hint: "Radar spokes = intermodal mode mix — Pilot 1: women mobility survey segments; Pilot 2: spokes toward SMY · DEH · GiSeMi P+R hubs (illustrative until partner survey arrives).",
+        hint: "Copenhagen-style flow corridors: colour = mode-share intensity, bidirectional arrows on spokes. Pilot 1: women mobility survey segments; Pilot 2: illustrative P+R hubs (SMY · DEH · GiSeMi).",
       };
     }
     if (kpiId === "kpi2.1" || kpiId === "kpi4.2") {

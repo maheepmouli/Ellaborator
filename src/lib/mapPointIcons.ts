@@ -17,13 +17,19 @@ const SVG_ICONS: Record<string, string> = {
   generic: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/></svg>`,
 };
 
-export function createMapPointDivIcon(spec: MapPointIconSpec, title?: string): L.DivIcon {
+export function createMapPointDivIcon(
+  spec: MapPointIconSpec,
+  title?: string,
+  overrides?: { accent?: string; glow?: string }
+): L.DivIcon {
   const svg = SVG_ICONS[spec.key] ?? SVG_ICONS.generic;
   const safeTitle = (title ?? spec.label).replace(/"/g, "&quot;");
+  const accent = overrides?.accent ?? spec.accent;
+  const glow = overrides?.glow ?? spec.glow;
   return L.divIcon({
     className: "map-point-icon-host",
     html: `
-      <div class="map-point-icon-badge" style="--icon-accent:${spec.accent};--icon-glow:${spec.glow}" title="${safeTitle}">
+      <div class="map-point-icon-badge" style="--icon-accent:${accent};--icon-glow:${glow}" title="${safeTitle}">
         <span class="map-point-icon">${svg}</span>
       </div>
     `,
@@ -52,11 +58,16 @@ export function addNeonPointMarker(
     selectedSegmentId?: string | null;
     popupHtml?: string;
     tooltip?: string;
+    accent?: string;
+    glow?: string;
   }
 ): NeonPointMarkerLayers {
   const hitRadius = options?.hitRadius ?? 12;
   const visual = L.marker([lat, lon], {
-    icon: createMapPointDivIcon(spec, options?.title ?? spec.label),
+    icon: createMapPointDivIcon(spec, options?.title ?? spec.label, {
+      accent: options?.accent,
+      glow: options?.glow,
+    }),
     interactive: false,
     zIndexOffset: options?.zIndexOffset ?? 820,
   }).addTo(map);
@@ -84,7 +95,7 @@ export function addNeonPointMarker(
       highlightRadius: hitRadius + 3,
       selectedSegmentId: options?.selectedSegmentId,
       baseStyle: { fillOpacity: 0, opacity: 0, weight: 0 },
-      highlightStyle: { fillOpacity: 0.12, opacity: 0.35, weight: 1.5, color: spec.glow },
+      highlightStyle: { fillOpacity: 0.12, opacity: 0.35, weight: 1.5, color: options?.glow ?? spec.glow },
     });
     hit.on("mouseover", () => {
       visual.getElement()?.querySelector(".map-point-icon-badge")?.classList.add("map-point-icon-badge--hover");

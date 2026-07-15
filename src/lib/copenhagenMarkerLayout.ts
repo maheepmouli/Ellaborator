@@ -1,17 +1,26 @@
 /** Spread overlapping map markers at lower zoom levels (display-only offsets). */
 
+export type SpreadOverlapOptions = {
+  /**
+   * Fixed geographic fan-out that looks the same when zooming (no zoom-tier jumps).
+   * Use for icon KPIs where zoom-dependent spread caused layout drift.
+   */
+  zoomStable?: boolean;
+};
+
 export function spreadOverlappingPositions(
   coords: ReadonlyArray<{ id: string; lat: number; lon: number }>,
-  zoom: number
+  zoom: number,
+  options?: SpreadOverlapOptions
 ): Map<string, [number, number]> {
   const positions = new Map<string, [number, number]>();
   if (!coords.length) return positions;
-  if (zoom >= 17) {
+  if (!options?.zoomStable && zoom >= 17) {
     coords.forEach((c) => positions.set(c.id, [c.lat, c.lon]));
     return positions;
   }
 
-  const precision = zoom < 14 ? 3 : 4;
+  const precision = options?.zoomStable ? 5 : zoom < 14 ? 3 : 4;
   const groups = new Map<string, Array<{ id: string; lat: number; lon: number }>>();
   coords.forEach((coord) => {
     const key = `${coord.lat.toFixed(precision)}|${coord.lon.toFixed(precision)}`;
@@ -20,8 +29,14 @@ export function spreadOverlappingPositions(
     groups.set(key, group);
   });
 
-  const minRadialDeg = zoom < 14 ? 0.00042 : zoom < 15 ? 0.00032 : 0.00022;
-  const outwardScale = zoom < 14 ? 2.6 : 2.1;
+  const minRadialDeg = options?.zoomStable
+    ? 0.0002
+    : zoom < 14
+      ? 0.00042
+      : zoom < 15
+        ? 0.00032
+        : 0.00022;
+  const outwardScale = options?.zoomStable ? 2.2 : zoom < 14 ? 2.6 : 2.1;
 
   groups.forEach((group) => {
     if (group.length === 1) {

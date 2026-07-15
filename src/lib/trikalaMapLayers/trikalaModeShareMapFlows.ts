@@ -1,10 +1,11 @@
 import type { CopenhagenObservedPoint } from "@/lib/copenhagenMapLayers/renderCopenhagenMapLayers";
 import type { TrikalaSegmentInsight, TrikalaSegmentId } from "@/services/trikalaSurveyParser";
-const FLOW_SEGMENTS: Array<{ segment: TrikalaSegmentId; segmentId: string }> = [
-  { segment: "village", segmentId: "tri-p1-village" },
-  { segment: "caregiver", segmentId: "tri-p1-caregiver" },
-  { segment: "urban", segmentId: "tri-p1-urban" },
-  { segment: "suburban", segmentId: "tri-p1-suburban" },
+
+const FLOW_SEGMENTS: Array<{ segment: TrikalaSegmentId; segmentId: string; bearing: number }> = [
+  { segment: "village", segmentId: "tri-p1-village", bearing: 315 },
+  { segment: "caregiver", segmentId: "tri-p1-caregiver", bearing: 45 },
+  { segment: "urban", segmentId: "tri-p1-urban", bearing: 90 },
+  { segment: "suburban", segmentId: "tri-p1-suburban", bearing: 180 },
 ];
 
 function interventionActivePct(active: number, segment: TrikalaSegmentId): number {
@@ -20,7 +21,7 @@ export function buildTrikalaModeShareFlowPoints(
   const flows: CopenhagenObservedPoint[] = [];
   let flowIndex = 0;
 
-  FLOW_SEGMENTS.forEach(({ segment, segmentId }) => {
+  FLOW_SEGMENTS.forEach(({ segment, segmentId, bearing }) => {
     const insight = insights.find((i) => i.segment === segment);
     if (!insight || insight.responseCount <= 0 || !insight.activeModeSharePct) return;
 
@@ -28,7 +29,7 @@ export function buildTrikalaModeShareFlowPoints(
     const car = insight.carModeSharePct ?? Math.max(0, 100 - active);
     const activeAfter = interventionActivePct(active, segment);
     const carAfter = Math.max(0, Math.round((car - 1) * 10) / 10);
-    const streetName = "Survey anchor";
+    const streetName = insight.label;
 
     flows.push({
       lat: hub.lat,
@@ -45,6 +46,7 @@ export function buildTrikalaModeShareFlowPoints(
         comparisonValue: activeAfter - active,
         subSegment: insight.label,
         flowIndex,
+        flowBearing: bearing,
         dataOrigin: "local-city-dataset",
       },
     });
@@ -65,6 +67,7 @@ export function buildTrikalaModeShareFlowPoints(
         comparisonValue: carAfter - car,
         subSegment: insight.label,
         flowIndex,
+        flowBearing: (bearing + 180) % 360,
         dataOrigin: "local-city-dataset",
       },
     });

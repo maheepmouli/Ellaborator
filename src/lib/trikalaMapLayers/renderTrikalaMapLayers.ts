@@ -141,8 +141,8 @@ function renderSmartCrossingVector(
   polyline.bindPopup(`
     <div style="font-family:'DM Sans',sans-serif;padding:8px;min-width:180px;">
       <p style="font-size:11px;color:#8578C3;margin:0 0 4px 0;text-transform:uppercase;">Smart crossing corridor</p>
-      <p style="font-size:12px;font-weight:600;color:#2F1B6D;margin:0;">Asklipiou × Stratigou Sarafi</p>
-      <p style="font-size:10px;color:#96C2EF;margin:4px 0 0 0;">Inferred crossing vector — survey anchor geometry</p>
+      <p style="font-size:12px;font-weight:600;color:#2F1B6D;margin:0;">Vasili Tsitsani · Military School</p>
+      <p style="font-size:10px;color:#96C2EF;margin:4px 0 0 0;">Smart crossing corridor — same anchor as mobility KPI 1.2</p>
     </div>
   `);
 
@@ -150,7 +150,7 @@ function renderSmartCrossingVector(
     polyline,
     {
       segmentId: "tri-p1-smart-crossing",
-      segmentName: "Smart crossing — Asklipiou",
+      segmentName: "Smart crossing — Military School",
       speed: null,
       congestion: null,
     },
@@ -175,9 +175,7 @@ function shouldHideAggregateSurveyMarkers(
   if (selectedPilotId === "tri-p3") return false;
   if (selectedPilotId !== "tri-p1") return false;
   if (selectedKpi !== "kpi2.1" && selectedKpi !== "kpi4.2") return false;
-  return infrastructureLocations.some(
-    (l) => l.kind === "traffic_signal" || l.kind === "smart_crossing_site"
-  );
+  return infrastructureLocations.some((l) => l.kind === "smart_crossing_site");
 }
 
 function renderSurveyMarkers(
@@ -207,10 +205,18 @@ function renderSurveyMarkers(
     const segmentId = String(props.segmentId ?? point.id);
     const isEnvironmental =
       props.datasetKind === "environmental-sensor" || segmentId.includes("environmental");
+    const isBikeLaneSensor = props.datasetKind === "bike-lane-sensor";
     if (
       isEnvironmental &&
       selectedKpi === "kpi3.2" &&
       infrastructureLocations.some((l) => l.kind === "air_quality_sensor")
+    ) {
+      return;
+    }
+    if (
+      isBikeLaneSensor &&
+      (selectedKpi === "kpi2.1" || selectedKpi === "kpi4.2") &&
+      infrastructureLocations.some((l) => l.kind === "bike_lane_sensor")
     ) {
       return;
     }
@@ -256,10 +262,7 @@ function shouldRenderWomenMobilityRings(
   selectedPilotId: string | null | undefined,
   selectedKpi: string
 ): boolean {
-  return (
-    selectedPilotId === "tri-p1" &&
-    (selectedKpi === "kpi1.2" || selectedKpi === "kpi4.1")
-  );
+  return selectedPilotId === "tri-p1" && selectedKpi === "kpi1.2";
 }
 
 export function renderTrikalaMapLayers(options: RenderTrikalaMapLayersOptions): void {
@@ -280,6 +283,7 @@ export function renderTrikalaMapLayers(options: RenderTrikalaMapLayersOptions): 
     polylinesOut,
     polygonsOut = [],
     wireCircleMarker,
+    getValueColor,
   } = options;
 
   const modeShareRadarActive =
@@ -295,7 +299,9 @@ export function renderTrikalaMapLayers(options: RenderTrikalaMapLayersOptions): 
         markersOut,
         circlesOut,
         polylinesOut,
+        polygonsOut,
         wireCircleMarker,
+        getValueColor,
       })) ||
     (selectedPilotId === "tri-p2" &&
       selectedKpi === "kpi1.2" &&
@@ -309,7 +315,9 @@ export function renderTrikalaMapLayers(options: RenderTrikalaMapLayersOptions): 
         markersOut,
         circlesOut,
         polylinesOut,
+        polygonsOut,
         wireCircleMarker,
+        getValueColor,
       }));
 
   if (shouldRenderWomenMobilityRings(selectedPilotId, selectedKpi) && !modeShareRadarActive) {
@@ -317,6 +325,22 @@ export function renderTrikalaMapLayers(options: RenderTrikalaMapLayersOptions): 
   }
 
   if (infrastructureLocations.length > 0) {
+    const bikeLaneBusyPctByLocationId: Record<string, number> = {};
+    records.forEach((point) => {
+      if (point.properties?.datasetKind !== "bike-lane-sensor") return;
+      const locId = String(point.properties?.segmentId ?? "");
+      if (!locId.startsWith("tri-loc-")) return;
+      const busy =
+        typeof point.properties?.busyPct === "number"
+          ? point.properties.busyPct
+          : selectedKpi === "kpi2.1"
+            ? point.value
+            : typeof point.properties?.availabilityPct === "number"
+              ? 100 - point.properties.availabilityPct
+              : 100 - point.value;
+      bikeLaneBusyPctByLocationId[locId] = busy;
+    });
+
     renderTrikalaInfrastructureLayers({
       map,
       anchor,
@@ -329,6 +353,8 @@ export function renderTrikalaMapLayers(options: RenderTrikalaMapLayersOptions): 
       circlesOut,
       polylinesOut,
       polygonsOut,
+      hideParkRideHubMarkers: modeShareRadarActive,
+      bikeLaneBusyPctByLocationId,
     });
   } else {
     renderSmartCrossingVector(

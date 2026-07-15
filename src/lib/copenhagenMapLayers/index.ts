@@ -28,7 +28,12 @@ export {
   sumDirectionalTraffic,
 } from "./copenhagenTrafficPulse";
 export {
-  getCopenhagenDirectionArmStyle,
+  CPH_KPI_TOKENS,
+  ribbonColorForIntensity,
+  safetyColorForRisk,
+  climateFillColor,
+  satisfactionHaloOpacity,
+} from "./copenhagenKpiVisualTokens";
   getCopenhagenEndpointMarkerStyle,
   getCopenhagenFlowStyle,
   resolveCopenhagenIntensityColor,

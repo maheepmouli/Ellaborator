@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { TrendingDown, TrendingUp } from "lucide-react";
+import { ChevronLeft, ChevronRight, TrendingDown, TrendingUp } from "lucide-react";
+import { PanelResizeHandle } from "@/components/PanelResizeHandle";
+import { useResizablePanelWidth } from "@/hooks/use-resizable-panel-width";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
@@ -59,9 +61,24 @@ import { DataProvenanceBadge } from "@/components/DataProvenanceBadge";
 import { PilotDataSummary } from "@/components/PilotDataSummary";
 import {
   formatConfidenceLine,
-  getKpiMissingDataNotice,
 } from "@/lib/kpiMissingDataMessage";
-import { dataSourceTrustLabel, kpiPrimaryIssySource } from "@/lib/issyDataTransparency";
+import { resolveKpiProvenance, provenanceConfidenceLine } from "@/lib/kpiProvenance";
+import { getLocalCityDiagnostics } from "@/services/localCityData";
+import { useMilanEnvironmentSegments, useMilanSpeedSegments } from "@/hooks/use-milan-segment-data";
+import {
+  aggregateMilanObservedKpi,
+  filterMilanObservatoryPoints,
+} from "@/lib/milanObservatoryView";
+import {
+  aggregateMilanJunctionMockKpi,
+  buildMilanJunctionAccessibilityMockPoints,
+  buildMilanJunctionClimateMockPoints,
+  buildMilanJunctionModeShareMockPoints,
+  milanHasObservedAccessibilityData,
+  milanHasObservedClimateData,
+  milanJunctionAnchorsForPilot,
+  pickJunctionsForModeSharePresentation,
+} from "@/lib/milanMapLayers";
 import { getIssySentimentMock, issySentimentKpiHeadline } from "@/data/issySentimentMock";
 import { getIssyAccessibilityMock, issyAccessibilityKpiHeadline } from "@/data/issyAccessibilityMock";
 import { getCityPilotProfile } from "@/data/cityPilotProfiles";
@@ -96,6 +113,7 @@ interface InsightPanelProps {
     congestion: number | null;
   } | null;
   dataQualitySummary?: LayerTrustSummary | null;
+  manifestAvailable?: boolean;
   mapSelection?: MapSelectionState;
   /** Copenhagen map hover — scopes segment-focus charts without persisting selection. */
   hoveredSegmentId?: string | null;
@@ -137,6 +155,7 @@ const InsightPanel = ({
   onOpenDataSummary,
   mapContext,
   dataQualitySummary,
+  manifestAvailable,
   mapSelection,
   hoveredSegmentId = null,
   milanEnvironmentWindow = "08-09",
@@ -180,6 +199,16 @@ const InsightPanel = ({
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [chartRadarFocus, setChartRadarFocus] = useState<string | null>(null);
   const [chartA11yFocus, setChartA11yFocus] = useState<string | null>(null);
+  const { width: panelWidth, maxWidth: panelMaxWidth, isResizing, startResize, setPreset } =
+    useResizablePanelWidth({
+      storageKey: "elab-insight-panel-width",
+      defaultWidth: 340,
+      minWidth: 300,
+      maxWidthCap: 560,
+      maxViewportFraction: 0.42,
+      side: "left",
+    });
+  const insightPanelWide = panelWidth >= 420;
 
   useEffect(() => {
     setChartRadarFocus(null);
@@ -304,6 +333,152 @@ const InsightPanel = ({
       unit: headline.unit,
     };
   }, [issyAccessibilityMock]);
+  const isMilanCity = selectedCity === "Milan";
+  const milanPilotId =
+    selectedPilotId === "mil-p1" || selectedPilotId === "mil-p2" || selectedPilotId === "mil-p3"
+      ? selectedPilotId
+      : "mil-p2";
+  const milanCenter = cityData ? { lat: cityData.lat, lon: cityData.lon } : null;
+  const shouldUseMilanLocalPoints =
+    isMilanCity && (selectedKpi === "kpi1.2" || selectedKpi === "kpi4.2");
+  const { data: milanLocalPoints } = useLocalCityData(
+    "Milan",
+    selectedKpi,
+    shouldUseMilanLocalPoints ? milanCenter : null,
+    selectedPilotId || null,
+    scenario
+  );
+  const { data: milanSpeedDataset } = useMilanSpeedSegments(
+    milanPilotId,
+    isMilanCity &&
+      (selectedKpi === "kpi2.1" ||
+        selectedKpi === "kpi1.2" ||
+        selectedKpi === "kpi3.2" ||
+        selectedKpi === "kpi4.2")
+  );
+  const { data: milanEnvDataset } = useMilanEnvironmentSegments(
+    milanEnvironmentWindow,
+    isMilanCity && selectedKpi === "kpi3.2",
+    milanPilotId
+  );
+  const milanJunctionMockPoints = useMemo(() => {
+    if (!isMilanCity || !milanSpeedDataset?.records?.length) return null;
+    const junctions = milanJunctionAnchorsForPilot(milanSpeedDataset.records);
+    if (!junctions.length) return null;
+
+    if (selectedKpi === "kpi1.2") {
+      return buildMilanJunctionModeShareMockPoints(junctions, milanPilotId);
+    }
+    if (selectedKpi === "kpi3.2" && !milanHasObservedClimateData(milanEnvDataset)) {
+      return buildMilanJunctionClimateMockPoints(junctions, milanPilotId);
+    }
+    if (
+      selectedKpi === "kpi4.2" &&
+      !milanHasObservedAccessibilityData(milanLocalPoints, milanPilotId)
+    ) {
+      return buildMilanJunctionAccessibilityMockPoints(junctions, milanPilotId);
+    }
+    return null;
+  }, [
+    isMilanCity,
+    selectedKpi,
+    milanSpeedDataset,
+    milanEnvDataset,
+    milanLocalPoints,
+    milanPilotId,
+  ]);
+
+  const milanIllustrativeModeShareKpi = useMemo(() => {
+    if (selectedKpi !== "kpi1.2" || !milanJunctionMockPoints?.length) return null;
+    const scoped = segmentFocusId
+      ? filterMilanObservatoryPoints(milanJunctionMockPoints, segmentFocusId)
+      : milanJunctionMockPoints;
+    const pointsForAgg = scoped.length ? scoped : milanJunctionMockPoints;
+    return aggregateMilanObservedKpi(pointsForAgg, "kpi1.2", selectedModeTypes);
+  }, [milanJunctionMockPoints, segmentFocusId, selectedModeTypes, selectedKpi]);
+
+  const milanIllustrativeClimateKpi = useMemo(() => {
+    if (selectedKpi !== "kpi3.2" || !milanJunctionMockPoints?.length) return null;
+    const scoped = segmentFocusId
+      ? filterMilanObservatoryPoints(milanJunctionMockPoints, segmentFocusId)
+      : milanJunctionMockPoints;
+    const pointsForAgg = scoped.length ? scoped : milanJunctionMockPoints;
+    return aggregateMilanJunctionMockKpi(pointsForAgg, scenario);
+  }, [milanJunctionMockPoints, segmentFocusId, selectedKpi, scenario]);
+
+  const milanIllustrativeAccessibilityKpi = useMemo(() => {
+    if (selectedKpi !== "kpi4.2" || !milanJunctionMockPoints?.length) return null;
+    const scoped = segmentFocusId
+      ? filterMilanObservatoryPoints(milanJunctionMockPoints, segmentFocusId)
+      : milanJunctionMockPoints;
+    const pointsForAgg = scoped.length ? scoped : milanJunctionMockPoints;
+    return aggregateMilanJunctionMockKpi(pointsForAgg, scenario);
+  }, [milanJunctionMockPoints, segmentFocusId, selectedKpi, scenario]);
+
+  const milanObservedPointKpi = useMemo(() => {
+    if (!shouldUseMilanLocalPoints || !milanLocalPoints?.length) return null;
+    const observed = milanLocalPoints.filter(
+      (p) => p.properties?.dataOrigin === "local-city-dataset"
+    );
+    if (!observed.length) return null;
+    const scoped = segmentFocusId
+      ? filterMilanObservatoryPoints(observed, segmentFocusId)
+      : observed;
+    const pointsForAgg = scoped.length ? scoped : observed;
+    return aggregateMilanObservedKpi(pointsForAgg, selectedKpi, selectedModeTypes);
+  }, [
+    shouldUseMilanLocalPoints,
+    milanLocalPoints,
+    selectedKpi,
+    segmentFocusId,
+    selectedModeTypes,
+  ]);
+  const milanModeShareKpi = milanIllustrativeModeShareKpi ?? milanObservedPointKpi;
+  const usingMilanIllustrativeModeShare =
+    isMilanCity && selectedKpi === "kpi1.2" && !!milanIllustrativeModeShareKpi;
+  const usingMilanIllustrativeClimate =
+    isMilanCity && selectedKpi === "kpi3.2" && !!milanIllustrativeClimateKpi;
+  const usingMilanIllustrativeAccessibility =
+    isMilanCity && selectedKpi === "kpi4.2" && !!milanIllustrativeAccessibilityKpi;
+  const usingMilanObservedModeShare =
+    isMilanCity && selectedKpi === "kpi1.2" && !!milanObservedPointKpi && !usingMilanIllustrativeModeShare;
+  const milanSegmentHeadline = useMemo(() => {
+    if (!isMilanCity) return null;
+    if (selectedKpi === "kpi2.1" && milanSpeedDataset?.records?.length) {
+      const avg =
+        milanSpeedDataset.records.reduce(
+          (sum, record) => sum + Number(record.properties?.avgSpeed ?? record.value),
+          0
+        ) / milanSpeedDataset.records.length;
+      return {
+        baselineMain: avg * 1.08,
+        interventionMain: avg,
+        change: avg - avg * 1.08,
+      };
+    }
+    if (selectedKpi === "kpi3.2" && milanEnvDataset?.records?.length) {
+      const avg = milanEnvDataset.stats.avgMetricValue;
+      return {
+        baselineMain: avg * 1.17,
+        interventionMain: avg,
+        change: avg - avg * 1.17,
+      };
+    }
+    if (selectedKpi === "kpi3.2" && milanIllustrativeClimateKpi) {
+      return milanIllustrativeClimateKpi;
+    }
+    if (selectedKpi === "kpi4.2" && milanIllustrativeAccessibilityKpi) {
+      return milanIllustrativeAccessibilityKpi;
+    }
+    return null;
+  }, [
+    isMilanCity,
+    selectedKpi,
+    milanSpeedDataset,
+    milanEnvDataset,
+    milanIllustrativeClimateKpi,
+    milanIllustrativeAccessibilityKpi,
+  ]);
   const copenhagenCenter = cityData ? { lat: cityData.lat, lon: cityData.lon } : null;
   const shouldUseCopenhagenObserved =
     selectedCity === "Copenhagen" && isCopenhagenCameraKpi(selectedKpi);
@@ -329,10 +504,134 @@ const InsightPanel = ({
     return aggregateCopenhagenObservedKpi(pointsForAgg, selectedKpi, selectedModeTypes);
   }, [shouldUseCopenhagenObserved, copenhagenLocalPoints, selectedModeTypes, selectedKpi, segmentFocusId]);
 
+  const milanJunctionIllustrativeNote = useMemo(() => {
+    if (!isMilanCity || !milanSpeedDataset?.records?.length) return null;
+    const junctionCount = milanJunctionAnchorsForPilot(milanSpeedDataset.records).length;
+    if (!junctionCount) {
+      return "KPI 2.1 safety network unavailable — illustrative junction data cannot be placed.";
+    }
+    if (selectedKpi === "kpi1.2" && usingMilanIllustrativeModeShare) {
+      return `Copenhagen-style illustrative demo: ${junctionCount} major junction${junctionCount === 1 ? "" : "s"} from the KPI 2.1 network (target 6–8). Mode-share values are mock proxies — not partner AMAT counts.`;
+    }
+    if (selectedKpi === "kpi3.2" && usingMilanIllustrativeClimate) {
+      return `Illustrative climate proxy at ${junctionCount} mode-share junction hub${junctionCount === 1 ? "" : "s"} — RETE environment segments unavailable for this pilot.`;
+    }
+    if (selectedKpi === "kpi4.2" && usingMilanIllustrativeAccessibility) {
+      return `Illustrative accessibility proxy at ${junctionCount} mode-share junction hub${junctionCount === 1 ? "" : "s"} — DSS workbook has no pilot-scoped rows.`;
+    }
+    return null;
+  }, [
+    isMilanCity,
+    selectedKpi,
+    milanSpeedDataset,
+    usingMilanIllustrativeModeShare,
+    usingMilanIllustrativeClimate,
+    usingMilanIllustrativeAccessibility,
+  ]);
+
+  const provenance = useMemo(() => {
+    const milanSegmentDiagnostics =
+      isMilanCity && selectedKpi === "kpi2.1" && (milanSpeedDataset?.records?.length ?? 0) > 0
+        ? {
+            reason: "ok" as const,
+            message: `${milanSpeedDataset!.records.length} AMAT speed segments loaded for ${milanPilotId}.`,
+          }
+        : isMilanCity && selectedKpi === "kpi3.2" && (milanEnvDataset?.records?.length ?? 0) > 0
+          ? {
+              reason: "ok" as const,
+              message: `${milanEnvDataset!.records.length} RETE segments loaded (${milanEnvironmentWindow}).`,
+            }
+          : isMilanCity && selectedKpi === "kpi3.2" && usingMilanIllustrativeClimate
+            ? {
+                reason: "mock" as const,
+                message: `${milanJunctionAnchorsForPilot(milanSpeedDataset!.records).length} illustrative junction climate proxies (mode-share anchors).`,
+              }
+          : isMilanCity && selectedKpi === "kpi1.2" && usingMilanIllustrativeModeShare
+            ? {
+                reason: "mock" as const,
+                message: `${pickJunctionsForModeSharePresentation(milanSpeedDataset!.records).length} illustrative junction hubs on KPI 2.1 network (mock mode-share).`,
+              }
+            : isMilanCity &&
+              selectedKpi === "kpi1.2" &&
+              (milanLocalPoints?.filter((p) => p.properties?.datasetKind === "amat-count").length ?? 0) > 0
+            ? {
+                reason: "ok" as const,
+                message: `${milanLocalPoints!.filter((p) => p.properties?.datasetKind === "amat-count").length} AMAT approach flow points loaded for ${milanPilotId}.`,
+              }
+            : isMilanCity &&
+                selectedKpi === "kpi4.2" &&
+                (milanLocalPoints?.filter((p) => p.properties?.datasetKind === "accessibility").length ?? 0) > 0
+              ? {
+                  reason: "ok" as const,
+                  message: `${milanLocalPoints!.filter((p) => p.properties?.datasetKind === "accessibility").length} DSS accessibility categories loaded for ${milanPilotId}.`,
+                }
+            : isMilanCity && selectedKpi === "kpi4.2" && usingMilanIllustrativeAccessibility
+              ? {
+                  reason: "mock" as const,
+                  message: `${milanJunctionAnchorsForPilot(milanSpeedDataset!.records).length} illustrative junction accessibility proxies (mode-share anchors).`,
+                }
+              : null;
+    const diagnostics =
+      milanSegmentDiagnostics ?? getLocalCityDiagnostics(selectedCity, selectedKpi, selectedPilotId);
+    const mapUsesLocalDataset = Boolean(
+      copenhagenLocalPoints?.some((p) => p.properties?.dataOrigin === "local-city-dataset") ||
+        milanLocalPoints?.some((p) => p.properties?.dataOrigin === "local-city-dataset") ||
+        (milanSpeedDataset?.records?.length ?? 0) > 0 ||
+        (milanEnvDataset?.records?.length ?? 0) > 0 ||
+        dataQualitySummary?.provenanceType === "observed" ||
+        dataQualitySummary?.provenanceType === "mock"
+    );
+    const panelUsesObservedSlice = Boolean(
+      usingIssyObservedModeShare ||
+        (usingTrikalaObservedModeShare && !usingTrikalaIllustrativeModeShare) ||
+        copenhagenObservedModeShare ||
+        (milanModeShareKpi && !usingMilanIllustrativeModeShare) ||
+        (milanSegmentHeadline && !usingMilanIllustrativeClimate && !usingMilanIllustrativeAccessibility) ||
+        usingMilanIllustrativeClimate ||
+        usingMilanIllustrativeAccessibility ||
+        (isCopenhagenCity && selectedKpi === "kpi3.2" && cphEmissionsModel)
+    );
+    return resolveKpiProvenance({
+      city: selectedCity,
+      kpiId: selectedKpi,
+      pilot: selectedPilot,
+      diagnostics,
+      dataQualitySummary,
+      manifestAvailable,
+      panelUsesObservedSlice,
+      mapUsesLocalDataset,
+      copenhagenEmissionsActive: Boolean(cphEmissionsModel?.flows?.length),
+    });
+  }, [
+    selectedCity,
+    selectedKpi,
+    selectedPilot,
+    selectedPilotId,
+    copenhagenLocalPoints,
+    dataQualitySummary,
+    manifestAvailable,
+    usingIssyObservedModeShare,
+    usingTrikalaObservedModeShare,
+    usingTrikalaIllustrativeModeShare,
+    copenhagenObservedModeShare,
+    milanModeShareKpi,
+    milanSegmentHeadline,
+    milanLocalPoints,
+    milanSpeedDataset,
+    milanEnvDataset,
+    milanEnvironmentWindow,
+    milanPilotId,
+    isMilanCity,
+    cphEmissionsModel,
+  ]);
+
   const displayUnit = useMemo(() => {
     if (!kpiValue) return "";
     if (issySentimentFromMock?.unit) return issySentimentFromMock.unit;
     if (issyAccessibilityFromMock?.unit) return issyAccessibilityFromMock.unit;
+    if (isMilanCity && selectedKpi === "kpi2.1" && milanSegmentHeadline) return "km/h";
+    if (isMilanCity && selectedKpi === "kpi3.2" && usingMilanIllustrativeClimate) return " env. idx";
+    if (isMilanCity && selectedKpi === "kpi4.2" && usingMilanIllustrativeAccessibility) return "%";
     return isTrikalaCity && trikalaObservedModeShare
       ? "%"
       : isCopenhagenCity && copenhagenObservedModeShare
@@ -347,6 +646,11 @@ const InsightPanel = ({
     kpiValue,
     issySentimentFromMock,
     issyAccessibilityFromMock,
+    isMilanCity,
+    milanSegmentHeadline,
+    usingMilanIllustrativeClimate,
+    usingMilanIllustrativeAccessibility,
+    selectedKpi,
   ]);
 
   const chartExplorerKeys = useMemo(() => {
@@ -462,21 +766,12 @@ const InsightPanel = ({
     }
   }, [kpiDef, kpiValue, selectedKpi, supportedKpisForPilot, onKpiChange]);
 
-  const missingDataNotice = useMemo(
-    () => getKpiMissingDataNotice(selectedCity, selectedKpi, selectedPilot),
-    [selectedCity, selectedKpi, selectedPilot]
-  );
+  const missingDataNotice = useMemo(() => provenance.missingNotice, [provenance]);
 
-  const confidenceLine = useMemo(() => {
-    const sourceHint = isIssyCity
-      ? dataSourceTrustLabel(kpiPrimaryIssySource(selectedKpi))
-      : dataQualitySummary?.dataType;
-    return formatConfidenceLine(
-      kpiDefinition?.dataLabel ?? dataQualitySummary?.provenanceType ?? "Derived",
-      dataQualitySummary?.confidence,
-      sourceHint
-    );
-  }, [isIssyCity, selectedKpi, kpiDefinition, dataQualitySummary]);
+  const confidenceLine = useMemo(
+    () => provenanceConfidenceLine(provenance, formatConfidenceLine),
+    [provenance]
+  );
 
   const stakeholderSummary = useMemo(() => {
     if (!kpiDef || !kpiValue || !selectedPilot) return null;
@@ -491,7 +786,11 @@ const InsightPanel = ({
           ? trikalaObservedModeShare.baselineMain
           : copenhagenObservedModeShare
             ? copenhagenObservedModeShare.baselineMain
-            : computeBaselineMainValue(kpiValue);
+            : milanModeShareKpi
+              ? milanModeShareKpi.baselineMain
+              : milanSegmentHeadline
+                ? milanSegmentHeadline.baselineMain
+                : computeBaselineMainValue(kpiValue);
     const interventionMainValue = issyModeShareFromCsv
       ? issyModeShareFromCsv.intervention.mainValue
       : issySentimentFromMock
@@ -502,13 +801,19 @@ const InsightPanel = ({
             ? trikalaObservedModeShare.interventionMain
             : copenhagenObservedModeShare
               ? copenhagenObservedModeShare.interventionMain
-              : Number(kpiValue.mainValue);
+              : milanModeShareKpi
+                ? milanModeShareKpi.interventionMain
+                : milanSegmentHeadline
+                  ? milanSegmentHeadline.interventionMain
+                  : Number(kpiValue.mainValue);
     const headlineChange =
       issyModeShareFromCsv?.intervention.change ??
       issySentimentFromMock?.intervention.change ??
       issyAccessibilityFromMock?.intervention.change ??
       trikalaObservedModeShare?.change ??
       copenhagenObservedModeShare?.change ??
+      milanModeShareKpi?.change ??
+      milanSegmentHeadline?.change ??
       kpiValue.change;
     const helsinkiBA =
       selectedCity === "Helsinki" && (selectedKpi === "kpi1.2" || selectedKpi === "kpi2.1");
@@ -569,6 +874,8 @@ const InsightPanel = ({
     issySentimentFromMock,
     issyAccessibilityFromMock,
     copenhagenObservedModeShare,
+    milanModeShareKpi,
+    milanSegmentHeadline,
     trikalaObservedModeShare,
     displayUnit,
   ]);
@@ -593,6 +900,17 @@ const InsightPanel = ({
               breakdown: copenhagenObservedModeShare.breakdownBaseline,
               change: 0,
             }
+          : milanModeShareKpi
+            ? {
+                mainValue: milanModeShareKpi.baselineMain,
+                breakdown: milanModeShareKpi.breakdownBaseline,
+                change: 0,
+              }
+            : milanSegmentHeadline
+              ? {
+                  mainValue: milanSegmentHeadline.baselineMain,
+                  change: 0,
+                }
           : baselineKpiSlice(kpiValue);
   const interventionKvSlice = issyModeShareFromCsv
     ? issyModeShareFromCsv.intervention
@@ -612,6 +930,17 @@ const InsightPanel = ({
               breakdown: copenhagenObservedModeShare.breakdownIntervention,
               change: copenhagenObservedModeShare.change,
             }
+          : milanModeShareKpi
+            ? {
+                mainValue: milanModeShareKpi.interventionMain,
+                breakdown: milanModeShareKpi.breakdownIntervention,
+                change: milanModeShareKpi.change,
+              }
+            : milanSegmentHeadline
+              ? {
+                  mainValue: milanSegmentHeadline.interventionMain,
+                  change: milanSegmentHeadline.change,
+                }
           : interventionKpiSlice(kpiValue);
   const baselineMainValue = issyModeShareFromCsv
     ? issyModeShareFromCsv.baseline.mainValue
@@ -623,6 +952,10 @@ const InsightPanel = ({
           ? trikalaObservedModeShare.baselineMain
           : copenhagenObservedModeShare
           ? copenhagenObservedModeShare.baselineMain
+          : milanModeShareKpi
+            ? milanModeShareKpi.baselineMain
+            : milanSegmentHeadline
+              ? milanSegmentHeadline.baselineMain
           : computeBaselineMainValue(kpiValue);
   const interventionMainValue = issyModeShareFromCsv
     ? issyModeShareFromCsv.intervention.mainValue
@@ -634,6 +967,10 @@ const InsightPanel = ({
           ? trikalaObservedModeShare.interventionMain
           : copenhagenObservedModeShare
           ? copenhagenObservedModeShare.interventionMain
+          : milanModeShareKpi
+            ? milanModeShareKpi.interventionMain
+            : milanSegmentHeadline
+              ? milanSegmentHeadline.interventionMain
           : Number(kpiValue.mainValue);
   const headlineChange =
     issyModeShareFromCsv?.intervention.change ??
@@ -641,6 +978,8 @@ const InsightPanel = ({
     issyAccessibilityFromMock?.intervention.change ??
     trikalaObservedModeShare?.change ??
     copenhagenObservedModeShare?.change ??
+    milanModeShareKpi?.change ??
+    milanSegmentHeadline?.change ??
     kpiValue.change;
   const currentMainValue = scenario === "baseline" ? baselineMainValue : interventionMainValue;
   const currentBreakdown =
@@ -661,7 +1000,29 @@ const InsightPanel = ({
     !!baselineKvSlice.breakdown && Object.keys(baselineKvSlice.breakdown).length > 0;
 
   return (
-    <div className="insight-sidebar absolute top-20 left-4 z-30 flex w-[320px] max-h-[calc(100vh-6.5rem)] flex-col overflow-hidden bg-[linear-gradient(165deg,rgba(22,18,48,0.94)_0%,rgba(12,10,32,0.98)_100%)] rounded-2xl shadow-[0_10px_40px_rgba(10,10,45,0.35)] text-white border border-white/35 leading-intel tracking-intel intel-ui">
+    <div
+      className="insight-sidebar absolute top-16 left-4 z-30 flex max-h-[calc(100vh-4.5rem)] min-h-[min(520px,calc(100vh-4.5rem))] flex-col overflow-hidden bg-[linear-gradient(165deg,rgba(22,18,48,0.94)_0%,rgba(12,10,32,0.98)_100%)] rounded-2xl shadow-[0_10px_40px_rgba(10,10,45,0.35)] text-white border border-white/35 leading-intel tracking-intel intel-ui"
+      style={{ width: panelWidth }}
+    >
+      <PanelResizeHandle side="left" onResizeStart={startResize} isResizing={isResizing} />
+      <div className="absolute top-3 right-3 z-[2] flex items-center gap-1">
+        <button
+          type="button"
+          onClick={() =>
+            setPreset(insightPanelWide ? 340 : Math.min(480, panelMaxWidth))
+          }
+          className="p-1.5 rounded-lg transition-colors hover:bg-white/10"
+          style={{ color: "rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.06)" }}
+          title={insightPanelWide ? "Narrow panel" : "Widen panel"}
+          aria-label={insightPanelWide ? "Narrow panel" : "Widen panel"}
+        >
+          {insightPanelWide ? (
+            <ChevronLeft className="h-3.5 w-3.5" />
+          ) : (
+            <ChevronRight className="h-3.5 w-3.5" />
+          )}
+        </button>
+      </div>
       <div className="pointer-events-none absolute inset-0 rounded-2xl bg-[radial-gradient(120%_60%_at_15%_0%,rgba(255,255,255,0.32)_0%,rgba(255,255,255,0.08)_45%,rgba(255,255,255,0)_80%)]" />
       <div className="pointer-events-none absolute inset-[1px] rounded-2xl border border-white/20" />
       {stakeholderSummary && (
@@ -877,8 +1238,28 @@ const InsightPanel = ({
             {dataQualitySummary?.provenanceType && (
               <DataProvenanceBadge type={dataQualitySummary.provenanceType} />
             )}
+            {provenance.headlineSource === "mock" && (
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-400/30 text-amber-100">
+                Illustrative
+              </span>
+            )}
             <span className="text-intel-meta font-semibold text-white/88">{confidenceLine}</span>
           </div>
+          {provenance.degradedBanner && (
+            <div className="mt-2 rounded-lg border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-[10px] text-amber-100/90 leading-relaxed">
+              {provenance.degradedBanner}
+            </div>
+          )}
+          {milanJunctionIllustrativeNote && (
+            <div className="mt-2 rounded-lg border border-violet-400/30 bg-violet-500/10 px-3 py-2 text-[10px] text-violet-100/90 leading-relaxed">
+              {milanJunctionIllustrativeNote}
+            </div>
+          )}
+          {provenance.panelMapSplit && (
+            <div className="mt-2 rounded-lg border border-sky-400/25 bg-sky-500/10 px-3 py-2 text-[10px] text-sky-100/90 leading-relaxed">
+              Panel uses illustrative KPI figures · Map shows local observed dataset for this selection.
+            </div>
+          )}
         </div>
 
         {/* Plot — always visible, directly under metrics (reference layout) */}
@@ -1107,9 +1488,12 @@ const InsightPanel = ({
                 const isSelected = selectedModeTypes.includes(modeType);
                 const value = currentBreakdown?.[modeType] || 0;
                 const displayValue =
-                  usingIssyObservedModeShare || usingTrikalaObservedModeShare
-                  ? `${value.toFixed(1)}%`
-                  : String(Math.round(value));
+                  usingIssyObservedModeShare ||
+                  usingTrikalaObservedModeShare ||
+                  usingMilanObservedModeShare ||
+                  usingMilanIllustrativeModeShare
+                    ? `${value.toFixed(1)}%`
+                    : String(Math.round(value));
                 return (
                   <div
                     key={modeType}

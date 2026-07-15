@@ -85,7 +85,7 @@ const PILOT_GRAPHIC_OVERRIDES: Record<string, PilotGraphicOverride> = {
   "mil-p2": { header: { "kpi2.1": "streetSegmentSchematic" }, kpiAnalysis: { "kpi2.1": "speedProfile" } },
   "zar-p1": { header: { "kpi1.2": "areaPolygonSchematic" } },
   "tri-p1": {
-    header: { "kpi4.1": "areaPolygonSchematic" },
+    header: { "kpi1.2": "cameraCorridorSchematic", "kpi4.1": "areaPolygonSchematic" },
     overview: { "kpi1.2": "modeShareBars" },
     kpiAnalysis: {
       "kpi1.2": "segmentModeShare",
@@ -99,7 +99,7 @@ const PILOT_GRAPHIC_OVERRIDES: Record<string, PilotGraphicOverride> = {
     kpiAnalysis: { "kpi4.1": "likertRadar", "kpi4.2": "accessibilityBars" },
   },
   "tri-p2": {
-    header: { "kpi3.1": "areaPolygonSchematic" },
+    header: { "kpi1.2": "cameraCorridorSchematic", "kpi3.1": "areaPolygonSchematic" },
     overview: { "kpi1.2": "modeShareBars" },
     kpiAnalysis: { "kpi1.2": "modeShareBars", "kpi3.1": "accessibilityBars" },
   },
@@ -292,6 +292,9 @@ export function resolveObservatoryGraphic(
     !selectedSegmentId.endsWith("-environmental-sensor");
 
   if (trikalaSegmentHover && zone === "header") {
+    if (kpiId === "kpi1.2") {
+      return { graphicId: "cameraCorridorSchematic", kind: "schematic", variant: "compact" };
+    }
     if (pilotId === "tri-p3") {
       return { graphicId: "streetSegmentSchematic", kind: "schematic", variant: "compact" };
     }

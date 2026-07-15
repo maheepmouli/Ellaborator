@@ -2,6 +2,15 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Database } from "lucide-react";
 import { getPilotById } from "@/data/pilotDefinitions";
+import { useMilanEnvironmentSegments, useMilanSpeedSegments } from "@/hooks/use-milan-segment-data";
+import {
+  buildMilanJunctionAccessibilityMockPoints,
+  buildMilanJunctionClimateMockPoints,
+  buildMilanJunctionModeShareMockPoints,
+  milanHasObservedAccessibilityData,
+  milanHasObservedClimateData,
+  milanJunctionAnchorsForPilot,
+} from "@/lib/milanMapLayers";
 import { useLocalCityData } from "@/hooks/use-local-city-data";
 import { getKpiMissingDataNotice } from "@/lib/kpiMissingDataMessage";
 import { dataClassLabel } from "@/lib/observatoryCityContent";
@@ -180,6 +189,57 @@ export function ObservatoryGraphicSlot({
   );
   const cityCenter = useMemo(() => getCityCenter(cityName), [cityName]);
   const isTrikala = cityName.toLowerCase().includes("trikala");
+  const isMilan = cityName === "Milan";
+  const milanPilotId =
+    pilotId === "mil-p1" || pilotId === "mil-p2" || pilotId === "mil-p3"
+      ? pilotId
+      : "mil-p2";
+  const { data: milanSpeedForObservatory } = useMilanSpeedSegments(
+    milanPilotId,
+    isMilan &&
+      (selectedKpi === "kpi2.1" ||
+        selectedKpi === "kpi1.2" ||
+        selectedKpi === "kpi3.2" ||
+        selectedKpi === "kpi4.2")
+  );
+  const { data: milanEnvForObservatory } = useMilanEnvironmentSegments(
+    "08-09",
+    isMilan && selectedKpi === "kpi3.2",
+    milanPilotId
+  );
+  const { data: localPoints = [] } = useLocalCityData(
+    cityName,
+    selectedKpi,
+    cityCenter,
+    pilotId,
+    scenario
+  );
+  const milanJunctionMockPoints = useMemo(() => {
+    if (!isMilan || !milanSpeedForObservatory?.records?.length) return [];
+    const junctions = milanJunctionAnchorsForPilot(milanSpeedForObservatory.records);
+    if (!junctions.length) return [];
+
+    if (selectedKpi === "kpi1.2") {
+      return buildMilanJunctionModeShareMockPoints(junctions, milanPilotId);
+    }
+    if (selectedKpi === "kpi3.2" && !milanHasObservedClimateData(milanEnvForObservatory)) {
+      return buildMilanJunctionClimateMockPoints(junctions, milanPilotId);
+    }
+    if (
+      selectedKpi === "kpi4.2" &&
+      !milanHasObservedAccessibilityData(localPoints, milanPilotId)
+    ) {
+      return buildMilanJunctionAccessibilityMockPoints(junctions, milanPilotId);
+    }
+    return [];
+  }, [
+    isMilan,
+    selectedKpi,
+    milanSpeedForObservatory,
+    milanEnvForObservatory,
+    localPoints,
+    milanPilotId,
+  ]);
   const { data: trikalaSegmentInsights = [] } = useQuery({
     queryKey: ["trikala-segment-insights", pilotId],
     queryFn: getTrikalaSegmentInsights,
@@ -198,13 +258,7 @@ export function ObservatoryGraphicSlot({
     enabled: isTrikala,
     staleTime: 600_000,
   });
-  const { data: points = [] } = useLocalCityData(
-    cityName,
-    selectedKpi,
-    cityCenter,
-    pilotId,
-    scenario
-  );
+  const points = isMilan && milanJunctionMockPoints.length ? milanJunctionMockPoints : localPoints;
 
   const payload = useMemo(
     () =>
@@ -226,6 +280,7 @@ export function ObservatoryGraphicSlot({
             trikalaSensorJoins: isTrikala ? trikalaLocationsBundle?.sensorJoins : undefined,
             trikalaWomenMobilityModeShare:
               isTrikala && pilotId !== "tri-p2" ? trikalaWomenMobilityModeShare : undefined,
+            milanSegmentStats: isMilan ? milanSpeedForObservatory?.stats : undefined,
           })
         : null,
     [
@@ -244,6 +299,8 @@ export function ObservatoryGraphicSlot({
       trikalaWomenMobilityModeShare,
       trikalaLocationsBundle?.locations,
       trikalaLocationsBundle?.sensorJoins,
+      milanSpeedForObservatory?.stats,
+      milanJunctionMockPoints,
     ]
   );
 

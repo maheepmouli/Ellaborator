@@ -3,7 +3,7 @@ import {
   ISSY_P2_JUNCTION,
   type IssyJunctionArmId,
 } from "@/lib/issyPilot2Junction";
-import { destinationLatLng } from "@/lib/copenhagenMapLayers/copenhagenFlowGeometry";
+import { placeFieldPointOnJunctionArm } from "@/lib/issyJunctionArmPlacement";
 import type { IssyPilotId } from "@/data/issyPilotProfiles";
 import type { LocalCityPoint } from "@/services/localCityData";
 import type { ScenarioType } from "@/types/normalized-city-data";
@@ -43,16 +43,16 @@ export interface IssySentimentPilotMock {
   methodology: string;
 }
 
-const ARM_BEARING: Record<IssyJunctionArmId, number> = {
-  west: 270,
-  east: 90,
-  north: 355,
-  south: 175,
+const ARM_FIELD_DISTANCE_M: Record<IssyJunctionArmId, number> = {
+  west: 40,
+  east: 46,
+  north: 54,
+  south: 50,
 };
 
 /** Survey slots on KPI 1.2 mode-share corridor arms only. */
 const PILOT_SENTIMENT_ARMS: Partial<Record<IssyPilotId, IssyJunctionArmId[]>> = {
-  "issy-p3": ["north", "east", "south"],
+  "issy-p3": ["west", "east", "south"],
 };
 
 const ARM_DIMENSIONS: IssySentimentDimension[] = [
@@ -67,7 +67,6 @@ function getArm(armId: IssyJunctionArmId) {
 
 function placeSamplesOnArms(pilotId: IssyPilotId, profile: Omit<IssySentimentPilotMock, "samples">): IssySentimentSampleMock[] {
   const arms = PILOT_SENTIMENT_ARMS[pilotId] ?? [];
-  const { lat: hubLat, lon: hubLon } = ISSY_P2_JUNCTION;
   const breakdownEntries = Object.entries(profile.breakdown) as [IssySentimentDimension, number][];
   const baselineEntries = Object.entries(profile.baselineBreakdown) as [IssySentimentDimension, number][];
 
@@ -76,8 +75,8 @@ function placeSamplesOnArms(pilotId: IssyPilotId, profile: Omit<IssySentimentPil
     const dimension = ARM_DIMENSIONS[index % ARM_DIMENSIONS.length];
     const satisfactionScore = breakdownEntries.find(([k]) => k === dimension)?.[1] ?? profile.satisfiedPct;
     const baselineScore = baselineEntries.find(([k]) => k === dimension)?.[1] ?? profile.baselineSatisfiedPct;
-    const distanceM = 72 + index * 16;
-    const [lat, lon] = destinationLatLng(hubLat, hubLon, ARM_BEARING[armId], distanceM);
+    const distanceM = ARM_FIELD_DISTANCE_M[armId] + index * 12;
+    const [lat, lon] = placeFieldPointOnJunctionArm(armId, distanceM);
 
     return {
       id: `${pilotId}-sentiment-${armId}`,
@@ -135,7 +134,7 @@ const ISSY_SENTIMENT_BY_PILOT: Partial<Record<IssyPilotId, IssySentimentPilotMoc
       "General Satisfaction": 68,
     },
     methodology:
-      "Three mock survey samples on north / east / south corridor arms where KPI 1.2 mode-share segments are monitored. Headline 82% matches registry demo anchor; per-arm hover values are mock cohort scores.",
+      "Three mock survey samples on west / east / south corridor arms where KPI 1.2 mode-share segments are monitored. Headline 82% matches registry demo anchor; per-arm hover values are mock cohort scores.",
   }),
 };
 

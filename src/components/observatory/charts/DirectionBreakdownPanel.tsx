@@ -41,7 +41,7 @@ export function DirectionBreakdownPanel({
                   : "border-white/15 bg-white/[0.03]"
               }`}
             >
-              <p className="font-medium text-white/88">{row.direction}</p>
+              <p className="font-medium text-white/90">{row.direction}</p>
               <p className="text-white/55">{row.site}</p>
               <p className="text-white/65">
                 Pre {row.baselinePct.toFixed(0)}% → Post {row.interventionPct.toFixed(0)}%

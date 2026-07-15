@@ -51,4 +51,11 @@ export interface NormalizedCityRecord {
   category?: string;
   likertLabel?: string;
   facilityCategory?: string;
+  preCo2GPerHour?: number;
+  postCo2GPerHour?: number;
+  /** LoRa device hex id (Trikala bike-lane sensors). */
+  deviceId?: string;
+  busyPct?: number;
+  availabilityPct?: number;
+  observationCount?: number;
 }

@@ -1,6 +1,6 @@
 import type { TrafficSegment } from "@/types/traffic";
 
-/** Cardinal arms at the Issy study intersection (4 traficissy segment IDs). */
+/** Cardinal arms at the Issy study intersection (3 monitored traficissy segment IDs). */
 export type IssyJunctionArmId = "west" | "east" | "north" | "south";
 
 export interface IssyJunctionArmConfig {
@@ -16,7 +16,7 @@ export interface IssyJunctionArmConfig {
 
 /**
  * Issy study intersection — Pont d'Issy × Quai du Président Roosevelt × Rue Rouget.
- * Four observed arms from traficissy (2× Quai d'Issy + 2× Bd Frères Voisins).
+ * Three monitored arms from traficissy (north Quai arm excluded from the map).
  */
 export const ISSY_P2_JUNCTION = {
   lat: 48.829725,
@@ -26,7 +26,7 @@ export const ISSY_P2_JUNCTION = {
   radiusMeters: 220,
 } as const;
 
-/** Clockwise from west: Pont / Rouget / Quai north / Quai south (mapped to nearest API arms). */
+/** Clockwise from west: Pont / Rouget / Quai south (mapped to nearest API arms). */
 export const ISSY_JUNCTION_ARMS: IssyJunctionArmConfig[] = [
   {
     id: "west",
@@ -43,14 +43,6 @@ export const ISSY_JUNCTION_ARMS: IssyJunctionArmConfig[] = [
     apiLabel: "Bd Frères Voisins vers Boulogne",
     armLabel: "East arm",
     color: "#10b981",
-  },
-  {
-    id: "north",
-    segmentId: "#ILM_92130_5416",
-    mapLabel: "Quai du Président Roosevelt (north)",
-    apiLabel: "Quai d'Issy vers Paris",
-    armLabel: "North arm",
-    color: "#63ccff",
   },
   {
     id: "south",

@@ -1,25 +1,11 @@
 import L from "leaflet";
-import { renderCopenhagenRadarFlowLayout } from "@/lib/copenhagenMapLayers/copenhagenRadarFlowLayout";
 import type { CopenhagenObservedPoint } from "@/lib/copenhagenMapLayers/renderCopenhagenMapLayers";
 import type { SegmentInteractionHandlers } from "@/lib/wireMapSegmentInteraction";
-import { wireMarkerSegment } from "@/lib/wireMapSegmentInteraction";
-import { createMapPointDivIcon } from "@/lib/mapPointIcons";
 import type { TrikalaSegmentInsight } from "@/services/trikalaSurveyParser";
-import { resolveTrikalaSurveyIconSpec } from "./trikalaPointIcons";
 import { buildTrikalaModeShareFlowPoints } from "./trikalaModeShareMapFlows";
+import { renderTrikalaMobilityHubStack } from "./renderTrikalaMobilityHubStack";
 
 const HUB_SEGMENT_ID = "tri-p1-women-mobility";
-
-function intensityScalar(
-  scenario: "baseline" | "intervention" | "comparison",
-  baselineValue: number,
-  interventionValue: number,
-  comparisonValue: number
-): number {
-  if (scenario === "baseline") return baselineValue;
-  if (scenario === "intervention") return interventionValue;
-  return Math.min(100, Math.abs(comparisonValue) * 4);
-}
 
 function buildTrikalaFlowPopup(options: {
   anchorLabel: string;
@@ -56,6 +42,7 @@ export interface RenderTrikalaModeShareRadarOptions {
   markersOut: L.Marker[];
   circlesOut: Array<L.Circle | L.CircleMarker>;
   polylinesOut: L.Polyline[];
+  polygonsOut: L.Polygon[];
   wireCircleMarker: (
     marker: L.CircleMarker,
     meta: { segmentId: string; segmentName: string; speed: null; congestion: null },
@@ -68,9 +55,10 @@ export interface RenderTrikalaModeShareRadarOptions {
       highlightStyle?: L.PathOptions;
     }
   ) => void;
+  getValueColor?: (value: number, safetyKpi: boolean) => string;
 }
 
-/** Radar spokes from survey segments — same flow geometry as Copenhagen, no camera FOV or hardware icons. */
+/** Copenhagen-style mobility radar at the women mobility survey anchor (KPI 1.2). */
 export function renderTrikalaModeShareRadar(options: RenderTrikalaModeShareRadarOptions): boolean {
   const {
     map,
@@ -83,7 +71,9 @@ export function renderTrikalaModeShareRadar(options: RenderTrikalaModeShareRadar
     markersOut,
     circlesOut,
     polylinesOut,
+    polygonsOut,
     wireCircleMarker,
+    getValueColor,
   } = options;
 
   const flows = buildTrikalaModeShareFlowPoints(segmentInsights, hub);
@@ -93,45 +83,24 @@ export function renderTrikalaModeShareRadar(options: RenderTrikalaModeShareRadar
     selectedSegmentId === HUB_SEGMENT_ID ||
     selectedSegmentId === "tri-p1-smart-crossing";
 
-  const iconSpec = resolveTrikalaSurveyIconSpec(HUB_SEGMENT_ID, "kpi1.2", {
-    subSegment: "Survey aggregate",
-  });
-  const hubMarker = L.marker([hub.lat, hub.lng], {
-    icon: createMapPointDivIcon(iconSpec, `${iconSpec.label} · ${hubLabel}`),
-    zIndexOffset: 1400,
-  }).addTo(map);
-  wireMarkerSegment(
-    hubMarker,
-    {
-      segmentId: HUB_SEGMENT_ID,
-      segmentName: hubLabel,
-      speed: null,
-      congestion: null,
-    },
-    segmentHandlers
-  );
-  hubMarker.bindTooltip(
-    `${hubLabel}<br/><span style="font-size:9px;opacity:0.85">Self-reported segments · not camera counts</span>`,
-    { direction: "top", opacity: 0.92 }
-  );
-  markersOut.push(hubMarker);
-
-  const svgRenderer = L.svg({ padding: 0.8 });
-  const circleMarkers = circlesOut as L.CircleMarker[];
-
-  renderCopenhagenRadarFlowLayout({
+  renderTrikalaMobilityHubStack({
     map,
     hubLat: hub.lat,
     hubLon: hub.lng,
+    hubSegmentId: HUB_SEGMENT_ID,
+    hubLabel,
     flows,
     scenario,
     selectedSegmentId,
     segmentHandlers,
+    markersOut,
+    circlesOut,
     polylinesOut,
-    circlesOut: circleMarkers,
-    svgRenderer,
+    polygonsOut,
     wireCircleMarker,
-    intensityScalar,
+    getValueColor,
+    ringScale: 1,
+    singleHubMarker: true,
     featureSelected: (segmentId) => {
       if (!selectedSegmentId) return false;
       if (selectedSegmentId === segmentId) return true;

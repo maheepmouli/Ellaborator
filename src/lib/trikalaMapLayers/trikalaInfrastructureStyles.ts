@@ -123,12 +123,18 @@ export function infrastructureMarkerHtml(options: {
   return `<div class="tri-infra-marker tri-infra-${kind}${isSelected ? " is-selected" : ""}" style="--tri-infra-color:${color};--tri-infra-size:${size}px">${ring}${shape}</div>`;
 }
 
-export function infrastructurePopupHtml(name: string, kind: TrikalaLocationKind, folder: string): string {
+export function infrastructurePopupHtml(
+  name: string,
+  kind: TrikalaLocationKind,
+  folder: string,
+  metricLine?: string
+): string {
   const label = kind.replace(/_/g, " ");
   return `
     <div style="font-family:'DM Sans',sans-serif;padding:8px;min-width:180px;">
       <p style="font-size:10px;color:#96C2EF;margin:0 0 4px 0;text-transform:uppercase;">${label}</p>
       <p style="font-size:12px;font-weight:600;color:#EAF7FF;margin:0;">${name}</p>
+      ${metricLine ? `<p style="font-size:10px;color:#22d3ee;margin:4px 0 0 0;">${metricLine}</p>` : ""}
       <p style="font-size:10px;color:#ffffff99;margin:4px 0 0 0;">${folder}</p>
     </div>
   `;

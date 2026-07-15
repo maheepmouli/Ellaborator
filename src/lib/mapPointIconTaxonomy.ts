@@ -1,6 +1,7 @@
 export type MapPointIconKey =
   | "cycleParking"
   | "charging"
+  | "climate"
   | "sharedMobility"
   | "pedestrian"
   | "sensor"
@@ -19,6 +20,7 @@ export interface MapPointIconSpec {
 const ICON_SPEC: Record<MapPointIconKey, MapPointIconSpec> = {
   cycleParking: { key: "cycleParking", label: "Cycle parking", symbol: "P", accent: "#00ffff", glow: "#22d3ee" },
   charging: { key: "charging", label: "Charging / sensor", symbol: "C", accent: "#ffb300", glow: "#f59e0b" },
+  climate: { key: "climate", label: "Modelled emissions node", symbol: "C", accent: "#f59e0b", glow: "#fbbf24" },
   sharedMobility: { key: "sharedMobility", label: "Shared mobility", symbol: "S", accent: "#2ecc71", glow: "#10b981" },
   pedestrian: { key: "pedestrian", label: "Pedestrian", symbol: "W", accent: "#7f5af0", glow: "#6d28d9" },
   sensor: { key: "sensor", label: "Sensor", symbol: "M", accent: "#ffb300", glow: "#f59e0b" },
@@ -81,8 +83,17 @@ function categoryFromText(text: string): MapPointIconKey | null {
     text.includes("crossing") ||
     text.includes("traffic signal")
   ) return "pedestrian";
-  if (text.includes("access")) return "accessibility";
+  if (text.includes("emissions") || text.includes("modelled co")) return "climate";
+  if (
+    text.includes("amat-count") ||
+    text.includes("amat_count") ||
+    text.includes("road user count")
+  ) {
+    return "sharedMobility";
+  }
   if (text.includes("parking")) return "parking";
+  if (text.includes("survey") || text.includes("acceptability") || text.includes("likert")) return "pedestrian";
+  if (text.includes("near encounter") || text.includes("irap")) return "sensor";
   return null;
 }
 

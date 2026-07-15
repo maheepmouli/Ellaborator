@@ -10,6 +10,10 @@ import {
 import {
   getCopenhagenDirectionArmStyle,
   getCopenhagenEndpointMarkerStyle,
+  copenhagenFlowLineOpacity,
+  copenhagenFlowLineWeight,
+  copenhagenZoomLineBoost,
+  resolveCopenhagenIntensityColor,
   CPH_LINE_FOCUS_DIM,
 } from "./copenhagenFlowStyles";
 import {
@@ -97,6 +101,7 @@ export interface RenderCopenhagenRadarFlowOptions {
   segmentHandlers: SegmentInteractionHandlers;
   polylinesOut: L.Polyline[];
   circlesOut: L.CircleMarker[];
+  markersOut?: L.Marker[];
   svgRenderer: L.Renderer;
   wireCircleMarker: (
     marker: L.CircleMarker,
@@ -118,8 +123,47 @@ export interface RenderCopenhagenRadarFlowOptions {
     interventionValue: number,
     comparisonValue: number
   ) => number;
+  getValueColor?: (value: number, safetyKpi: boolean) => string;
+  safetyKpi?: boolean;
   /** Scale radar ring/spoke radius — use >1 when map is zoomed out (e.g. Trikala P+R network). */
   ringScale?: number;
+  /** Hide spoke terminal dots — junction hubs use ripple + center marker only. */
+  hideFlowEndpointMarkers?: boolean;
+}
+
+function flowArrowIcon(bearingDeg: number, color: string): L.DivIcon {
+  return L.divIcon({
+    className: "cph-radar-flow-arrow",
+    html: `<svg width="12" height="12" viewBox="0 0 12 12" style="transform: rotate(${bearingDeg}deg);"><path d="M6 1 L10 9 L6 7 L2 9 Z" fill="${color}" opacity="0.92"/></svg>`,
+    iconSize: [12, 12],
+    iconAnchor: [6, 6],
+  });
+}
+
+function pointAlongSpoke(
+  path: [number, number][],
+  fraction: number
+): { point: [number, number]; bearing: number } | null {
+  if (path.length < 2) return null;
+  const a = path[0];
+  const b = path[path.length - 1];
+  return {
+    point: [a[0] + (b[0] - a[0]) * fraction, a[1] + (b[1] - a[1]) * fraction],
+    bearing: bearingBetween(a, b),
+  };
+}
+
+function bearingBetween(from: [number, number], to: [number, number]): number {
+  const [lat1, lon1] = from;
+  const [lat2, lon2] = to;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const lat1r = (lat1 * Math.PI) / 180;
+  const lat2r = (lat2 * Math.PI) / 180;
+  const y = Math.sin(dLon) * Math.cos(lat2r);
+  const x =
+    Math.cos(lat1r) * Math.sin(lat2r) -
+    Math.sin(lat1r) * Math.cos(lat2r) * Math.cos(dLon);
+  return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
 }
 
 /**
@@ -137,16 +181,21 @@ export function renderCopenhagenRadarFlowLayout(options: RenderCopenhagenRadarFl
     segmentHandlers,
     polylinesOut,
     circlesOut,
+    markersOut,
     svgRenderer,
     wireCircleMarker,
     buildPopup,
     featureSelected,
     intensityScalar,
+    getValueColor,
+    safetyKpi = false,
     ringScale = 1,
+    hideFlowEndpointMarkers = false,
   } = options;
 
   if (!flows.length) return;
 
+  const zoomBoost = copenhagenZoomLineBoost(map.getZoom());
   const hasFocus = Boolean(selectedSegmentId);
 
   const innerRing = L.polyline(
@@ -179,6 +228,10 @@ export function renderCopenhagenRadarFlowLayout(options: RenderCopenhagenRadarFl
     popupHtml: string;
     intensityValue: number;
     isSelected: boolean;
+    isInbound: boolean;
+    baselineValue: number;
+    interventionValue: number;
+    comparisonValue: number;
   }> = [];
 
   flows.forEach((point, flowIndex) => {
@@ -209,19 +262,26 @@ export function renderCopenhagenRadarFlowLayout(options: RenderCopenhagenRadarFl
     const pairSlot = directionPairSlot(direction, flowIndex);
     const isInbound = pairSlot === 0;
     const { path, terminal } = buildRadarSpokeGeometry(hubLat, hubLon, bearing, isInbound, ringScale);
-    const armColor = CPH_DIRECTION_PAIR_COLORS[pairSlot];
     const flowStyle = getCopenhagenDirectionArmStyle({
       pairSlot,
       isSelected,
       scenario,
       dimmed: hasFocus && !isSelected,
     });
+    const intensityColor = resolveCopenhagenIntensityColor({
+      scenario,
+      baselineValue,
+      interventionValue,
+      comparisonValue,
+      getValueColor,
+      safetyKpi,
+    });
 
     spokeItems.push({
       path,
       terminal,
       pairSlot,
-      armColor,
+      armColor: intensityColor,
       flowStyle,
       segmentId,
       segmentName: `${streetName} · ${direction}`,
@@ -229,16 +289,44 @@ export function renderCopenhagenRadarFlowLayout(options: RenderCopenhagenRadarFl
       popupHtml: buildPopup(point),
       intensityValue,
       isSelected,
+      isInbound,
+      baselineValue,
+      interventionValue,
+      comparisonValue,
     });
   });
 
   spokeItems
     .sort((a, b) => a.pairSlot - b.pairSlot)
     .forEach((spoke) => {
+      const lineWeight =
+        copenhagenFlowLineWeight(spoke.intensityValue, spoke.isSelected) * zoomBoost;
+      const lineOpacity = copenhagenFlowLineOpacity(
+        spoke.intensityValue,
+        spoke.isSelected,
+        hasFocus && !spoke.isSelected
+      );
+      const lineColor =
+        scenario === "comparison"
+          ? spoke.armColor
+          : spoke.isSelected
+            ? "#ffffff"
+            : spoke.armColor;
+
+      const glow = L.polyline(spoke.path, {
+        color: spoke.armColor,
+        weight: lineWeight + 7,
+        opacity: spoke.isSelected ? 0.4 : lineOpacity * 0.32,
+        lineCap: "round",
+        lineJoin: "round",
+        interactive: false,
+      }).addTo(map);
+      polylinesOut.push(glow);
+
       const polyline = L.polyline(spoke.path, {
-        color: spoke.flowStyle.color,
-        weight: spoke.flowStyle.weight,
-        opacity: spoke.flowStyle.opacity,
+        color: lineColor,
+        weight: lineWeight,
+        opacity: lineOpacity,
         dashArray: spoke.flowStyle.dashArray,
         className: spoke.flowStyle.className,
         lineCap: "round",
@@ -289,7 +377,7 @@ export function renderCopenhagenRadarFlowLayout(options: RenderCopenhagenRadarFl
         hasFocus && !spoke.isSelected
       );
 
-      if (!endpointStyle.hidden) {
+      if (!endpointStyle.hidden && !hideFlowEndpointMarkers) {
         const endpointMarker = L.circleMarker(spoke.terminal, {
           radius: endpointStyle.radius,
           fillColor: endpointStyle.fillColor,
@@ -297,43 +385,59 @@ export function renderCopenhagenRadarFlowLayout(options: RenderCopenhagenRadarFl
           color: endpointStyle.color,
           weight: endpointStyle.weight,
           opacity: 0.98,
-          interactive: false,
         }).addTo(map);
         endpointMarker.bindPopup(spoke.popupHtml);
+        bindCopenhagenMapTooltip(endpointMarker, spoke.tooltipLabel);
+        wireCircleMarker(
+          endpointMarker,
+          {
+            segmentId: spoke.segmentId,
+            segmentName: spoke.segmentName,
+            speed: null,
+            congestion: null,
+          },
+          segmentHandlers,
+          {
+            baseRadius: endpointStyle.radius,
+            highlightRadius: endpointStyle.radius + 3,
+            selectedSegmentId,
+            baseStyle: {
+              fillColor: endpointStyle.fillColor,
+              color: endpointStyle.color,
+              fillOpacity: endpointStyle.fillOpacity,
+              opacity: 0.98,
+              weight: endpointStyle.weight,
+            },
+            highlightStyle: {
+              fillOpacity: 1,
+              opacity: 1,
+              weight: (endpointStyle.weight as number) + 1,
+              color: "#ffffff",
+            },
+          }
+        );
         circlesOut.push(endpointMarker);
       }
 
-      const endpointHit = L.circleMarker(spoke.terminal, {
-        radius: endpointStyle.hidden ? 10 : endpointStyle.radius + 4,
-        fillOpacity: 0,
-        opacity: 0,
-        weight: 0,
-        interactive: true,
-      }).addTo(map);
-      wireCircleMarker(
-        endpointHit,
-        {
-          segmentId: spoke.segmentId,
-          segmentName: spoke.segmentName,
-          speed: null,
-          congestion: null,
-        },
-        segmentHandlers,
-        {
-          baseRadius: endpointStyle.radius + 4,
-          highlightRadius: endpointStyle.radius + 6,
-          selectedSegmentId,
-          baseStyle: { fillOpacity: 0, opacity: 0, weight: 0 },
-          highlightStyle: {
-            fillOpacity: 0.12,
-            opacity: 0.35,
-            weight: 1.5,
-            color: spoke.armColor,
-          },
+      if (markersOut) {
+        const outboundArrow = pointAlongSpoke(spoke.path, 0.82);
+        if (outboundArrow) {
+          const arrow = L.marker(outboundArrow.point, {
+            icon: flowArrowIcon(outboundArrow.bearing, spoke.armColor),
+            interactive: false,
+            zIndexOffset: 850,
+          }).addTo(map);
+          markersOut.push(arrow);
         }
-      );
-      endpointHit.bindPopup(spoke.popupHtml);
-      bindCopenhagenMapTooltip(endpointHit, spoke.tooltipLabel);
-      circlesOut.push(endpointHit);
+        const inboundArrow = pointAlongSpoke(spoke.path, 0.22);
+        if (inboundArrow) {
+          const arrow = L.marker(inboundArrow.point, {
+            icon: flowArrowIcon((inboundArrow.bearing + 180) % 360, spoke.armColor),
+            interactive: false,
+            zIndexOffset: 850,
+          }).addTo(map);
+          markersOut.push(arrow);
+        }
+      }
     });
 }

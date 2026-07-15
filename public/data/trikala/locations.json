@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-10T09:26:58.639Z",
+  "generatedAt": "2026-07-15T09:52:17.706Z",
   "sourceKml": "scripts/data/trikala-partner-map/doc.kml",
   "locationCount": 57,
   "sensorJoinCount": 7,
@@ -1460,6 +1460,327 @@
       "locationId": null,
       "label": null,
       "joinMethod": null
+    }
+  ],
+  "bikeLaneSensorJoins": [
+    {
+      "deviceId": "FC073EEB",
+      "locationId": "tri-loc-cups-nine-2",
+      "label": "CUPS NINE 2",
+      "joinMethod": "exact-name",
+      "busyPct": 47,
+      "availabilityPct": 53,
+      "observationCount": 1011,
+      "periodStart": "2026-04-04 07:15:17.312",
+      "periodEnd": "2026-04-22 08:34:29.588"
+    },
+    {
+      "deviceId": "FC073EEC",
+      "locationId": "tri-loc-cups-nine-3",
+      "label": "CUPS NINE 3",
+      "joinMethod": "exact-name",
+      "busyPct": 48,
+      "availabilityPct": 52,
+      "observationCount": 1014,
+      "periodStart": "2026-04-02 14:08:16.884",
+      "periodEnd": "2026-04-22 08:02:13.026"
+    },
+    {
+      "deviceId": "FC073EED",
+      "locationId": "tri-loc-parking-1",
+      "label": "PARKING ΔΕΗ 1",
+      "joinMethod": "exact-name",
+      "busyPct": 46,
+      "availabilityPct": 54,
+      "observationCount": 1005,
+      "periodStart": "2026-03-21 13:18:14.642",
+      "periodEnd": "2026-04-22 05:42:34.222"
+    },
+    {
+      "deviceId": "FC073EEE",
+      "locationId": "tri-loc-parking-2",
+      "label": "PARKING ΔΕΗ 2",
+      "joinMethod": "exact-name",
+      "busyPct": 45,
+      "availabilityPct": 55,
+      "observationCount": 896,
+      "periodStart": "2026-02-24 08:57:01.897",
+      "periodEnd": "2026-04-22 03:54:56.573"
+    },
+    {
+      "deviceId": "FC073EEF",
+      "locationId": "tri-loc-cups-nine-5",
+      "label": "CUPS NINE 5",
+      "joinMethod": "exact-name",
+      "busyPct": 35,
+      "availabilityPct": 65,
+      "observationCount": 449,
+      "periodStart": "2026-02-24 09:27:24.954",
+      "periodEnd": "2026-04-22 05:29:57.995"
+    },
+    {
+      "deviceId": "FC073EF0",
+      "locationId": "tri-loc-cups-nine-4",
+      "label": "CUPS NINE 4",
+      "joinMethod": "exact-name",
+      "busyPct": 39,
+      "availabilityPct": 61,
+      "observationCount": 241,
+      "periodStart": "2026-02-24 09:27:25.295",
+      "periodEnd": "2026-04-22 00:46:59.496"
+    },
+    {
+      "deviceId": "FC073EF1",
+      "locationId": "tri-loc-parking",
+      "label": "PARKING ΜΠΟΝΩΤΗ",
+      "joinMethod": "exact-name",
+      "busyPct": 38,
+      "availabilityPct": 62,
+      "observationCount": 592,
+      "periodStart": "2026-02-24 09:27:24.456",
+      "periodEnd": "2026-04-22 06:58:18.819"
+    },
+    {
+      "deviceId": "FC073EF2",
+      "locationId": "tri-loc-jimmys-1",
+      "label": "JIMMYS 1",
+      "joinMethod": "exact-name",
+      "busyPct": 53,
+      "availabilityPct": 47,
+      "observationCount": 442,
+      "periodStart": "2026-02-24 09:27:25.911",
+      "periodEnd": "2026-04-22 05:46:18.591"
+    },
+    {
+      "deviceId": "FC073EF3",
+      "locationId": "tri-loc-7",
+      "label": "ΔΕΣΠΟΤΙΚΟ 7",
+      "joinMethod": "exact-name",
+      "busyPct": 54,
+      "availabilityPct": 46,
+      "observationCount": 445,
+      "periodStart": "2026-02-24 09:27:25.120",
+      "periodEnd": "2026-04-22 05:30:17.952"
+    },
+    {
+      "deviceId": "FC073EF5",
+      "locationId": "tri-loc-2",
+      "label": "ΒΟΥΒΗΣ 2",
+      "joinMethod": "exact-name",
+      "busyPct": 46,
+      "availabilityPct": 54,
+      "observationCount": 900,
+      "periodStart": "2026-02-24 09:27:26.224",
+      "periodEnd": "2026-04-22 06:01:49.418"
+    },
+    {
+      "deviceId": "FC073EF6",
+      "locationId": "tri-loc-1",
+      "label": "ΒΟΥΒΗΣ 1",
+      "joinMethod": "exact-name",
+      "busyPct": 44,
+      "availabilityPct": 56,
+      "observationCount": 437,
+      "periodStart": "2026-02-24 09:27:24.653",
+      "periodEnd": "2026-04-21 22:31:28.033"
+    },
+    {
+      "deviceId": "FC073EF7",
+      "locationId": "tri-loc-gisemi-1",
+      "label": "GiSeMi 1",
+      "joinMethod": "exact-name",
+      "busyPct": 46,
+      "availabilityPct": 54,
+      "observationCount": 381,
+      "periodStart": "2026-02-24 09:27:23.839",
+      "periodEnd": "2026-04-22 05:27:33.998"
+    },
+    {
+      "deviceId": "FC073EF8",
+      "locationId": "tri-loc-gisemi-2",
+      "label": "GiSeMi 2",
+      "joinMethod": "exact-name",
+      "busyPct": 60,
+      "availabilityPct": 40,
+      "observationCount": 290,
+      "periodStart": "2026-02-24 09:27:24.928",
+      "periodEnd": "2026-04-22 08:23:49.599"
+    },
+    {
+      "deviceId": "FC073EF9",
+      "locationId": "tri-loc-gisemi-3",
+      "label": "GiSeMi 3",
+      "joinMethod": "exact-name",
+      "busyPct": 60,
+      "availabilityPct": 40,
+      "observationCount": 404,
+      "periodStart": "2026-02-24 09:27:27.504",
+      "periodEnd": "Received at"
+    },
+    {
+      "deviceId": "FC073EFA",
+      "locationId": "tri-loc-3",
+      "label": "ΔΕΣΠΟΤΙΚΟ 3",
+      "joinMethod": "exact-name",
+      "busyPct": 48,
+      "availabilityPct": 52,
+      "observationCount": 1010,
+      "periodStart": "2026-04-03 14:11:27.293",
+      "periodEnd": "2026-04-22 07:51:33.703"
+    },
+    {
+      "deviceId": "FC073EFB",
+      "locationId": "tri-loc-parking-1",
+      "label": "ΔΗΜΑΡΧΕΙΟ PARKING 1",
+      "joinMethod": "exact-name",
+      "busyPct": 42,
+      "availabilityPct": 58,
+      "observationCount": 652,
+      "periodStart": "2026-02-24 09:27:28.962",
+      "periodEnd": "2026-04-22 07:12:40.596"
+    },
+    {
+      "deviceId": "FC073EFC",
+      "locationId": "tri-loc-parking-3",
+      "label": "ΔΗΜΑΡΧΕΙΟ PARKING 3",
+      "joinMethod": "exact-name",
+      "busyPct": 44,
+      "availabilityPct": 56,
+      "observationCount": 784,
+      "periodStart": "2026-02-24 09:26:42.858",
+      "periodEnd": "2026-04-22 07:26:13.445"
+    },
+    {
+      "deviceId": "FC073EFD",
+      "locationId": "tri-loc-parking-2",
+      "label": "ΔΗΜΑΡΧΕΙΟ PARKING 2",
+      "joinMethod": "exact-name",
+      "busyPct": 41,
+      "availabilityPct": 59,
+      "observationCount": 436,
+      "periodStart": "2026-02-24 08:58:21.104",
+      "periodEnd": "2026-04-22 03:51:01.699"
+    },
+    {
+      "deviceId": "FC073EFE",
+      "locationId": "tri-loc-parking-2",
+      "label": "PARKING ΣΜΥ 2",
+      "joinMethod": "exact-name",
+      "busyPct": 56,
+      "availabilityPct": 44,
+      "observationCount": 690,
+      "periodStart": "2026-02-24 09:27:27.189",
+      "periodEnd": "2026-04-22 07:12:24.441"
+    },
+    {
+      "deviceId": "FC073EFF",
+      "locationId": "tri-loc-cups-nine-1",
+      "label": "CUPS NINE 1",
+      "joinMethod": "exact-name",
+      "busyPct": 47,
+      "availabilityPct": 53,
+      "observationCount": 1033,
+      "periodStart": "2026-04-07 20:35:50.703",
+      "periodEnd": "2026-04-22 09:18:27.482"
+    },
+    {
+      "deviceId": "FC073F00",
+      "locationId": "tri-loc-5",
+      "label": "ΔΕΣΠΟΤΙΚΟ 5",
+      "joinMethod": "exact-name",
+      "busyPct": 44,
+      "availabilityPct": 56,
+      "observationCount": 1005,
+      "periodStart": "2026-03-11 20:11:07.750",
+      "periodEnd": "2026-04-22 07:56:00.499"
+    },
+    {
+      "deviceId": "FC073F01",
+      "locationId": "tri-loc-parking-4",
+      "label": "ΔΗΜΑΡΧΕΙΟ PARKING 4",
+      "joinMethod": "exact-name",
+      "busyPct": 43,
+      "availabilityPct": 57,
+      "observationCount": 686,
+      "periodStart": "2026-02-24 08:58:17.289",
+      "periodEnd": "2026-04-22 06:53:00.765"
+    },
+    {
+      "deviceId": "FC073F02",
+      "locationId": "tri-loc-8",
+      "label": "ΔΕΣΠΟΤΙΚΟ 8",
+      "joinMethod": "exact-name",
+      "busyPct": 49,
+      "availabilityPct": 51,
+      "observationCount": 1040,
+      "periodStart": "2026-04-10 14:41:05.356",
+      "periodEnd": "2026-04-22 09:32:52.446"
+    },
+    {
+      "deviceId": "FC073F03",
+      "locationId": "tri-loc-jimmys-2",
+      "label": "JIMMYS 2",
+      "joinMethod": "exact-name",
+      "busyPct": 47,
+      "availabilityPct": 53,
+      "observationCount": 1001,
+      "periodStart": "2026-03-24 12:16:17.852",
+      "periodEnd": "2026-04-22 06:17:05.939"
+    },
+    {
+      "deviceId": "FC073F04",
+      "locationId": "tri-loc-6",
+      "label": "ΔΕΣΠΟΤΙΚΟ 6",
+      "joinMethod": "exact-name",
+      "busyPct": 48,
+      "availabilityPct": 52,
+      "observationCount": 1000,
+      "periodStart": "2026-04-08 15:46:23.624",
+      "periodEnd": "2026-04-21 22:12:30.431"
+    },
+    {
+      "deviceId": "FC073F05",
+      "locationId": "tri-loc-parking-1",
+      "label": "PARKING ΣΜΥ 1",
+      "joinMethod": "exact-name",
+      "busyPct": 43,
+      "availabilityPct": 57,
+      "observationCount": 470,
+      "periodStart": "2026-02-24 08:59:55.834",
+      "periodEnd": "2026-04-21 22:43:45.797"
+    },
+    {
+      "deviceId": "FC073F06",
+      "locationId": "tri-loc-4",
+      "label": "ΔΕΣΠΟΤΙΚΟ 4",
+      "joinMethod": "exact-name",
+      "busyPct": 43,
+      "availabilityPct": 57,
+      "observationCount": 645,
+      "periodStart": "2026-02-24 12:35:30.216",
+      "periodEnd": "2026-04-21 21:20:38.660"
+    },
+    {
+      "deviceId": "FC073F07",
+      "locationId": "tri-loc-2",
+      "label": "ΔΕΣΠΟΤΙΚΟ 2",
+      "joinMethod": "exact-name",
+      "busyPct": 42,
+      "availabilityPct": 58,
+      "observationCount": 510,
+      "periodStart": "2026-02-24 09:27:25.827",
+      "periodEnd": "2026-04-22 03:50:38.626"
+    },
+    {
+      "deviceId": "FC073F08",
+      "locationId": "tri-loc-1",
+      "label": "ΔΕΣΠΟΤΙΚΟ 1",
+      "joinMethod": "exact-name",
+      "busyPct": 45,
+      "availabilityPct": 55,
+      "observationCount": 639,
+      "periodStart": "2026-02-24 09:27:25.734",
+      "periodEnd": "2026-04-22 03:12:09.974"
     }
   ]
 }

@@ -119,46 +119,41 @@ export function renderTrikalaSatisfactionZones(
   if (selectedPilotId !== "tri-p1") return;
 
   const crossingSite = locations.find((l) => l.kind === "smart_crossing_site");
-  const centers: Array<{ lat: number; lng: number; label: string }> = [
-    {
-      lat: crossingSite?.lat ?? anchor.lat,
-      lng: crossingSite?.lng ?? anchor.lng,
-      label: crossingSite?.name ?? "Smart crossing",
-    },
-    { lat: anchor.lat, lng: anchor.lng, label: "Survey anchor" },
-  ];
+  const center = {
+    lat: crossingSite?.lat ?? anchor.lat,
+    lng: crossingSite?.lng ?? anchor.lng,
+    label: crossingSite?.name ?? "Smart crossing",
+  };
 
-  centers.forEach((center, idx) => {
-    const zone = L.circle([center.lat, center.lng], {
-      radius: SATISFACTION_ZONE_RADIUS_M + idx * 20,
-      color: ZONE.satisfaction.stroke,
-      weight: 2.5,
-      opacity: 0.74,
-      fillColor: ZONE.satisfaction.fill,
-      fillOpacity: 0.18,
-      interactive: false,
-      className: "tri-satisfaction-zone",
-    }).addTo(map);
-    circlesOut.push(zone);
-    addZoneTag(
-      map,
-      center.lat,
-      center.lng,
-      center.label,
-      "User satisfaction",
-      "satisfaction",
-      markersOut,
-      0.0004 + idx * 0.00008
-    );
-  });
+  const zone = L.circle([center.lat, center.lng], {
+    radius: SATISFACTION_ZONE_RADIUS_M,
+    color: ZONE.satisfaction.stroke,
+    weight: 2.5,
+    opacity: 0.74,
+    fillColor: ZONE.satisfaction.fill,
+    fillOpacity: 0.18,
+    interactive: false,
+    className: "tri-satisfaction-zone",
+  }).addTo(map);
+  circlesOut.push(zone);
+  addZoneTag(
+    map,
+    center.lat,
+    center.lng,
+    center.label,
+    "User satisfaction",
+    "satisfaction",
+    markersOut,
+    0.0004
+  );
 }
 
-/** Accessibility field at smart-crossing / bike corridor (KPI 4.2). */
+/** Accessibility labels at smart-crossing / bike corridor (KPI 4.2) — markers only, no zone halos. */
 export function renderTrikalaAccessibilityZones(
   map: L.Map,
   locations: TrikalaLocation[],
   selectedKpi: string,
-  circlesOut: L.Circle[],
+  _circlesOut: L.Circle[],
   markersOut: L.Marker[]
 ): void {
   if (selectedKpi !== "kpi4.2") return;
@@ -169,20 +164,17 @@ export function renderTrikalaAccessibilityZones(
       isVisible(l, selectedKpi)
   );
 
-  sites.forEach((loc, idx) => {
-    const zone = L.circle([loc.lat, loc.lng], {
-      radius: 78 + (idx % 4) * 14,
-      color: ZONE.accessibility.stroke,
-      weight: 2.5,
-      opacity: 0.74,
-      fillColor: ZONE.accessibility.fill,
-      fillOpacity: 0.2,
-      interactive: false,
-      className: "tri-accessibility-zone",
-    }).addTo(map);
-    circlesOut.push(zone);
+  const seen = new Set<string>();
+  sites.forEach((loc) => {
+    const tagKey =
+      loc.kind === "bike_lane_sensor"
+        ? loc.name.replace(/\s+\d+$/u, "").trim()
+        : loc.id;
+    if (seen.has(tagKey)) return;
+    seen.add(tagKey);
+
     const tagLabel =
-      loc.kind === "smart_crossing_site" ? "Smart crossing" : loc.name;
+      loc.kind === "smart_crossing_site" ? "Smart crossing" : tagKey;
     addZoneTag(
       map,
       loc.lat,

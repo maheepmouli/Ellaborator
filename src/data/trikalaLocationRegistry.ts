@@ -33,11 +33,24 @@ export interface TrikalaSensorJoin {
   joinMethod?: string;
 }
 
+export interface TrikalaBikeLaneSensorJoin {
+  deviceId: string;
+  locationId: string | null;
+  label: string | null;
+  joinMethod?: string | null;
+  busyPct?: number | null;
+  availabilityPct?: number | null;
+  observationCount?: number;
+  periodStart?: string | null;
+  periodEnd?: string | null;
+}
+
 export interface TrikalaLocationsBundle {
   generatedAt: string;
   locationCount: number;
   locations: TrikalaLocation[];
   sensorJoins: TrikalaSensorJoin[];
+  bikeLaneSensorJoins?: TrikalaBikeLaneSensorJoin[];
 }
 
 const BUNDLE_URL = "/data/trikala/locations.json";

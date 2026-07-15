@@ -83,7 +83,10 @@ export function filterTrikalaObservatoryPoints(
     const byRegistryId = points.filter(
       (p) =>
         String(p.properties?.segmentId ?? "") === selectionId ||
-        pointRecordId(p) === `trikala-kpi3.2-${selectionId}`
+        pointRecordId(p) === selectionId ||
+        pointRecordId(p) === `trikala-kpi3.2-${selectionId}` ||
+        pointRecordId(p) === `trikala-kpi2.1-${selectionId}` ||
+        pointRecordId(p) === `trikala-kpi4.2-${selectionId}`
     );
     if (byRegistryId.length) return byRegistryId;
 
@@ -94,6 +97,14 @@ export function filterTrikalaObservatoryPoints(
       );
       if (bySensor.length) return bySensor;
     }
+  }
+
+  if (selectionId.startsWith("trikala-kpi2.1-") || selectionId.startsWith("trikala-kpi4.2-")) {
+    const suffix = selectionId.replace(/^trikala-kpi[\d.]+-/, "");
+    const bySuffix = points.filter(
+      (p) => pointRecordId(p) === selectionId || String(p.properties?.segmentId ?? "") === suffix
+    );
+    if (bySuffix.length) return bySuffix;
   }
 
   if (selectionId.startsWith("trikala-kpi3.2-")) {
@@ -111,6 +122,49 @@ export function filterTrikalaObservatoryPoints(
     if (byGroup.length === 1) return byGroup;
   }
   return [];
+}
+
+function enrichBikeLaneSensorHoverView(
+  view: JunctionStudyView,
+  location: TrikalaLocation,
+  scoped: LocalCityPoint[],
+  selectedKpi: string
+): JunctionStudyView {
+  const pt = scoped[0];
+  const busyPct =
+    typeof pt?.properties?.busyPct === "number"
+      ? Math.round(pt.properties.busyPct)
+      : selectedKpi === "kpi2.1" && typeof pt?.value === "number"
+        ? Math.round(pt.value)
+        : null;
+  const availabilityPct =
+    typeof pt?.properties?.availabilityPct === "number"
+      ? Math.round(pt.properties.availabilityPct)
+      : selectedKpi === "kpi4.2" && typeof pt?.value === "number"
+        ? Math.round(pt.value)
+        : null;
+  const obsCount = pt?.properties?.observationCount;
+  const deviceId = pt?.properties?.deviceId;
+  const metricLine =
+    selectedKpi === "kpi4.2" && availabilityPct != null
+      ? `Lane availability ${availabilityPct}%`
+      : busyPct != null
+        ? `Occupancy stress ${busyPct}%`
+        : view.interventionType;
+
+  return {
+    ...view,
+    name: location.name,
+    shortName: location.name,
+    coordinates: [location.lat, location.lng],
+    kpiValue: pt?.value ?? view.kpiValue,
+    interventionType: `${metricLine}${deviceId ? ` · device ${deviceId}` : ""}`,
+    monitoringPeriod: obsCount
+      ? `${Number(obsCount).toLocaleString()} LoRa parking-status readings · observed time-series`
+      : "Bike-lane LoRa sensor time-series",
+    segmentApiId: location.id,
+    sourceLabel: "Bike-lane sensor workbook (SharePoint)",
+  };
 }
 
 function enrichAirQualityHoverView(
@@ -237,21 +291,31 @@ export function buildTrikalaObservatoryView(
     return enrichAirQualityHoverView(view, location, scoped, sensorJoin);
   }
 
+  if (location?.kind === "bike_lane_sensor" && scoped.length) {
+    return enrichBikeLaneSensorHoverView(view, location, scoped, selectedKpi);
+  }
+
   if (pilotId === "tri-p2" && location && !scoped.length) {
     return enrichPilot2InfraView(view, location, selectedKpi);
   }
 
   if (location && !scoped.length) {
     const kindLabel = INFRA_KIND_LABEL[location.kind] ?? location.kind;
+    const registryOnlyNote =
+      location.kind === "bike_lane_sensor"
+        ? "Registry position only — run build-trikala-bike-lane-sensors to link observed time-series."
+        : undefined;
     return {
       ...view,
       name: location.name,
       shortName: location.name,
       coordinates: [location.lat, location.lng],
       interventionType: `${kindLabel} · partner My Maps geodata`,
-      monitoringPeriod: location.linkedKpis.length
-        ? `Linked KPIs: ${location.linkedKpis.join(", ")}`
-        : view.monitoringPeriod,
+      monitoringPeriod:
+        registryOnlyNote ??
+        (location.linkedKpis.length
+          ? `Linked KPIs: ${location.linkedKpis.join(", ")}`
+          : view.monitoringPeriod),
       segmentApiId: location.id,
       sourceLabel: location.folderPath.join(" › ") || "Partner My Maps registry",
     };

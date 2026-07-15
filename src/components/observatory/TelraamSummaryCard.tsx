@@ -31,7 +31,7 @@ function MetricRow({
 }) {
   return (
     <tr className="border-b border-white/5 last:border-0">
-      <td className={`py-1.5 pr-2 text-[11px] ${muted ? "text-white/55" : "text-white/72"}`}>
+      <td className={`py-1.5 pr-2 text-[11px] ${muted ? "text-white/55" : "text-white/75"}`}>
         {label}
       </td>
       <td
@@ -65,7 +65,7 @@ export function TelraamSummaryCard({
           className="inline-block h-2.5 w-2.5 rounded-full"
           style={{ backgroundColor: C.cyan, boxShadow: `0 0 8px ${C.cyan}` }}
         />
-        <p className="text-[11px] font-semibold text-white/88">Telraam continuous sensor summary</p>
+        <p className="text-[11px] font-semibold text-white/90">Telraam continuous sensor summary</p>
       </div>
       <p className="mb-2 text-[10px] text-white/58">{location.name}</p>
       <table className="w-full border-collapse">

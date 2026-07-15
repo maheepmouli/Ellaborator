@@ -1,21 +1,10 @@
 import L from "leaflet";
-import { renderCopenhagenRadarFlowLayout } from "@/lib/copenhagenMapLayers/copenhagenRadarFlowLayout";
 import type { SegmentInteractionHandlers } from "@/lib/wireMapSegmentInteraction";
 import type { TrikalaLocation } from "@/data/trikalaLocationRegistry";
 import { buildTrikalaPilot2HubLocalFlows } from "./trikalaPilot2ModeShare";
+import { renderTrikalaMobilityHubStack } from "./renderTrikalaMobilityHubStack";
 
 const PILOT2_RADAR_RING_SCALE = 6;
-
-function intensityScalar(
-  scenario: "baseline" | "intervention" | "comparison",
-  baselineValue: number,
-  interventionValue: number,
-  comparisonValue: number
-): number {
-  if (scenario === "baseline") return baselineValue;
-  if (scenario === "intervention") return interventionValue;
-  return Math.min(100, Math.abs(comparisonValue) * 4);
-}
 
 function buildPilot2FlowPopup(options: {
   siteName: string;
@@ -61,6 +50,7 @@ export interface RenderTrikalaPilot2ModeShareRadarOptions {
   markersOut: L.Marker[];
   circlesOut: Array<L.Circle | L.CircleMarker>;
   polylinesOut: L.Polyline[];
+  polygonsOut: L.Polygon[];
   wireCircleMarker: (
     marker: L.CircleMarker,
     meta: { segmentId: string; segmentName: string; speed: null; congestion: null },
@@ -73,9 +63,10 @@ export interface RenderTrikalaPilot2ModeShareRadarOptions {
       highlightStyle?: L.PathOptions;
     }
   ) => void;
+  getValueColor?: (value: number, safetyKpi: boolean) => string;
 }
 
-/** Copenhagen-style mini radar at each P+R hub — spokes scale for district zoom (KPI 1.2). */
+/** Copenhagen-style radar at each P+R hub — spokes scale for district zoom (KPI 1.2). */
 export function renderTrikalaPilot2ModeShareRadar(
   options: RenderTrikalaPilot2ModeShareRadarOptions
 ): boolean {
@@ -87,33 +78,36 @@ export function renderTrikalaPilot2ModeShareRadar(
     segmentHandlers,
     circlesOut,
     polylinesOut,
+    polygonsOut,
+    markersOut,
     wireCircleMarker,
+    getValueColor,
   } = options;
 
   const parkRideSites = locations.filter((l) => l.kind === "park_and_ride");
   if (!parkRideSites.length) return false;
 
-  const svgRenderer = L.svg({ padding: 0.8 });
-  const circleMarkers = circlesOut as L.CircleMarker[];
-
   parkRideSites.forEach((site, siteIndex) => {
     const flows = buildTrikalaPilot2HubLocalFlows(site, siteIndex);
     if (!flows.length) return;
 
-    renderCopenhagenRadarFlowLayout({
+    renderTrikalaMobilityHubStack({
       map,
       hubLat: site.lat,
       hubLon: site.lng,
+      hubSegmentId: site.id,
+      hubLabel: site.name,
       flows,
       scenario,
       selectedSegmentId,
       segmentHandlers,
+      markersOut,
+      circlesOut,
       polylinesOut,
-      circlesOut: circleMarkers,
-      svgRenderer,
+      polygonsOut,
       wireCircleMarker,
+      getValueColor,
       ringScale: PILOT2_RADAR_RING_SCALE,
-      intensityScalar,
       featureSelected: (segmentId) =>
         featureSelectedForHub(selectedSegmentId, site.id, segmentId),
       buildPopup: (point) => {

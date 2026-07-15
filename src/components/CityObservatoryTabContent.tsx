@@ -76,7 +76,7 @@ function GraphicSlot({
 function GlassCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
     <div
-      className={`rounded-xl border px-4 py-3 ${className}`}
+      className={`rounded-xl border px-4 py-3 text-white ${className}`}
       style={{ background: C.glass, borderColor: C.border }}
     >
       {children}
@@ -237,8 +237,8 @@ export function CityObservatoryTabContent({
         ) : null}
         <GraphicSlot zone="overview" {...graphicProps} />
         <GlassCard>
-          <p className="text-[11px] font-semibold text-white/88">Pilot overview</p>
-          <p className="mt-1 text-[11px] text-white/72 leading-relaxed">
+          <p className="text-[11px] font-semibold text-white/90">Pilot overview</p>
+          <p className="mt-1 text-[11px] text-white/75 leading-relaxed">
             {profile?.interventionSummary || config.subtitle}
           </p>
           <div className="mt-2 flex flex-wrap gap-1">
@@ -246,8 +246,8 @@ export function CityObservatoryTabContent({
           </div>
         </GlassCard>
         <GlassCard>
-          <p className="text-[11px] font-semibold text-white/88">Objectives</p>
-          <ul className="mt-1 list-disc pl-4 text-[11px] text-white/72 space-y-0.5">
+          <p className="text-[11px] font-semibold text-white/90">Objectives</p>
+          <ul className="mt-1 list-disc pl-4 text-[11px] text-white/75 space-y-0.5">
             {(cphPilot
               ? [cphPilot.objective.primary, ...cphPilot.objective.secondary]
               : profile?.objectives || ["Track intervention performance with explicit data readiness."]
@@ -258,8 +258,8 @@ export function CityObservatoryTabContent({
         </GlassCard>
         {cphPilot && (
           <GlassCard>
-            <p className="text-[11px] font-semibold text-white/88">Evaluation focus</p>
-            <p className="mt-1 text-[11px] text-white/72 leading-relaxed capitalize">
+            <p className="text-[11px] font-semibold text-white/90">Evaluation focus</p>
+            <p className="mt-1 text-[11px] text-white/75 leading-relaxed capitalize">
               {cphPilot.evaluation.focus} · {cphPilot.evaluation.methods.join(" · ")}
             </p>
             {cphPilot.evaluation.caveats.length > 0 && (
@@ -272,8 +272,8 @@ export function CityObservatoryTabContent({
           </GlassCard>
         )}
         <GlassCard>
-          <p className="text-[11px] font-semibold text-white/88">Expected impacts</p>
-          <ul className="mt-1 list-disc pl-4 text-[11px] text-white/72 space-y-0.5">
+          <p className="text-[11px] font-semibold text-white/90">Expected impacts</p>
+          <ul className="mt-1 list-disc pl-4 text-[11px] text-white/75 space-y-0.5">
             {(profile?.expectedImpacts || ["Transparent pilot-level evidence for stakeholders."]).map(
               (item) => (
                 <li key={item}>{item}</li>
@@ -298,21 +298,21 @@ export function CityObservatoryTabContent({
     return (
       <div className="space-y-3">
         <GlassCard>
-          <p className="text-[11px] font-semibold text-white/88 flex items-center gap-1.5">
+          <p className="text-[11px] font-semibold text-white/90 flex items-center gap-1.5">
             <Database className="h-3.5 w-3.5" /> Data availability
           </p>
-          <p className="mt-1 text-[11px] text-white/72">{profile?.dataAvailability || "Partial — see Data Catalogue"}</p>
-          <p className="mt-2 text-[11px] text-white/72">Points in scope: {observedPoints.length}</p>
-          <p className="text-[11px] text-white/72">Scenario: {scenario}</p>
-          <p className="text-[11px] text-white/72">Primary file: {sourceFile}</p>
+          <p className="mt-1 text-[11px] text-white/75">{profile?.dataAvailability || "Partial — see Data Catalogue"}</p>
+          <p className="mt-2 text-[11px] text-white/75">Points in scope: {observedPoints.length}</p>
+          <p className="text-[11px] text-white/75">Scenario: {scenario}</p>
+          <p className="text-[11px] text-white/75">Primary file: {sourceFile}</p>
           <div className="mt-2">
             <SourceTag label={kpiDef?.dataLabel || "Dataset-linked"} />
           </div>
         </GlassCard>
         {methodology?.sources.length ? (
           <GlassCard>
-            <p className="text-[11px] font-semibold text-white/88">Linked sources</p>
-            <ul className="mt-1 list-disc pl-4 text-[11px] text-white/72 space-y-0.5">
+            <p className="text-[11px] font-semibold text-white/90">Linked sources</p>
+            <ul className="mt-1 list-disc pl-4 text-[11px] text-white/75 space-y-0.5">
               {methodology.sources.map((s) => (
                 <li key={s}>{s}</li>
               ))}
@@ -328,9 +328,9 @@ export function CityObservatoryTabContent({
       <div className="space-y-3">
         <GraphicSlot zone="beforeAfter" {...graphicProps} />
         <GlassCard>
-          <p className="text-[11px] font-semibold text-white/88">Temporal scope</p>
-          <p className="mt-1 text-[11px] text-white/72">{view.monitoringPeriod}</p>
-          <p className="text-[11px] text-white/72">Active scenario: {scenario}</p>
+          <p className="text-[11px] font-semibold text-white/90">Temporal scope</p>
+          <p className="mt-1 text-[11px] text-white/75">{view.monitoringPeriod}</p>
+          <p className="text-[11px] text-white/75">Active scenario: {scenario}</p>
           {perfDelta != null && (
             <p className="mt-2 text-[11px]" style={{ color: C.lime }}>
               Mean comparison delta: {perfDelta > 0 ? "+" : ""}
@@ -363,13 +363,13 @@ export function CityObservatoryTabContent({
       <div className="space-y-3">
         <GraphicSlot zone="kpiAnalysis" {...graphicProps} />
         <GlassCard>
-          <p className="text-[11px] font-semibold text-white/88 flex items-center gap-1.5">
+          <p className="text-[11px] font-semibold text-white/90 flex items-center gap-1.5">
             <BarChart3 className="h-3.5 w-3.5" /> KPI summary
           </p>
-          <p className="mt-1 text-[11px] text-white/72">
+          <p className="mt-1 text-[11px] text-white/75">
             {kpiDef?.name || selectedKpi}: <strong>{avg.toFixed(1)}</strong>
           </p>
-          <p className="text-[11px] text-white/72">
+          <p className="text-[11px] text-white/75">
             Range {min.toFixed(1)} – {max.toFixed(1)} · {observedPoints.length} point
             {observedPoints.length === 1 ? "" : "s"}
           </p>
@@ -390,8 +390,8 @@ export function CityObservatoryTabContent({
         ) : null}
         {isCopenhagen && (
           <GlassCard>
-            <p className="text-[11px] font-semibold text-white/88">Maria Risom workbook rules</p>
-            <p className="mt-1 text-[11px] text-white/72 leading-relaxed">
+            <p className="text-[11px] font-semibold text-white/90">Maria Risom workbook rules</p>
+            <p className="mt-1 text-[11px] text-white/75 leading-relaxed">
               Partner methodology constraints applied when aggregating OpenTrafficCam directional counts.
               {selectionKind ? ` Active selection: ${selectionKind}.` : ""}
             </p>
@@ -421,32 +421,32 @@ export function CityObservatoryTabContent({
           </GlassCard>
         )}
         <GlassCard>
-          <p className="text-[11px] font-semibold text-white/88 flex items-center gap-1.5">
+          <p className="text-[11px] font-semibold text-white/90 flex items-center gap-1.5">
             <FileText className="h-3.5 w-3.5" /> Methodology
           </p>
-          <p className="mt-1 text-[11px] text-white/72 leading-relaxed">
+          <p className="mt-1 text-[11px] text-white/75 leading-relaxed">
             {profile?.methodologyNotes || "Intervention metrics follow linked dataset parsers with explicit readiness."}
           </p>
         </GlassCard>
         {methodology && (
           <>
             <GlassCard>
-              <p className="text-[11px] font-semibold text-white/88">Meaning</p>
-              <p className="mt-1 text-[11px] text-white/72 leading-relaxed">{methodology.meaning}</p>
+              <p className="text-[11px] font-semibold text-white/90">Meaning</p>
+              <p className="mt-1 text-[11px] text-white/75 leading-relaxed">{methodology.meaning}</p>
             </GlassCard>
             <GlassCard>
-              <p className="text-[11px] font-semibold text-white/88">Calculation</p>
-              <p className="mt-1 text-[11px] text-white/72 leading-relaxed">{methodology.calculationMethod}</p>
+              <p className="text-[11px] font-semibold text-white/90">Calculation</p>
+              <p className="mt-1 text-[11px] text-white/75 leading-relaxed">{methodology.calculationMethod}</p>
             </GlassCard>
             <GlassCard>
-              <p className="text-[11px] font-semibold text-white/88">Limitations</p>
-              <p className="mt-1 text-[11px] text-white/72 leading-relaxed">{methodology.limitations}</p>
+              <p className="text-[11px] font-semibold text-white/90">Limitations</p>
+              <p className="mt-1 text-[11px] text-white/75 leading-relaxed">{methodology.limitations}</p>
             </GlassCard>
             <GlassCard>
-              <p className="text-[11px] font-semibold text-white/88 flex items-center gap-1.5">
+              <p className="text-[11px] font-semibold text-white/90 flex items-center gap-1.5">
                 <Activity className="h-3.5 w-3.5" /> Readiness: {methodology.readiness}
               </p>
-              <ul className="mt-1 list-disc pl-4 text-[11px] text-white/72">
+              <ul className="mt-1 list-disc pl-4 text-[11px] text-white/75">
                 {methodology.sources.map((s) => (
                   <li key={s}>{s}</li>
                 ))}

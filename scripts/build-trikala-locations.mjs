@@ -329,6 +329,25 @@ async function main() {
   const envRows = loadEnvironmentalRows();
   const sensorJoins = joinSensorsToLocations(locations, envRows);
 
+  let bikeLaneSensorJoins = [];
+  try {
+    const metricsPath = path.join(OUT, "bike-lane-sensor-metrics.json");
+    const metrics = JSON.parse(await fs.readFile(metricsPath, "utf8"));
+    bikeLaneSensorJoins = (metrics.sensors ?? []).map((s) => ({
+      deviceId: s.deviceId,
+      locationId: s.locationId,
+      label: s.label,
+      joinMethod: s.joinMethod,
+      busyPct: s.busyPct,
+      availabilityPct: s.availabilityPct,
+      observationCount: s.observationCount,
+      periodStart: s.periodStart,
+      periodEnd: s.periodEnd,
+    }));
+  } catch {
+    // metrics bundle built separately via build-trikala-bike-lane-sensors
+  }
+
   const geojson = {
     type: "FeatureCollection",
     features: locations.map((loc) => ({
@@ -372,6 +391,7 @@ async function main() {
     },
     locations,
     sensorJoins,
+    bikeLaneSensorJoins,
   };
   await fs.writeFile(path.join(OUT, "locations.json"), `${JSON.stringify(bundle, null, 2)}\n`, "utf8");
   await fs.writeFile(path.join(OUT, "locations.geojson"), `${JSON.stringify(geojson, null, 2)}\n`, "utf8");

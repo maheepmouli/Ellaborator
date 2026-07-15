@@ -232,11 +232,12 @@ function buildEvidenceManifest(mediaFiles, docFiles) {
         "tri-partner-map-locations",
         "tri-bike-lane-baseline",
         "tri-bike-lane-post",
+        "tri-bike-lane-sensor-timeseries",
       ],
-      linkedMethods: ["Redesigned bike lanes", "Bike safety survey baseline + post"],
+      linkedMethods: ["Redesigned bike lanes", "Bike safety survey baseline + post", "LoRa parking-status sensors"],
       fallback: {
         type: "narrative",
-        text: "30 partner bike-lane sensor nodes and paired safety surveys (n≈310 baseline). Per-sensor time-series not yet linked — map shows registry positions with survey aggregates at pilot anchor.",
+        text: "30 partner bike-lane sensor nodes with 29 observed LoRa time-series workbooks joined to registry coordinates. KPI 2.1 uses occupancy stress (% BUSY); KPI 4.2 uses lane availability (100 − busy%). Survey aggregates remain at pilot anchor.",
       },
     },
     {

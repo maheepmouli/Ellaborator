@@ -13,6 +13,9 @@ import {
   filterCopenhagenObservatoryPoints,
 } from "@/lib/copenhagenObservatoryView";
 import { isCopenhagenObservatoryContext } from "@/lib/copenhagenMapSelection";
+import { filterHelsinkiObservatoryPoints } from "@/lib/helsinkiObservatoryView";
+import { filterZaragozaObservatoryPoints } from "@/lib/zaragozaObservatoryView";
+import { filterMilanObservatoryPoints } from "@/lib/milanObservatoryView";
 
 export type ObservatoryDataClass = "observed" | "derived" | "modelled" | "mock";
 
@@ -233,9 +236,16 @@ export function buildSegmentScopedObservatoryView(
   selectedModeTypes: string[] = []
 ): JunctionStudyView {
   const isCopenhagen = isCopenhagenObservatoryContext(city, pilotId);
+  const cityKey = normalizeCityKey(city);
   const scopedPoints = isCopenhagen
     ? filterCopenhagenObservatoryPoints(points, segment.segmentId)
-    : pointsForSegment(points, segment.segmentId);
+    : cityKey.includes("helsinki")
+      ? filterHelsinkiObservatoryPoints(points, segment.segmentId)
+      : cityKey.includes("zaragoza")
+        ? filterZaragozaObservatoryPoints(points, segment.segmentId)
+        : cityKey.includes("milan")
+          ? filterMilanObservatoryPoints(points, segment.segmentId)
+          : pointsForSegment(points, segment.segmentId);
 
   if (isCopenhagen) {
     return buildCopenhagenObservatoryView(

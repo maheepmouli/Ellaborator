@@ -37,7 +37,7 @@ export function sumDirectionalTraffic(
   return { outbound, inbound };
 }
 
-function trafficPulseHtml(isInboundDominant: boolean): string {
+export function trafficPulseHtml(isInboundDominant: boolean): string {
   const pulseClass = isInboundDominant ? "pulse-inbound" : "pulse-outbound";
   return `
     <div class="traffic-pulse-container ${pulseClass}">
@@ -46,6 +46,52 @@ function trafficPulseHtml(isInboundDominant: boolean): string {
       <div class="pulse-ring ring-3"></div>
     </div>
   `;
+}
+
+/** Minimum map zoom before hub ripple markers are drawn (Milan pilot fit often lands at 14). */
+export const HUB_PULSE_MIN_ZOOM = 14;
+
+/** Copenhagen-style expanding ripple rings at a map hub (Issy junction, CPH camera, etc.). */
+export function renderHubRipplePulseOverlay(
+  map: L.Map,
+  hubLat: number,
+  hubLon: number,
+  isInboundDominant: boolean,
+  markersOut: L.Marker[],
+  circlesOut: L.CircleMarker[],
+  options?: { showAnchorDot?: boolean; minZoom?: number }
+): void {
+  const minZoom = options?.minZoom ?? HUB_PULSE_MIN_ZOOM;
+  if (map.getZoom() < minZoom) return;
+
+  const anchorFill = isInboundDominant ? CPH_INBOUND_COLOR : CPH_OUTBOUND_COLOR;
+
+  const pulseMarker = L.marker([hubLat, hubLon], {
+    icon: L.divIcon({
+      html: trafficPulseHtml(isInboundDominant),
+      className: "custom-traffic-pulse",
+      iconSize: [200, 200],
+      iconAnchor: [100, 100],
+    }),
+    interactive: false,
+    zIndexOffset: 980,
+  }).addTo(map);
+  markersOut.push(pulseMarker);
+
+  if (options?.showAnchorDot !== false) {
+    const anchorDot = L.circleMarker([hubLat, hubLon], {
+      radius: 6,
+      fillColor: anchorFill,
+      color: "#ffffff",
+      weight: 2,
+      fillOpacity: 1,
+      opacity: 1,
+      interactive: false,
+      className: "cph-traffic-anchor-dot",
+    }).addTo(map);
+    anchorDot.bringToFront();
+    circlesOut.push(anchorDot);
+  }
 }
 
 /**
@@ -75,39 +121,22 @@ export function renderCopenhagenTrafficPulseOverlay(
       }
     ) => void;
     selectedSegmentId?: string | null;
+    showAnchorDot?: boolean;
   }
 ): void {
   if (!flows.length) return;
-  if (map.getZoom() < 15) return;
 
   const { outbound, inbound } = sumDirectionalTraffic(flows, scenario);
   const isInboundDominant = inbound >= outbound;
-  const anchorFill = isInboundDominant ? CPH_INBOUND_COLOR : CPH_OUTBOUND_COLOR;
-
-  const pulseMarker = L.marker([hubLat, hubLon], {
-    icon: L.divIcon({
-      html: trafficPulseHtml(isInboundDominant),
-      className: "custom-traffic-pulse",
-      iconSize: [200, 200],
-      iconAnchor: [100, 100],
-    }),
-    interactive: false,
-    zIndexOffset: 980,
-  }).addTo(map);
-  markersOut.push(pulseMarker);
-
-  const anchorDot = L.circleMarker([hubLat, hubLon], {
-    radius: 6,
-    fillColor: anchorFill,
-    color: "#ffffff",
-    weight: 2,
-    fillOpacity: 1,
-    opacity: 1,
-    interactive: false,
-    className: "cph-traffic-anchor-dot",
-  }).addTo(map);
-  anchorDot.bringToFront();
-  circlesOut.push(anchorDot);
+  renderHubRipplePulseOverlay(
+    map,
+    hubLat,
+    hubLon,
+    isInboundDominant,
+    markersOut,
+    circlesOut,
+    { showAnchorDot: options?.showAnchorDot }
+  );
 
   if (hubLabel?.trim()) {
     const hubHit = L.circleMarker([hubLat, hubLon], {

@@ -314,7 +314,7 @@ const EXTRACTIONS = [
   {
     zip: "Milano-20260709T084301Z-2-001.zip",
     match: /Milan_Accessibility_Features_DSS_Analysis_CIRCE\.xlsx$/i,
-    dest: "Milan/8. Data - accessibility features/Milan_Accessibility_Features_DSS_Analysis_CIRCE.xlsx",
+    dest: "Milan/Eval data Ex ante/8. Data - accessibility features/Milan_Accessibility_Features_DSS_Analysis_CIRCE.xlsx",
     label: "mil-accessibility-dss-xlsx",
   },
   {
@@ -618,6 +618,45 @@ async function unpackTrikalaMedia(zipPath) {
   return written;
 }
 
+async function unpackTrikalaBikeLaneSensors(zipPath) {
+  const members = listZipMembers(zipPath);
+  const sensorMembers = members.filter(
+    (m) =>
+      /BIKE LANE SENSORS DATA\//i.test(m) &&
+      /\.xlsx$/i.test(m) &&
+      !m.includes("__MACOSX") &&
+      !m.endsWith("/")
+  );
+  const tempDir = path.join(OUT_DIR, ".extract-tmp", "tri-bike-lane-sensors");
+  await fs.mkdir(tempDir, { recursive: true });
+  const written = [];
+  for (const member of sensorMembers) {
+    const quoted = member.includes(" ") ? `"${member}"` : member;
+    try {
+      execSync(`tar -xf "${zipPath}" -C "${tempDir}" ${quoted}`, {
+        stdio: "pipe",
+        maxBuffer: 50 * 1024 * 1024,
+      });
+    } catch {
+      continue;
+    }
+  }
+  const walk = async (dir) => {
+    for (const entry of await fs.readdir(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) await walk(full);
+      else if (/\.xlsx$/i.test(entry.name)) {
+        const dest = path.join(OUT_DIR, "Trikala/bike-lane-sensors", entry.name);
+        await fs.mkdir(path.dirname(dest), { recursive: true });
+        await fs.copyFile(full, dest);
+        written.push(`Trikala/bike-lane-sensors/${entry.name}`);
+      }
+    }
+  };
+  await walk(tempDir);
+  return written;
+}
+
 async function unpackTrikalaDocs(zipPath) {
   const members = listZipMembers(zipPath);
   const docMembers = members.filter(
@@ -900,6 +939,34 @@ async function main() {
       label: "tri-bulk-extract",
       error: err instanceof Error ? err.message : String(err),
     });
+  }
+
+  const triBikeLaneZip = path.join(DROP_DIR, "BIKE LANE SENSORS DATA-20260713T091909Z-2-001.zip");
+  try {
+    await fs.access(triBikeLaneZip);
+    const bikeLaneSensors = await unpackTrikalaBikeLaneSensors(triBikeLaneZip);
+    manifest.files.push({
+      label: "tri-bike-lane-sensor-timeseries",
+      dest: "Trikala/bike-lane-sensors/*",
+      publicPath: "/sharepoint-data/Trikala/bike-lane-sensors/",
+      bytes: bikeLaneSensors.length,
+      status: bikeLaneSensors.length ? "ok" : "empty",
+      members: bikeLaneSensors.slice(0, 8),
+      memberCount: bikeLaneSensors.length,
+    });
+    console.log(`OK  tri-bike-lane-sensor-timeseries (${bikeLaneSensors.length} workbooks)`);
+  } catch (err) {
+    if (err && typeof err === "object" && "code" in err && err.code === "ENOENT") {
+      manifest.errors.push({
+        label: "tri-bike-lane-sensor-timeseries",
+        error: "BIKE LANE SENSORS zip not found in Sharepoint_Datasets_06_2026",
+      });
+    } else {
+      manifest.errors.push({
+        label: "tri-bike-lane-sensor-timeseries",
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
   }
 
   const cphZip = path.join(DROP_DIR, "Copenhagen Lighthouse-20260625T113853Z-3-001.zip");

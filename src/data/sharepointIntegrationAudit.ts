@@ -45,7 +45,7 @@ export interface ExtractedFileRow {
 }
 
 export const MILAN_EXTERNAL_CALLOUT =
-  "Milan is not included in the June 2026 SharePoint drop. The app expects a separate public/sharepoint-data/Milan/ tree; without it, Milan uses registry mock data.";
+  "Milan ships in Milano-20260709T084301Z-2-001.zip (July 2026). Run npm run build-milan-data to extract Eval data Ex ante assets, refresh mode-share/corridor/walk-graph JSON, and inventory via npm run inventory-milan.";
 
 export const INTEGRATION_COVERAGE = {
   lighthouseIntegrated: [
@@ -54,8 +54,9 @@ export const INTEGRATION_COVERAGE = {
     "Issy-les-Moulineaux",
     "Zaragoza",
     "Trikala",
+    "Milan",
   ] as const,
-  lighthouseExternal: ["Milan"] as const,
+  lighthouseExternal: [] as const,
   followerNotIntegrated: ["Lund", "Krusevac", "Velenje", "Liberec", "Ioannina"] as const,
   inventoryNotParsed: ["Data available in Sharepoint.xlsx"] as const,
 };
@@ -98,10 +99,11 @@ export const CITY_INTEGRATION_ROWS: CityIntegrationRow[] = [
   },
   {
     city: "Milan",
-    integrationStatus: "external",
-    runtimeStatus: "mock_registry",
-    confidence: "low",
-    notes: "Requires separate SharePoint Milan tree; not in June 2026 drop.",
+    integrationStatus: "integrated",
+    runtimeStatus: "sharepoint_segments",
+    confidence: "medium",
+    notes:
+      "AMAT speed (kpi2.1), RETE (kpi3.2), DSS accessibility (kpi4.2), AMAT counts (kpi1.2) from Milano zip; walk_graph for mil-p3; survey folder 7 empty pending partner upload.",
   },
 ];
 
@@ -153,7 +155,7 @@ export const KPI_SOURCE_MATRIX: KpiSourceRow[] = [
   },
   {
     city: "Milan",
-    kpi1_2: "Camera SHP",
+    kpi1_2: "AMAT counts",
     kpi2_1: "Speed segments",
     kpi3_1: "—",
     kpi3_2: "RETE bands",
@@ -283,11 +285,31 @@ export const DROP_PIPELINE_ROWS: DropPipelineRow[] = [
       "tri-bike-lane-post",
       "tri-smarta-app-post",
       "tri-environmental-sensors",
+      "tri-bike-lane-sensor-timeseries",
       "tri-meeting-attendance",
       "tri-media-gallery",
       "tri-docs-bundle",
     ],
     notes: "50 files in zip; 8 xlsx + 13 images + 19 PDFs + docx/pptx; Park & Ride folder empty.",
+  },
+  {
+    id: "mil-lighthouse",
+    label: "Milano-20260709T084301Z zip",
+    available: "yes",
+    extracted: "yes",
+    parsed: "partial",
+    displayed: "yes",
+    manifestLabels: [
+      "mil-amat-counts",
+      "mil-speed-shapefiles",
+      "mil-co2-network",
+      "mil-accessibility-dss",
+      "mil-walk-graph",
+      "mil-pilot-corridors",
+      "mil-survey-insights",
+    ],
+    notes:
+      "196 files in zip; build-milan-data extracts folders 2–10 + Evaluation Data Ex Post; inventory-milan produces docs/MILAN_DATA_INVENTORY.md.",
   },
   {
     id: "follower-cities",
@@ -554,6 +576,12 @@ export const EXTRACTED_FILE_APPENDIX: ExtractedFileRow[] = [
     publicPath: "/sharepoint-data/Trikala/smart_citizen_kit_environmental_metrics.xlsx",
     sourceZip: "Trikala Lighthouse",
     parser: "trikalaEnvironmentalParser.buildTrikalaEnvironmentalRecords",
+  },
+  {
+    label: "tri-bike-lane-sensor-timeseries",
+    publicPath: "/sharepoint-data/Trikala/bike-lane-sensors/",
+    sourceZip: "BIKE LANE SENSORS DATA",
+    parser: "trikalaBikeLaneSensorParser.buildTrikalaBikeLaneSensorRecords",
   },
   {
     label: "tri-meeting-attendance",

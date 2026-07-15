@@ -6,6 +6,7 @@ import Header from "@/components/Header";
 import HeroMap from "@/components/HeroMap";
 import InsightPanel from "@/components/InsightPanel";
 import { isTrikalaCityName } from "@/lib/trikalaMapConfig";
+import { getTrikalaPilot2FitBounds } from "@/lib/trikalaMapLayers/trikalaParkRideBounds";
 import MapControls from "@/components/MapControls";
 import MapTour from "@/components/MapTour";
 import DataSummaryPanel from "@/components/ScenarioPanel";
@@ -23,6 +24,7 @@ import { buildCityObservatoryView, buildSegmentScopedObservatoryView } from "@/l
 import { buildTrikalaObservatoryView } from "@/lib/trikalaObservatoryView";
 import { loadTrikalaLocationsBundle } from "@/data/trikalaLocationRegistry";
 import { buildCopenhagenObservatoryView, filterCopenhagenObservatoryPoints } from "@/lib/copenhagenObservatoryView";
+import { buildMilanObservatoryView } from "@/lib/milanObservatoryView";
 import { useLocalCityData } from "@/hooks/use-local-city-data";
 import { isIssyCity } from "@/lib/issyMapRouting";
 import { getIssyPilotProfile } from "@/data/issyPilotProfiles";
@@ -37,8 +39,18 @@ import { isCopenhagenObservatoryContext } from "@/lib/copenhagenMapSelection";
 import { getCopenhagenPilotLatLngBounds } from "@/data/copenhagenCameraSites";
 import type { MapSelectionState } from "@/types/mapSelection";
 import { useMilanEnvironmentSegments, useMilanSpeedSegments } from "@/hooks/use-milan-segment-data";
+import {
+  buildMilanJunctionAccessibilityMockPoints,
+  buildMilanJunctionClimateMockPoints,
+  buildMilanJunctionModeShareMockPoints,
+  milanHasObservedAccessibilityData,
+  milanHasObservedClimateData,
+  milanHasObservedModeShareData,
+  milanJunctionAnchorsForPilot,
+  pickJunctionsForModeSharePresentation,
+} from "@/lib/milanMapLayers";
 import type { TrafficSegment } from "@/types/traffic";
-import { filterPointsInPilotZone, pickDefaultSegmentId } from "@/lib/interventionZone";
+import { filterPointsInPilotZone, filterMilanLocalPoints, pickDefaultSegmentId } from "@/lib/interventionZone";
 import type { MilanSegmentRecord } from "@/services/milanSegmentData";
 import {
   dominantRuntimeLinkage,
@@ -46,8 +58,10 @@ import {
 } from "@/lib/pilotGeometryRenderer";
 import { getPilotGeometryRecord } from "@/lib/pilotGeometryContract";
 import type { PilotGeometryRenderSpec } from "@/lib/pilotGeometryRenderer";
+import { fetchSharepointManifest } from "@/data/sharepointDatasets";
 import { TimeWindowChip } from "@/components/TimeWindowChip";
 import { MapIntelligenceProvider, useMapIntelligence } from "@/context/MapIntelligenceContext";
+import { useMapSideInsets } from "@/hooks/use-map-side-insets";
 
 /** Glyphs aligned with geometry: discs for points, short bars for polylines, squares for polygons, strips for ramps. */
 function LegendSwatch({ marker, color }: { marker: Exclude<MapLegendMarker, "polygonRamp">; color: string }) {
@@ -146,6 +160,12 @@ const MapContent = () => {
   /** Pilot map highlights intervention streets by default — no toggle in the sidebar. */
   const showInterventionLayer = true;
   const [dataQualitySummary, setDataQualitySummary] = useState<DataQualitySummary | null>(null);
+  const { data: sharepointManifest } = useQuery({
+    queryKey: ["sharepoint-manifest-map"],
+    queryFn: fetchSharepointManifest,
+    staleTime: 300_000,
+  });
+  const manifestAvailable = sharepointManifest != null;
   const [mapSelection, setMapSelection] = useState<MapSelectionState>({});
   /** Milan KPI 3.2 RETE hour band (discrete); independent of baseline/intervention scenario toggle. */
   const [milanEnvWindow, setMilanEnvWindow] = useState<"08-09" | "18-19">("08-09");
@@ -309,6 +329,10 @@ const MapContent = () => {
   useEffect(() => {
     if (!selectedPilot) return;
     if (selectedPilot.id.startsWith("issy-p")) return;
+    if (selectedPilot.id === "tri-p2") {
+      requestPilotMapBounds(getTrikalaPilot2FitBounds(selectedKpi), 17);
+      return;
+    }
     if (selectedPilot.id.startsWith("cph-")) {
       const bounds = getCopenhagenPilotLatLngBounds(selectedPilot.id);
       if (bounds) {
@@ -338,7 +362,7 @@ const MapContent = () => {
     if (typeof selectedPilot.lat === "number" && typeof selectedPilot.lng === "number") {
       requestPilotMapFocus(selectedPilot.lat, selectedPilot.lng, 14);
     }
-  }, [selectedPilot, pilotGeometrySpec, requestPilotMapFocus, requestPilotMapBounds]);
+  }, [selectedPilot, selectedKpi, pilotGeometrySpec, requestPilotMapFocus, requestPilotMapBounds]);
 
   const milanPilotId =
     selectedPilot?.id === "mil-p1" || selectedPilot?.id === "mil-p2" || selectedPilot?.id === "mil-p3"
@@ -346,18 +370,65 @@ const MapContent = () => {
       : "mil-p2";
   const { data: milanSpeedForObservatory } = useMilanSpeedSegments(
     milanPilotId,
-    selectedCity === "Milan" && (selectedKpi === "kpi2.1" || !!selectedPilot?.id?.startsWith("mil-"))
+    selectedCity === "Milan" &&
+      (selectedKpi === "kpi2.1" ||
+        selectedKpi === "kpi1.2" ||
+        selectedKpi === "kpi3.2" ||
+        selectedKpi === "kpi4.2" ||
+        !!selectedPilot?.id?.startsWith("mil-"))
   );
+
   const { data: milanEnvForObservatory } = useMilanEnvironmentSegments(
     milanEnvWindow,
     selectedCity === "Milan" && selectedKpi === "kpi3.2",
     milanPilotId
   );
 
-  const scopedObservatoryPoints = useMemo(
-    () => filterPointsInPilotZone(localObservatoryPoints, selectedCity, selectedPilot?.id),
-    [localObservatoryPoints, selectedCity, selectedPilot?.id]
-  );
+  const milanJunctionMockPoints = useMemo(() => {
+    if (selectedCity !== "Milan" || !milanSpeedForObservatory?.records?.length) return [];
+    const junctions = milanJunctionAnchorsForPilot(milanSpeedForObservatory.records);
+    if (!junctions.length) return [];
+
+    if (selectedKpi === "kpi1.2") {
+      if (!milanHasObservedModeShareData(localObservatoryPoints, milanPilotId)) {
+        return buildMilanJunctionModeShareMockPoints(junctions, milanPilotId);
+      }
+      return [];
+    }
+    if (selectedKpi === "kpi3.2" && !milanHasObservedClimateData(milanEnvForObservatory)) {
+      return buildMilanJunctionClimateMockPoints(junctions, milanPilotId);
+    }
+    if (
+      selectedKpi === "kpi4.2" &&
+      !milanHasObservedAccessibilityData(localObservatoryPoints, milanPilotId)
+    ) {
+      return buildMilanJunctionAccessibilityMockPoints(junctions, milanPilotId);
+    }
+    return [];
+  }, [
+    selectedCity,
+    selectedKpi,
+    milanSpeedForObservatory,
+    milanEnvForObservatory,
+    localObservatoryPoints,
+    milanPilotId,
+  ]);
+
+  const scopedObservatoryPoints = useMemo(() => {
+    if (selectedCity === "Milan" && milanJunctionMockPoints.length) {
+      return milanJunctionMockPoints;
+    }
+    if (selectedCity === "Milan") {
+      return filterMilanLocalPoints(localObservatoryPoints, selectedPilot?.id);
+    }
+    return filterPointsInPilotZone(localObservatoryPoints, selectedCity, selectedPilot?.id);
+  }, [
+    localObservatoryPoints,
+    selectedCity,
+    selectedKpi,
+    selectedPilot?.id,
+    milanJunctionMockPoints,
+  ]);
 
   const milanRecordToTrafficSegment = useCallback((record: MilanSegmentRecord): TrafficSegment => {
     const props = record.properties || {};
@@ -392,10 +463,43 @@ const MapContent = () => {
       return issyJunctionTraffic.results;
     }
     if (selectedCity === "Milan") {
+      if (milanJunctionMockPoints.length) {
+        const seenHubs = new Set<string>();
+        return milanJunctionMockPoints
+          .filter((point) => {
+            const hubId = String(point.properties?.junctionId ?? "");
+            if (!hubId || seenHubs.has(hubId)) return false;
+            seenHubs.add(hubId);
+            return true;
+          })
+          .map((point, index) => ({
+            id: String(point.properties?.junctionId ?? point.id ?? `mil-junction-${index + 1}`),
+            segment: String(point.properties?.junctionLabel ?? `Junction ${index + 1}`),
+            type: "Radial",
+            noeud_amont: "upstream",
+            noeud_aval: "downstream",
+            geo_shape: {
+              type: "Feature",
+              geometry: { type: "Point", coordinates: [point.lon, point.lat] as [number, number] },
+              properties: point.properties ?? {},
+            },
+            date_et_heure_de_comptage_utc: new Date().toISOString(),
+            distance_metres: 0,
+            vitesse_km_h: null,
+            temps_perdu_secondes: 0,
+            indice_de_congestion:
+              point.value != null && Number.isFinite(point.value)
+                ? Math.min(1, point.value / 100)
+                : null,
+            geo_point_2d: { lat: point.lat, lon: point.lon },
+          }));
+      }
       const milanRecords =
         selectedKpi === "kpi3.2"
           ? milanEnvForObservatory?.records
-          : milanSpeedForObservatory?.records;
+          : selectedKpi === "kpi2.1"
+            ? milanSpeedForObservatory?.records
+            : undefined;
       if (milanRecords?.length) {
         return milanRecords.map(milanRecordToTrafficSegment);
       }
@@ -429,6 +533,7 @@ const MapContent = () => {
     issyJunctionTraffic?.results,
     milanSpeedForObservatory?.records,
     milanEnvForObservatory?.records,
+    milanJunctionMockPoints,
     selectedKpi,
     scopedObservatoryPoints,
     milanRecordToTrafficSegment,
@@ -559,6 +664,33 @@ const MapContent = () => {
       );
     }
 
+    if (selectedCity === "Milan") {
+      const selectionId = hoveredSegmentId ?? selectedJunctionSegmentId;
+      const milanRecord =
+        selectedKpi === "kpi3.2"
+          ? milanEnvForObservatory?.records?.find((r) => r.id === selectionId)
+          : selectedKpi === "kpi2.1"
+            ? milanSpeedForObservatory?.records?.find((r) => r.id === selectionId)
+            : undefined;
+      return buildMilanObservatoryView(
+        junctionConfig,
+        selectedPilot.id,
+        selectedKpi,
+        scenario,
+        scopedObservatoryPoints,
+        {
+          selectionId,
+          segmentName: mapContext?.segmentName ?? null,
+          speed: mapContext?.speed ?? null,
+          congestion: mapContext?.congestion ?? null,
+          segmentProperties: milanRecord?.properties,
+          speedDataset: milanSpeedForObservatory ?? null,
+          envDataset: milanEnvForObservatory ?? null,
+          pilotLabel: label,
+        }
+      );
+    }
+
     const seg =
       observatorySegments.find((s) => s.id === selectedJunctionSegmentId) ??
       pickDefaultSegment(observatorySegments);
@@ -629,10 +761,11 @@ const MapContent = () => {
     if (activeSeg && activeSelectionId) {
       const milanRecord =
         selectedCity === "Milan"
-          ? (selectedKpi === "kpi3.2"
-              ? milanEnvForObservatory?.records
-              : milanSpeedForObservatory?.records
-            )?.find((r) => r.id === activeSelectionId)
+          ? selectedKpi === "kpi3.2"
+            ? milanEnvForObservatory?.records?.find((r) => r.id === activeSelectionId)
+            : selectedKpi === "kpi2.1"
+              ? milanSpeedForObservatory?.records?.find((r) => r.id === activeSelectionId)
+              : undefined
           : undefined;
       return buildSegmentScopedObservatoryView(
         junctionConfig,
@@ -688,9 +821,14 @@ const MapContent = () => {
 
   const mapLegendSpec = resolveMapLegend(selectedCity || "", selectedKpi, scenario, {
     issyJunctionStudy,
+    milanIllustrativeLayer:
+      selectedCity === "Milan" &&
+      (selectedKpi === "kpi1.2" || selectedKpi === "kpi3.2" || selectedKpi === "kpi4.2") &&
+      dataQualitySummary?.provenanceType === "mock",
   });
   const pilotSupportsKpi = selectedPilot ? selectedPilot.supportedKpis.includes(selectedKpi) : true;
   const shouldShowLegend = !showTour && showPanel && pilotSupportsKpi;
+  const mapSideInsets = useMapSideInsets(!!showPanel, isObservatoryOpen);
 
   const handleTourClose = () => {
     setShowTour(false);
@@ -933,6 +1071,7 @@ const MapContent = () => {
             onOpenDataSummary={() => setIsDataSummaryOpen(true)}
             mapContext={mapContext}
             dataQualitySummary={dataQualitySummary}
+            manifestAvailable={manifestAvailable}
             mapSelection={mapSelection}
             hoveredSegmentId={hoveredSegmentId}
             milanEnvironmentWindow={milanEnvWindow}
@@ -979,37 +1118,37 @@ const MapContent = () => {
           <>
             {isLegendOpen ? (
               <motion.div
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
+                exit={{ opacity: 0, y: 16 }}
                 transition={{ duration: 0.2, ease: "easeOut" }}
-                className="fixed right-3 top-24 sm:right-4 sm:top-24 lg:right-4 lg:top-24 z-[65] w-[220px] sm:w-[240px] max-w-[calc(100vw-24px)]"
+                className="fixed bottom-3 z-[62] flex max-h-[min(38vh,300px)] flex-col overflow-hidden rounded-2xl border border-white/15 shadow-[0_12px_32px_rgba(0,0,0,0.45)]"
                 style={{
-                  background: "rgba(20, 20, 35, 0.82)",
-                  backdropFilter: "blur(12px)",
-                  WebkitBackdropFilter: "blur(12px)",
-                  border: "1px solid rgba(255,255,255,0.14)",
-                  borderRadius: "16px",
-                  padding: "14px 16px",
-                  boxShadow: "0 10px 24px rgba(0,0,0,0.35)",
+                  left: mapSideInsets.left,
+                  right: mapSideInsets.right,
+                  background: "rgba(14, 14, 28, 0.92)",
+                  backdropFilter: "blur(14px)",
+                  WebkitBackdropFilter: "blur(14px)",
                 }}
               >
-                <button
-                  onClick={() => setIsLegendOpen(false)}
-                  className="absolute right-2 top-2 rounded p-1 text-white/65 hover:text-white/90 hover:bg-white/10 transition-colors"
-                  aria-label="Hide legend"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
-
-                <div className="pr-6">
-                  <p className="text-[13px] font-semibold text-white leading-tight">
-                    {selectedKpiMeta?.shortName || "KPI Layer"}
-                  </p>
-                  <p className="mt-1 text-[11px] text-white/65">{selectedKpiMeta?.ref || selectedKpi}</p>
+                <div className="flex shrink-0 items-start justify-between gap-3 border-b border-white/10 px-4 py-3">
+                  <div className="min-w-0 pr-2">
+                    <p className="text-[13px] font-semibold text-white leading-tight">
+                      {selectedKpiMeta?.shortName || "KPI Layer"}
+                    </p>
+                    <p className="mt-0.5 text-[11px] text-white/70">{selectedKpiMeta?.ref || selectedKpi}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsLegendOpen(false)}
+                    className="shrink-0 rounded p-1 text-white/65 hover:bg-white/10 hover:text-white/90 transition-colors"
+                    aria-label="Hide legend"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
                 </div>
 
-                <div className="mt-3 space-y-2">
+                <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3 scrollbar-thin">
                   {(() => {
                     const items = mapLegendSpec.items;
                     const stripRamp =
@@ -1032,7 +1171,7 @@ const MapContent = () => {
                               )
                             )}
                           </div>
-                          <div className="mt-1 flex justify-between gap-2 text-intel-meta text-white/78">
+                          <div className="mt-1.5 flex justify-between gap-2 text-intel-meta text-white/80">
                             <span className="truncate text-left">{items[0]?.label || "Lower"}</span>
                             <span className="truncate text-right">{items[items.length - 1]?.label || "Higher"}</span>
                           </div>
@@ -1045,33 +1184,52 @@ const MapContent = () => {
                       mapLegendSpec.marker === "polygon"
                         ? mapLegendSpec.marker
                         : "point";
-                    return items.map((item, i) => (
-                      <div key={`legend-row-${i}-${item.color}`} className="flex items-center gap-2 min-w-0">
-                        <LegendSwatch marker={rowMarker} color={item.color} />
-                        {item.label ? (
-                          <span className="text-intel-meta text-white/85 leading-tight flex-1 min-w-0">{item.label}</span>
-                        ) : null}
+                    return (
+                      <div
+                        className="grid gap-x-6 gap-y-2"
+                        style={{
+                          gridTemplateColumns: "repeat(auto-fill, minmax(11.5rem, 1fr))",
+                        }}
+                      >
+                        {items.map((item, i) => (
+                          <div key={`legend-row-${i}-${item.color}`} className="flex min-w-0 items-center gap-2">
+                            <LegendSwatch marker={rowMarker} color={item.color} />
+                            {item.label ? (
+                              <span className="text-intel-meta text-white/90 leading-snug">{item.label}</span>
+                            ) : null}
+                          </div>
+                        ))}
                       </div>
-                    ));
+                    );
                   })()}
                 </div>
 
-                <div className="mt-3 flex items-start gap-2 text-intel-meta text-white/82 leading-tight">
-                  <Eye className="mt-0.5 h-3.5 w-3.5 text-white/60 flex-shrink-0" />
-                  <p>{mapLegendSpec.hint}</p>
-                </div>
+                {mapLegendSpec.hint ? (
+                  <div className="shrink-0 border-t border-white/10 px-4 py-2.5">
+                    <div className="flex items-start gap-2 text-intel-meta text-white/85 leading-snug">
+                      <Eye className="mt-0.5 h-3.5 w-3.5 shrink-0 text-white/60" />
+                      <p>{mapLegendSpec.hint}</p>
+                    </div>
+                  </div>
+                ) : null}
               </motion.div>
             ) : (
-              <motion.button
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 8 }}
                 transition={{ duration: 0.2 }}
-                onClick={() => setIsLegendOpen(true)}
-                className="fixed right-3 top-24 sm:right-4 sm:top-24 lg:right-4 lg:top-24 z-[65] rounded-xl border border-white/20 bg-[rgba(20,20,35,0.82)] px-3 py-1.5 text-[11px] font-medium text-white/85 backdrop-blur-[12px] hover:text-white"
+                className="fixed bottom-3 z-[62] flex justify-center pointer-events-none"
+                style={{ left: mapSideInsets.left, right: mapSideInsets.right }}
               >
-                Show legend
-              </motion.button>
+                <button
+                  type="button"
+                  onClick={() => setIsLegendOpen(true)}
+                  className="pointer-events-auto rounded-xl border border-white/20 bg-[rgba(14,14,28,0.9)] px-3 py-1.5 text-[11px] font-medium text-white/90 backdrop-blur-[12px] hover:text-white shadow-lg"
+                >
+                  Show legend
+                </button>
+              </motion.div>
             )}
           </>
         )}
@@ -1101,6 +1259,8 @@ const MapContent = () => {
           selectedPilotName={selectedPilot?.name}
           selectedPilotId={selectedPilot?.id}
           pilotGeometrySpec={pilotGeometrySpec}
+          dataQualitySummary={dataQualitySummary}
+          manifestAvailable={manifestAvailable}
           onClose={() => setIsDataSummaryOpen(false)}
         />
       )}
@@ -1139,19 +1299,20 @@ const MapContent = () => {
         pilotGeometrySpec={pilotGeometrySpec}
       />
 
-      {/* Bottom Attribution */}
+      {/* Bottom Attribution — tucked under left panel (corner, low z) */}
       <div
-        className={`absolute left-4 bottom-4 z-20 text-[10px] text-primary-foreground/80 bg-purple/70 backdrop-blur-xl px-3 py-1.5 rounded-lg border border-primary-foreground/10 transition-opacity ${
-          showTour ? "opacity-0" : "opacity-100"
+        className={`fixed left-3 bottom-3 z-[12] max-w-[min(280px,calc(100vw-24px))] text-[10px] text-primary-foreground/80 bg-purple/70 backdrop-blur-xl px-3 py-1.5 rounded-lg border border-primary-foreground/10 transition-opacity duration-200 ${
+          showTour ? "opacity-0 pointer-events-none" : "opacity-100"
         }`}
       >
         Data period: 2024 snapshot · ELABORATOR Consortium · © OpenStreetMap contributors
       </div>
 
-      {/* How to Use Button */}
+      {/* How to Use — tucked under right panel (corner, low z) */}
       {!showTour && (
-        <div className="absolute bottom-4 right-4 z-20 transition-all">
+        <div className="fixed right-3 bottom-3 z-[12]">
           <button
+            type="button"
             onClick={() => setShowTour(true)}
             className="text-xs font-medium text-primary-foreground bg-violet/80 backdrop-blur-xl px-4 py-2 rounded-lg border border-violet/30 hover:bg-violet transition-all shadow-lg"
           >

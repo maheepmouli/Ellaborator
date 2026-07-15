@@ -26,6 +26,7 @@ import {
   parseCopenhagenMapSelection,
 } from "@/lib/copenhagenMapSelection";
 import { areAllTravelModesSelected } from "@/lib/travelModeMapLink";
+import { co2GPerHourToKpiIntensity } from "@/lib/copenhagenEmissionsModel";
 
 type ModeBreakdown = {
   pre: { bike: number; pedestrian: number; motorised: number; ptw: number; total: number };
@@ -157,6 +158,35 @@ function kpiValueFromAgg(
   }
 }
 
+function gCo2PerHourToKgDay(gPerHour: number): number {
+  if (!Number.isFinite(gPerHour) || gPerHour <= 0) return 0;
+  return Math.round((gPerHour * 24) / 1000);
+}
+
+function aggregateScalarPoints(
+  points: LocalCityPoint[],
+  pickBaseline: (p: LocalCityPoint) => number,
+  pickIntervention: (p: LocalCityPoint) => number
+): { baseline: number; intervention: number; count: number } {
+  let baselineSum = 0;
+  let interventionSum = 0;
+  let count = 0;
+  for (const point of points) {
+    const baseline = pickBaseline(point);
+    const intervention = pickIntervention(point);
+    if (!Number.isFinite(baseline) && !Number.isFinite(intervention)) continue;
+    baselineSum += baseline;
+    interventionSum += intervention;
+    count += 1;
+  }
+  if (!count) return { baseline: 0, intervention: 0, count: 0 };
+  return {
+    baseline: baselineSum / count,
+    intervention: interventionSum / count,
+    count,
+  };
+}
+
 export function filterCopenhagenObservatoryPoints(
   points: LocalCityPoint[],
   selectionId: string | null | undefined
@@ -184,6 +214,14 @@ export function filterCopenhagenObservatoryPoints(
       );
       return normalizeCopenhagenSegmentKey(category) === categoryKey;
     });
+  }
+
+  if (selectionId.startsWith("emissions-") || selectionId.startsWith("cph-survey-")) {
+    return points.filter((p) => String(p.properties?.segmentId ?? p.id) === selectionId);
+  }
+
+  if (selectionId.startsWith("encounter-") || selectionId.startsWith("irap-")) {
+    return points.filter((p) => String(p.properties?.segmentId ?? p.id) === selectionId);
   }
 
   const parsed = parseCopenhagenMapSelection(selectionId);
@@ -249,6 +287,8 @@ export function buildCopenhagenObservatoryView(
     (p) =>
       p.properties?.datasetKind === "parking" || p.properties?.datasetKind === "accessibility"
   );
+  const emissionsPoints = activePoints.filter((p) => p.properties?.datasetKind === "emissions");
+  const surveyPoints = activePoints.filter((p) => p.properties?.datasetKind === "survey");
   const hasModeBreakdown = pre.total > 0 || post.total > 0;
 
   const infraPeriod = (value: number, label: string, periodLabel: string): JunctionPeriodView => ({
@@ -265,7 +305,80 @@ export function buildCopenhagenObservatoryView(
 
   let baselineValue: number;
   let interventionValue: number;
-  if (infraPoints.length && !hasModeBreakdown) {
+  let emissionsPeriod: { baseline: JunctionPeriodView; intervention: JunctionPeriodView } | null =
+    null;
+  let surveyPeriod: { baseline: JunctionPeriodView; intervention: JunctionPeriodView } | null = null;
+
+  if (selectedKpi === "kpi3.2" && emissionsPoints.length) {
+    const agg = aggregateScalarPoints(
+      emissionsPoints,
+      (p) => Number(p.properties?.preCo2GPerHour ?? 0),
+      (p) => Number(p.properties?.postCo2GPerHour ?? 0)
+    );
+    const baselineIntensity = co2GPerHourToKpiIntensity(agg.baseline);
+    const interventionIntensity = co2GPerHourToKpiIntensity(agg.intervention);
+    baselineValue = baselineIntensity;
+    interventionValue = interventionIntensity;
+    const baselineKg = gCo2PerHourToKgDay(agg.baseline);
+    const interventionKg = gCo2PerHourToKgDay(agg.intervention);
+    const motorShare = Math.min(1, interventionIntensity / 100);
+    emissionsPeriod = {
+      baseline: {
+        label: "Pre-intervention",
+        period: "Modelled emissions (pre OTC)",
+        modeShare: {},
+        dailyCycleCount: 0,
+        peakCongestion: Math.min(1, baselineIntensity / 100),
+        avgSpeedKmh: 0,
+        co2ProxyKgDay: baselineKg,
+        trendCycle: [baselineIntensity],
+        trendCar: [baselineIntensity],
+      },
+      intervention: {
+        label: "Post-intervention",
+        period: "Modelled emissions (post OTC)",
+        modeShare: {},
+        dailyCycleCount: 0,
+        peakCongestion: motorShare,
+        avgSpeedKmh: 0,
+        co2ProxyKgDay: interventionKg,
+        trendCycle: [interventionIntensity],
+        trendCar: [interventionIntensity],
+      },
+    };
+  } else if (selectedKpi === "kpi4.1" && surveyPoints.length) {
+    const agg = aggregateScalarPoints(
+      surveyPoints,
+      (p) => Number(p.properties?.baselineValue ?? 0),
+      (p) => Number(p.properties?.interventionValue ?? p.value ?? 0)
+    );
+    baselineValue = agg.baseline;
+    interventionValue = agg.intervention;
+    surveyPeriod = {
+      baseline: {
+        label: "Pre-intervention",
+        period: String(surveyPoints[0]?.properties?.source ?? "Citizen survey"),
+        modeShare: {},
+        dailyCycleCount: Math.round(agg.baseline),
+        peakCongestion: 0,
+        avgSpeedKmh: agg.baseline,
+        co2ProxyKgDay: 0,
+        trendCycle: [agg.baseline],
+        trendCar: [agg.baseline],
+      },
+      intervention: {
+        label: "Post-intervention",
+        period: String(surveyPoints[0]?.properties?.source ?? "Citizen survey"),
+        modeShare: {},
+        dailyCycleCount: Math.round(agg.intervention),
+        peakCongestion: 0,
+        avgSpeedKmh: agg.intervention,
+        co2ProxyKgDay: 0,
+        trendCycle: [agg.intervention],
+        trendCar: [agg.intervention],
+      },
+    };
+  } else if (infraPoints.length && !hasModeBreakdown) {
     baselineValue = infraPoints.reduce(
       (sum, p) => sum + Number(p.properties?.baselineValue ?? 0),
       0
@@ -279,24 +392,32 @@ export function buildCopenhagenObservatoryView(
     interventionValue = kpiValueFromAgg(post, selectedKpi, modeTypes);
   }
 
-  const baselinePeriod = hasModeBreakdown
-    ? periodFromAgg(pre, "Pre-intervention", "OpenTrafficCam pre sample", post)
-    : infraPeriod(
-        baselineValue,
-        "Pre-intervention",
-        infraPoints[0]?.properties?.source
-          ? String(infraPoints[0].properties.source)
-          : "Parking inventory (Eksisterende forhold)"
-      );
-  const interventionPeriod = hasModeBreakdown
-    ? periodFromAgg(post, "Post-intervention", "OpenTrafficCam post sample", pre)
-    : infraPeriod(
-        interventionValue,
-        "Post-intervention",
-        infraPoints[0]?.properties?.source
-          ? String(infraPoints[0].properties.source)
-          : "Parking inventory (Udført)"
-      );
+  const baselinePeriod = emissionsPeriod
+    ? emissionsPeriod.baseline
+    : surveyPeriod
+      ? surveyPeriod.baseline
+      : hasModeBreakdown
+        ? periodFromAgg(pre, "Pre-intervention", "OpenTrafficCam pre sample", post)
+        : infraPeriod(
+            baselineValue,
+            "Pre-intervention",
+            infraPoints[0]?.properties?.source
+              ? String(infraPoints[0].properties.source)
+              : "Parking inventory (Eksisterende forhold)"
+          );
+  const interventionPeriod = emissionsPeriod
+    ? emissionsPeriod.intervention
+    : surveyPeriod
+      ? surveyPeriod.intervention
+      : hasModeBreakdown
+        ? periodFromAgg(post, "Post-intervention", "OpenTrafficCam post sample", pre)
+        : infraPeriod(
+            interventionValue,
+            "Post-intervention",
+            infraPoints[0]?.properties?.source
+              ? String(infraPoints[0].properties.source)
+              : "Parking inventory (Udført)"
+          );
   const scenarioValue =
     scenario === "baseline"
       ? baselineValue
@@ -363,20 +484,29 @@ export function buildCopenhagenObservatoryView(
     interventionType: pilotRecord?.intervention.summary ?? config.interventionType,
     coordinates: [lat, lon],
     monitoringPeriod:
-      infraPoints.length && !hasModeBreakdown
-        ? `Parking inventory · ${infraPoints.length} matched record${infraPoints.length === 1 ? "" : "s"}`
-        : `OpenTrafficCam · ${directionCount} observed direction${directionCount === 1 ? "" : "s"}`,
+      emissionsPoints.length && selectedKpi === "kpi3.2"
+        ? `Modelled emissions · ${emissionsPoints.length} flow node${emissionsPoints.length === 1 ? "" : "s"}`
+        : surveyPoints.length && selectedKpi === "kpi4.1"
+          ? `Citizen survey · ${surveyPoints.length} response${surveyPoints.length === 1 ? "" : "s"}`
+          : infraPoints.length && !hasModeBreakdown
+            ? `Parking inventory · ${infraPoints.length} matched record${infraPoints.length === 1 ? "" : "s"}`
+            : `OpenTrafficCam · ${directionCount} observed direction${directionCount === 1 ? "" : "s"}`,
     sensors: directionCount,
     approachesCovered: directionCount,
     totalApproaches: directionCount,
     dataConfidence: 0.88,
     baseline: baselinePeriod,
     intervention: interventionPeriod,
-    dataSource: "observed",
-    dataClass: "observed",
-    sourceLabel: methodologyRule
-      ? `OpenTrafficCam (methodology filtered) · ${pilotRecord?.code ?? "CPH"}`
-      : `OpenTrafficCam directional counts · ${pilotRecord?.code ?? "CPH"}`,
+    dataSource: emissionsPoints.length && selectedKpi === "kpi3.2" ? "modelled" : "observed",
+    dataClass: emissionsPoints.length && selectedKpi === "kpi3.2" ? "derived" : "observed",
+    sourceLabel:
+      emissionsPoints.length && selectedKpi === "kpi3.2"
+        ? `${String(emissionsPoints[0]?.properties?.source ?? "COPERT-lite emissions model")} · ${pilotRecord?.code ?? "CPH"}`
+        : surveyPoints.length && selectedKpi === "kpi4.1"
+          ? `${String(surveyPoints[0]?.properties?.source ?? "Citizen survey")} · ${pilotRecord?.code ?? "CPH"}`
+          : methodologyRule
+            ? `OpenTrafficCam (methodology filtered) · ${pilotRecord?.code ?? "CPH"}`
+            : `OpenTrafficCam directional counts · ${pilotRecord?.code ?? "CPH"}`,
     streetNS: config.streetNS,
     streetEW: config.streetEW,
   };

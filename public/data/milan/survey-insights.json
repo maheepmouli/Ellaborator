@@ -1,0 +1,9 @@
+{
+  "generatedAt": "2026-07-15T09:54:09.377Z",
+  "source": "Milano SharePoint — folder 7 Survey results (Satisfaction LL)",
+  "workbookCount": 0,
+  "pilots": [],
+  "aggregateSatisfactionPct": null,
+  "status": "folder_empty",
+  "note": "Survey folder present in zip but contains no xlsx files yet — KPI 4.1 uses observatory fallback until partner upload."
+}

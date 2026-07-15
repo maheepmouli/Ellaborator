@@ -129,6 +129,14 @@ export function resolveSpatialSystem(
     return "points";
   }
 
+  if (cityKey === "zaragoza" && (kpiId === "kpi1.2" || kpiId === "kpi2.1" || kpiId === "kpi4.2")) {
+    return "points";
+  }
+
+  if (cityKey === "milan" && kpiId === "kpi4.2") {
+    return "points";
+  }
+
   return KPI_SPATIAL_DEFAULT[kpiId] ?? "points";
 }
 
@@ -316,7 +324,6 @@ export function resolveRenderIntent(
   kpiId: string,
   options?: SpatialResolveOptions & { pilotId?: string | null }
 ): "point" | "segment" | "polygon" | "hex" {
-  if (cityName.toLowerCase().includes("zaragoza")) return "polygon";
   const system = resolveSpatialSystem(cityName, kpiId, options);
   if (system === "segments" || system === "flows") return "segment";
   if (system === "climate-hex") return "hex";

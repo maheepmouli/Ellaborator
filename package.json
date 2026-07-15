@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "prebuild": "npm run build-trikala-locations && npm run build-trikala-bundle",
+    "prebuild": "npm run build-trikala-bike-lane-sensors && npm run build-trikala-locations && npm run build-trikala-bundle && npm run build-milan-data",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
@@ -20,6 +20,9 @@
     "build-trikala-insights": "node scripts/build-trikala-insights.mjs",
     "build-trikala-bundle": "node scripts/build-trikala-bundle.mjs",
     "build-trikala-locations": "node scripts/build-trikala-locations.mjs",
+    "build-trikala-bike-lane-sensors": "node scripts/build-trikala-bike-lane-sensors.mjs",
+    "build-milan-data": "node scripts/build-milan-data.mjs",
+    "inventory-milan": "node scripts/inventory-milan-zip.mjs",
     "convert-helsinki-gpkg": "node scripts/convert-helsinki-gpkg.mjs",
     "prepare:geodata": "python scripts/prepare_geodata.py"
   },

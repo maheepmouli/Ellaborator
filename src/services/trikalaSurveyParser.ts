@@ -1,6 +1,7 @@
 import * as XLSX from "xlsx";
 import type { NormalizedCityRecord } from "@/types/normalized-city-data";
 import { buildTrikalaEnvironmentalRecords } from "@/services/trikalaEnvironmentalParser";
+import { buildTrikalaBikeLaneSensorRecords } from "@/services/trikalaBikeLaneSensorParser";
 
 import { TRIKALA_MAP_ANCHOR, getTrikalaPilotAnchor, type TrikalaPilotId } from "@/lib/trikalaMapConfig";
 import { computeWomenMobilityModeShareRows } from "@/lib/trikalaModeShare";
@@ -644,6 +645,11 @@ export async function buildTrikalaRecords(kpiId: string): Promise<NormalizedCity
   if (kpiId === "kpi3.2") {
     const envRecords = await buildTrikalaEnvironmentalRecords(kpiId);
     records.push(...envRecords);
+  }
+
+  if (kpiId === "kpi2.1" || kpiId === "kpi4.2") {
+    const bikeLaneRecords = await buildTrikalaBikeLaneSensorRecords(kpiId);
+    records.push(...bikeLaneRecords);
   }
 
   const filtered = records.filter((r) => r.kpiId === kpiId);

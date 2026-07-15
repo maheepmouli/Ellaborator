@@ -16,11 +16,14 @@ import {
 } from "./trikalaInfrastructureStyles";
 import { createMapPointDivIcon } from "@/lib/mapPointIcons";
 import { resolveTrikalaInfraIconSpec } from "./trikalaPointIcons";
+import { clusterTrikalaBikeLaneSensors } from "./trikalaLocationClustering";
 import {
   renderTrikalaAccessibilityZones,
   renderTrikalaEnvironmentalZones,
   renderTrikalaSatisfactionZones,
 } from "./trikalaZoneHighlights";
+import { spreadOverlappingPositions } from "@/lib/copenhagenMarkerLayout";
+import { scheduleLeafletLayerRepaint } from "@/lib/leafletMapSync";
 
 export interface RenderTrikalaInfrastructureOptions {
   map: L.Map;
@@ -34,6 +37,10 @@ export interface RenderTrikalaInfrastructureOptions {
   circlesOut: L.Circle[];
   polylinesOut: L.Polyline[];
   polygonsOut?: L.Polygon[];
+  /** When Copenhagen-style mode-share radar renders hub markers, skip duplicate P+R pins. */
+  hideParkRideHubMarkers?: boolean;
+  /** Observed busy % keyed by tri-loc-* id (bike-lane LoRa sensors). */
+  bikeLaneBusyPctByLocationId?: Record<string, number>;
 }
 
 type InfraPointEntry = {
@@ -76,26 +83,6 @@ function isVisible(loc: TrikalaLocation, selectedKpi: string): boolean {
   return loc.mapVisible !== false && loc.linkedKpis.includes(selectedKpi);
 }
 
-/** Fit map to all P+R polygon rings so SMY, DEH, and GiSeMi stay in view together. */
-function fitTriParkRideHubBounds(map: L.Map, locations: TrikalaLocation[]): void {
-  const hubs = locations.filter((l) => l.kind === "park_and_ride" && l.ring?.length);
-  if (hubs.length < 2) return;
-
-  const bounds = L.latLngBounds([]);
-  hubs.forEach((hub) => {
-    hub.ring!.forEach(([lat, lng]) => bounds.extend([lat, lng]));
-    bounds.extend([hub.lat, hub.lng]);
-  });
-  if (!bounds.isValid()) return;
-
-  map.fitBounds(bounds, {
-    padding: [64, 64],
-    maxZoom: 16,
-    animate: true,
-    duration: 0.5,
-  });
-}
-
 function renderParkAndRidePolygons(
   map: L.Map,
   locations: TrikalaLocation[],
@@ -103,7 +90,8 @@ function renderParkAndRidePolygons(
   selectedSegmentId: string | null | undefined,
   segmentHandlers: SegmentInteractionHandlers,
   polygonsOut: L.Polygon[],
-  markersOut: L.Marker[]
+  markersOut: L.Marker[],
+  hideHubMarkers = false
 ): void {
   const color = TRIKALA_INFRA_COLORS.emerald;
   const baseStyle: L.PathOptions = {
@@ -155,6 +143,8 @@ function renderParkAndRidePolygons(
 
       polygonsOut.push(poly);
 
+      if (hideHubMarkers) return;
+
       const iconSpec = resolveTrikalaInfraIconSpec("park_and_ride", selectedKpi);
       const hubMarker = L.marker([loc.lat, loc.lng], {
         icon: createMapPointDivIcon(iconSpec, `${iconSpec.label} · ${loc.name}`),
@@ -197,7 +187,7 @@ function renderSmartCrossingFromRegistry(
     infrastructurePopupHtml(
       site?.name ?? "Smart crossing corridor",
       "smart_crossing_site",
-      site?.folderPath.join(" › ") ?? "Asklipiou × Stratigou Sarafi"
+      site?.folderPath.join(" › ") ?? "Vasili Tsitsani · Military School"
     )
   );
   wirePolylineSegment(
@@ -222,10 +212,15 @@ function renderInfrastructureMarkers(
   map: L.Map,
   locations: TrikalaLocation[],
   selectedKpi: string,
+  selectedPilotId: string | null | undefined,
+  anchor: { lat: number; lng: number },
   selectedSegmentId: string | null | undefined,
   segmentHandlers: SegmentInteractionHandlers,
   markersOut: L.Marker[],
-  circlesOut: L.Circle[]
+  circlesOut: L.Circle[],
+  bikeLaneBusyPctByLocationId: Record<string, number> = {},
+  bikeLaneSpread: Map<string, [number, number]> = new Map(),
+  useBikeLaneHitMarkers = false
 ): void {
   resetInfraZoomSync(map);
 
@@ -238,23 +233,78 @@ function renderInfrastructureMarkers(
     "bike_lane_sensor",
   ]);
 
+  const triP1SafetyKpi =
+    selectedPilotId === "tri-p1" && (selectedKpi === "kpi2.1" || selectedKpi === "kpi4.2");
+
   const zoom = map.getZoom();
 
   locations
     .filter((loc) => pointKinds.has(loc.kind) && isVisible(loc, selectedKpi))
+    .filter((loc) => !(triP1SafetyKpi && loc.kind === "traffic_signal"))
     .forEach((loc) => {
-      const segmentId = loc.id;
+      const useMobilityHub = triP1SafetyKpi && loc.kind === "smart_crossing_site";
+      const spread = bikeLaneSpread.get(loc.id);
+      const lat = useMobilityHub ? anchor.lat : spread ? spread[0] : loc.lat;
+      const lng = useMobilityHub ? anchor.lng : spread ? spread[1] : loc.lng;
+      const segmentId = useMobilityHub ? "tri-p1-smart-crossing" : loc.id;
       const isSelected = selectedSegmentId === segmentId;
-      const scale = capacityScale(loc.capacity);
+      const observedBusy =
+        loc.kind === "bike_lane_sensor" ? bikeLaneBusyPctByLocationId[loc.id] : undefined;
+      const scale =
+        loc.kind === "bike_lane_sensor" && typeof observedBusy === "number"
+          ? capacityScale(Math.max(1, Math.round(observedBusy / 10)))
+          : capacityScale(loc.capacity);
       const expanded = isSelected;
       const fill = getInfraColorByKind(loc.kind);
       const glow = getInfraGlowByKind(loc.kind);
+      const iconSpec = resolveTrikalaInfraIconSpec(loc.kind, selectedKpi);
+      const segmentName = useMobilityHub
+        ? "Smart crossing — Military School"
+        : `${iconSpec.label} · ${loc.name}`;
+      const segmentDetail = {
+        segmentId,
+        segmentName,
+        speed: null as null,
+        congestion: null as null,
+      };
+      const popupMetric =
+        typeof observedBusy === "number"
+          ? selectedKpi === "kpi4.2"
+            ? `Observed lane availability ${Math.round(100 - observedBusy)}% (LoRa parking status)`
+            : `Observed occupancy stress ${Math.round(observedBusy)}% (LoRa parking status)`
+          : undefined;
+      const popupHtml = infrastructurePopupHtml(
+        loc.name,
+        loc.kind,
+        loc.folderPath.join(" › "),
+        popupMetric
+      );
+
+      if (useBikeLaneHitMarkers && loc.kind === "bike_lane_sensor") {
+        const hitMarker = L.marker([lat, lng], {
+          icon: createMapPointDivIcon(iconSpec, segmentName),
+          interactive: true,
+          zIndexOffset: isSelected ? 1200 : 950,
+          riseOnHover: true,
+        }).addTo(map);
+        hitMarker.bindPopup(popupHtml);
+        hitMarker.bindTooltip(loc.name, {
+          direction: "top",
+          className: "tri-segment-tooltip",
+          opacity: 0.94,
+          offset: [0, -6],
+        });
+        wireMarkerSegment(hitMarker, segmentDetail, segmentHandlers);
+        markersOut.push(hitMarker);
+        return;
+      }
+
       const baseStyle = infraCircleMarkerStyle(loc.kind, zoom, scale, expanded);
 
       let pulse: L.CircleMarker | undefined;
-      if (TRIKALA_PULSE_KINDS.has(loc.kind)) {
+      if (TRIKALA_PULSE_KINDS.has(loc.kind) && loc.kind !== "bike_lane_sensor") {
         const pulseR = infraMarkerRadius(loc.kind, zoom, scale, false) * 2.2;
-        pulse = L.circleMarker([loc.lat, loc.lng], {
+        pulse = L.circleMarker([lat, lng], {
           radius: pulseR,
           color: glow,
           weight: 1.2,
@@ -267,13 +317,12 @@ function renderInfrastructureMarkers(
         circlesOut.push(pulse);
       }
 
-      const core = L.circleMarker([loc.lat, loc.lng], {
+      const core = L.circleMarker([lat, lng], {
         ...baseStyle,
         interactive: true,
       }).addTo(map);
-      const iconSpec = resolveTrikalaInfraIconSpec(loc.kind, selectedKpi);
-      const iconMarker = L.marker([loc.lat, loc.lng], {
-        icon: createMapPointDivIcon(iconSpec, `${iconSpec.label} · ${loc.name}`),
+      const iconMarker = L.marker([lat, lng], {
+        icon: createMapPointDivIcon(iconSpec, segmentName),
         interactive: false,
         zIndexOffset: isSelected ? 900 : 700,
       }).addTo(map);
@@ -286,7 +335,7 @@ function renderInfrastructureMarkers(
         weight: 0,
       });
 
-      core.bindPopup(infrastructurePopupHtml(loc.name, loc.kind, loc.folderPath.join(" › ")));
+      core.bindPopup(popupHtml);
       core.bindTooltip(loc.name, {
         direction: "top",
         className: "tri-segment-tooltip",
@@ -299,12 +348,7 @@ function renderInfrastructureMarkers(
 
       wireCircleMarkerSegment(
         core,
-        {
-          segmentId,
-          segmentName: `${iconSpec.label} · ${loc.name}`,
-          speed: null,
-          congestion: null,
-        },
+        segmentDetail,
         segmentHandlers,
         {
           baseRadius,
@@ -356,35 +400,64 @@ export function renderTrikalaInfrastructureLayers(
     circlesOut,
     polylinesOut,
     polygonsOut = [],
+    hideParkRideHubMarkers = false,
+    bikeLaneBusyPctByLocationId = {},
   } = options;
 
   if (!locations.length) return;
 
-  renderTrikalaEnvironmentalZones(map, locations, selectedKpi, circlesOut, markersOut);
+  const clusterBikeLanes =
+    selectedPilotId === "tri-p3" &&
+    selectedKpi !== "kpi2.1" &&
+    selectedKpi !== "kpi4.2";
+  const mapLocations = clusterBikeLanes
+    ? clusterTrikalaBikeLaneSensors(locations)
+    : locations;
+
+  const useBikeLaneHitMarkers =
+    selectedPilotId === "tri-p3" &&
+    (selectedKpi === "kpi2.1" || selectedKpi === "kpi4.2");
+  const bikeLaneSpread = useBikeLaneHitMarkers
+    ? spreadOverlappingPositions(
+        mapLocations
+          .filter(
+            (l) =>
+              l.kind === "bike_lane_sensor" &&
+              l.mapVisible !== false &&
+              l.linkedKpis.includes(selectedKpi)
+          )
+          .map((l) => ({ id: l.id, lat: l.lat, lon: l.lng })),
+        map.getZoom(),
+        { zoomStable: true }
+      )
+    : new Map<string, [number, number]>();
+
+  renderTrikalaEnvironmentalZones(map, mapLocations, selectedKpi, circlesOut, markersOut);
   renderTrikalaSatisfactionZones(
     map,
     anchor,
-    locations,
+    mapLocations,
     selectedKpi,
     selectedPilotId,
     circlesOut,
     markersOut
   );
-  renderTrikalaAccessibilityZones(map, locations, selectedKpi, circlesOut, markersOut);
+  renderTrikalaAccessibilityZones(map, mapLocations, selectedKpi, circlesOut, markersOut);
 
   renderParkAndRidePolygons(
     map,
-    locations,
+    mapLocations,
     selectedKpi,
     selectedSegmentId,
     segmentHandlers,
     polygonsOut,
-    markersOut
+    markersOut,
+    hideParkRideHubMarkers
   );
   renderSmartCrossingFromRegistry(
     map,
     anchor,
-    locations,
+    mapLocations,
     selectedKpi,
     selectedSegmentId,
     segmentHandlers,
@@ -392,15 +465,29 @@ export function renderTrikalaInfrastructureLayers(
   );
   renderInfrastructureMarkers(
     map,
-    locations,
+    mapLocations,
     selectedKpi,
+    selectedPilotId,
+    anchor,
     selectedSegmentId,
     segmentHandlers,
     markersOut,
-    circlesOut
+    circlesOut,
+    bikeLaneBusyPctByLocationId,
+    bikeLaneSpread,
+    useBikeLaneHitMarkers
   );
 
   if (selectedPilotId === "tri-p2") {
-    fitTriParkRideHubBounds(map, locations);
+    fitTriParkRideHubBounds(map, mapLocations, selectedKpi);
   }
+
+  const circleMarkers = circlesOut.filter(
+    (layer): layer is L.CircleMarker => typeof (layer as L.CircleMarker).setRadius === "function"
+  );
+  scheduleLeafletLayerRepaint(map, markersOut, circleMarkers);
+  window.setTimeout(
+    () => scheduleLeafletLayerRepaint(map, markersOut, circleMarkers),
+    120
+  );
 }

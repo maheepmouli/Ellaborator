@@ -1,4 +1,9 @@
 import type { SegmentHighlightStyle } from "@/lib/segmentHighlight";
+import {
+  wireCircleMarkerSegment,
+  type SegmentInteractionDetail,
+  type SegmentInteractionHandlers,
+} from "@/lib/wireMapSegmentInteraction";
 import L from "leaflet";
 
 /** Pixel diameter for sample dots along an approach (matches reference mock). */
@@ -51,6 +56,69 @@ export function createJunctionSampleDotIcon(
     iconSize: [diameter, diameter],
     iconAnchor: [diameter / 2, diameter / 2],
   });
+}
+
+export interface JunctionFieldPointMarkerLayers {
+  visual: L.Marker;
+  hit: L.CircleMarker;
+}
+
+/** Subtle survey pin — solid dot + white ring, no neon glow (field audit / mock assets). */
+export function addJunctionFieldPointMarker(
+  map: L.Map,
+  lat: number,
+  lon: number,
+  highlight: SegmentHighlightStyle,
+  detail: SegmentInteractionDetail,
+  handlers?: SegmentInteractionHandlers,
+  options?: {
+    hitRadius?: number;
+    zIndexOffset?: number;
+    selectedSegmentId?: string | null;
+    popupHtml?: string;
+    tooltip?: string;
+  }
+): JunctionFieldPointMarkerLayers {
+  const hitRadius = options?.hitRadius ?? 10;
+  const visual = L.marker([lat, lon], {
+    icon: createJunctionSampleDotIcon(highlight, "sample"),
+    interactive: false,
+    zIndexOffset: options?.zIndexOffset ?? 760,
+  }).addTo(map);
+
+  const hit = L.circleMarker([lat, lon], {
+    radius: hitRadius,
+    fillOpacity: 0,
+    opacity: 0,
+    weight: 0,
+    interactive: true,
+    className: "map-point-hit-target",
+  }).addTo(map);
+
+  if (options?.popupHtml) {
+    visual.bindPopup(options.popupHtml);
+    hit.bindPopup(options.popupHtml);
+  }
+  if (options?.tooltip) {
+    hit.bindTooltip(options.tooltip, { direction: "top", opacity: 0.92 });
+  }
+
+  if (handlers) {
+    wireCircleMarkerSegment(hit, detail, handlers, {
+      baseRadius: hitRadius,
+      highlightRadius: hitRadius + 2,
+      selectedSegmentId: options?.selectedSegmentId,
+      baseStyle: { fillOpacity: 0, opacity: 0, weight: 0 },
+      highlightStyle: {
+        fillOpacity: 0.1,
+        opacity: 0.35,
+        weight: 1.5,
+        color: highlight.color,
+      },
+    });
+  }
+
+  return { visual, hit };
 }
 
 /** Dashed purple study ring around the junction anchor (reference halo). */

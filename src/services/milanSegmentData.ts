@@ -1,4 +1,19 @@
 import * as shapefile from "shapefile";
+import proj4 from "proj4";
+import {
+  MILAN_CAMERA_NETWORK,
+  MILAN_CAMERA_NETWORK_LEGACY,
+  MILAN_ENVIRONMENT_SOURCES,
+  MILAN_ENVIRONMENT_SOURCES_LEGACY,
+  MILAN_SPEED_SOURCES,
+  MILAN_SPEED_SOURCES_LEGACY,
+} from "@/lib/milanDataPaths";
+import { MILAN_PILOT_ANCHORS } from "@/lib/milanMapConfig";
+
+proj4.defs(
+  "EPSG:3003",
+  "+proj=tmerc +lat_0=0 +lon_0=9 +k=0.9996 +x_0=1500000 +y_0=0 +ellps=intl +towgs84=-104.1,-49.1,-9.9,0.416,0.41,0.35,-5.71 +units=m +no_defs"
+);
 
 export interface MilanSegmentRecord {
   id: string;
@@ -33,39 +48,8 @@ interface GeoFeature {
   properties?: Record<string, unknown>;
 }
 
-const SPEED_SOURCES = {
-  "mil-p1": {
-    networkShp:
-      "/sharepoint-data/Milan/4. Speed measurements/Pilot 1_Olimpic itineraries_AMAT/jobs_7882016_results_Itinerari_Olimpici_Maggio2025.shapefile/network.shp",
-    networkDbf:
-      "/sharepoint-data/Milan/4. Speed measurements/Pilot 1_Olimpic itineraries_AMAT/jobs_7882016_results_Itinerari_Olimpici_Maggio2025.shapefile/network.dbf",
-    metricDbf:
-      "/sharepoint-data/Milan/4. Speed measurements/Pilot 1_Olimpic itineraries_AMAT/jobs_7882016_results_Itinerari_Olimpici_Maggio2025.shapefile/Maggio 2025_0_8_00-9_00_0.dbf",
-    label: "Pilot 1 speed",
-  },
-  "mil-p2": {
-    networkShp:
-      "/sharepoint-data/Milan/4. Speed measurements/Pilot 2_west axis_AMAT/jobs_7735361_results_Asse_Ovest.shapefile/network.shp",
-    networkDbf:
-      "/sharepoint-data/Milan/4. Speed measurements/Pilot 2_west axis_AMAT/jobs_7735361_results_Asse_Ovest.shapefile/network.dbf",
-    metricDbf:
-      "/sharepoint-data/Milan/4. Speed measurements/Pilot 2_west axis_AMAT/jobs_7735361_results_Asse_Ovest.shapefile/Ottobre_2024_0_8_00-9_00_0.dbf",
-    label: "Pilot 2 speed",
-  },
-} as const;
-
-const ENVIRONMENT_SOURCES = {
-  "08-09": {
-    shp: "/sharepoint-data/Milan/6. CO2 and noise emissions/traffic_08-09_AMAT/RETE_H08_archi.shp",
-    dbf: "/sharepoint-data/Milan/6. CO2 and noise emissions/traffic_08-09_AMAT/RETE_H08_archi.dbf",
-    label: "08-09 AMAT",
-  },
-  "18-19": {
-    shp: "/sharepoint-data/Milan/6. CO2 and noise emissions/traffic_18-19_AMAT/RETE_H18_archi.shp",
-    dbf: "/sharepoint-data/Milan/6. CO2 and noise emissions/traffic_18-19_AMAT/RETE_H18_archi.dbf",
-    label: "18-19 AMAT",
-  },
-} as const;
+const SPEED_SOURCES = MILAN_SPEED_SOURCES;
+const ENVIRONMENT_SOURCES = MILAN_ENVIRONMENT_SOURCES;
 
 const speedCache = new Map<string, MilanSegmentDataset>();
 const environmentCache = new Map<string, MilanSegmentDataset>();
@@ -77,10 +61,44 @@ interface MilanSpeedJsonBundle {
   pilots?: Record<string, MilanSegmentDataset>;
 }
 
-const MILAN_CAMERA_NETWORK = {
-  shp: "/sharepoint-data/Milan/3. Road user counts/evaluation_cameras.shp",
-  dbf: "/sharepoint-data/Milan/3. Road user counts/evaluation_cameras.dbf",
-};
+function cameraRowsFromFeatures(features: GeoFeature[]): Record<string, unknown>[] {
+  return features.map((feature) => {
+    const props = { ...(feature.properties || {}) };
+    const coords = feature.geometry?.coordinates;
+    if (coords && coords.length >= 2) {
+      const [lng, lat] = proj4("EPSG:3003", "WGS84", [coords[0], coords[1]]);
+      props.lat = lat;
+      props.lon = lng;
+    }
+    return props;
+  });
+}
+
+async function readShapefileWithFallback(
+  candidates: Array<{ shp: string; dbf: string }>
+): Promise<GeoFeature[]> {
+  for (const candidate of candidates) {
+    try {
+      const features = await readShapefileFeatures(candidate.shp, candidate.dbf);
+      if (features.length > 0) return features;
+    } catch {
+      // try next path
+    }
+  }
+  return [];
+}
+
+async function readDbfWithFallback(candidates: string[]): Promise<Record<string, unknown>[]> {
+  for (const dbfPath of candidates) {
+    try {
+      const rows = await readDbfRows(dbfPath);
+      if (rows.length > 0) return rows;
+    } catch {
+      // try next path
+    }
+  }
+  return [];
+}
 
 function toNumber(value: unknown): number {
   if (typeof value === "number") return value;
@@ -121,15 +139,27 @@ async function readDbfRows(dbfPath: string): Promise<Record<string, unknown>[]> 
   return rows;
 }
 
-function toLeafletCoordinates(coords: [number, number][]): [number, number][] {
-  return coords.map(([lon, lat]) => [lat, lon]);
+function isProjectedCoord(x: number, y: number): boolean {
+  return Math.abs(x) > 180 || Math.abs(y) > 90;
 }
 
-function getLineMidpoint(coords: [number, number][]): [number, number] {
+/** Shapefile lines may be EPSG:3003 (Monte Mario) or WGS84 — always return Leaflet [lat, lng]. */
+function reprojectLineToLeaflet(coords: [number, number][]): [number, number][] {
+  return coords.map(([x, y]) => {
+    if (isProjectedCoord(x, y)) {
+      const [lng, lat] = proj4("EPSG:3003", "WGS84", [x, y]);
+      return [lat, lng];
+    }
+    return [y, x];
+  });
+}
+
+function lineMidpointLatLng(coords: [number, number][]): [number, number] {
   if (coords.length === 0) return [0, 0];
   const mid = coords[Math.floor(coords.length / 2)];
-  return [mid[1], mid[0]];
+  return [mid[0], mid[1]];
 }
+
 
 function parseSegmentId(value: unknown): number | null {
   const asNumber = Math.round(toNumber(value));
@@ -149,28 +179,16 @@ function distanceSquared(a: [number, number], b: [number, number]): number {
   return dLat * dLat + dLon * dLon;
 }
 
-export const MILAN_PILOT_BUFFERS: Record<
-  "mil-p1" | "mil-p2" | "mil-p3",
-  { lat: number; lon: number; radiusDeg: number }
-> = {
-  "mil-p1": { lat: 45.476, lon: 9.195, radiusDeg: 0.018 },
-  "mil-p2": { lat: 45.458, lon: 9.175, radiusDeg: 0.022 },
-  "mil-p3": { lat: 45.44, lon: 9.19, radiusDeg: 0.02 },
-};
+export const MILAN_PILOT_BUFFERS = MILAN_PILOT_ANCHORS;
 
 function segmentMidpointLatLng(coords: [number, number][]): [number, number] | null {
-  if (coords.length === 0) return null;
-  const mid = coords[Math.floor(coords.length / 2)];
-  return [mid[0], mid[1]];
+  return lineMidpointLatLng(coords);
 }
 
 export function filterMilanSegmentsNearPilot(
   records: MilanSegmentRecord[],
   pilotId: "mil-p1" | "mil-p2" | "mil-p3"
 ): MilanSegmentRecord[] {
-  if (pilotId === "mil-p3") {
-    return [];
-  }
   const anchor = MILAN_PILOT_BUFFERS[pilotId];
   const r2 = anchor.radiusDeg * anchor.radiusDeg;
   return records.filter((record) => {
@@ -333,12 +351,14 @@ export async function parseMilanSegmentShapefile(params: {
       outProps.municipality = props.NOME_COMUN;
     }
 
+    const leafletCoords = reprojectLineToLeaflet(feature.geometry.coordinates);
+
     const directCameraMatches = camerasBySegment.get(segmentId) || [];
     if (directCameraMatches.length > 0) {
       outProps.cameraJoin = "segment_id";
       outProps.cameraCount = directCameraMatches.length;
     } else if (cameraLocations.length > 0) {
-      const lineMidpoint = getLineMidpoint(feature.geometry.coordinates);
+      const lineMidpoint = lineMidpointLatLng(leafletCoords);
       let best = cameraLocations[0];
       let bestDist = distanceSquared(lineMidpoint, best.coord);
       for (let i = 1; i < cameraLocations.length; i += 1) {
@@ -352,12 +372,14 @@ export async function parseMilanSegmentShapefile(params: {
       outProps.cameraJoin = "nearest_geometry";
       outProps.cameraCount = 1;
       outProps.cameraDistance = Math.sqrt(bestDist);
+      outProps.centroidLat = lineMidpoint[0];
+      outProps.centroidLon = lineMidpoint[1];
     }
 
     values.push(value);
     records.push({
       id: `${params.metricType}-${params.timeWindow}-${segmentId}`,
-      coordinates: toLeafletCoordinates(feature.geometry.coordinates),
+      coordinates: leafletCoords,
       value,
       properties: outProps,
     });
@@ -411,22 +433,34 @@ export async function loadMilanSpeedSegments(
   const source = SPEED_SOURCES[pilotId];
   try {
     if (!cameraCache.has("milan-cameras")) {
-      try {
-        const cameraFeatures = await readShapefileFeatures(MILAN_CAMERA_NETWORK.shp, MILAN_CAMERA_NETWORK.dbf);
-        const rows = cameraFeatures.map((feature) => feature.properties || {});
-        cameraCache.set("milan-cameras", rows);
-      } catch {
-        cameraCache.set("milan-cameras", []);
-      }
+      const cameraFeatures = await readShapefileWithFallback([
+        MILAN_CAMERA_NETWORK,
+        MILAN_CAMERA_NETWORK_LEGACY,
+      ]);
+      const rows = cameraRowsFromFeatures(cameraFeatures);
+      cameraCache.set("milan-cameras", rows);
     }
-    const metricRows = await readDbfRows(source.metricDbf);
-    const dataset = await parseMilanSegmentShapefile({
+    const metricRows = await readDbfWithFallback([
+      source.metricDbf,
+      MILAN_SPEED_SOURCES_LEGACY[pilotId].metricDbf,
+    ]);
+    let dataset = await parseMilanSegmentShapefile({
       file: { shp: source.networkShp, dbf: source.networkDbf },
       metricType: "speed",
       sourceLabel: source.label,
       timeWindow: "08:00-09:00",
       metricRows,
     });
+    if (dataset.records.length === 0) {
+      const legacy = MILAN_SPEED_SOURCES_LEGACY[pilotId];
+      dataset = await parseMilanSegmentShapefile({
+        file: { shp: legacy.networkShp, dbf: legacy.networkDbf },
+        metricType: "speed",
+        sourceLabel: legacy.label,
+        timeWindow: "08:00-09:00",
+        metricRows,
+      });
+    }
     if (dataset.records.length === 0) {
       const fallback = await loadMilanSpeedFromJsonFallback(pilotId);
       if (fallback) {
@@ -478,22 +512,30 @@ export async function loadMilanEnvironmentSegments(
 
   const source = ENVIRONMENT_SOURCES[window];
   if (!cameraCache.has("milan-cameras")) {
-    try {
-      const cameraFeatures = await readShapefileFeatures(MILAN_CAMERA_NETWORK.shp, MILAN_CAMERA_NETWORK.dbf);
-      const rows = cameraFeatures.map((feature) => feature.properties || {});
-      cameraCache.set("milan-cameras", rows);
-    } catch {
-      cameraCache.set("milan-cameras", []);
-    }
+    const cameraFeatures = await readShapefileWithFallback([
+      MILAN_CAMERA_NETWORK,
+      MILAN_CAMERA_NETWORK_LEGACY,
+    ]);
+    const rows = cameraRowsFromFeatures(cameraFeatures);
+    cameraCache.set("milan-cameras", rows);
   }
-  const dataset = await parseMilanSegmentShapefile({
+  let dataset = await parseMilanSegmentShapefile({
     file: { shp: source.shp, dbf: source.dbf },
     metricType: "co2",
     sourceLabel: source.label,
     timeWindow: window,
   });
+  if (dataset.records.length === 0) {
+    const legacy = MILAN_ENVIRONMENT_SOURCES_LEGACY[window];
+    dataset = await parseMilanSegmentShapefile({
+      file: { shp: legacy.shp, dbf: legacy.dbf },
+      metricType: "co2",
+      sourceLabel: legacy.label,
+      timeWindow: window,
+    });
+  }
   let scoped = dataset;
-  if (pilotId && pilotId !== "mil-p3") {
+  if (pilotId) {
     const filtered = filterMilanSegmentsNearPilot(dataset.records, pilotId);
     scoped = {
       ...dataset,
@@ -503,13 +545,10 @@ export async function loadMilanEnvironmentSegments(
         parsedSegments: filtered.length,
         pilotScoped: true,
       },
-      statusMessage: `RETE segments clipped to ${pilotId} buffer (~${filtered.length} links). Environmental proxy from traffic composition; camera joins where available.`,
-    };
-  } else if (pilotId === "mil-p3") {
-    scoped = {
-      ...dataset,
       statusMessage:
-        "Probabilistic CO₂/noise network for Pilot 3 — full RETE context, not P1/P2 corridor clipping.",
+        pilotId === "mil-p3"
+          ? `RETE segments clipped to ${pilotId} intervention buffer (~${filtered.length} links). Environmental proxy from traffic composition.`
+          : `RETE segments clipped to ${pilotId} buffer (~${filtered.length} links). Environmental proxy from traffic composition; camera joins where available.`,
     };
   } else {
     scoped.statusMessage =

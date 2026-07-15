@@ -14,7 +14,9 @@ import type { CyclingInfrastructureRecord } from "@/types/cycling-infrastructure
 import { infrastructureChartLabelMatchesFeature } from "@/lib/infrastructureChartMapLink";
 import { isParkingStyleFacility, lineLatLngs as facilityLineLatLngs } from "@/lib/issyFacilityMap";
 import { resolveMapPointIconSpec, type MapPointIconSpec } from "@/lib/mapPointIconTaxonomy";
+import { addJunctionFieldPointMarker } from "@/lib/junctionSampleMarkers";
 import { createMapPointDivIcon, addNeonPointMarker } from "@/lib/mapPointIcons";
+import { getSegmentHighlight } from "@/lib/segmentHighlight";
 import {
   wirePolylineSegment,
   wireCircleMarkerSegment,
@@ -321,6 +323,38 @@ export function renderIssySentimentField(
     const mockNote = point.isMock
       ? `<p style="font-size:9px;color:#A78BFA;margin-top:6px;line-height:1.35">${ISSY_SENTIMENT_MOCK_DISCLAIMER}</p>`
       : "";
+    const popupHtml = `
+      <div style="font-family:'DM Sans',sans-serif;padding:8px;min-width:150px">
+        ${point.isMock ? `<div style="margin-bottom:6px">${mockBadge}</div>` : ""}
+        <p style="font-size:10px;color:#8578C3">${point.isMock ? "Mock survey sample" : `Survey point ${i + 1}`}</p>
+        <p style="font-size:14px;font-weight:bold;color:#2F1B6D">${point.value.toFixed(0)}% satisfied</p>
+        ${point.dimension ? `<p style="font-size:10px;color:#96C2EF;margin-top:4px">${point.dimension}</p>` : ""}
+        ${point.armLabel ? `<p style="font-size:10px;color:#96C2EF">${point.armLabel}</p>` : ""}
+        ${point.responseWindow ? `<p style="font-size:10px;color:#96C2EF">${point.responseWindow}</p>` : ""}
+        ${mockNote}
+      </div>
+    `;
+
+    if (point.isMock) {
+      const highlight = getSegmentHighlight(point.value, 55, 78, "safety");
+      const layers = addJunctionFieldPointMarker(
+        map,
+        point.lat,
+        point.lon,
+        { ...highlight, color },
+        hoverDetail,
+        options.segmentHandlers,
+        {
+          hitRadius: 10,
+          selectedSegmentId: options.selectedSegmentId,
+          popupHtml,
+          tooltip: `${point.label} · ${point.value.toFixed(0)}%`,
+        }
+      );
+      refs.markers.push(layers.visual);
+      refs.circles.push(layers.hit);
+      return;
+    }
 
     const blob = L.circle([point.lat, point.lon], {
       radius: 70 + (point.value / 100) * 35,
@@ -405,8 +439,6 @@ export function renderIssyAccessibilityField(
   const profile = options.mockProfile;
   const mockBadge = provenanceBadgesHtml([dataSourceTrustLabel("mock"), "KPI 4.2"]);
   const features = profile?.features ?? [];
-  const iconSpec = resolveMapPointIconSpec({ facilityCategory: "accessibility" });
-
   features.forEach((feature) => {
     if (options.filterRange) {
       const [lo, hi] = options.filterRange;
@@ -429,13 +461,21 @@ export function renderIssyAccessibilityField(
         <p style="font-size:9px;color:#A78BFA;margin-top:6px;line-height:1.35">${ISSY_ACCESSIBILITY_MOCK_DISCLAIMER}</p>
       </div>
     `;
-    const layers = addNeonPointMarker(map, feature.lat, feature.lon, iconSpec, detail, options.segmentHandlers, {
-      title: feature.label,
-      hitRadius: 11,
-      selectedSegmentId: options.selectedSegmentId,
-      popupHtml: popup,
-      tooltip: `${feature.category} · ${feature.armLabel} (mock)`,
-    });
+    const highlight = getSegmentHighlight(feature.qualityScore, 45, 75, "safety");
+    const layers = addJunctionFieldPointMarker(
+      map,
+      feature.lat,
+      feature.lon,
+      highlight,
+      detail,
+      options.segmentHandlers,
+      {
+        hitRadius: 11,
+        selectedSegmentId: options.selectedSegmentId,
+        popupHtml: popup,
+        tooltip: `${feature.category} · ${feature.armLabel} (mock)`,
+      }
+    );
     refs.markers.push(layers.visual);
     refs.circles.push(layers.hit);
   });
@@ -535,6 +575,8 @@ export function renderIssyFacilityLayers(
     filterRange?: [number, number];
     categoryFocus?: string | null;
     segmentHandlers?: SegmentInteractionHandlers;
+    /** Junction study: plain survey dots instead of neon facility badges. */
+    fieldSurveyMarkers?: boolean;
   } = {}
 ): IssyFacilityRenderStats {
   const stats: IssyFacilityRenderStats = { pointCount: 0, lineCount: 0 };
@@ -639,6 +681,27 @@ export function renderIssyFacilityLayers(
       geometryLabel: isHub ? "Parking / hub node" : "Facility centroid",
       qualityScore: observatoryScore,
     });
+    if (options.fieldSurveyMarkers) {
+      const highlight = getSegmentHighlight(observatoryScore, 40, 72, "safety");
+      const layers = addJunctionFieldPointMarker(
+        map,
+        pt.lat,
+        pt.lon,
+        highlight,
+        segmentDetail,
+        options.segmentHandlers,
+        {
+          hitRadius: isHub ? 12 : 10,
+          zIndexOffset: isHub ? 800 : 760,
+          popupHtml: popup,
+          tooltip: `${iconSpec.label} · ${props.localisation ?? props.type_amgt_cycl}`,
+        }
+      );
+      refs.markers.push(layers.visual);
+      refs.circles.push(layers.hit);
+      stats.pointCount += 1;
+      return;
+    }
     const { visual: marker, hit: hitTarget } = addNeonPointMarker(
       map,
       pt.lat,

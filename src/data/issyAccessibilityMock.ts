@@ -3,7 +3,7 @@ import {
   ISSY_P2_JUNCTION,
   type IssyJunctionArmId,
 } from "@/lib/issyPilot2Junction";
-import { destinationLatLng } from "@/lib/copenhagenMapLayers/copenhagenFlowGeometry";
+import { placeFieldPointOnJunctionArm } from "@/lib/issyJunctionArmPlacement";
 import type { IssyPilotId } from "@/data/issyPilotProfiles";
 import type { LocalCityPoint } from "@/services/localCityData";
 import type { ScenarioType } from "@/types/normalized-city-data";
@@ -46,18 +46,18 @@ export interface IssyAccessibilityPilotMock {
   methodology: string;
 }
 
-const ARM_BEARING: Record<IssyJunctionArmId, number> = {
-  west: 270,
-  east: 90,
-  north: 355,
-  south: 175,
+const ARM_FIELD_DISTANCE_M: Record<IssyJunctionArmId, number> = {
+  west: 38,
+  east: 44,
+  north: 52,
+  south: 48,
 };
 
 /** Which junction arms get a mock asset — only on KPI 1.2 corridor segments. */
 const PILOT_ARM_SLOTS: Record<IssyPilotId, IssyJunctionArmId[]> = {
-  "issy-p1": ["west", "north", "east", "south", "north"],
-  "issy-p2": ["west", "north", "east", "south", "east"],
-  "issy-p3": ["north", "east", "south"],
+  "issy-p1": ["west", "east", "south", "west", "east"],
+  "issy-p2": ["west", "east", "south", "west", "east"],
+  "issy-p3": ["west", "east", "south"],
 };
 
 const SLOT_CATEGORIES: IssyAccessibilityCategory[] = [
@@ -81,14 +81,13 @@ function getArm(armId: IssyJunctionArmId) {
 
 function placeFeaturesOnJunctionArms(pilotId: IssyPilotId): IssyAccessibilityFeatureMock[] {
   const slots = PILOT_ARM_SLOTS[pilotId];
-  const { lat: hubLat, lon: hubLon } = ISSY_P2_JUNCTION;
 
   return slots.map((armId, index) => {
     const arm = getArm(armId);
     const category = SLOT_CATEGORIES[index % SLOT_CATEGORIES.length];
     const u = seededUnit(pilotId, index);
-    const distanceM = 68 + index * 14 + u * 18;
-    const [lat, lon] = destinationLatLng(hubLat, hubLon, ARM_BEARING[armId], distanceM);
+    const distanceM = ARM_FIELD_DISTANCE_M[armId] + index * 11 + u * 9;
+    const [lat, lon] = placeFieldPointOnJunctionArm(armId, distanceM);
     const qualityScore = Math.round(58 + u * 32);
     const status: IssyAccessibilityFeatureMock["status"] =
       u > 0.7 ? "post-intervention" : u > 0.2 ? "existing" : "planned";
@@ -155,7 +154,7 @@ const ISSY_ACCESSIBILITY_BY_PILOT: Record<IssyPilotId, IssyAccessibilityPilotMoc
     baselineIndex: 61,
     confidencePct: 58,
     methodology:
-      "Five mock assets placed on the same four junction arms used for KPI 1.2 mode-share context — city inventory proxy, not field survey.",
+      "Five mock assets placed on the same three junction arms used for KPI 1.2 mode-share context — city inventory proxy, not field survey.",
   }),
   "issy-p3": buildProfile("issy-p3", {
     title: "GecoAir corridor — mock accessibility (3 arms)",
@@ -164,7 +163,7 @@ const ISSY_ACCESSIBILITY_BY_PILOT: Record<IssyPilotId, IssyAccessibilityPilotMoc
     baselineIndex: 54,
     confidencePct: 54,
     methodology:
-      "Three mock walkability assets on north / east / south corridor arms where mode-share segments are monitored.",
+      "Three mock walkability assets on west / east / south corridor arms where mode-share segments are monitored.",
   }),
 };
 

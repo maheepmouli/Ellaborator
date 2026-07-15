@@ -79,6 +79,20 @@ export function filterPointsInPilotZone(
   return points.filter((p) => isInPilotZone(p.lat, p.lon, city, pilotId));
 }
 
+/** Milan AMAT count / DSS rows carry pilotId — prefer that over geographic buffer clipping. */
+export function filterMilanLocalPoints(
+  points: LocalCityPoint[],
+  pilotId: string | null | undefined
+): LocalCityPoint[] {
+  if (!pilotId) return points;
+  const byPilot = points.filter(
+    (p) =>
+      String(p.properties?.pilotId ?? p.properties?.interventionId ?? "") === pilotId
+  );
+  if (byPilot.length) return byPilot;
+  return filterPointsInPilotZone(points, "Milan", pilotId);
+}
+
 export function filterMilanSegmentsForPilot(
   records: MilanSegmentRecord[],
   pilotId: "mil-p1" | "mil-p2" | "mil-p3" | null | undefined

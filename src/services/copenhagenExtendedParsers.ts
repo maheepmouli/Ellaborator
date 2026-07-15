@@ -6,6 +6,7 @@ import { loadCopenhagenEmissionsSnapshot } from "@/services/copenhagenEmissionsS
 import {
   co2GPerHourToKpiIntensity,
   co2ReductionPct,
+  maxCo2GPerHourFromFlows,
 } from "@/lib/copenhagenEmissionsModel";
 import type { NormalizedCityRecord } from "@/types/normalized-city-data";
 
@@ -466,7 +467,7 @@ function surveyRecords(kpiId: string, bundle: SurveyBundle): CopenhagenExtendedR
 }
 
 function parkingRecords(kpiId: string, bundle: ParkingBundle): CopenhagenExtendedRecord[] {
-  if (kpiId !== "kpi3.1") return [];
+  if (kpiId !== "kpi3.1" && kpiId !== "kpi4.2") return [];
   return bundle.facilities.slice(0, 120).map((f, i) => {
     const anchor = streetAnchor(f.street);
     const jitter = (i % 5) * 0.00003;
@@ -779,13 +780,14 @@ function emissionsRecords(
   snapshot: CopenhagenEmissionsSnapshot
 ): CopenhagenExtendedRecord[] {
   if (kpiId !== "kpi3.2") return [];
+  const refMax = maxCo2GPerHourFromFlows(snapshot.flows);
   return snapshot.flows.map((flow) => {
     const siteKey = flow.siteName.toLowerCase().replace(/[^a-z0-9]+/g, "-");
     const flowId = flow.flow.toLowerCase().replace(/[^a-z0-9]+/g, "-");
     const lat = flow.lat ?? 55.676;
     const lon = flow.lon ?? 12.57;
-    const baselineIntensity = co2GPerHourToKpiIntensity(flow.preCo2GPerHour);
-    const interventionIntensity = co2GPerHourToKpiIntensity(flow.postCo2GPerHour);
+    const baselineIntensity = co2GPerHourToKpiIntensity(flow.preCo2GPerHour, refMax);
+    const interventionIntensity = co2GPerHourToKpiIntensity(flow.postCo2GPerHour, refMax);
     const reductionPct = co2ReductionPct(flow.preCo2GPerHour, flow.postCo2GPerHour);
     return {
       id: `copenhagen-emissions-${siteKey}-${flowId}`,
@@ -815,6 +817,8 @@ function emissionsRecords(
       parserStatus: "ready",
       datasetKind: "emissions",
       category: "Modelled CO₂",
+      preCo2GPerHour: flow.preCo2GPerHour,
+      postCo2GPerHour: flow.postCo2GPerHour,
     };
   });
 }

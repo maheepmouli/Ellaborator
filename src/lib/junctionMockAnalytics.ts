@@ -77,11 +77,25 @@ export function buildMockJunctionStudyView(
   };
 }
 
+function resolveMergedDataSource(
+  realView: JunctionStudyView,
+  config: JunctionConfig
+): JunctionStudyView["dataSource"] {
+  if (realView.dataSource === "mock" || realView.dataSource === "derived") {
+    return realView.dataSource;
+  }
+  if (config.segmentApiId.startsWith("mock-")) {
+    return "mock";
+  }
+  return realView.dataSource ?? "observed";
+}
+
 /** Overlay registry metadata on API-derived view; keep live metrics. */
 export function mergeJunctionConfig(
   realView: JunctionStudyView,
   config: JunctionConfig
 ): JunctionStudyView {
+  const dataSource = resolveMergedDataSource(realView, config);
   return {
     ...realView,
     shortName: config.shortName,
@@ -97,7 +111,8 @@ export function mergeJunctionConfig(
       event: e.event,
       status: e.status === "active" ? ("done" as const) : e.status,
     })),
-    dataSource: "observed",
+    dataSource,
+    dataClass: dataSource === "mock" ? "mock" : realView.dataClass,
     streetNS: config.streetNS,
     streetEW: config.streetEW,
   };

@@ -88,9 +88,9 @@ export function renderCopenhagenStreetUnderlay(
 ): void {
   const layer = L.geoJSON(streetsGeoJson, {
     style: {
-      color: "#2c3e50",
-      weight: 2,
-      opacity: 0.15,
+      color: "#3d4f63",
+      weight: 2.5,
+      opacity: 0.22,
       fillOpacity: 0,
       interactive: false,
       className: "cph-street-underlay",

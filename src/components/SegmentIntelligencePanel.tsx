@@ -82,6 +82,8 @@ import { getCityPilotProfile } from "@/data/cityPilotProfiles";
 import { ObservatoryGraphicSlot } from "@/components/observatory/ObservatoryGraphicSlot";
 import type { ObservatoryGraphicZone } from "@/lib/observatoryGraphicTypes";
 import { intelAccentValue, intelPanelHeader, intelSectionLabel } from "@/styles/intelPanels";
+import { PanelResizeHandle } from "@/components/PanelResizeHandle";
+import { useResizablePanelWidth } from "@/hooks/use-resizable-panel-width";
 import type { PilotGeometryRenderSpec } from "@/lib/pilotGeometryRenderer";
 
 // ─── Palette ─────────────────────────────────────────────────────────────────
@@ -120,7 +122,7 @@ function GlassCard({
 }) {
   return (
     <div
-      className={`rounded-xl border ${className}`}
+      className={`rounded-xl border text-white ${className}`}
       style={{
         background: C.glass,
         borderColor: C.border,
@@ -1525,7 +1527,16 @@ export default function SegmentIntelligencePanel({
   );
   const observatoryKpiDef = useMemo(() => getKpiDefinition(selectedKpi), [selectedKpi]);
   const [activeRegistryTab, setActiveRegistryTab] = useState<ObservatoryTabId>("overview");
-  const [expanded, setExpanded] = useState(false);
+  const { width: panelWidth, maxWidth: panelMaxWidth, isResizing, startResize, setPreset } =
+    useResizablePanelWidth({
+      storageKey: "elab-observatory-panel-width",
+      defaultWidth: 440,
+      minWidth: 360,
+      maxWidthCap: 780,
+      maxViewportFraction: 0.55,
+      side: "right",
+    });
+  const observatoryPanelWide = panelWidth >= 560;
   const isFlagship = pilotId === "issy-p1";
 
   const junctionArms = useMemo(
@@ -1642,9 +1653,10 @@ export default function SegmentIntelligencePanel({
 
           {/* ── Panel ── */}
           <motion.div
-            className="fixed top-0 right-0 bottom-0 z-[75] flex flex-col overflow-hidden sm:top-4 sm:bottom-4 sm:rounded-[18px]"
+            className="fixed top-0 right-0 bottom-0 z-[75] flex flex-col overflow-hidden text-white sm:top-3 sm:bottom-3 sm:rounded-[18px]"
             style={{
-              width: expanded ? "min(580px, 100vw)" : "min(440px, 100vw)",
+              width: Math.min(panelWidth, panelMaxWidth),
+              maxWidth: "100vw",
               background: C.panel,
               border: `1px solid ${isFlagship ? "rgba(99,204,255,0.35)" : C.border}`,
               borderRadius: 0,
@@ -1657,6 +1669,7 @@ export default function SegmentIntelligencePanel({
             exit={{ x: "100%", opacity: 0 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
           >
+            <PanelResizeHandle side="right" onResizeStart={startResize} isResizing={isResizing} />
             {/* Top gradient sheen */}
             <div
               className="pointer-events-none absolute inset-x-0 top-0 h-px"
@@ -1811,12 +1824,20 @@ export default function SegmentIntelligencePanel({
               {/* Controls */}
               <div className="absolute top-4 right-4 flex items-center gap-1.5">
                 <button
-                  onClick={() => setExpanded((v) => !v)}
-                  className="p-1.5 rounded-lg transition-colors"
+                  type="button"
+                  onClick={() =>
+                    setPreset(observatoryPanelWide ? 440 : Math.min(640, panelMaxWidth))
+                  }
+                  className="p-1.5 rounded-lg transition-colors hover:bg-white/10"
                   style={{ color: "rgba(255,255,255,0.45)", background: "rgba(255,255,255,0.06)" }}
-                  title={expanded ? "Collapse" : "Expand"}
+                  title={observatoryPanelWide ? "Narrow panel" : "Widen panel"}
+                  aria-label={observatoryPanelWide ? "Narrow panel" : "Widen panel"}
                 >
-                  {expanded ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
+                  {observatoryPanelWide ? (
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  ) : (
+                    <ChevronLeft className="h-3.5 w-3.5" />
+                  )}
                 </button>
                 <button
                   onClick={onClose}
@@ -1881,7 +1902,7 @@ export default function SegmentIntelligencePanel({
             </div>
 
             {/* ── Tab content ─────────────────────────────────────────────────── */}
-            <div className="flex-1 overflow-y-auto px-4 py-4 scrollbar-thin" style={{ scrollbarColor: `${C.border} transparent` }}>
+            <div className="flex-1 overflow-y-auto px-4 py-4 scrollbar-thin observatory-tab-content" style={{ scrollbarColor: `${C.border} transparent` }}>
               <AnimatePresence mode="wait">
                 <motion.div
                   key={`${selectedKpi}-${activeRegistryTab}`}

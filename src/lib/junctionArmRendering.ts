@@ -123,3 +123,25 @@ export function outerApproachPoint(
     ? first
     : last;
 }
+
+/** Walk `distanceM` along a polyline starting at coordinates[0]. */
+export function pointAtDistanceAlongPolyline(
+  coordinates: [number, number][],
+  distanceM: number
+): [number, number] {
+  if (coordinates.length === 0) return [ISSY_P2_JUNCTION.lat, ISSY_P2_JUNCTION.lon];
+  if (coordinates.length === 1 || distanceM <= 0) return coordinates[0];
+
+  let remaining = distanceM;
+  for (let i = 1; i < coordinates.length; i++) {
+    const a = coordinates[i - 1];
+    const b = coordinates[i];
+    const segLen = haversineMeters(a[0], a[1], b[0], b[1]);
+    if (remaining <= segLen) {
+      const t = segLen > 0 ? remaining / segLen : 0;
+      return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+    }
+    remaining -= segLen;
+  }
+  return coordinates[coordinates.length - 1];
+}

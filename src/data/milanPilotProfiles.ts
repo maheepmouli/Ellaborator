@@ -18,7 +18,7 @@ export const MILAN_PILOT_PROFILES: Record<MilanPilotId, CityPilotProfile> = {
       "Improved route accessibility context for vulnerable users.",
     ],
     geometryType: "line",
-    dataAvailability: "Partial dataset; post-intervention data missing.",
+    dataAvailability: "AMAT speed, counts, and accessibility workbooks extracted from Milano SharePoint zip.",
     methodologyNotes:
       "Use observed segment geometry where available and keep missing post-intervention evidence explicit.",
     observatoryType: "street-segment",
@@ -38,7 +38,7 @@ export const MILAN_PILOT_PROFILES: Record<MilanPilotId, CityPilotProfile> = {
       "Clearer intervention monitoring around stadium-adjacent links.",
     ],
     geometryType: "line",
-    dataAvailability: "Partial dataset; baseline package missing.",
+    dataAvailability: "AMAT speed, counts, and RETE environment layers; baseline/evaluation count workbooks in SharePoint mirror.",
     methodologyNotes:
       "Maintain segment-level trust metadata and expose missing baseline links explicitly.",
     observatoryType: "street-segment",
@@ -46,21 +46,25 @@ export const MILAN_PILOT_PROFILES: Record<MilanPilotId, CityPilotProfile> = {
   "mil-p3": {
     id: "mil-p3",
     city: "Milan",
-    title: "Decision Support System",
+    title: "CDM3 — Decision Support System (DSS)",
     interventionSummary:
-      "Decision-support mobility layer integrating segment evidence for operational planning.",
+      "Digital tool supporting planning and prioritisation of accessibility improvements in public spaces along West Axis and Olympic Routes — OSM barrier mapping, DSS evaluation, and replicable dissemination.",
     objectives: [
-      "Improve transit reliability.",
-      "Reduce emissions pressure from corridor delay.",
+      "Map architectural barriers and mobility infrastructure using OpenStreetMap (Activity 1).",
+      "Integrate mapped data in a DSS tool for accessibility prioritisation (Activity 2).",
+      "Evaluate pre/post intervention accessibility along Olympic Routes and West Axis (Activity 4).",
+      "Increase walking and cycling mode share while achieving ≥3-star corridor safety ratings.",
     ],
     expectedImpacts: [
-      "Lower congestion in intervention segments.",
-      "More stable before/after transport performance.",
+      "Improved accessibility for vulnerable users through barrier remediation.",
+      "Higher active-mode share and safer corridor star ratings post-intervention.",
+      "Replicable DSS methodology for other Milan districts and partner cities.",
     ],
     geometryType: "line",
-    dataAvailability: "Segment datasets active; some indicator layers are partial.",
+    dataAvailability:
+      "DSS walk_graph.shp (bundled geojson) + illustrative CDM3 corridor mock aligned to six WP activities.",
     methodologyNotes:
-      "Use observed segment layers first, with explicit missing-data notices for partial KPI support.",
+      "Speed shapefiles are unavailable for mil-p3 — use walk graph underlay with explicit illustrative mock labels until observed CDM3 evaluation workbooks are camera-linked.",
     observatoryType: "street-segment",
   },
 };

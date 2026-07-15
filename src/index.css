@@ -226,6 +226,15 @@
     font-size: var(--text-body);
   }
 
+  /* Observatory panel — default light copy on dark glass (invalid Tailwind /72 /88 fall back to purple ink) */
+  .observatory-tab-content {
+    color: rgba(255, 255, 255, 0.85);
+  }
+
+  .observatory-tab-content strong {
+    color: rgba(255, 255, 255, 0.95);
+  }
+
   .intel-transition {
     transition: opacity 0.2s ease, transform 0.2s ease, background-color 0.2s ease;
   }
@@ -362,6 +371,15 @@
   z-index: 1;
 }
 
+.cph-map-dot-wrap {
+  background: transparent !important;
+  border: none !important;
+}
+
+.cph-map-dot.is-selected {
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.65) !important;
+}
+
 /* Copenhagen map sensor markers */
 .cph-sensor-icon {
   background: transparent !important;
@@ -400,6 +418,41 @@
 }
 
 .cph-camera-marker.is-selected .cph-camera-core {
+  background: #00ffff;
+}
+
+.cph-flow-camera-marker {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cph-flow-camera-ring {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #f59e0b;
+  box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.35);
+}
+
+.cph-flow-camera-core {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f59e0b;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+
+.cph-flow-camera-marker.is-selected .cph-flow-camera-ring {
+  border-color: #00ffff;
+  box-shadow: 0 0 8px rgba(0, 255, 255, 0.55);
+}
+
+.cph-flow-camera-marker.is-selected .cph-flow-camera-core {
   background: #00ffff;
 }
 

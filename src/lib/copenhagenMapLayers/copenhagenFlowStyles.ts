@@ -11,13 +11,21 @@ export interface CopenhagenFlowStyle {
 
 /** Shared GIS line tokens for Copenhagen corridor / parking layers. */
 export const CPH_LINE_FOCUS_COLOR = "#00ffff";
-export const CPH_LINE_DEFAULT_WEIGHT = 2.5;
-export const CPH_LINE_DEFAULT_OPACITY = 0.3;
+export const CPH_LINE_DEFAULT_WEIGHT = 4;
+export const CPH_LINE_DEFAULT_OPACITY = 0.62;
 export const CPH_LINE_FOCUSED_WEIGHT = 5;
 export const CPH_LINE_FOCUSED_OPACITY = 1.0;
 export const CPH_LINE_DIRECTIONAL_DASH = "1, 8";
 export const CPH_LINE_FOCUS_DIM = 0.28;
 export const CPH_PARKING_LOD_ZOOM = 14;
+
+/** Boost polyline pixel weight when the map is zoomed out so corridors stay visible. */
+export function copenhagenZoomLineBoost(zoom: number): number {
+  if (zoom >= 17) return 1;
+  if (zoom >= 15) return 1.18;
+  if (zoom >= 13) return 1.38;
+  return 1.55;
+}
 
 export const CPH_LINE_BASE: Pick<CopenhagenFlowStyle, "weight" | "opacity"> & {
   lineCap: "round";
@@ -35,13 +43,21 @@ export const CPH_LINE_FOCUSED: CopenhagenFlowStyle = {
   opacity: CPH_LINE_FOCUSED_OPACITY,
 };
 
+function defaultIntensityColor(value: number): string {
+  const t = Math.max(0, Math.min(100, value));
+  if (t < 33) return "#6EE7B7";
+  if (t < 66) return "#38bdf8";
+  if (t < 85) return "#FBBF24";
+  return "#F97316";
+}
+
 /** Map scenario + observed values to the shared ELABORATOR point-intensity palette. */
 export function resolveCopenhagenIntensityColor(options: {
   scenario: "baseline" | "intervention" | "comparison";
   baselineValue: number;
   interventionValue: number;
   comparisonValue: number;
-  getValueColor: (value: number, safetyKpi: boolean) => string;
+  getValueColor?: (value: number, safetyKpi: boolean) => string;
   safetyKpi?: boolean;
 }): string {
   const {
@@ -53,21 +69,45 @@ export function resolveCopenhagenIntensityColor(options: {
     safetyKpi = false,
   } = options;
 
+  const colorFn =
+    typeof getValueColor === "function"
+      ? getValueColor
+      : (value: number) => defaultIntensityColor(value);
+
   if (scenario === "baseline") {
-    return getValueColor(baselineValue, safetyKpi);
+    return colorFn(baselineValue, safetyKpi);
   }
   if (scenario === "intervention") {
-    return getValueColor(interventionValue, safetyKpi);
+    return colorFn(interventionValue, safetyKpi);
   }
   const magnitude = Math.min(100, Math.abs(comparisonValue) * 4);
-  return getValueColor(magnitude, safetyKpi);
+  return colorFn(magnitude, safetyKpi);
 }
 
 /** Slight radius boost for higher intensity (0–100 scale). */
 export function copenhagenMarkerRadius(intensityValue: number, isSelected: boolean): number {
-  const base = isSelected ? 6 : 4;
-  const boost = Math.min(2.5, (Math.max(0, intensityValue) / 100) * 2.5);
+  const base = isSelected ? 7 : 4.5;
+  const boost = Math.min(3, (Math.max(0, intensityValue) / 100) * 3);
   return base + boost;
+}
+
+/** Line weight scales with observed flow intensity (0–100). */
+export function copenhagenFlowLineWeight(intensityValue: number, isSelected: boolean): number {
+  if (isSelected) return CPH_LINE_FOCUSED_WEIGHT + 1;
+  const t = Math.max(0, Math.min(100, intensityValue));
+  return CPH_LINE_DEFAULT_WEIGHT + (t / 100) * 4.5;
+}
+
+/** Line opacity scales with flow intensity; dimmed spokes stay readable. */
+export function copenhagenFlowLineOpacity(
+  intensityValue: number,
+  isSelected: boolean,
+  dimmed = false
+): number {
+  if (isSelected) return CPH_LINE_FOCUSED_OPACITY;
+  const t = Math.max(0, Math.min(100, intensityValue));
+  const base = CPH_LINE_DEFAULT_OPACITY + (t / 100) * 0.28;
+  return dimmed ? base * CPH_LINE_FOCUS_DIM * 1.35 : base;
 }
 
 export function getCopenhagenFlowStyle(options: {
@@ -153,24 +193,16 @@ export function getCopenhagenEndpointMarkerStyle(
   weight: number;
   hidden?: boolean;
 } {
-  if (!isSelected) {
-    return {
-      radius: 0,
-      fillColor: intensityColor,
-      fillOpacity: 0,
-      color: intensityColor,
-      weight: 0,
-      hidden: true,
-    };
-  }
+  const radius = copenhagenMarkerRadius(intensityValue, isSelected);
+  const t = Math.max(0, Math.min(100, intensityValue));
+  const opacityScale = dimmed ? 0.55 : 1;
 
-  const radius = copenhagenMarkerRadius(intensityValue, true);
   return {
-    radius,
-    fillColor: CPH_LINE_FOCUS_COLOR,
-    fillOpacity: 0.95,
-    color: "#ffffff",
-    weight: 2.2,
+    radius: isSelected ? radius + 1.5 : Math.max(5.5, radius * 0.9),
+    fillColor: isSelected ? CPH_LINE_FOCUS_COLOR : intensityColor,
+    fillOpacity: (isSelected ? 0.95 : 0.62 + (t / 100) * 0.3) * opacityScale,
+    color: isSelected ? "#ffffff" : intensityColor,
+    weight: isSelected ? 2.4 : 1.6,
     hidden: false,
   };
 }
