@@ -2,6 +2,10 @@ node_modules
 dist
 .git
 public/sharepoint-data
+public/Sharepoint_Datasets_06_2026
+Sharepoint data-*.zip
+public/data/trikala/docs/map.pdf
 *.zip
 .cursor
 **/.DS_Store
+.tmp-bike-lane-inspect
