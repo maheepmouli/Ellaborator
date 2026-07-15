@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-07-15T09:52:16.894Z",
-  "sourceDir": ".tmp-bike-lane-inspect/BIKE LANE SENSORS DATA",
+  "generatedAt": "2026-07-15T11:28:34.065Z",
+  "sourceDir": "data-ingest/trikala/bike-lane-sensors",
   "sourceZip": "BIKE LANE SENSORS DATA-20260713T091909Z-2-001.zip",
   "sensorCount": 29,
   "joinedCount": 29,

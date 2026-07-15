@@ -10,6 +10,7 @@ import { fileURLToPath } from "node:url";
 import XLSX from "xlsx";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const DATA_INGEST_DIR = path.join(ROOT, "data-ingest", "trikala", "bike-lane-sensors");
 const MIRROR_DIR = path.join(ROOT, "public", "sharepoint-data", "Trikala", "bike-lane-sensors");
 const TMP_ZIP_DIR = path.join(ROOT, ".tmp-bike-lane-inspect", "BIKE LANE SENSORS DATA");
 const ZIP_PATH = path.join(
@@ -46,15 +47,20 @@ function parseFilename(name) {
 }
 
 function resolveSensorDir() {
-  if (existsSync(MIRROR_DIR)) {
-    const files = readdirSync(MIRROR_DIR).filter((f) => f.toLowerCase().endsWith(".xlsx"));
-    if (files.length) return MIRROR_DIR;
-  }
-  if (existsSync(TMP_ZIP_DIR)) {
-    const files = readdirSync(TMP_ZIP_DIR).filter((f) => f.toLowerCase().endsWith(".xlsx"));
-    if (files.length) return TMP_ZIP_DIR;
+  for (const dir of [DATA_INGEST_DIR, MIRROR_DIR, TMP_ZIP_DIR]) {
+    if (!existsSync(dir)) continue;
+    const files = readdirSync(dir).filter((f) => f.toLowerCase().endsWith(".xlsx"));
+    if (files.length) return dir;
   }
   return null;
+}
+
+async function readExistingMetrics() {
+  try {
+    return JSON.parse(await fs.readFile(OUT_PATH, "utf8"));
+  } catch {
+    return null;
+  }
 }
 
 function parseWorkbookMetrics(filePath) {
@@ -137,6 +143,13 @@ function joinToLocation(label, locations) {
 async function main() {
   const sensorDir = resolveSensorDir();
   if (!sensorDir) {
+    const existing = await readExistingMetrics();
+    if (existing?.sensorCount > 0) {
+      console.log(
+        `No bike-lane workbooks found — keeping existing metrics bundle (${existing.sensorCount} sensors).`
+      );
+      return;
+    }
     console.warn("No bike-lane sensor workbooks found — writing empty metrics bundle.");
     await fs.mkdir(path.dirname(OUT_PATH), { recursive: true });
     await fs.writeFile(

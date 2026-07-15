@@ -15,7 +15,10 @@ import proj4 from "proj4";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const DROP_DIR = path.join(ROOT, "public", "Sharepoint_Datasets_06_2026");
-const MIL_ZIP = path.join(DROP_DIR, "Milano-20260709T084301Z-2-001.zip");
+const MIL_ZIP_CANDIDATES = [
+  path.join(ROOT, "data-ingest", "milan", "Milano-20260709T084301Z-2-001.zip"),
+  path.join(DROP_DIR, "Milano-20260709T084301Z-2-001.zip"),
+];
 const OUT_SHAREPOINT = path.join(ROOT, "public", "sharepoint-data", "Milan");
 const MODE_SHARE_OUT = path.join(ROOT, "public", "data", "milan", "mode-share-counts.json");
 const CORRIDORS_OUT = path.join(ROOT, "public", "data", "milan", "pilot-corridors.geojson");
@@ -47,15 +50,40 @@ function listZipMembers(zipPath) {
   return output.split(/\r?\n/).filter(Boolean);
 }
 
+function resolveMilZip() {
+  for (const candidate of MIL_ZIP_CANDIDATES) {
+    try {
+      statSync(candidate);
+      return candidate;
+    } catch {
+      // try next
+    }
+  }
+  return null;
+}
+
+async function readJsonIfExists(filePath) {
+  try {
+    return JSON.parse(await fs.readFile(filePath, "utf8"));
+  } catch {
+    return null;
+  }
+}
+
+async function readGeoJsonIfExists(filePath) {
+  const parsed = await readJsonIfExists(filePath);
+  if (parsed?.type === "FeatureCollection" && Array.isArray(parsed.features)) return parsed;
+  return null;
+}
+
 function shouldExtractMember(member) {
   if (!member.startsWith("Milano/") || member.endsWith("/")) return false;
   return MILAN_MEMBER_PREFIXES.some((prefix) => member.startsWith(prefix) || member === prefix);
 }
 
 async function extractMilanFromZip() {
-  try {
-    await fs.access(MIL_ZIP);
-  } catch {
+  const MIL_ZIP = resolveMilZip();
+  if (!MIL_ZIP) {
     console.warn("WARN  Milano zip missing — skipping SharePoint extract");
     return { extracted: 0, skipped: true };
   }
@@ -482,6 +510,15 @@ async function buildPilotCorridors() {
     }
   }
   const geojson = { type: "FeatureCollection", features };
+  if (!features.length) {
+    const existing = await readGeoJsonIfExists(CORRIDORS_OUT);
+    if (existing?.features?.length) {
+      console.log(
+        `WARN  no Milan corridor shapefiles — keeping existing pilot-corridors.geojson (${existing.features.length} features).`
+      );
+      return existing;
+    }
+  }
   await fs.mkdir(path.dirname(CORRIDORS_OUT), { recursive: true });
   await fs.writeFile(CORRIDORS_OUT, `${JSON.stringify(geojson, null, 2)}\n`, "utf8");
   console.log(`OK  milan-pilot-corridors (${features.length} LineString features)`);
@@ -542,6 +579,15 @@ async function buildWalkGraphGeojson() {
     }
   }
   const geojson = { type: "FeatureCollection", features };
+  if (!features.length) {
+    const existing = await readGeoJsonIfExists(WALK_GRAPH_OUT);
+    if (existing?.features?.length) {
+      console.log(
+        `WARN  no Milan walk_graph shapefile — keeping existing walk-graph.geojson (${existing.features.length} features).`
+      );
+      return existing;
+    }
+  }
   await fs.mkdir(path.dirname(WALK_GRAPH_OUT), { recursive: true });
   await fs.writeFile(WALK_GRAPH_OUT, `${JSON.stringify(geojson, null, 2)}\n`, "utf8");
   console.log(`OK  milan-walk-graph (${features.length} LineString features)`);
@@ -623,6 +669,13 @@ async function buildSurveyInsights() {
           ? "Survey workbooks found but no satisfaction percentage rows detected."
           : undefined,
   };
+  if (!files.length) {
+    const existing = await readJsonIfExists(SURVEY_OUT);
+    if (existing && (existing.pilots?.length || existing.workbookCount > 0)) {
+      console.log("WARN  no Milan survey workbooks — keeping existing survey-insights.json.");
+      return existing;
+    }
+  }
   await fs.mkdir(path.dirname(SURVEY_OUT), { recursive: true });
   await fs.writeFile(SURVEY_OUT, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
   console.log(

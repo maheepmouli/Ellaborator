@@ -2,7 +2,7 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "devCommand": "npm run dev",
-  "installCommand": "npm install",
+  "installCommand": "git lfs pull 2>/dev/null || true && npm install",
   "framework": "vite",
   "rewrites": [
     {
