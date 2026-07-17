@@ -4,7 +4,24 @@ import { addNeonPointMarker } from "@/lib/mapPointIcons";
 import { resolveMapPointIconSpec } from "@/lib/mapPointIconTaxonomy";
 import { spreadOverlappingPositions } from "@/lib/copenhagenMarkerLayout";
 import { scheduleLeafletLayerRepaint } from "@/lib/leafletMapSync";
+import { milanHubSegmentId } from "@/lib/milanMapLayers/milanFlowGeometry";
 import type { SegmentInteractionHandlers } from "@/lib/wireMapSegmentInteraction";
+
+/** Stable click id shared with Milan observatory segment list. */
+function resolveInteractivePointSegmentId(
+  cityName: string,
+  point: LocalCityPoint
+): string {
+  const props = (point.properties ?? {}) as Record<string, unknown>;
+  if (cityName === "Milan") {
+    const junctionId = String(props.junctionId ?? "");
+    const siteKey = String(props.siteKey ?? "");
+    if (junctionId.startsWith("mil-junction-") || siteKey.startsWith("mil-junction-")) {
+      return milanHubSegmentId(props);
+    }
+  }
+  return String(props.segmentId ?? props.id ?? point.id);
+}
 
 export interface RenderLocalCityInteractivePointsOptions {
   map: L.Map;
@@ -125,6 +142,9 @@ export function renderLocalCityInteractivePoints(
       )
     : new Map(filtered.map((p) => [String(p.properties?.id ?? p.id), [p.lat, p.lon] as [number, number]]));
 
+  // Wire observatory click/hover whenever handlers are supplied.
+  const interactionOn = Boolean(segmentHandlers);
+
   let rendered = 0;
   for (const point of filtered) {
     const props = point.properties ?? {};
@@ -144,10 +164,12 @@ export function renderLocalCityInteractivePoints(
       selectedKpi === "kpi1.2" || selectedKpi === "kpi4.2" || selectedKpi === "kpi3.2"
         ? getValueColor(point.value, false)
         : undefined;
-    const segId = String(props.segmentId ?? point.id);
-    const segName = `${iconSpec.label} · ${String(props.streetName ?? props.siteId ?? "Site")}`;
+    const segId = resolveInteractivePointSegmentId(cityName, point);
+    const segName = `${iconSpec.label} · ${String(
+      props.junctionLabel ?? props.streetName ?? props.siteId ?? props.category ?? "Site"
+    )}`;
     const popupContent = popupForPoint(cityName, selectedKpi, point, iconSpec.label, valueLabel);
-    const hitRadius = Math.max(10, Math.min(18, 9 + normalizedValue * 9));
+    const hitRadius = Math.max(16, Math.min(26, 14 + normalizedValue * 10));
 
     const { visual, hit } = addNeonPointMarker(
       map,
@@ -161,7 +183,7 @@ export function renderLocalCityInteractivePoints(
         congestion: point.value / 100,
         properties: props,
       },
-      segmentInteractionEnabled ? segmentHandlers : undefined,
+      interactionOn || segmentInteractionEnabled ? segmentHandlers : undefined,
       {
         title: segName,
         hitRadius,

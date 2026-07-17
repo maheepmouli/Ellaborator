@@ -32,7 +32,6 @@ import {
 import { renderCopenhagenRadarFlowLayout } from "./copenhagenRadarFlowLayout";
 import { bindCopenhagenMapTooltip } from "./copenhagenMapTooltips";
 import { renderCopenhagenTrafficPulseOverlay } from "./copenhagenTrafficPulse";
-import { renderCopenhagenStreetCorridors } from "./renderCopenhagenStreetCorridors";
 import { emissionsIntensityToColor } from "@/lib/copenhagenEmissionsModel";
 import { scheduleLeafletLayerRepaint } from "@/lib/leafletMapSync";
 
@@ -197,10 +196,13 @@ function renderRegistryMarkers(
   }
 
   const iconOnlyKpi = selectedKpi === "kpi3.2" || selectedKpi === "kpi4.1";
-  const safetyFlowKpi = selectedKpi === "kpi2.1";
+  const aggregateHubKpi = selectedKpi === "kpi1.2" || selectedKpi === "kpi2.1";
   const locations = getLocationsForPilot(pilotId).filter((loc) => {
     if (iconOnlyKpi) return loc.kind === "otc_workbook_site";
-    if (safetyFlowKpi) return loc.kind === "otc_workbook_site";
+    // Keep intelligent cameras in the returned set for FOV cones, but we only draw workbook hubs.
+    if (aggregateHubKpi) {
+      return loc.kind === "otc_workbook_site" || loc.kind === "intelligent_camera";
+    }
     if (loc.kind === "flow_camera") return selectedKpi === "kpi1.2";
     if (loc.kind === "intelligent_camera" && loc.otcWorkbookKey === "vandkunsten") {
       return loc.id === "wb-vandkunsten";
@@ -219,6 +221,10 @@ function renderRegistryMarkers(
   );
 
   locations.forEach((loc) => {
+    // Aggregated hub mode: one clickable workbook site only — skip extra dots inside the ripple.
+    if (aggregateHubKpi && loc.kind !== "otc_workbook_site") {
+      return;
+    }
     const [markerLat, markerLon] = markerLayout.get(loc.id) ?? [loc.lat, loc.lon];
     const isSite = loc.kind === "otc_workbook_site";
     const segmentId = isSite
@@ -652,31 +658,16 @@ export function renderCopenhagenMapLayers(options: RenderCopenhagenMapLayersOpti
     selectedKpi
   );
 
-  if (!["kpi3.2", "kpi4.1", "kpi2.1"].includes(selectedKpi)) {
+  // Camera FOV wedges at hubs for mode share + road safety (partner: keep angles, drop flow lines).
+  if (!["kpi3.2", "kpi4.1"].includes(selectedKpi)) {
     renderCameraFovCones(map, registryLocations, polygonsOut, selectedSegmentId);
   }
 
   const useRadarFlowLayout =
     !["kpi3.1", "kpi3.2", "kpi4.1", "kpi4.2"].includes(selectedKpi) && observedPoints.length > 0;
 
-  if (
-    useRadarFlowLayout &&
-    streetsGeoJson?.features?.length &&
-    (selectedKpi === "kpi1.2" || selectedKpi === "kpi2.1")
-  ) {
-    renderCopenhagenStreetCorridors({
-      map,
-      streetsGeoJson,
-      flowsByWorkbook,
-      scenario,
-      selectedSegmentId,
-      segmentHandlers,
-      polylinesOut,
-      markersOut,
-      getValueColor,
-      safetyKpi: selectedKpi === "kpi2.1",
-    });
-  }
+  // Street corridor flow lines removed — partners want aggregated hub points only.
+  // Directional named links are shown in the observatory panel diagram instead.
 
   const cameras = registryLocations.filter(
     (l) => l.kind === "intelligent_camera" || l.kind === "otc_workbook_site"
@@ -714,6 +705,8 @@ export function renderCopenhagenMapLayers(options: RenderCopenhagenMapLayersOpti
         getValueColor,
         safetyKpi: selectedKpi === "kpi2.1",
         markersOut,
+        hideFlowSpokes: true,
+        hideFlowEndpointMarkers: true,
         featureSelected: (segmentId) => {
           const flow = flows.find(
             (f) => String(f.properties?.segmentId || f.properties?.id || f.id) === segmentId
@@ -740,24 +733,23 @@ export function renderCopenhagenMapLayers(options: RenderCopenhagenMapLayersOpti
           });
         },
       });
-      if (selectedKpi !== "kpi2.1") {
-        renderCopenhagenTrafficPulseOverlay(
-          map,
-          hub.lat,
-          hub.lon,
-          flows,
-          scenario,
-          markersOut,
-          circlesOut,
-          workbookSite?.name ?? String(flows[0]?.properties?.streetName ?? workbookKey),
-          {
-            workbookKey,
-            segmentHandlers,
-            wireCircleMarker,
-            selectedSegmentId,
-          }
-        );
-      }
+      // Pulse + aggregated hub point for mode share and road safety.
+      renderCopenhagenTrafficPulseOverlay(
+        map,
+        hub.lat,
+        hub.lon,
+        flows,
+        scenario,
+        markersOut,
+        circlesOut,
+        workbookSite?.name ?? String(flows[0]?.properties?.streetName ?? workbookKey),
+        {
+          workbookKey,
+          segmentHandlers,
+          wireCircleMarker,
+          selectedSegmentId,
+        }
+      );
       return;
     }
   });

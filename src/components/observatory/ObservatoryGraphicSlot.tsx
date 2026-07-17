@@ -9,6 +9,7 @@ import {
   buildMilanJunctionModeShareMockPoints,
   milanHasObservedAccessibilityData,
   milanHasObservedClimateData,
+  milanHasObservedModeShareData,
   milanJunctionAnchorsForPilot,
 } from "@/lib/milanMapLayers";
 import { useLocalCityData } from "@/hooks/use-local-city-data";
@@ -122,6 +123,7 @@ function renderGraphic(
     case "facilityStrip":
       return <FacilityCategoryChart payload={payload} compact={compact} />;
     case "climateField":
+    case "climateComparison":
     case "motorIntensity":
     case "envProxy":
     case "reteBand":
@@ -144,7 +146,11 @@ function renderGraphic(
     case "sentiment":
     case "dssBars":
     case "accessibilityBars":
-      return <StatCardsChart payload={payload} compact={compact} />;
+      return payload.likert?.length && payload.kpiId === "kpi4.2" ? (
+        <LikertDistributionChart payload={payload} compact={compact} />
+      ) : (
+        <StatCardsChart payload={payload} compact={compact} />
+      );
     default:
       return <StatCardsChart payload={payload} compact={compact} />;
   }
@@ -220,7 +226,10 @@ export function ObservatoryGraphicSlot({
     if (!junctions.length) return [];
 
     if (selectedKpi === "kpi1.2") {
-      return buildMilanJunctionModeShareMockPoints(junctions, milanPilotId);
+      if (!milanHasObservedModeShareData(localPoints, milanPilotId)) {
+        return buildMilanJunctionModeShareMockPoints(junctions, milanPilotId);
+      }
+      return [];
     }
     if (selectedKpi === "kpi3.2" && !milanHasObservedClimateData(milanEnvForObservatory)) {
       return buildMilanJunctionClimateMockPoints(junctions, milanPilotId);

@@ -51,6 +51,7 @@ export function renderMobilityHubFovCone(
     fillColor: selected ? "#00ffff" : "#63ccff",
     fillOpacity: selected ? 0.22 : 0.12,
     interactive: false,
+    bubblingMouseEvents: true,
   }).addTo(map);
   polygonsOut.push(cone);
 }

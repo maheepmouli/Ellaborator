@@ -177,17 +177,27 @@ export function resolveMapLegend(
 
   if (isCopenhagen && kpiId === "kpi1.2") {
     return {
-      marker: "line",
-      items: [...CPH_RADAR_CORRIDOR_ITEMS, ...CPH_CAMERA_REGISTRY_ITEMS],
-      hint: "Glowing street corridors coloured by flow rate with bidirectional arrows; radar spokes at camera hubs; registry markers at OTC sites.",
+      marker: "point",
+      items: [
+        { label: "Aggregated hub (ripple)", color: "#38bdf8" },
+        { label: "Camera FOV", color: "#96C2EF" },
+        { label: "Hub threshold rings", color: "#ef4444" },
+        ...CPH_CAMERA_REGISTRY_ITEMS,
+      ],
+      hint: "Flows aggregated at camera hubs (ripple + FOV). Per-direction named links are in the observatory panel — not drawn as map spokes.",
     };
   }
 
   if (isCopenhagen && kpiId === "kpi2.1") {
     return {
-      marker: "line",
-      items: [...CPH_RADAR_CORRIDOR_ITEMS, ...CPH_SAFETY_SUPPLEMENT_ITEMS, { label: "Workbook hub site", color: "#c4b5fd" }],
-      hint: "Flow-rate corridors and radar spokes; supplementary iRAP, near-encounter, and tube-speed markers only (camera clutter hidden).",
+      marker: "point",
+      items: [
+        { label: "Aggregated hub (ripple)", color: "#ef4444" },
+        { label: "Camera FOV", color: "#96C2EF" },
+        ...CPH_SAFETY_SUPPLEMENT_ITEMS,
+        { label: "Workbook hub site", color: "#c4b5fd" },
+      ],
+      hint: "Road safety uses the same hub aggregation (no flow spokes). Named directional links appear in the observatory diagram.",
     };
   }
 
@@ -337,27 +347,39 @@ export function resolveMapLegend(
           { label: "Accessibility (A)", color: "#22c55e" },
           { label: "Equal access score", color: "#63ccff" },
         ],
-        hint: "Illustrative accessibility proxy at 6–8 mode-share junction hubs — DSS workbook has no pilot-scoped rows. Dim lines = KPI 2.1 safety network.",
+        hint: "Illustrative accessibility proxy at 6–8 mode-share junction hubs — DSS routing points unavailable for this pilot. Dim lines = KPI 2.1 safety network.",
       };
     }
     return {
       marker: "point",
       items: [
-        { label: "DSS category", color: "#63ccff" },
-        { label: "Equal access %", color: "#22c55e" },
+        { label: "Equal access", color: "#22c55e" },
+        { label: "Slightly penalised", color: "#fbbf24" },
+        { label: "Heavily penalised", color: "#f87171" },
       ],
-      hint: "DSS accessibility workbook categories mapped to pilot centroid (no point geometry in source file).",
+      hint: "AMAT DSS civic-address routing points (150 m). Color by barrier category; value = % equal-access routes. Pilot 1 includes before/after.",
+    };
+  }
+  if (isMilan && kpiId === "kpi3.1") {
+    return {
+      marker: "point",
+      items: [
+        { label: "Cycle parking", color: "#2ecc71" },
+        { label: "EV charging", color: "#38bdf8" },
+        { label: "Mobility hub / pedestrian", color: "#a78bfa" },
+      ],
+      hint: "Illustrative zero-emission facility inventory (KPI 3.1) — taxonomy badges per deployment type; dim lines = speed network underlay.",
     };
   }
   if (isMilan && kpiId === "kpi1.2") {
     return {
       marker: "point",
       items: [
-        { label: "Inbound approach (N/E)", color: "#ef4444" },
-        { label: "Outbound approach (S/W)", color: "#38bdf8" },
+        { label: "Aggregated hub (ripple)", color: "#38bdf8" },
+        { label: "Camera FOV", color: "#96C2EF" },
         { label: "Hub pulse", color: "#a78bfa" },
       ],
-      hint: "Illustrative Copenhagen-style radar at 6–8 KPI 2.1 junctions (mock mode-share). Dim lines = road safety network.",
+      hint: "One ripple hub per AMAT camera site (all matched + inferred). Click the center point for the observatory — directional flows stay in the panel.",
     };
   }
 
@@ -394,13 +416,13 @@ export function resolveMapLegend(
     }
     if (kpiId === "kpi1.2") {
       return {
-        marker: "line",
+        marker: "point",
         items: [
-          ...CPH_RADAR_CORRIDOR_ITEMS,
-          { label: "Survey anchor (W)", color: "#00ffff" },
-          { label: "P+R hub (Pilot 2)", color: "#2ecc71" },
+          { label: "Aggregated hub (ripple)", color: "#38bdf8" },
+          { label: "Camera FOV", color: "#96C2EF" },
+          { label: "Survey / P+R hub", color: "#2ecc71" },
         ],
-        hint: "Copenhagen-style flow corridors: colour = mode-share intensity, bidirectional arrows on spokes. Pilot 1: women mobility survey segments; Pilot 2: illustrative P+R hubs (SMY · DEH · GiSeMi).",
+        hint: "Flows aggregated at mobility hubs (ripple + FOV). No map spokes — directional detail stays in the observatory. Pilot 1: survey hub; Pilot 2: P+R hubs (SMY · DEH · GiSeMi).",
       };
     }
     if (kpiId === "kpi2.1" || kpiId === "kpi4.2") {

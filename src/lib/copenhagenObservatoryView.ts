@@ -14,6 +14,11 @@ import {
   resolveMethodologyConstraint,
 } from "@/data/copenhagenLocationRegistry";
 import {
+  isKnownDirectionalFlow,
+  knownDirectionalFlowKeys,
+  normalizeOtcFlowKey,
+} from "@/lib/copenhagenMapLayers/copenhagenFlowGeometry";
+import {
   applyMethodologyToAgg,
   getMethodologyConstraintForWorkbook,
 } from "@/lib/copenhagenMethodology";
@@ -232,13 +237,23 @@ export function filterCopenhagenObservatoryPoints(
   }
   if (parsed.kind === "location") {
     const loc = getCopenhagenLocationFromSelection(selectionId);
-    if (loc?.otcWorkbookKey) {
+    const workbookKey =
+      loc?.otcWorkbookKey ??
+      (loc?.name ? inferOtcWorkbookKey(loc.name) : null) ??
+      inferOtcWorkbookKey(selectionId);
+    if (workbookKey) {
       return points.filter(
-        (p) => inferOtcWorkbookKey(String(p.properties?.streetName ?? "")) === loc.otcWorkbookKey
+        (p) => inferOtcWorkbookKey(String(p.properties?.streetName ?? "")) === workbookKey
       );
     }
     if (loc?.id) {
-      return points;
+      // Unknown location — do not dump every city flow into one hub.
+      return points.filter(
+        (p) =>
+          String(p.properties?.segmentId ?? p.id).includes(loc.id) ||
+          inferOtcWorkbookKey(String(p.properties?.streetName ?? "")) ===
+            inferOtcWorkbookKey(loc.name)
+      );
     }
   }
   if (parsed.kind === "direction" && parsed.directionSegmentId) {
@@ -252,6 +267,78 @@ export function filterCopenhagenObservatoryPoints(
       String(p.properties?.segmentId ?? "").includes(selectionId) ||
       selectionId.includes(String(p.properties?.segmentId ?? ""))
   );
+}
+
+/** Resolve which OTC workbook a selection / site label belongs to. */
+export function resolveCopenhagenWorkbookFocus(
+  selectionId: string | null | undefined,
+  hints: { segmentName?: string | null; segmentApiId?: string | null; streetName?: string | null } = {}
+): string | null {
+  if (selectionId) {
+    const parsed = parseCopenhagenMapSelection(selectionId);
+    if (parsed.kind === "site" && parsed.workbookKey) return parsed.workbookKey;
+    if (parsed.kind === "location") {
+      const loc = getCopenhagenLocationFromSelection(selectionId);
+      const fromLoc =
+        loc?.otcWorkbookKey ?? (loc?.name ? inferOtcWorkbookKey(loc.name) : null);
+      if (fromLoc) return fromLoc;
+    }
+    const fromId = inferOtcWorkbookKey(selectionId);
+    if (fromId) return fromId;
+  }
+  for (const hint of [hints.segmentName, hints.segmentApiId, hints.streetName]) {
+    if (!hint) continue;
+    const key = inferOtcWorkbookKey(hint);
+    if (key) return key;
+  }
+  return null;
+}
+
+/**
+ * Keep only realistic directional flows for one camera hub (typically 2–4).
+ * Prefer partner methodology labels from FLOW_BEARING_OVERRIDES.
+ */
+export function scopeCopenhagenPointsToWorkbookDirections(
+  points: LocalCityPoint[],
+  workbookKey: string | null
+): LocalCityPoint[] {
+  if (!workbookKey || !points.length) return points;
+  const atSite = points.filter(
+    (p) => inferOtcWorkbookKey(String(p.properties?.streetName ?? "")) === workbookKey
+  );
+  if (!atSite.length) return points;
+
+  const known = knownDirectionalFlowKeys(workbookKey);
+  if (known.length) {
+    const matched = atSite.filter((p) =>
+      isKnownDirectionalFlow(
+        workbookKey,
+        String(p.properties?.direction ?? p.properties?.mode ?? "")
+      )
+    );
+    if (matched.length) {
+      // One row per known direction label.
+      const byFlow = new Map<string, LocalCityPoint>();
+      for (const p of matched) {
+        const key = normalizeOtcFlowKey(
+          String(p.properties?.direction ?? p.properties?.mode ?? "")
+        );
+        if (!byFlow.has(key)) byFlow.set(key, p);
+      }
+      return [...byFlow.values()].slice(0, Math.max(known.length, 4));
+    }
+  }
+
+  // Fallback: unique direction strings at the site, hard cap at 4.
+  const byFlow = new Map<string, LocalCityPoint>();
+  for (const p of atSite) {
+    const key = normalizeOtcFlowKey(
+      String(p.properties?.direction ?? p.properties?.mode ?? p.id)
+    );
+    if (!key || key === "n/a") continue;
+    if (!byFlow.has(key)) byFlow.set(key, p);
+  }
+  return [...byFlow.values()].slice(0, 4);
 }
 
 export function buildCopenhagenObservatoryView(
@@ -280,7 +367,17 @@ export function buildCopenhagenObservatoryView(
   const scoped = options?.selectionId
     ? filterCopenhagenObservatoryPoints(observed, options.selectionId)
     : observed;
-  const activePoints = options?.selectionId ? scoped : observed;
+  const workbookFocus =
+    resolveCopenhagenWorkbookFocus(options?.selectionId, {
+      segmentName: options?.segmentName,
+      segmentApiId: config.segmentApiId,
+      streetName: String(scoped[0]?.properties?.streetName ?? ""),
+    }) ?? resolveCopenhagenWorkbookFocus(null, { segmentApiId: config.segmentApiId });
+  const siteScoped = scopeCopenhagenPointsToWorkbookDirections(
+    scoped.length ? scoped : observed,
+    workbookFocus
+  );
+  const activePoints = siteScoped.length ? siteScoped : scoped.length ? scoped : observed;
   const { pre, post } = aggregateModeBreakdown(activePoints);
   const modeTypes = options?.selectedModeTypes ?? [];
   const infraPoints = activePoints.filter(

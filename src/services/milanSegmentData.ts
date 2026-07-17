@@ -9,6 +9,7 @@ import {
   MILAN_SPEED_SOURCES_LEGACY,
 } from "@/lib/milanDataPaths";
 import { MILAN_PILOT_ANCHORS } from "@/lib/milanMapConfig";
+import { milanSourcePilotIds } from "@/lib/milanPilotScope";
 
 proj4.defs(
   "EPSG:3003",
@@ -189,6 +190,19 @@ export function filterMilanSegmentsNearPilot(
   records: MilanSegmentRecord[],
   pilotId: "mil-p1" | "mil-p2" | "mil-p3"
 ): MilanSegmentRecord[] {
+  const sources = milanSourcePilotIds(pilotId);
+  if (sources.length > 1) {
+    const seen = new Set<string>();
+    const merged: MilanSegmentRecord[] = [];
+    for (const src of sources) {
+      for (const record of filterMilanSegmentsNearPilot(records, src)) {
+        if (seen.has(record.id)) continue;
+        seen.add(record.id);
+        merged.push(record);
+      }
+    }
+    return merged;
+  }
   const anchor = MILAN_PILOT_BUFFERS[pilotId];
   const r2 = anchor.radiusDeg * anchor.radiusDeg;
   return records.filter((record) => {
@@ -197,6 +211,47 @@ export function filterMilanSegmentsNearPilot(
     const dLat = mid[0] - anchor.lat;
     const dLon = mid[1] - anchor.lon;
     return dLat * dLat + dLon * dLon <= r2;
+  });
+}
+
+function mergeMilanSegmentDatasets(
+  left: MilanSegmentDataset,
+  right: MilanSegmentDataset,
+  pilotId: "mil-p3"
+): MilanSegmentDataset {
+  const seen = new Set<string>();
+  const records: MilanSegmentRecord[] = [];
+  for (const record of [...left.records, ...right.records]) {
+    if (seen.has(record.id)) continue;
+    seen.add(record.id);
+    records.push(record);
+  }
+  const avgMetricValue =
+    records.length > 0
+      ? records.reduce((sum, record) => sum + record.value, 0) / records.length
+      : 0;
+  const dataConfidence =
+    left.dataConfidence === "unavailable" && right.dataConfidence === "unavailable"
+      ? "unavailable"
+      : left.dataConfidence === "unavailable"
+        ? right.dataConfidence
+        : right.dataConfidence === "unavailable"
+          ? left.dataConfidence
+          : left.dataConfidence === "proxy" || right.dataConfidence === "proxy"
+            ? "proxy"
+            : "real";
+  return withCameraJoinStats({
+    records,
+    stats: {
+      parsedSegments: records.length,
+      invalidGeometries: left.stats.invalidGeometries + right.stats.invalidGeometries,
+      missingMetricJoins: left.stats.missingMetricJoins + right.stats.missingMetricJoins,
+      avgMetricValue,
+      pilotScoped: true,
+    },
+    dataConfidence,
+    renderMode: left.renderMode === "proxy" || right.renderMode === "proxy" ? "proxy" : "segment",
+    statusMessage: `Merged mil-p1 (${left.records.length}) + mil-p2 (${right.records.length}) segments for ${pilotId} (${records.length} unique).`,
   });
 }
 
@@ -414,20 +469,11 @@ export async function loadMilanSpeedSegments(
   if (cached) return cached;
 
   if (pilotId === "mil-p3") {
-    const unavailable: MilanSegmentDataset = {
-      records: [],
-      stats: {
-        parsedSegments: 0,
-        invalidGeometries: 0,
-        missingMetricJoins: 0,
-        avgMetricValue: 0,
-      },
-      dataConfidence: "unavailable",
-      renderMode: "segment",
-      statusMessage: "Segment-level safety data is not available for Milan Pilot 3 yet.",
-    };
-    speedCache.set(cacheKey, unavailable);
-    return unavailable;
+    const p1 = await loadMilanSpeedSegments("mil-p1");
+    const p2 = await loadMilanSpeedSegments("mil-p2");
+    const merged = mergeMilanSegmentDatasets(p1, p2, "mil-p3");
+    speedCache.set(cacheKey, merged);
+    return merged;
   }
 
   const source = SPEED_SOURCES[pilotId];
@@ -547,7 +593,7 @@ export async function loadMilanEnvironmentSegments(
       },
       statusMessage:
         pilotId === "mil-p3"
-          ? `RETE segments clipped to ${pilotId} intervention buffer (~${filtered.length} links). Environmental proxy from traffic composition.`
+          ? `RETE segments clipped to Pilot 1 + Pilot 2 buffers (~${filtered.length} links). Environmental proxy from traffic composition.`
           : `RETE segments clipped to ${pilotId} buffer (~${filtered.length} links). Environmental proxy from traffic composition; camera joins where available.`,
     };
   } else {

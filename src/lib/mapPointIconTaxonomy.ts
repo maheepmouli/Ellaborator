@@ -83,7 +83,16 @@ function categoryFromText(text: string): MapPointIconKey | null {
     text.includes("crossing") ||
     text.includes("traffic signal")
   ) return "pedestrian";
-  if (text.includes("emissions") || text.includes("modelled co")) return "climate";
+  if (text.includes("emissions") || text.includes("modelled co") || text.includes("climate")) return "climate";
+  if (
+    text.includes("accessibility") ||
+    text.includes("equal access") ||
+    text.includes("penalised") ||
+    text.includes("penalized") ||
+    text.includes("barrier")
+  ) {
+    return "accessibility";
+  }
   if (
     text.includes("amat-count") ||
     text.includes("amat_count") ||

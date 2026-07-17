@@ -36,6 +36,15 @@ export function milanSiteSegmentId(siteKey: string): string {
   return `milan-site-${siteKey}`;
 }
 
+/** Stable hub id shared by map click targets and observatory segment list. */
+export function milanHubSegmentId(properties: Record<string, unknown> | undefined): string {
+  const junctionId = String(properties?.junctionId ?? "").trim();
+  if (junctionId.startsWith("mil-junction-")) return junctionId;
+  const siteKey = milanSiteKeyFromPoint(properties);
+  if (siteKey.startsWith("mil-junction-")) return siteKey;
+  return milanSiteSegmentId(siteKey || "unknown-site");
+}
+
 export function milanSiteHubFromFlows(
   flows: Array<{ lat: number; lon: number }>
 ): { lat: number; lon: number } {

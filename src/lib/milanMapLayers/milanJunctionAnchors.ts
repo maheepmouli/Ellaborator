@@ -1,7 +1,12 @@
 import { haversineMeters } from "@/lib/issyPilot2Junction";
+import { MILAN_PILOT_ANCHORS } from "@/lib/milanMapConfig";
 import type { LocalCityPoint } from "@/services/localCityData";
 import type { MilanSegmentRecord } from "@/services/milanSegmentData";
-import { milanSiteHubFromFlows, milanSiteKeyFromPoint } from "./milanFlowGeometry";
+import {
+  milanHubSegmentId,
+  milanSiteHubFromFlows,
+  milanSiteKeyFromPoint,
+} from "./milanFlowGeometry";
 
 export type MilanJunctionAnchor = {
   id: string;
@@ -17,7 +22,8 @@ const JUNCTION_COORD_PRECISION = 4;
 const JUNCTION_MERGE_METERS = 85;
 export const MILAN_MODE_SHARE_JUNCTION_LIMIT = 8;
 export const MILAN_MODE_SHARE_JUNCTION_MIN = 6;
-export const MILAN_JUNCTION_SNAP_METERS = 1600;
+/** Keep AMAT→junction links on the intervention corridor — not distant Marghera cameras. */
+export const MILAN_JUNCTION_SNAP_METERS = 750;
 
 function coordKey(lat: number, lon: number): string {
   return `${lat.toFixed(JUNCTION_COORD_PRECISION)},${lon.toFixed(JUNCTION_COORD_PRECISION)}`;
@@ -224,35 +230,33 @@ export function anchorModeSharePointsToJunctions(
     }
   });
 
-  let selected = [...chosenByJunction.values()].sort(
-    (a, b) => b.junction.score - a.junction.score
-  );
+  // Only keep AMAT sites that snapped onto a real KPI 2.1 network junction.
+  // Do NOT fall back to raw camera GPS — that paints detached Marghera/Molinazzo clusters.
+  let selected = [...chosenByJunction.values()]
+    .filter((row) => row.distanceM <= maxSnapMeters)
+    .sort((a, b) => b.junction.score - a.junction.score);
 
   if (selected.length < minJunctions) {
-    const usedSites = new Set(selected.map((row) => row.bucket.siteKey));
-    const fallbackSites = siteBuckets
-      .filter((bucket) => !usedSites.has(bucket.siteKey))
-      .sort((a, b) => b.totalVolume - a.totalVolume);
-
-    for (const bucket of fallbackSites) {
+    // Prefer highest-scoring corridor junctions even if fewer AMAT links matched.
+    const usedJunctionIds = new Set(selected.map((row) => row.junction.id));
+    const extra = [...chosenByJunction.values()]
+      .filter((row) => !usedJunctionIds.has(row.junction.id))
+      .sort((a, b) => b.junction.score - a.junction.score);
+    for (const row of extra) {
       if (selected.length >= minJunctions) break;
-      selected.push({
-        junction: {
-          id: `mil-site-${bucket.siteKey}`,
-          lat: bucket.hubLat,
-          lon: bucket.hubLon,
-          label: bucket.studyName,
-          degree: 0,
-          score: bucket.totalVolume,
-          streetNames: [bucket.studyName],
-        },
-        bucket,
-        distanceM: 0,
-      });
+      selected.push(row);
     }
   }
 
   selected = selected.slice(0, maxJunctions);
+
+  if (!selected.length) {
+    // Safety network often sits kilometres from AMAT cameras (e.g. mil-p1 Repubblica
+    // vs Porta Romana). Keep camera hubs so mode-share still shows every matched site.
+    return countPoints.filter(
+      (point) => Number.isFinite(point.lat) && Number.isFinite(point.lon)
+    );
+  }
 
   const anchored: LocalCityPoint[] = [];
   selected.forEach(({ junction, bucket, distanceM }) => {
@@ -271,11 +275,206 @@ export function anchorModeSharePointsToJunctions(
           spatialNote:
             distanceM > 0
               ? `AMAT count (${bucket.studyName}) linked ${Math.round(distanceM)} m to KPI 2.1 junction`
-              : `AMAT count site ${bucket.studyName} — no nearby safety-network junction match`,
+              : `AMAT count site ${bucket.studyName}`,
         },
       });
     });
   });
 
   return anchored.length ? anchored : points;
+}
+
+const METERS_PER_DEG_LAT = 111_320;
+
+/**
+ * Fan out co-located AMAT camera hubs (e.g. Porta Romana stack) so each site
+ * keeps its own ripple instead of reading as a single blob at city zoom.
+ */
+export function spreadOverlappingMilanHubPoints(
+  points: LocalCityPoint[],
+  options?: { clusterMeters?: number; ringMeters?: number }
+): LocalCityPoint[] {
+  const clusterMeters = options?.clusterMeters ?? 400;
+  const ringMeters = options?.ringMeters ?? 140;
+  const countPoints = points.filter((p) => p.properties?.datasetKind === "amat-count");
+  if (countPoints.length < 2) return points;
+
+  type HubGroup = {
+    hubId: string;
+    flows: LocalCityPoint[];
+    lat: number;
+    lon: number;
+  };
+
+  const byHub = new Map<string, LocalCityPoint[]>();
+  countPoints.forEach((point) => {
+    const hubId = milanHubSegmentId(point.properties as Record<string, unknown>);
+    const list = byHub.get(hubId) ?? [];
+    list.push(point);
+    byHub.set(hubId, list);
+  });
+
+  const hubs: HubGroup[] = [...byHub.entries()].map(([hubId, flows]) => {
+    const hub = milanSiteHubFromFlows(flows);
+    return { hubId, flows, lat: hub.lat, lon: hub.lon };
+  });
+
+  const clusters: HubGroup[][] = [];
+  hubs.forEach((hub) => {
+    const cluster = clusters.find((group) =>
+      group.some(
+        (member) => haversineMeters(member.lat, member.lon, hub.lat, hub.lon) < clusterMeters
+      )
+    );
+    if (cluster) cluster.push(hub);
+    else clusters.push([hub]);
+  });
+
+  const offsets = new Map<string, { lat: number; lon: number }>();
+  clusters.forEach((cluster) => {
+    if (cluster.length === 1) {
+      offsets.set(cluster[0].hubId, { lat: cluster[0].lat, lon: cluster[0].lon });
+      return;
+    }
+    const meanLat = cluster.reduce((sum, hub) => sum + hub.lat, 0) / cluster.length;
+    const meanLon = cluster.reduce((sum, hub) => sum + hub.lon, 0) / cluster.length;
+    const cosLat = Math.cos((meanLat * Math.PI) / 180);
+    const dLat = ringMeters / METERS_PER_DEG_LAT;
+    const dLon = ringMeters / (METERS_PER_DEG_LAT * Math.max(cosLat, 0.2));
+    cluster.forEach((hub, index) => {
+      const angle = (2 * Math.PI * index) / cluster.length - Math.PI / 2;
+      offsets.set(hub.hubId, {
+        lat: meanLat + Math.cos(angle) * dLat,
+        lon: meanLon + Math.sin(angle) * dLon,
+      });
+    });
+  });
+
+  return points.map((point) => {
+    if (point.properties?.datasetKind !== "amat-count") return point;
+    const hubId = milanHubSegmentId(point.properties as Record<string, unknown>);
+    const offset = offsets.get(hubId);
+    if (!offset) return point;
+    if (offset.lat === point.lat && offset.lon === point.lon) return point;
+    return {
+      ...point,
+      lat: offset.lat,
+      lon: offset.lon,
+      properties: {
+        ...point.properties,
+        presentationLat: offset.lat,
+        presentationLon: offset.lon,
+        spatialNote: point.properties?.spatialNote
+          ? `${point.properties.spatialNote} · hub offset for visibility`
+          : "Hub offset so co-located AMAT cameras stay distinct",
+      },
+    };
+  });
+}
+
+function seededUnit(seed: string): number {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i += 1) {
+    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+  }
+  return (hash % 1000) / 1000;
+}
+
+function hasValidHubCoords(point: LocalCityPoint): boolean {
+  return (
+    Number.isFinite(point.lat) &&
+    Number.isFinite(point.lon) &&
+    Math.abs(point.lat) > 0.1 &&
+    Math.abs(point.lon) > 0.1
+  );
+}
+
+/**
+ * Always keep every AMAT count site as its own ripple hub (mil-p1: 7, mil-p2: 8).
+ * Fills missing camera GPS, then fans co-located sites so ripples stay distinct.
+ * Does not snap/drop to the KPI 2.1 network — that was hiding cameras.
+ */
+export function prepareMilanModeShareDisplayPoints(
+  points: LocalCityPoint[],
+  pilotId?: string | null
+): LocalCityPoint[] {
+  const countPoints = points.filter((p) => p.properties?.datasetKind === "amat-count");
+  if (!countPoints.length) return points;
+
+  const bySite = new Map<string, LocalCityPoint[]>();
+  countPoints.forEach((point) => {
+    const siteKey = milanSiteKeyFromPoint(point.properties);
+    const list = bySite.get(siteKey) ?? [];
+    list.push(point);
+    bySite.set(siteKey, list);
+  });
+
+  const matchedHubs = [...bySite.entries()]
+    .map(([siteKey, flows]) => {
+      const withCoords = flows.filter(hasValidHubCoords);
+      if (!withCoords.length) return null;
+      const hub = milanSiteHubFromFlows(withCoords);
+      return { siteKey, ...hub };
+    })
+    .filter((row): row is { siteKey: string; lat: number; lon: number } => row != null);
+
+  const pilotAnchor =
+    pilotId && pilotId in MILAN_PILOT_ANCHORS
+      ? MILAN_PILOT_ANCHORS[pilotId as keyof typeof MILAN_PILOT_ANCHORS]
+      : MILAN_PILOT_ANCHORS["mil-p1"];
+
+  const meanLat =
+    matchedHubs.length > 0
+      ? matchedHubs.reduce((sum, hub) => sum + hub.lat, 0) / matchedHubs.length
+      : pilotAnchor.lat;
+  const meanLon =
+    matchedHubs.length > 0
+      ? matchedHubs.reduce((sum, hub) => sum + hub.lon, 0) / matchedHubs.length
+      : pilotAnchor.lon;
+
+  const filled: LocalCityPoint[] = [];
+  bySite.forEach((flows, siteKey) => {
+    const seed = seededUnit(`milan-hub-fill-${pilotId ?? "x"}-${siteKey}`);
+    const angle = seed * Math.PI * 2;
+    const radiusDeg = 0.0018 + seed * 0.0008;
+    const fallbackLat = meanLat + Math.cos(angle) * radiusDeg;
+    const fallbackLon = meanLon + Math.sin(angle) * radiusDeg * 1.15;
+
+    flows.forEach((flow, flowIndex) => {
+      const valid = hasValidHubCoords(flow);
+      const lat = valid ? flow.lat : fallbackLat;
+      const lon = valid ? flow.lon : fallbackLon;
+      filled.push({
+        ...flow,
+        lat,
+        lon,
+        properties: {
+          ...flow.properties,
+          siteKey,
+          junctionId: undefined,
+          junctionLabel: undefined,
+          locationMethod: valid
+            ? flow.properties?.locationMethod
+            : "pilot_site_inference",
+          spatialNote: valid
+            ? flow.properties?.spatialNote
+            : `AMAT site ${siteKey} — camera GPS missing; placed near pilot count cluster for map visibility`,
+          // Keep each flow slightly offset only for radar fan; hub uses site average.
+          ...(valid
+            ? {}
+            : {
+                presentationLat: lat,
+                presentationLon: lon,
+                inferredMapPlacement: true,
+              }),
+          flowIndex,
+        },
+      });
+    });
+  });
+
+  return spreadOverlappingMilanHubPoints(filled, {
+    clusterMeters: 450,
+    ringMeters: 150,
+  });
 }

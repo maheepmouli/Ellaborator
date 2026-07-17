@@ -1,17 +1,22 @@
 import L from "leaflet";
 import type { LocalCityPoint } from "@/services/localCityData";
 import type { SegmentInteractionHandlers } from "@/lib/wireMapSegmentInteraction";
+import { wireMarkerSegment } from "@/lib/wireMapSegmentInteraction";
 import { renderCopenhagenRadarFlowLayout } from "@/lib/copenhagenMapLayers/copenhagenRadarFlowLayout";
 import { renderCopenhagenTrafficPulseOverlay } from "@/lib/copenhagenMapLayers/copenhagenTrafficPulse";
+import { renderMobilityHubFovCone } from "@/lib/copenhagenMapLayers/renderMobilityHubFov";
+import { bindCopenhagenMapTooltip } from "@/lib/copenhagenMapLayers/copenhagenMapTooltips";
 import type { CopenhagenObservedPoint } from "@/lib/copenhagenMapLayers/renderCopenhagenMapLayers";
-import { resolveCopenhagenIntensityColor } from "@/lib/copenhagenMapLayers/copenhagenFlowStyles";
 import {
   milanFlowIdFromPoint,
+  milanHubSegmentId,
   milanSiteHubFromFlows,
   milanSiteKeyFromPoint,
-  milanSiteSegmentId,
   resolveMilanFlowBearing,
 } from "./milanFlowGeometry";
+
+/** Larger than CPH default so ripples read clearly on Milan corridor zoom. */
+const MILAN_HUB_RING_SCALE = 2.4;
 
 export interface RenderMilanMapLayersOptions {
   map: L.Map;
@@ -24,6 +29,7 @@ export interface RenderMilanMapLayersOptions {
   markersOut: L.Marker[];
   circlesOut: L.CircleMarker[];
   polylinesOut: L.Polyline[];
+  polygonsOut?: L.Polygon[];
   wireCircleMarker: (
     marker: L.CircleMarker,
     meta: { segmentId: string; segmentName: string; speed: null; congestion: null },
@@ -84,27 +90,44 @@ function buildMilanFlowPopup(options: {
   `;
 }
 
-function toRadarFlowPoint(point: LocalCityPoint): CopenhagenObservedPoint {
+function toRadarFlowPointAtHub(
+  point: LocalCityPoint,
+  hubLat: number,
+  hubLon: number,
+  flowIndex: number,
+  flowCount: number
+): CopenhagenObservedPoint {
   const props = point.properties ?? {};
   const flowId = milanFlowIdFromPoint(props);
   const direction = String(props.direction ?? props.mode ?? flowId.toUpperCase());
+  const labeledBearing = resolveMilanFlowBearing(flowId, direction);
+  const hasCardinal =
+    flowId === "nb" ||
+    flowId === "sb" ||
+    flowId === "eb" ||
+    flowId === "wb" ||
+    /north|south|east|west/i.test(direction);
+  const fanBearing =
+    flowCount <= 4 ? [0, 90, 180, 270][flowIndex % 4]! : (360 / Math.max(flowCount, 1)) * flowIndex;
+  const bearing = hasCardinal ? labeledBearing : fanBearing;
+
   return {
-    lat: point.lat,
-    lon: point.lon,
+    lat: hubLat,
+    lon: hubLon,
     id: point.id,
-    value: point.value,
+    value: Math.max(Number(point.value) || 0, 12),
     properties: {
       ...props,
       direction,
       mode: direction,
-      flowBearing: resolveMilanFlowBearing(flowId, direction),
-      baselineValue: props.baselineValue ?? point.value,
-      interventionValue: props.interventionValue ?? point.value,
+      flowBearing: bearing,
+      baselineValue: Number(props.baselineValue ?? point.value ?? 12),
+      interventionValue: Number(props.interventionValue ?? point.value ?? 12),
       comparisonValue:
         typeof props.comparisonValue === "number"
           ? props.comparisonValue
-          : Number(props.interventionValue ?? point.value) -
-            Number(props.baselineValue ?? point.value),
+          : Number(props.interventionValue ?? point.value ?? 0) -
+            Number(props.baselineValue ?? point.value ?? 0),
     },
   };
 }
@@ -112,19 +135,29 @@ function toRadarFlowPoint(point: LocalCityPoint): CopenhagenObservedPoint {
 function milanFeatureSelected(
   selectedId: string | null | undefined,
   segmentId: string,
-  hubKey: string
+  hubSegmentId: string
 ): boolean {
   if (!selectedId) return false;
   if (selectedId === segmentId) return true;
-  if (selectedId === hubKey) return true;
-  if (!hubKey.startsWith("mil-junction-") && selectedId === milanSiteSegmentId(hubKey)) return true;
-  if (selectedId.startsWith(`${hubKey}-`)) return selectedId === segmentId;
+  if (selectedId === hubSegmentId) return true;
+  if (selectedId.startsWith(`${hubSegmentId}-`)) return selectedId === segmentId;
   return false;
 }
 
+function milanHubCenterIcon(selected: boolean): L.DivIcon {
+  const size = selected ? 28 : 24;
+  const half = size / 2;
+  return L.divIcon({
+    className: "milan-hub-center-wrap",
+    html: `<button type="button" class="milan-hub-center${selected ? " milan-hub-center--selected" : ""}" aria-label="Open observatory"></button>`,
+    iconSize: [size, size],
+    iconAnchor: [half, half],
+  });
+}
+
 /**
- * Copenhagen-parity radar hub layout for Milan AMAT count sites:
- * concentric rings, directional spokes, endpoint markers, and hub pulse.
+ * Copenhagen-parity radar hub layout for Milan:
+ * bigger ripples + always-visible center point (marker pane) that opens the observatory.
  */
 export function renderMilanMapLayers(options: RenderMilanMapLayersOptions): number {
   const {
@@ -138,6 +171,7 @@ export function renderMilanMapLayers(options: RenderMilanMapLayersOptions): numb
     markersOut,
     circlesOut,
     polylinesOut,
+    polygonsOut,
     wireCircleMarker,
   } = options;
 
@@ -147,7 +181,7 @@ export function renderMilanMapLayers(options: RenderMilanMapLayersOptions): numb
   const flowsBySite = new Map<string, LocalCityPoint[]>();
   countPoints.forEach((point) => {
     const props = point.properties ?? {};
-    const hubKey = String(props.junctionId ?? milanSiteKeyFromPoint(props));
+    const hubKey = milanHubSegmentId(props);
     const list = flowsBySite.get(hubKey) ?? [];
     list.push(point);
     flowsBySite.set(hubKey, list);
@@ -156,15 +190,24 @@ export function renderMilanMapLayers(options: RenderMilanMapLayersOptions): numb
   const svgRenderer = L.svg({ padding: 0.8 });
   let siteCount = 0;
 
-  flowsBySite.forEach((siteFlows, hubKey) => {
+  flowsBySite.forEach((siteFlows, hubSegmentId) => {
     if (!siteFlows.length) return;
     const hub = milanSiteHubFromFlows(siteFlows);
-    const radarFlows = siteFlows.map(toRadarFlowPoint);
+    const radarFlows = siteFlows.map((point, index) =>
+      toRadarFlowPointAtHub(point, hub.lat, hub.lon, index, siteFlows.length)
+    );
     const props0 = siteFlows[0]?.properties ?? {};
     const studyName = String(
-      props0.junctionLabel ?? props0.streetName ?? hubKey
+      props0.junctionLabel ?? props0.streetName ?? milanSiteKeyFromPoint(props0)
     ).split(" · ")[0];
-    const siteKey = String(props0.siteKey ?? milanSiteKeyFromPoint(props0));
+    const hubSelected = milanFeatureSelected(selectedSegmentId, hubSegmentId, hubSegmentId);
+
+    if (polygonsOut) {
+      renderMobilityHubFovCone(map, hub.lat, hub.lon, radarFlows, polygonsOut, {
+        selected: hubSelected,
+        ringScale: MILAN_HUB_RING_SCALE,
+      });
+    }
 
     renderCopenhagenRadarFlowLayout({
       map,
@@ -182,8 +225,11 @@ export function renderMilanMapLayers(options: RenderMilanMapLayersOptions): numb
       intensityScalar,
       getValueColor,
       safetyKpi: false,
+      ringScale: MILAN_HUB_RING_SCALE,
       hideFlowEndpointMarkers: true,
-      featureSelected: (segmentId) => milanFeatureSelected(selectedSegmentId, segmentId, hubKey),
+      hideFlowSpokes: true,
+      featureSelected: (segmentId) =>
+        milanFeatureSelected(selectedSegmentId, segmentId, hubSegmentId),
       buildPopup: (point) => {
         const props = point.properties ?? {};
         const direction = String(props.direction ?? props.mode ?? "n/a");
@@ -207,6 +253,7 @@ export function renderMilanMapLayers(options: RenderMilanMapLayersOptions): numb
       },
     });
 
+    // Decorative ripple only — center point is a separate top marker below.
     renderCopenhagenTrafficPulseOverlay(
       map,
       hub.lat,
@@ -216,54 +263,29 @@ export function renderMilanMapLayers(options: RenderMilanMapLayersOptions): numb
       markersOut,
       circlesOut,
       studyName,
-      { showAnchorDot: false }
-    );
-
-    const hubHit = L.circleMarker([hub.lat, hub.lon], {
-      radius: 8,
-      fillColor: resolveCopenhagenIntensityColor({
-        scenario,
-        baselineValue: radarFlows.reduce(
-          (s, f) => s + Number(f.properties?.baselineValue ?? f.value ?? 0),
-          0
-        ) / radarFlows.length,
-        interventionValue: radarFlows.reduce(
-          (s, f) => s + Number(f.properties?.interventionValue ?? f.value ?? 0),
-          0
-        ) / radarFlows.length,
-        comparisonValue: radarFlows.reduce((s, f) => {
-          const props = f.properties ?? {};
-          const comparison =
-            typeof props.comparisonValue === "number"
-              ? Number(props.comparisonValue)
-              : Number(props.interventionValue ?? f.value ?? 0) -
-                Number(props.baselineValue ?? f.value ?? 0);
-          return s + comparison;
-        }, 0) / radarFlows.length,
-        getValueColor,
-        safetyKpi: false,
-      }),
-      color: "#ffffff",
-      weight: 2,
-      fillOpacity: 0.95,
-      opacity: 1,
-    }).addTo(map);
-    wireCircleMarker(
-      hubHit,
       {
-        segmentId: hubKey.startsWith("mil-junction-") ? hubKey : milanSiteSegmentId(siteKey),
-        segmentName: studyName,
-        speed: null,
-        congestion: null,
-      },
-      segmentHandlers,
-      {
-        baseRadius: 8,
-        highlightRadius: 11,
-        selectedSegmentId,
+        showAnchorDot: false,
+        ringScale: MILAN_HUB_RING_SCALE,
       }
     );
-    circlesOut.push(hubHit);
+
+    const detail = {
+      segmentId: hubSegmentId,
+      segmentName: studyName,
+      speed: null as null,
+      congestion: null as null,
+    };
+    const centerMarker = L.marker([hub.lat, hub.lon], {
+      icon: milanHubCenterIcon(hubSelected),
+      interactive: true,
+      keyboard: true,
+      zIndexOffset: 2500,
+      title: studyName,
+    }).addTo(map);
+    bindCopenhagenMapTooltip(centerMarker, studyName);
+    wireMarkerSegment(centerMarker, detail, segmentHandlers);
+    markersOut.push(centerMarker);
+
     siteCount += 1;
   });
 

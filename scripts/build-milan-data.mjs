@@ -24,6 +24,27 @@ const MODE_SHARE_OUT = path.join(ROOT, "public", "data", "milan", "mode-share-co
 const CORRIDORS_OUT = path.join(ROOT, "public", "data", "milan", "pilot-corridors.geojson");
 const WALK_GRAPH_OUT = path.join(ROOT, "public", "data", "milan", "walk-graph.geojson");
 const SURVEY_OUT = path.join(ROOT, "public", "data", "milan", "survey-insights.json");
+const ACCESSIBILITY_OUT = path.join(ROOT, "public", "data", "milan", "accessibility-points.json");
+
+const ACCESSIBILITY_LAYERS = [
+  {
+    pilotId: "mil-p1",
+    phase: "baseline",
+    relative: "Eval data Ex ante/8. Data - accessibility features/Pilot 1_AMAT/baseline/routing_all_torta_150_geom",
+  },
+  {
+    pilotId: "mil-p1",
+    phase: "evaluation",
+    relative: "Eval data Ex ante/8. Data - accessibility features/Pilot 1_AMAT/evaluation/routing_all_elaborator_torta_150_geom",
+  },
+  {
+    pilotId: "mil-p2",
+    phase: "baseline",
+    relative: "Eval data Ex ante/8. Data - accessibility features/Pilot 2_AMAT/baseline/routing_OVEST_torta_150_geom",
+  },
+];
+
+const ACCESSIBILITY_MAP_MAX_PER_PILOT = 320;
 
 proj4.defs(
   "EPSG:3003",
@@ -684,13 +705,272 @@ async function buildSurveyInsights() {
   return payload;
 }
 
+function classifyAccessibility(props) {
+  const equal = toNumber(props.perc_1);
+  const slight = toNumber(props.perc_1_2);
+  const heavy = toNumber(props.perc_2plus);
+  const unreachable = toNumber(props.perc_null);
+  // Unreachable routes (perc_null) are treated as the worst accessibility class.
+  if (unreachable >= 50 || unreachable > equal + slight + heavy) return "Heavily penalised";
+  if (heavy >= equal && heavy >= slight && heavy > 0) return "Heavily penalised";
+  if (slight > equal) return "Slightly penalised";
+  return "Equal access";
+}
+
+function pointCentroid(geometry) {
+  if (!geometry) return null;
+  if (geometry.type === "Point" && Array.isArray(geometry.coordinates)) {
+    return { x: geometry.coordinates[0], y: geometry.coordinates[1] };
+  }
+  if (geometry.type === "MultiPoint" && Array.isArray(geometry.coordinates?.[0])) {
+    return { x: geometry.coordinates[0][0], y: geometry.coordinates[0][1] };
+  }
+  return null;
+}
+
+async function resolveAccessibilityStem(relativeStem) {
+  const candidates = [
+    path.join(OUT_SHAREPOINT, relativeStem),
+    path.join(ROOT, ".tmp-milan-a11y", "Milano", relativeStem),
+  ];
+  for (const stem of candidates) {
+    try {
+      await fs.access(`${stem}.shp`);
+      await fs.access(`${stem}.dbf`);
+      return stem;
+    } catch {
+      // try next
+    }
+  }
+  return null;
+}
+
+async function loadAccessibilityLayerFeatures(layer) {
+  const stem = await resolveAccessibilityStem(layer.relative);
+  if (!stem) return [];
+  const features = await readShapefileFeatures(`${stem}.shp`, `${stem}.dbf`);
+  return features
+    .map((feature) => {
+      const xy = pointCentroid(feature.geometry);
+      if (!xy) return null;
+      const { lat, lng } = utmToWgs84(xy.x, xy.y);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+      const props = feature.properties || {};
+      return {
+        orig: String(props.orig ?? ""),
+        lat,
+        lng,
+        nTot: toNumber(props.n_tot),
+        percEqual: toNumber(props.perc_1),
+        percSlight: toNumber(props.perc_1_2),
+        percHeavy: toNumber(props.perc_2plus),
+        percNull: toNumber(props.perc_null),
+        category: classifyAccessibility(props),
+      };
+    })
+    .filter(Boolean);
+}
+
+function downsampleAccessibilityPoints(points, maxPoints) {
+  if (points.length <= maxPoints) return points;
+  const byCategory = {
+    "Heavily penalised": [],
+    "Slightly penalised": [],
+    "Equal access": [],
+  };
+  points.forEach((point) => {
+    const key = byCategory[point.category] ? point.category : "Equal access";
+    byCategory[key].push(point);
+  });
+  Object.values(byCategory).forEach((list) =>
+    list.sort((a, b) => a.interventionValue - b.interventionValue)
+  );
+
+  const quotas = {
+    "Heavily penalised": Math.round(maxPoints * 0.45),
+    "Slightly penalised": Math.round(maxPoints * 0.25),
+    "Equal access": Math.round(maxPoints * 0.3),
+  };
+  const picked = [];
+  const grid = new Map();
+  const pushUnique = (point) => {
+    const key = `${point.lat.toFixed(4)},${point.lng.toFixed(4)}`;
+    if (grid.has(key)) return false;
+    grid.set(key, true);
+    picked.push(point);
+    return true;
+  };
+
+  for (const [category, quota] of Object.entries(quotas)) {
+    const list = byCategory[category] || [];
+    let taken = 0;
+    for (const point of list) {
+      if (taken >= quota || picked.length >= maxPoints) break;
+      if (pushUnique(point)) taken += 1;
+    }
+  }
+  if (picked.length < maxPoints) {
+    const rest = points
+      .filter((p) => !picked.includes(p))
+      .sort((a, b) => a.interventionValue - b.interventionValue);
+    for (const point of rest) {
+      if (picked.length >= maxPoints) break;
+      pushUnique(point);
+    }
+  }
+  return picked;
+}
+
+function parseCirceCategorySummary(workbookPath) {
+  try {
+    const workbook = XLSX.readFile(workbookPath);
+    const sheet = workbook.Sheets["4. KPI 4.2 (WP7 format)"];
+    if (!sheet) return [];
+    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "", raw: true });
+    const summary = [];
+    let currentPilot = null;
+    const toPct = (value) => {
+      const n = toNumber(value);
+      if (!Number.isFinite(n)) return null;
+      return n <= 1 ? n * 100 : n;
+    };
+    for (const row of rows) {
+      const intervention = String(row[0] || "");
+      if (/cdm1|pilot 1|olympic/i.test(intervention)) currentPilot = "mil-p1";
+      if (/cdm2|pilot 2|west/i.test(intervention)) currentPilot = "mil-p2";
+      const category = String(row[1] || "").trim();
+      if (!currentPilot || !category || /accessibility category/i.test(category)) continue;
+      const postRaw = row[5];
+      const hasPost = postRaw !== "" && !/not available|n\/a/i.test(String(postRaw || ""));
+      summary.push({
+        pilotId: currentPilot,
+        category,
+        baselinePct: toPct(row[3]),
+        postPct: hasPost ? toPct(postRaw) : null,
+        baselineN: toNumber(row[2]),
+        postN: hasPost ? toNumber(row[4]) : null,
+      });
+    }
+    return summary;
+  } catch {
+    return [];
+  }
+}
+
+async function buildAccessibilityPoints() {
+  const byPilotPhase = new Map();
+  for (const layer of ACCESSIBILITY_LAYERS) {
+    const features = await loadAccessibilityLayerFeatures(layer);
+    byPilotPhase.set(`${layer.pilotId}:${layer.phase}`, features);
+    console.log(`  a11y layer ${layer.pilotId}/${layer.phase}: ${features.length} points`);
+  }
+
+  const circeCandidates = [
+    path.join(
+      OUT_SHAREPOINT,
+      "Eval data Ex ante/8. Data - accessibility features/Milan_Accessibility_Features_DSS_Analysis_CIRCE.xlsx"
+    ),
+    path.join(
+      ROOT,
+      ".tmp-milan-a11y/Milano/Eval data Ex ante/8. Data - accessibility features/Milan_Accessibility_Features_DSS_Analysis_CIRCE.xlsx"
+    ),
+  ];
+  let circePath = null;
+  for (const candidate of circeCandidates) {
+    try {
+      await fs.access(candidate);
+      circePath = candidate;
+      break;
+    } catch {
+      // next
+    }
+  }
+  const categorySummary = circePath ? parseCirceCategorySummary(circePath) : [];
+
+  const points = [];
+  for (const pilotId of ["mil-p1", "mil-p2"]) {
+    const baseline = byPilotPhase.get(`${pilotId}:baseline`) || [];
+    const evaluation = byPilotPhase.get(`${pilotId}:evaluation`) || [];
+    const evalByOrig = new Map(evaluation.map((row) => [row.orig, row]));
+
+    const joined = baseline.map((base) => {
+      const post = evalByOrig.get(base.orig);
+      const baselineValue = base.percEqual;
+      const interventionValue = post ? post.percEqual : base.percEqual;
+      const category = post ? post.category : base.category;
+      return {
+        id: `mil-a11y-${pilotId}-${base.orig || normalizeKey(`${base.lat},${base.lng}`)}`,
+        orig: base.orig,
+        pilotId,
+        lat: base.lat,
+        lng: base.lng,
+        category,
+        baselineCategory: base.category,
+        evaluationCategory: post?.category ?? null,
+        baselineValue,
+        interventionValue,
+        comparisonValue: interventionValue - baselineValue,
+        nTot: post?.nTot ?? base.nTot,
+        percEqualBaseline: base.percEqual,
+        percSlightBaseline: base.percSlight,
+        percHeavyBaseline: base.percHeavy,
+        percEqualPost: post?.percEqual ?? null,
+        percSlightPost: post?.percSlight ?? null,
+        percHeavyPost: post?.percHeavy ?? null,
+        temporalCoverage: post ? "before-after" : "baseline-only",
+        spatialQuality: "matched",
+        mapPriority: category === "Heavily penalised" ? 3 : category === "Slightly penalised" ? 2 : 1,
+      };
+    });
+
+    const sampled = downsampleAccessibilityPoints(joined, ACCESSIBILITY_MAP_MAX_PER_PILOT);
+    points.push(...sampled);
+  }
+
+  const payload = {
+    generatedAt: new Date().toISOString(),
+    source:
+      "Milano SharePoint — 8. Data - accessibility features (DSS routing torta 150 m + CIRCE workbook)",
+    pointCount: points.length,
+    rawPointCounts: {
+      "mil-p1-baseline": (byPilotPhase.get("mil-p1:baseline") || []).length,
+      "mil-p1-evaluation": (byPilotPhase.get("mil-p1:evaluation") || []).length,
+      "mil-p2-baseline": (byPilotPhase.get("mil-p2:baseline") || []).length,
+    },
+    mapSampleMaxPerPilot: ACCESSIBILITY_MAP_MAX_PER_PILOT,
+    categorySummary,
+    points,
+    note: "Map uses a stratified sample of civic-address DSS points (EPSG:3003 → WGS84). Score = % equal-access routes (perc_1).",
+  };
+
+  if (!points.length) {
+    const existing = await readJsonIfExists(ACCESSIBILITY_OUT);
+    if (existing?.points?.length) {
+      console.log("WARN  no accessibility shapefiles — keeping existing accessibility-points.json.");
+      return existing;
+    }
+  }
+
+  await fs.mkdir(path.dirname(ACCESSIBILITY_OUT), { recursive: true });
+  await fs.writeFile(ACCESSIBILITY_OUT, `${JSON.stringify(payload)}\n`, "utf8");
+  console.log(
+    `OK  milan-accessibility-points (${points.length} map points, ${categorySummary.length} CIRCE categories)`
+  );
+  return payload;
+}
+
 async function main() {
+  if (process.env.MILAN_BUILD_ACCESSIBILITY_ONLY === "1") {
+    await buildAccessibilityPoints();
+    return;
+  }
   await extractMilanFromZip();
   const cameraIndex = await loadCameraIndex();
   await buildModeShareCounts(cameraIndex);
   await buildPilotCorridors();
   await buildWalkGraphGeojson();
   await buildSurveyInsights();
+  await buildAccessibilityPoints();
 }
 
 main().catch((err) => {

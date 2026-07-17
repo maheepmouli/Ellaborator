@@ -8,6 +8,7 @@ export const MILAN_ACCESSIBILITY_FILES = [
   `${MILAN_SHAREPOINT_ROOT}/8. Data - accessibility features/Milan_Accessibility_Features_DSS_Analysis_CIRCE.xlsx`,
 ] as const;
 
+export const MILAN_ACCESSIBILITY_JSON = "/data/milan/accessibility-points.json";
 export const MILAN_MODE_SHARE_JSON = "/data/milan/mode-share-counts.json";
 export const MILAN_PILOT_CORRIDORS_JSON = "/data/milan/pilot-corridors.geojson";
 export const MILAN_WALK_GRAPH_JSON = "/data/milan/walk-graph.geojson";

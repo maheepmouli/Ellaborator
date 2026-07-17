@@ -6,6 +6,11 @@ import {
   type MilanSegmentRecord,
 } from "@/services/milanSegmentData";
 import type { LocalCityPoint } from "@/services/localCityData";
+import {
+  isInMilanPilotScope,
+  milanPointMatchesPilotScope,
+  milanSourcePilotIds,
+} from "@/lib/milanPilotScope";
 
 export { filterMilanSegmentsNearPilot, MILAN_PILOT_BUFFERS };
 
@@ -79,17 +84,18 @@ export function filterPointsInPilotZone(
   return points.filter((p) => isInPilotZone(p.lat, p.lon, city, pilotId));
 }
 
-/** Milan AMAT count / DSS rows carry pilotId — prefer that over geographic buffer clipping. */
+/** Milan AMAT count / DSS rows carry pilotId — mil-p3 unions Pilot 1 + Pilot 2 rows. */
 export function filterMilanLocalPoints(
   points: LocalCityPoint[],
   pilotId: string | null | undefined
 ): LocalCityPoint[] {
   if (!pilotId) return points;
-  const byPilot = points.filter(
-    (p) =>
-      String(p.properties?.pilotId ?? p.properties?.interventionId ?? "") === pilotId
-  );
+  const sources = milanSourcePilotIds(pilotId);
+  const byPilot = points.filter((p) => milanPointMatchesPilotScope(p.properties, pilotId));
   if (byPilot.length) return byPilot;
+  if (sources.length > 1) {
+    return points.filter((p) => isInMilanPilotScope(p.lat, p.lon, pilotId));
+  }
   return filterPointsInPilotZone(points, "Milan", pilotId);
 }
 

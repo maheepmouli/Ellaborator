@@ -76,6 +76,7 @@ import {
   buildMilanJunctionModeShareMockPoints,
   milanHasObservedAccessibilityData,
   milanHasObservedClimateData,
+  milanHasObservedModeShareData,
   milanJunctionAnchorsForPilot,
   pickJunctionsForModeSharePresentation,
 } from "@/lib/milanMapLayers";
@@ -367,7 +368,10 @@ const InsightPanel = ({
     if (!junctions.length) return null;
 
     if (selectedKpi === "kpi1.2") {
-      return buildMilanJunctionModeShareMockPoints(junctions, milanPilotId);
+      if (!milanHasObservedModeShareData(milanLocalPoints, milanPilotId)) {
+        return buildMilanJunctionModeShareMockPoints(junctions, milanPilotId);
+      }
+      return null;
     }
     if (selectedKpi === "kpi3.2" && !milanHasObservedClimateData(milanEnvDataset)) {
       return buildMilanJunctionClimateMockPoints(junctions, milanPilotId);
@@ -445,11 +449,11 @@ const InsightPanel = ({
   const milanSegmentHeadline = useMemo(() => {
     if (!isMilanCity) return null;
     if (selectedKpi === "kpi2.1" && milanSpeedDataset?.records?.length) {
-      const avg =
-        milanSpeedDataset.records.reduce(
-          (sum, record) => sum + Number(record.properties?.avgSpeed ?? record.value),
-          0
-        ) / milanSpeedDataset.records.length;
+      const record =
+        (segmentFocusId
+          ? milanSpeedDataset.records.find((r) => r.id === segmentFocusId)
+          : undefined) ?? milanSpeedDataset.records[0];
+      const avg = Number(record.properties?.avgSpeed ?? record.value);
       return {
         baselineMain: avg * 1.08,
         interventionMain: avg,
@@ -457,7 +461,13 @@ const InsightPanel = ({
       };
     }
     if (selectedKpi === "kpi3.2" && milanEnvDataset?.records?.length) {
-      const avg = milanEnvDataset.stats.avgMetricValue;
+      const record =
+        (segmentFocusId
+          ? milanEnvDataset.records.find((r) => r.id === segmentFocusId)
+          : undefined) ?? undefined;
+      const avg = record
+        ? Number(record.value)
+        : milanEnvDataset.stats.avgMetricValue;
       return {
         baselineMain: avg * 1.17,
         interventionMain: avg,
@@ -478,6 +488,7 @@ const InsightPanel = ({
     milanEnvDataset,
     milanIllustrativeClimateKpi,
     milanIllustrativeAccessibilityKpi,
+    segmentFocusId,
   ]);
   const copenhagenCenter = cityData ? { lat: cityData.lat, lon: cityData.lon } : null;
   const shouldUseCopenhagenObserved =

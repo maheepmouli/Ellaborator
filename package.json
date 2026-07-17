@@ -22,6 +22,7 @@
     "build-trikala-locations": "node scripts/build-trikala-locations.mjs",
     "build-trikala-bike-lane-sensors": "node scripts/build-trikala-bike-lane-sensors.mjs",
     "build-milan-data": "node scripts/build-milan-data.mjs",
+    "build-milan-accessibility": "node scripts/build-milan-accessibility.mjs",
     "inventory-milan": "node scripts/inventory-milan-zip.mjs",
     "convert-helsinki-gpkg": "node scripts/convert-helsinki-gpkg.mjs",
     "prepare:geodata": "python scripts/prepare_geodata.py"

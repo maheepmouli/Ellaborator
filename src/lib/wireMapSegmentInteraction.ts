@@ -67,6 +67,8 @@ export function wirePolylineSegment(
   layer.on("mouseover", () => {
     layer.setStyle({ ...base, ...highlight, opacity: 1 });
     layer.bringToFront();
+    const el = layer.getElement();
+    if (el) el.style.cursor = "pointer";
     emitHover(detail, handlers);
   });
   layer.on("mouseout", () => {
@@ -81,6 +83,8 @@ export function wirePolylineSegment(
     handlers.onJunctionSegmentClick?.(detail);
     emitFocus(detail, handlers);
   });
+  const el = layer.getElement();
+  if (el) el.style.cursor = "pointer";
 }
 
 /** Wire hover / click on a Leaflet polygon (P+R hubs, intervention areas). */

@@ -64,13 +64,23 @@ type PilotGraphicOverride = Partial<
 const PILOT_GRAPHIC_OVERRIDES: Record<string, PilotGraphicOverride> = {
   "cph-p1": {
     header: { "kpi1.2": "cameraCorridorSchematic", "kpi2.1": "cameraCorridorSchematic", "kpi3.2": "cameraCorridorSchematic" },
-    overview: { "kpi1.2": "telraamModeBars" },
-    kpiAnalysis: { "kpi1.2": "telraamModeBars", "kpi4.1": "sentimentGauge", "kpi4.2": "accessibilityBars" },
+    overview: { "kpi1.2": "telraamModeBars", "kpi2.1": "cameraCorridorSchematic" },
+    kpiAnalysis: {
+      "kpi1.2": "cameraCorridorSchematic",
+      "kpi2.1": "cameraCorridorSchematic",
+      "kpi4.1": "sentimentGauge",
+      "kpi4.2": "accessibilityBars",
+    },
   },
   "cph-p2": {
     header: { "kpi1.2": "cameraCorridorSchematic", "kpi2.1": "cameraCorridorSchematic", "kpi3.2": "cameraCorridorSchematic" },
-    overview: { "kpi3.1": "facilityInventory", "kpi4.2": "accessibilityBars" },
-    kpiAnalysis: { "kpi3.1": "facilityInventory", "kpi4.2": "accessibilityBars" },
+    overview: { "kpi3.1": "facilityInventory", "kpi4.2": "accessibilityBars", "kpi2.1": "cameraCorridorSchematic" },
+    kpiAnalysis: {
+      "kpi1.2": "cameraCorridorSchematic",
+      "kpi2.1": "cameraCorridorSchematic",
+      "kpi3.1": "facilityInventory",
+      "kpi4.2": "accessibilityBars",
+    },
   },
   "cph-p3": {
     header: {
@@ -78,11 +88,70 @@ const PILOT_GRAPHIC_OVERRIDES: Record<string, PilotGraphicOverride> = {
       "kpi2.1": "cameraCorridorSchematic",
       "kpi3.2": "cameraCorridorSchematic",
     },
-    kpiAnalysis: { "kpi4.1": "likertRadar", "kpi2.1": "flowPressure", "kpi4.2": "accessibilityBars" },
+    overview: { "kpi2.1": "cameraCorridorSchematic" },
+    kpiAnalysis: {
+      "kpi1.2": "cameraCorridorSchematic",
+      "kpi4.1": "likertRadar",
+      "kpi2.1": "cameraCorridorSchematic",
+      "kpi4.2": "accessibilityBars",
+    },
   },
   "hel-p1": { header: { "kpi2.1": "interventionPointsSchematic" } },
   "hel-p2": { header: { "kpi3.1": "interventionPointsSchematic" } },
-  "mil-p2": { header: { "kpi2.1": "streetSegmentSchematic" }, kpiAnalysis: { "kpi2.1": "speedProfile" } },
+  "mil-p1": {
+    header: {
+      "kpi1.2": "cameraCorridorSchematic",
+      "kpi3.1": "streetSegmentSchematic",
+      "kpi3.2": "streetSegmentSchematic",
+      "kpi4.2": "streetSegmentSchematic",
+    },
+    overview: { "kpi1.2": "modeShareBars", "kpi3.1": "facilityInventory", "kpi3.2": "reteBand", "kpi4.2": "accessibilityBars" },
+    kpiAnalysis: {
+      "kpi1.2": "modeShareBars",
+      "kpi3.1": "facilityInventory",
+      "kpi3.2": "reteBand",
+      "kpi4.2": "accessibilityBars",
+    },
+  },
+  "mil-p2": {
+    header: {
+      "kpi1.2": "cameraCorridorSchematic",
+      "kpi2.1": "streetSegmentSchematic",
+      "kpi3.1": "streetSegmentSchematic",
+      "kpi3.2": "streetSegmentSchematic",
+      "kpi4.2": "streetSegmentSchematic",
+    },
+    overview: {
+      "kpi1.2": "modeShareBars",
+      "kpi3.1": "facilityInventory",
+      "kpi3.2": "reteBand",
+      "kpi4.2": "accessibilityBars",
+    },
+    kpiAnalysis: {
+      "kpi1.2": "modeShareBars",
+      "kpi2.1": "speedProfile",
+      "kpi3.1": "facilityInventory",
+      "kpi3.2": "reteBand",
+      "kpi4.2": "accessibilityBars",
+    },
+  },
+  "mil-p3": {
+    header: {
+      "kpi1.2": "cameraCorridorSchematic",
+      "kpi2.1": "streetSegmentSchematic",
+      "kpi3.1": "streetSegmentSchematic",
+      "kpi3.2": "streetSegmentSchematic",
+      "kpi4.2": "streetSegmentSchematic",
+    },
+    overview: { "kpi1.2": "modeShareBars", "kpi3.1": "facilityInventory", "kpi3.2": "reteBand", "kpi4.2": "accessibilityBars" },
+    kpiAnalysis: {
+      "kpi1.2": "modeShareBars",
+      "kpi2.1": "speedProfile",
+      "kpi3.1": "facilityInventory",
+      "kpi3.2": "reteBand",
+      "kpi4.2": "accessibilityBars",
+    },
+  },
   "zar-p1": { header: { "kpi1.2": "areaPolygonSchematic" } },
   "tri-p1": {
     header: { "kpi1.2": "cameraCorridorSchematic", "kpi4.1": "areaPolygonSchematic" },

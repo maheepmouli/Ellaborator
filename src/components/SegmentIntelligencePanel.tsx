@@ -1571,8 +1571,16 @@ export default function SegmentIntelligencePanel({
     pilotId?.startsWith("tri-") &&
     !!selectedSegmentId &&
     !selectedSegmentId.endsWith("-environmental-fleet");
-  const headerTitle = isTrikalaSegmentFocus ? view?.name ?? corridorLabel : corridorLabel;
-  const headerSubtitle = isTrikalaSegmentFocus ? corridorLabel : view?.name ?? "";
+  const isMilanPointFocus =
+    pilotId?.startsWith("mil-") &&
+    !!selectedSegmentId &&
+    (selectedKpi === "kpi4.2" ||
+      selectedKpi === "kpi3.2" ||
+      selectedKpi === "kpi3.1" ||
+      selectedKpi === "kpi1.2");
+  const useSegmentFocusHeader = isTrikalaSegmentFocus || isMilanPointFocus;
+  const headerTitle = useSegmentFocusHeader ? view?.name ?? corridorLabel : corridorLabel;
+  const headerSubtitle = useSegmentFocusHeader ? corridorLabel : view?.name ?? "";
   const perfImprovement = useMemo(() => {
     if (!view?.intervention || !view?.baseline) return 18;
     const profile = getCityPilotProfile(pilotId);

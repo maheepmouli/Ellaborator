@@ -16,8 +16,9 @@ import type { NormalizedCityRecord, ScenarioType } from "@/types/normalized-city
 import { parseCopenhagenExtendedRecords } from "@/services/copenhagenExtendedParsers";
 import { buildTrikalaRecords } from "@/services/trikalaSurveyParser";
 import { buildMilanSurveyRecords } from "@/services/milanSurveyParser";
-import { MILAN_ACCESSIBILITY_FILES, MILAN_MODE_SHARE_JSON } from "@/lib/milanDataPaths";
+import { MILAN_ACCESSIBILITY_FILES, MILAN_ACCESSIBILITY_JSON, MILAN_MODE_SHARE_JSON } from "@/lib/milanDataPaths";
 import { MILAN_PILOT_ANCHORS } from "@/lib/milanMapConfig";
+import { milanRecordMatchesPilotScope } from "@/lib/milanPilotScope";
 
 export interface LocalCityPoint {
   lat: number;
@@ -888,6 +889,141 @@ async function parseMilanAccessibilityRecords(kpiId: string): Promise<Normalized
   const cached = normalizedRecordCache.get(cacheKey);
   if (cached) return cached;
 
+  // Prefer DSS routing civic-address points (EPSG:3003 shapefiles → WGS84 JSON bundle).
+  try {
+    const response = await fetch(MILAN_ACCESSIBILITY_JSON);
+    if (response.ok) {
+      const bundle = (await response.json()) as {
+        points?: Array<{
+          id: string;
+          orig?: string;
+          pilotId: string;
+          lat: number;
+          lng: number;
+          category: string;
+          baselineCategory?: string;
+          evaluationCategory?: string | null;
+          baselineValue: number;
+          interventionValue: number;
+          comparisonValue: number;
+          temporalCoverage?: string;
+          spatialQuality?: string;
+          percEqualBaseline?: number;
+          percSlightBaseline?: number;
+          percHeavyBaseline?: number;
+          percEqualPost?: number | null;
+          percSlightPost?: number | null;
+          percHeavyPost?: number | null;
+          nTot?: number;
+        }>;
+        categorySummary?: Array<{
+          pilotId: string;
+          category: string;
+          baselinePct: number | null;
+          postPct: number | null;
+        }>;
+        source?: string;
+        note?: string;
+      };
+      const points = bundle.points || [];
+      if (points.length) {
+        const parsed: NormalizedCityRecord[] = points.map((point) => {
+          const hasPost = point.temporalCoverage === "before-after";
+          return {
+            id: point.id,
+            city: "Milan",
+            cityId: "milan",
+            interventionId: point.pilotId,
+            kpiId,
+            sourceFile: MILAN_ACCESSIBILITY_JSON,
+            datasetKind: "accessibility",
+            category: point.category,
+            facilityCategory: point.category,
+            likertLabel: point.category,
+            geometryType: "point",
+            lat: point.lat,
+            lng: point.lng,
+            geometry: [[point.lat, point.lng]],
+            segmentId: point.id,
+            siteKey: point.orig || point.id,
+            streetName: point.orig
+              ? `Civic ${point.orig} · ${point.category}`
+              : point.category,
+            value: clampPercent(point.interventionValue),
+            baselineValue: clampPercent(point.baselineValue),
+            interventionValue: clampPercent(point.interventionValue),
+            comparisonValue: point.comparisonValue,
+            source: bundle.source || "Milan DSS accessibility routing points",
+            method:
+              "AMAT DSS civic-address routing (150 m torta) — equal-access route share (perc_1)",
+            type: "observed",
+            dataOrigin: "observed",
+            spatialQuality: point.spatialQuality === "matched" ? "matched" : "inferred",
+            geometryLinkage: "matched",
+            temporalCoverage: hasPost ? "before-after" : "baseline-only",
+            locationMethod: "dss_routing_shapefile",
+            spatialNote:
+              bundle.note ||
+              `Civic address ${point.orig || "n/a"} · ${point.category} (DSS barrier routing)`,
+            parserStatus: hasPost ? "ready" : "partial",
+            percEqualBaseline: point.percEqualBaseline,
+            percSlightBaseline: point.percSlightBaseline,
+            percHeavyBaseline: point.percHeavyBaseline,
+            percEqualPost: point.percEqualPost ?? undefined,
+            percSlightPost: point.percSlightPost ?? undefined,
+            percHeavyPost: point.percHeavyPost ?? undefined,
+          } as NormalizedCityRecord;
+        });
+
+        // Keep CIRCE category rows as pilot-level aggregates (no geometry) for breakdown charts.
+        (bundle.categorySummary || []).forEach((row) => {
+          if (row.baselinePct == null) return;
+          const postPct = row.postPct ?? row.baselinePct;
+          parsed.push({
+            id: `milan-${kpiId}-summary-${row.pilotId}-${slugKey(row.category)}`,
+            city: "Milan",
+            cityId: "milan",
+            interventionId: row.pilotId,
+            kpiId,
+            sourceFile: MILAN_ACCESSIBILITY_FILES[0],
+            datasetKind: "accessibility-summary",
+            category: row.category,
+            facilityCategory: row.category,
+            likertLabel: row.category,
+            geometryType: "point",
+            lat: MILAN_PILOT_CENTERS[row.pilotId]?.lat ?? MILAN_PILOT_CENTERS["mil-p1"].lat,
+            lng: MILAN_PILOT_CENTERS[row.pilotId]?.lon ?? MILAN_PILOT_CENTERS["mil-p1"].lon,
+            geometry: [
+              [
+                MILAN_PILOT_CENTERS[row.pilotId]?.lat ?? MILAN_PILOT_CENTERS["mil-p1"].lat,
+                MILAN_PILOT_CENTERS[row.pilotId]?.lon ?? MILAN_PILOT_CENTERS["mil-p1"].lon,
+              ],
+            ],
+            segmentId: `mil-a11y-summary-${row.pilotId}-${slugKey(row.category)}`,
+            streetName: row.category,
+            value: clampPercent(postPct),
+            baselineValue: clampPercent(row.baselinePct),
+            interventionValue: clampPercent(postPct),
+            comparisonValue: postPct - row.baselinePct,
+            source: "Milan DSS accessibility CIRCE workbook",
+            method: "WP7 KPI 4.2 category shares from CIRCE summary",
+            type: "observed",
+            spatialQuality: "inferred",
+            temporalCoverage: row.postPct != null ? "before-after" : "baseline-only",
+            locationMethod: "pilot_area_inference",
+            spatialNote: "CIRCE category aggregate — not a map marker",
+            parserStatus: row.postPct != null ? "ready" : "partial",
+          });
+        });
+
+        normalizedRecordCache.set(cacheKey, parsed);
+        return parsed;
+      }
+    }
+  } catch {
+    // fall through to workbook-only path
+  }
+
   const buffer = await fetchFirstAvailableMilanWorkbook();
   if (!buffer) return [];
   const workbook = XLSX.read(buffer, { type: "array" });
@@ -913,10 +1049,13 @@ async function parseMilanAccessibilityRecords(kpiId: string): Promise<Normalized
     }
     if (!currentIntervention) return;
 
-    const baselinePct = clampPercent(parseNumber(row[3]));
+    const baselinePct = clampPercent(parseNumber(row[3]) <= 1 ? parseNumber(row[3]) * 100 : parseNumber(row[3]));
     const postRaw = row[5];
     const hasPost = !isUnavailableMetric(postRaw);
-    const postPct = hasPost ? clampPercent(parseNumber(postRaw)) : baselinePct;
+    const postParsed = parseNumber(postRaw);
+    const postPct = hasPost
+      ? clampPercent(postParsed <= 1 ? postParsed * 100 : postParsed)
+      : baselinePct;
     const interventionValue = kpiId === "kpi4.2" ? postPct : clampPercent(postPct - baselinePct + 50);
     const value = interventionValue;
     const baselineValue = baselinePct > 0 ? baselinePct : interventionValue * 0.9;
@@ -1384,17 +1523,18 @@ export async function loadLocalCityPoints(
     return [];
   }
 
-  if (cityKey === "milan" && selectedPilotId === "mil-p3") {
-    const { getMilanCdm3Mock, milanCdm3ToLocalPoints } = await import("@/data/milanCdm3Mock");
-    const profile = getMilanCdm3Mock();
-    const cdm3Points = milanCdm3ToLocalPoints(profile, kpiId, scenario);
-    if (cdm3Points.length) {
-      localCityDiagnosticsCache.set(localCityDiagnosticsKey(cityName, kpiId, selectedPilotId), {
-        reason: "ok",
-        message: `CDM3 DSS illustrative dataset for ${kpiId} (${cdm3Points.length} corridor features).`,
-      });
-      return cdm3Points;
-    }
+  if (cityKey === "milan" && kpiId === "kpi3.1" && selectedPilotId) {
+    const { milanZeroEmissionToLocalPoints, milanZeroEmissionFacilityCount } = await import(
+      "@/data/milanZeroEmissionMock"
+    );
+    const points = milanZeroEmissionToLocalPoints(selectedPilotId, scenario);
+    localCityDiagnosticsCache.set(localCityDiagnosticsKey(cityName, kpiId, selectedPilotId), {
+      reason: points.length ? "ok" : "no-records",
+      message: points.length
+        ? `Illustrative zero-emission facility inventory for ${selectedPilotId} (${milanZeroEmissionFacilityCount(selectedPilotId)} sites).`
+        : "No zero-emission mock facilities for this Milan pilot scope.",
+    });
+    return points;
   }
 
   const records = await getNormalizedCityRecords(cityName, kpiId);
@@ -1402,6 +1542,9 @@ export async function loadLocalCityPoints(
     ? records.filter((record) => {
         if (normalizeCityKey(cityName) === "copenhagen") {
           return copenhagenRecordMatchesPilotScope(record, selectedPilotId);
+        }
+        if (normalizeCityKey(cityName) === "milan") {
+          return milanRecordMatchesPilotScope(record.interventionId, selectedPilotId);
         }
         return record.interventionId === selectedPilotId;
       })
@@ -1457,6 +1600,8 @@ export async function loadLocalCityPoints(
               : undefined,
           locationMethod: record.locationMethod || "pilot_area_inference",
           segmentId: record.segmentId,
+          siteKey: record.siteKey,
+          flowId: record.flowId,
           spatialNote: record.spatialNote,
           methodologyWarnings: record.methodologyWarnings,
           parserStatus: record.parserStatus || "partial",

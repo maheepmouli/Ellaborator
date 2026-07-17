@@ -91,6 +91,134 @@ function sampleRingLatLngs(
   return ring;
 }
 
+/** Direction points on radar rings only (no spoke lines) — lat/lng meter offsets stay fixed across zoom. */
+function renderRadarEndpointMarkersOnly(options: {
+  map: L.Map;
+  hubLat: number;
+  hubLon: number;
+  flows: CopenhagenObservedPoint[];
+  scenario: "baseline" | "intervention" | "comparison";
+  selectedSegmentId?: string | null;
+  segmentHandlers: SegmentInteractionHandlers;
+  circlesOut: L.CircleMarker[];
+  ringScale: number;
+  featureSelected: (segmentId: string) => boolean;
+  intensityScalar: (
+    scenario: "baseline" | "intervention" | "comparison",
+    baselineValue: number,
+    interventionValue: number,
+    comparisonValue: number
+  ) => number;
+  getValueColor?: (value: number, safetyKpi: boolean) => string;
+  safetyKpi: boolean;
+  wireCircleMarker: RenderCopenhagenRadarFlowOptions["wireCircleMarker"];
+  buildPopup: (flow: CopenhagenObservedPoint) => string;
+}): void {
+  const {
+    map,
+    hubLat,
+    hubLon,
+    flows,
+    scenario,
+    selectedSegmentId,
+    segmentHandlers,
+    circlesOut,
+    ringScale,
+    featureSelected,
+    intensityScalar,
+    getValueColor,
+    safetyKpi,
+    wireCircleMarker,
+    buildPopup,
+  } = options;
+  const hasFocus = Boolean(selectedSegmentId);
+
+  flows.forEach((point, flowIndex) => {
+    const props = point.properties ?? {};
+    const streetName = String(props.streetName ?? "Site");
+    const direction = String(props.direction ?? props.mode ?? "n/a");
+    const segmentId = String(props.segmentId || props.id || point.id);
+    const isSelected = featureSelected(segmentId);
+    const baselineValue = Number(props.baselineValue ?? point.value ?? 0);
+    const interventionValue = Number(props.interventionValue ?? point.value ?? 0);
+    const comparisonValue =
+      typeof props.comparisonValue === "number"
+        ? Number(props.comparisonValue)
+        : interventionValue - baselineValue;
+    const intensityValue = intensityScalar(
+      scenario,
+      baselineValue,
+      interventionValue,
+      comparisonValue
+    );
+    const bearing =
+      typeof props.flowBearing === "number"
+        ? props.flowBearing
+        : resolveFlowBearing(streetName, direction, flowIndex, flows.length);
+    const pairSlot = directionPairSlot(direction, flowIndex);
+    const isInbound = pairSlot === 0;
+    const { terminal } = buildRadarSpokeGeometry(hubLat, hubLon, bearing, isInbound, ringScale);
+    const intensityColor = resolveCopenhagenIntensityColor({
+      scenario,
+      baselineValue,
+      interventionValue,
+      comparisonValue,
+      getValueColor,
+      safetyKpi,
+    });
+    const endpointStyle = getCopenhagenEndpointMarkerStyle(
+      isSelected,
+      isSelected ? "#00ffff" : intensityColor,
+      intensityValue,
+      hasFocus && !isSelected
+    );
+    if (endpointStyle.hidden) return;
+
+    const endpointMarker = L.circleMarker(terminal, {
+      radius: endpointStyle.radius,
+      fillColor: endpointStyle.fillColor,
+      fillOpacity: endpointStyle.fillOpacity,
+      color: endpointStyle.color,
+      weight: endpointStyle.weight,
+      opacity: 0.98,
+    }).addTo(map);
+    endpointMarker.bindPopup(buildPopup(point));
+    bindCopenhagenMapTooltip(
+      endpointMarker,
+      copenhagenFlowTerminalLabel(streetName, direction, isInbound)
+    );
+    wireCircleMarker(
+      endpointMarker,
+      {
+        segmentId,
+        segmentName: `${streetName} · ${direction}`,
+        speed: null,
+        congestion: null,
+      },
+      segmentHandlers,
+      {
+        baseRadius: endpointStyle.radius,
+        highlightRadius: endpointStyle.radius + 3,
+        selectedSegmentId,
+        baseStyle: {
+          fillColor: endpointStyle.fillColor,
+          color: endpointStyle.color,
+          fillOpacity: endpointStyle.fillOpacity,
+          opacity: 0.98,
+          weight: endpointStyle.weight,
+        },
+        highlightStyle: {
+          fillOpacity: 1,
+          opacity: 1,
+          weight: (endpointStyle.weight as number) + 1,
+          color: "#ffffff",
+        },
+      }
+    );
+    circlesOut.push(endpointMarker);
+  });
+}
+
 export interface RenderCopenhagenRadarFlowOptions {
   map: L.Map;
   hubLat: number;
@@ -129,6 +257,11 @@ export interface RenderCopenhagenRadarFlowOptions {
   ringScale?: number;
   /** Hide spoke terminal dots — junction hubs use ripple + center marker only. */
   hideFlowEndpointMarkers?: boolean;
+  /**
+   * Partner preference: aggregate flows at the hub point.
+   * Keeps concentric threshold rings; skips spoke lines, hit targets, arrows, and endpoints.
+   */
+  hideFlowSpokes?: boolean;
 }
 
 function flowArrowIcon(bearingDeg: number, color: string): L.DivIcon {
@@ -191,6 +324,7 @@ export function renderCopenhagenRadarFlowLayout(options: RenderCopenhagenRadarFl
     safetyKpi = false,
     ringScale = 1,
     hideFlowEndpointMarkers = false,
+    hideFlowSpokes = false,
   } = options;
 
   if (!flows.length) return;
@@ -215,6 +349,30 @@ export function renderCopenhagenRadarFlowLayout(options: RenderCopenhagenRadarFl
     }
   ).addTo(map);
   polylinesOut.push(outerRing);
+
+  // Aggregate-at-hub mode: no spoke lines / arrows — optional ring endpoints stay meter-locked.
+  if (hideFlowSpokes) {
+    if (!hideFlowEndpointMarkers) {
+      renderRadarEndpointMarkersOnly({
+        map,
+        hubLat,
+        hubLon,
+        flows,
+        scenario,
+        selectedSegmentId,
+        segmentHandlers,
+        circlesOut,
+        ringScale,
+        featureSelected,
+        intensityScalar,
+        getValueColor,
+        safetyKpi,
+        wireCircleMarker,
+        buildPopup,
+      });
+    }
+    return;
+  }
 
   const spokeItems: Array<{
     path: [number, number][];

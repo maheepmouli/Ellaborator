@@ -792,7 +792,7 @@ export const DATASET_REGISTRY: DatasetMetadata[] = [
     updateStatus: "static",
     responsiblePartner: "AMAT / Milan",
     notes:
-      "AMAT network.shp + time DBF. mil-p3 has no speed data — walk_graph.geojson used for CDM3 geometry.",
+      "AMAT network.shp + time DBF. mil-p3 merges speed segments from mil-p1 and mil-p2 intervention buffers.",
   },
   {
     id: "mil-co2-network",

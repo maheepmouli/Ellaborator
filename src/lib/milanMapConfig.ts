@@ -7,7 +7,8 @@ export const MILAN_PILOT_ANCHORS: Record<
 > = {
   "mil-p1": { lat: 45.461, lon: 9.168, radiusDeg: 0.055 },
   "mil-p2": { lat: 45.47, lon: 9.142, radiusDeg: 0.05 },
-  "mil-p3": { lat: 45.468, lon: 9.18, radiusDeg: 0.08 },
+  /** Union viewport for Pilot 1 + Pilot 2 when mil-p3 is selected. */
+  "mil-p3": { lat: 45.4655, lon: 9.155, radiusDeg: 0.085 },
 };
 
 export function milanMapZoom(): number {

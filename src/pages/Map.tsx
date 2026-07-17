@@ -46,8 +46,9 @@ import {
   milanHasObservedAccessibilityData,
   milanHasObservedClimateData,
   milanHasObservedModeShareData,
+  milanHubSegmentId,
   milanJunctionAnchorsForPilot,
-  pickJunctionsForModeSharePresentation,
+  prepareMilanModeShareDisplayPoints,
 } from "@/lib/milanMapLayers";
 import type { TrafficSegment } from "@/types/traffic";
 import { filterPointsInPilotZone, filterMilanLocalPoints, pickDefaultSegmentId } from "@/lib/interventionZone";
@@ -373,6 +374,7 @@ const MapContent = () => {
     selectedCity === "Milan" &&
       (selectedKpi === "kpi2.1" ||
         selectedKpi === "kpi1.2" ||
+        selectedKpi === "kpi3.1" ||
         selectedKpi === "kpi3.2" ||
         selectedKpi === "kpi4.2" ||
         !!selectedPilot?.id?.startsWith("mil-"))
@@ -419,7 +421,14 @@ const MapContent = () => {
       return milanJunctionMockPoints;
     }
     if (selectedCity === "Milan") {
-      return filterMilanLocalPoints(localObservatoryPoints, selectedPilot?.id);
+      const scoped = filterMilanLocalPoints(localObservatoryPoints, selectedPilot?.id);
+      if (selectedKpi === "kpi1.2" && milanHasObservedModeShareData(scoped, milanPilotId)) {
+        return prepareMilanModeShareDisplayPoints(
+          scoped.filter((p) => p.properties?.datasetKind === "amat-count"),
+          milanPilotId
+        );
+      }
+      return scoped;
     }
     return filterPointsInPilotZone(localObservatoryPoints, selectedCity, selectedPilot?.id);
   }, [
@@ -428,6 +437,7 @@ const MapContent = () => {
     selectedKpi,
     selectedPilot?.id,
     milanJunctionMockPoints,
+    milanPilotId,
   ]);
 
   const milanRecordToTrafficSegment = useCallback((record: MilanSegmentRecord): TrafficSegment => {
@@ -463,17 +473,114 @@ const MapContent = () => {
       return issyJunctionTraffic.results;
     }
     if (selectedCity === "Milan") {
+      if (selectedKpi === "kpi1.2") {
+        const hubSource =
+          milanJunctionMockPoints.length > 0
+            ? milanJunctionMockPoints
+            : scopedObservatoryPoints.filter(
+                (p) => p.properties?.datasetKind === "amat-count"
+              );
+        const seenHubs = new Set<string>();
+        return hubSource
+          .filter((point) => {
+            const hubId = milanHubSegmentId(point.properties as Record<string, unknown>);
+            if (!hubId || seenHubs.has(hubId)) return false;
+            seenHubs.add(hubId);
+            return true;
+          })
+          .map((point, index) => {
+            const hubId = milanHubSegmentId(point.properties as Record<string, unknown>);
+            const label = String(
+              point.properties?.junctionLabel ??
+                point.properties?.streetName ??
+                point.properties?.siteKey ??
+                `Junction ${index + 1}`
+            ).split(" · ")[0];
+            return {
+              id: hubId,
+              segment: label,
+              type: "Radial",
+              noeud_amont: "upstream",
+              noeud_aval: "downstream",
+              geo_shape: {
+                type: "Feature",
+                geometry: { type: "Point", coordinates: [point.lon, point.lat] as [number, number] },
+                properties: point.properties ?? {},
+              },
+              date_et_heure_de_comptage_utc: new Date().toISOString(),
+              distance_metres: 0,
+              vitesse_km_h: null,
+              temps_perdu_secondes: 0,
+              indice_de_congestion:
+                point.value != null && Number.isFinite(point.value)
+                  ? Math.min(1, point.value / 100)
+                  : null,
+              geo_point_2d: { lat: point.lat, lon: point.lon },
+            };
+          });
+      }
+      if (selectedKpi === "kpi4.2") {
+        const a11yPoints = scopedObservatoryPoints.filter(
+          (p) => p.properties?.datasetKind === "accessibility"
+        );
+        if (a11yPoints.length) {
+          const seenIds = new Set<string>();
+          return a11yPoints
+            .map((point, index) => {
+              const props = (point.properties ?? {}) as Record<string, unknown>;
+              const junctionLike =
+                String(props.junctionId ?? "").startsWith("mil-junction-") ||
+                String(props.siteKey ?? "").startsWith("mil-junction-");
+              const id = junctionLike
+                ? milanHubSegmentId(props)
+                : String(props.segmentId ?? props.id ?? point.id ?? `mil-a11y-${index}`);
+              return { point, props, id, index };
+            })
+            .filter(({ id }) => {
+              if (!id || seenIds.has(id)) return false;
+              seenIds.add(id);
+              return true;
+            })
+            .map(({ point, props, id, index }) => ({
+              id,
+              segment: String(
+                props.junctionLabel ??
+                  props.streetName ??
+                  props.category ??
+                  props.facilityCategory ??
+                  `Accessibility ${index + 1}`
+              ),
+              type: "Radial",
+              noeud_amont: "upstream",
+              noeud_aval: "downstream",
+              geo_shape: {
+                type: "Feature",
+                geometry: { type: "Point", coordinates: [point.lon, point.lat] as [number, number] },
+                properties: props,
+              },
+              date_et_heure_de_comptage_utc: new Date().toISOString(),
+              distance_metres: 0,
+              vitesse_km_h: null,
+              temps_perdu_secondes: 0,
+              indice_de_congestion:
+                point.value != null && Number.isFinite(point.value)
+                  ? Math.min(1, point.value / 100)
+                  : null,
+              geo_point_2d: { lat: point.lat, lon: point.lon },
+            }));
+        }
+      }
       if (milanJunctionMockPoints.length) {
         const seenHubs = new Set<string>();
         return milanJunctionMockPoints
           .filter((point) => {
-            const hubId = String(point.properties?.junctionId ?? "");
+            const hubId = milanHubSegmentId(point.properties as Record<string, unknown>);
             if (!hubId || seenHubs.has(hubId)) return false;
             seenHubs.add(hubId);
             return true;
           })
           .map((point, index) => ({
-            id: String(point.properties?.junctionId ?? point.id ?? `mil-junction-${index + 1}`),
+            id: milanHubSegmentId(point.properties as Record<string, unknown>),
             segment: String(point.properties?.junctionLabel ?? `Junction ${index + 1}`),
             type: "Radial",
             noeud_amont: "upstream",
@@ -537,17 +644,18 @@ const MapContent = () => {
     selectedKpi,
     scopedObservatoryPoints,
     milanRecordToTrafficSegment,
-    mapContext?.segmentName,
   ]);
 
   useEffect(() => {
     if (!selectedPilot?.id || isIssyCity(selectedCity) || isTrikalaMap) return;
     const segmentIds = observatorySegments.map((s) => s.id);
     if (segmentIds.length > 0) {
-      const defaultId = pickDefaultSegmentId(segmentIds);
-      if (defaultId) {
-        patchSelection({ segmentId: defaultId });
-        const seg = observatorySegments.find((s) => s.id === defaultId);
+      // Preserve map click/hover selection when it is still a valid observatory target.
+      // Always resetting to segmentIds[0] made Milan accessibility/climate clicks appear dead.
+      const nextId = pickDefaultSegmentId(segmentIds, selectedJunctionSegmentId);
+      if (nextId && nextId !== selectedJunctionSegmentId) {
+        patchSelection({ segmentId: nextId });
+        const seg = observatorySegments.find((s) => s.id === nextId);
         if (seg) {
           setMapContext({
             segmentName: String(seg.segment),
@@ -558,9 +666,9 @@ const MapContent = () => {
       }
       return;
     }
-    if (scopedObservatoryPoints.length > 0) {
+    if (scopedObservatoryPoints.length > 0 && !selectedJunctionSegmentId) {
       const p = scopedObservatoryPoints[0];
-      const id = String(p.properties?.segmentId ?? p.id);
+      const id = String(p.properties?.segmentId ?? p.properties?.id ?? p.id);
       patchSelection({ segmentId: id });
       setMapContext({
         segmentName: String(p.properties?.streetName ?? p.properties?.siteId ?? "Intervention site"),
@@ -576,6 +684,7 @@ const MapContent = () => {
     scopedObservatoryPoints,
     patchSelection,
     isTrikalaMap,
+    selectedJunctionSegmentId,
   ]);
 
   const junctionConfig = selectedPilot?.id ? getPrimaryJunctionConfig(selectedPilot.id) : null;
@@ -904,7 +1013,10 @@ const MapContent = () => {
       if (detail === null) {
         setHoveredSegmentId(null);
         const preserveContext =
-          (isCopenhagenMap || isIssyCity(selectedCity) || isTrikalaMap) &&
+          (isCopenhagenMap ||
+            isIssyCity(selectedCity) ||
+            isTrikalaMap ||
+            selectedCity === "Milan") &&
           selectedJunctionSegmentId;
         if (!preserveContext) {
           setMapContext(null);
@@ -921,15 +1033,27 @@ const MapContent = () => {
         speed: detail.speed ?? null,
         congestion: detail.congestion ?? null,
       });
-      setMapSelection((prev) => ({
-        ...prev,
-        segmentId: prev.segmentId,
-        city: selectedCity,
-        pilotId: selectedPilot?.id,
-        kpi: selectedKpi,
-      }));
+      // Milan accessibility/climate points: keep selection in sync on hover so the
+      // observatory panel tracks the glowing DSS markers the user is pointing at.
+      if (selectedCity === "Milan") {
+        patchSelection({ segmentId: detail.segmentId });
+        setMapSelection({
+          segmentId: detail.segmentId,
+          city: selectedCity,
+          pilotId: selectedPilot?.id,
+          kpi: selectedKpi,
+        });
+      } else {
+        setMapSelection((prev) => ({
+          ...prev,
+          segmentId: prev.segmentId,
+          city: selectedCity,
+          pilotId: selectedPilot?.id,
+          kpi: selectedKpi,
+        }));
+      }
     },
-    [selectedCity, selectedPilot?.id, selectedKpi, isCopenhagenMap, isTrikalaMap, selectedJunctionSegmentId]
+    [selectedCity, selectedPilot?.id, selectedKpi, isCopenhagenMap, isTrikalaMap, selectedJunctionSegmentId, patchSelection]
   );
 
   const handlePilotChange = (pilotId: string) => {

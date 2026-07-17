@@ -123,7 +123,8 @@ export function kpiUsesZoomDependentMarkerLayout(
     if (kpi === "kpi3.2" || kpi === "kpi4.1" || kpi === "kpi4.2") return false;
   }
   if (cityName?.toLowerCase().includes("milan")) {
-    return false;
+    // Resize CSS hub pulse to geographic ring diameter when zoom tier changes.
+    return kpi === "kpi1.2";
   }
   return true;
 }

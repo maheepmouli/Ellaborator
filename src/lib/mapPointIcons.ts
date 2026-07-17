@@ -2,6 +2,7 @@ import L from "leaflet";
 import type { MapPointIconSpec } from "@/lib/mapPointIconTaxonomy";
 import {
   wireCircleMarkerSegment,
+  wireMarkerSegment,
   type SegmentInteractionDetail,
   type SegmentInteractionHandlers,
 } from "@/lib/wireMapSegmentInteraction";
@@ -62,27 +63,36 @@ export function addNeonPointMarker(
     glow?: string;
   }
 ): NeonPointMarkerLayers {
-  const hitRadius = options?.hitRadius ?? 12;
+  const hitRadius = Math.max(options?.hitRadius ?? 14, 18);
   const visual = L.marker([lat, lon], {
     icon: createMapPointDivIcon(spec, options?.title ?? spec.label, {
       accent: options?.accent,
       glow: options?.glow,
     }),
-    interactive: false,
+    // Badge CSS is pointer-events:none; hit circle + marker wire handle clicks.
+    interactive: Boolean(handlers),
+    keyboard: false,
     zIndexOffset: options?.zIndexOffset ?? 820,
+    title: options?.title ?? spec.label,
   }).addTo(map);
 
   const hit = L.circleMarker([lat, lon], {
     radius: hitRadius,
-    fillOpacity: 0,
-    opacity: 0,
-    weight: 0,
+    // Keep a real fill so SVG hit-testing works (0 / 0.001 often drops events).
+    fillColor: options?.glow ?? spec.glow,
+    fillOpacity: 0.12,
+    color: options?.glow ?? spec.glow,
+    opacity: 0.35,
+    weight: 1,
     interactive: true,
+    bubblingMouseEvents: false,
     className: "map-point-hit-target",
+    // Same pane as badges so segments underneath cannot steal hover/click.
+    pane: "markerPane",
   }).addTo(map);
+  hit.bringToFront();
 
   if (options?.popupHtml) {
-    visual.bindPopup(options.popupHtml);
     hit.bindPopup(options.popupHtml);
   }
   if (options?.tooltip) {
@@ -92,16 +102,39 @@ export function addNeonPointMarker(
   if (handlers) {
     wireCircleMarkerSegment(hit, detail, handlers, {
       baseRadius: hitRadius,
-      highlightRadius: hitRadius + 3,
+      highlightRadius: hitRadius + 6,
       selectedSegmentId: options?.selectedSegmentId,
-      baseStyle: { fillOpacity: 0, opacity: 0, weight: 0 },
-      highlightStyle: { fillOpacity: 0.12, opacity: 0.35, weight: 1.5, color: options?.glow ?? spec.glow },
+      baseStyle: {
+        fillColor: options?.glow ?? spec.glow,
+        fillOpacity: 0.12,
+        color: options?.glow ?? spec.glow,
+        opacity: 0.35,
+        weight: 1,
+        className: "map-point-hit-target",
+      },
+      highlightStyle: {
+        fillOpacity: 0.28,
+        opacity: 0.85,
+        weight: 2,
+        color: options?.glow ?? spec.glow,
+        className: "map-point-hit-target",
+      },
     });
+    // Fallback: badge host can also receive clicks if hit path misses.
+    wireMarkerSegment(visual, detail, handlers);
     hit.on("mouseover", () => {
       visual.getElement()?.querySelector(".map-point-icon-badge")?.classList.add("map-point-icon-badge--hover");
+      const el = hit.getElement();
+      if (el) el.style.cursor = "pointer";
     });
     hit.on("mouseout", () => {
       visual.getElement()?.querySelector(".map-point-icon-badge")?.classList.remove("map-point-icon-badge--hover");
+    });
+  } else {
+    // Still show pointer when only popups are bound.
+    hit.on("mouseover", () => {
+      const el = hit.getElement();
+      if (el) el.style.cursor = "pointer";
     });
   }
 

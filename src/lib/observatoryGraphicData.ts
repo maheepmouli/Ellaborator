@@ -21,7 +21,12 @@ import type {
 } from "@/lib/observatoryGraphicTypes";
 import type { LocalCityPoint } from "@/services/localCityData";
 import { normalizeConfidencePct } from "@/lib/observatoryCityContent";
-import { filterCopenhagenObservatoryPoints } from "@/lib/copenhagenObservatoryView";
+import {
+  filterCopenhagenObservatoryPoints,
+  resolveCopenhagenWorkbookFocus,
+  scopeCopenhagenPointsToWorkbookDirections,
+} from "@/lib/copenhagenObservatoryView";
+import { inferOtcWorkbookKey } from "@/data/copenhagenLocationRegistry";
 import {
   modeShareFromTrikalaInsights,
   modeShareFromTrikalaSurveyRecords,
@@ -118,15 +123,28 @@ function cameraRowsFromPoints(
   const byId = new Map<string, CameraDirectionRow>();
 
   for (const p of points) {
-    const mb = p.properties?.modeBreakdown as ModeBreakdown | undefined;
-    if (!mb) continue;
+    const direction = String(p.properties?.direction || p.properties?.mode || "").trim();
+    if (!direction || direction === "n/a") continue;
+
     const id = String(p.properties?.segmentId || p.id);
-    const direction = String(p.properties?.direction || p.properties?.mode || "Direction");
     const site = String(p.properties?.streetName || "Camera site");
-    const postActive = selectedCount(mb.post, selectedModeTypes);
-    const preActive = selectedCount(mb.pre, selectedModeTypes);
-    const interventionPct = pct(postActive, mb.post.total);
-    const baselinePct = pct(preActive, mb.pre.total);
+    const mb = p.properties?.modeBreakdown as ModeBreakdown | undefined;
+
+    let interventionPct = 0;
+    let baselinePct = 0;
+    if (mb) {
+      const postActive = selectedCount(mb.post, selectedModeTypes);
+      const preActive = selectedCount(mb.pre, selectedModeTypes);
+      interventionPct = pct(postActive, mb.post.total);
+      baselinePct = pct(preActive, mb.pre.total);
+    } else {
+      const baseline = Number(p.properties?.baselineValue ?? 0);
+      const intervention = Number(p.properties?.interventionValue ?? p.value ?? 0);
+      const scale = Math.max(baseline, intervention, 1);
+      baselinePct = (baseline / scale) * 100;
+      interventionPct = (intervention / scale) * 100;
+    }
+
     const row: CameraDirectionRow = {
       id,
       site,
@@ -141,7 +159,6 @@ function cameraRowsFromPoints(
         { t: "Post", v: interventionPct },
       ],
     };
-    // Same segmentId can appear when xlsx + fallback overlap or duplicate flow rows — keep richest row.
     const existing = byId.get(id);
     if (!existing || row.direction.length > existing.direction.length) {
       byId.set(id, row);
@@ -621,12 +638,27 @@ export function buildObservatoryGraphicPayload(
     }
   }
 
+  // Copenhagen: one hub = 2–4 named directional links (never city-wide dump).
+  if (cityName === "Copenhagen") {
+    const workbookFocus =
+      resolveCopenhagenWorkbookFocus(selectedSegmentId, {
+        segmentName: view.name,
+        segmentApiId: view.segmentApiId,
+        streetName: String(activeObserved[0]?.properties?.streetName ?? ""),
+      }) ??
+      inferOtcWorkbookKey(String(view.name || view.segmentApiId || "")) ??
+      inferOtcWorkbookKey(String(activeObserved[0]?.properties?.streetName ?? ""));
+    activeObserved = scopeCopenhagenPointsToWorkbookDirections(activeObserved, workbookFocus);
+  }
+
   const cameraDirections =
     cityName === "Copenhagen"
       ? cameraRowsFromPoints(activeObserved, selectedModeTypes)
       : cityName === "Trikala" && selectedKpi === "kpi1.2"
         ? mobilityFlowRowsFromPoints(activeObserved)
-        : [];
+        : cityName === "Milan" && selectedKpi === "kpi1.2"
+          ? cameraRowsFromPoints(activeObserved, selectedModeTypes)
+          : [];
   const activeDirectionId =
     selectedDirectionId ?? cameraDirections[0]?.id ?? null;
 
@@ -735,6 +767,33 @@ export function buildObservatoryGraphicPayload(
   }
 
   if (
+    cityName === "Milan" &&
+    (spec.graphicId === "accessibilityBars" || spec.graphicId === "dssBars")
+  ) {
+    const a11yBars = activeObserved
+      .filter((p) => p.properties?.datasetKind === "accessibility")
+      .map((p) => ({
+        label: String(
+          p.properties?.facilityCategory ??
+            p.properties?.category ??
+            p.properties?.junctionLabel ??
+            p.properties?.streetName ??
+            "Accessibility"
+        ),
+        before: Number(p.properties?.baselineValue ?? 0),
+        after: Number(p.properties?.interventionValue ?? p.value ?? 0),
+      }));
+    if (a11yBars.length) {
+      accessibilityLikert = a11yBars.slice(0, 12).map((b) => ({
+        label: b.label,
+        value: b.after,
+        before: b.before,
+        after: b.after,
+      }));
+    }
+  }
+
+  if (
     cityName === "Trikala" &&
     pilotId === "tri-p3" &&
     selectedKpi === "kpi4.2" &&
@@ -770,6 +829,9 @@ export function buildObservatoryGraphicPayload(
         })()
       : spec.graphicId === "accessibilityBars" && accessibilityLikert?.length
         ? accessibilityLikert
+        : (spec.graphicId === "dssBars" || spec.graphicId === "accessLikert") &&
+            accessibilityLikert?.length
+          ? accessibilityLikert
         : cityName === "Trikala" &&
             pilotId === "tri-p3" &&
             selectedKpi === "kpi4.2" &&

@@ -38,6 +38,25 @@ function normalizeFlowKey(flow: string): string {
     .trim();
 }
 
+export function normalizeOtcFlowKey(flow: string): string {
+  return normalizeFlowKey(flow);
+}
+
+/** Partner-realistic directional labels known for each OTC workbook site (usually 2–4). */
+export function knownDirectionalFlowKeys(workbookKey: string | null | undefined): string[] {
+  if (!workbookKey) return [];
+  return Object.keys(FLOW_BEARING_OVERRIDES[workbookKey] ?? {});
+}
+
+export function isKnownDirectionalFlow(
+  workbookKey: string | null | undefined,
+  flowLabel: string
+): boolean {
+  const keys = knownDirectionalFlowKeys(workbookKey);
+  if (!keys.length) return false;
+  return keys.includes(normalizeFlowKey(flowLabel));
+}
+
 export function resolveFlowBearing(
   streetName: string,
   flowLabel: string,

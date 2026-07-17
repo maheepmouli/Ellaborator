@@ -46,25 +46,22 @@ export const MILAN_PILOT_PROFILES: Record<MilanPilotId, CityPilotProfile> = {
   "mil-p3": {
     id: "mil-p3",
     city: "Milan",
-    title: "CDM3 — Decision Support System (DSS)",
+    title: "Combined Olympic Routes & Stadium Corridor",
     interventionSummary:
-      "Digital tool supporting planning and prioritisation of accessibility improvements in public spaces along West Axis and Olympic Routes — OSM barrier mapping, DSS evaluation, and replicable dissemination.",
+      "Pilot 3 unions the observed datasets from Pilot 1 (Olympic routes) and Pilot 2 (stadium corridor) without synthetic CDM3 mock layers.",
     objectives: [
-      "Map architectural barriers and mobility infrastructure using OpenStreetMap (Activity 1).",
-      "Integrate mapped data in a DSS tool for accessibility prioritisation (Activity 2).",
-      "Evaluate pre/post intervention accessibility along Olympic Routes and West Axis (Activity 4).",
-      "Increase walking and cycling mode share while achieving ≥3-star corridor safety ratings.",
+      "Compare mode share, safety, and accessibility across both Milan intervention areas in one map view.",
+      "Keep segment-level evidence from AMAT speed/count shapefiles and DSS accessibility workbooks.",
     ],
     expectedImpacts: [
-      "Improved accessibility for vulnerable users through barrier remediation.",
-      "Higher active-mode share and safer corridor star ratings post-intervention.",
-      "Replicable DSS methodology for other Milan districts and partner cities.",
+      "Broader corridor coverage for KPI 1.2, 2.1, 3.2, and 4.2 observatory panels.",
+      "Single pilot scope for cross-corridor synthesis while preserving per-pilot provenance on each point.",
     ],
     geometryType: "line",
     dataAvailability:
-      "DSS walk_graph.shp (bundled geojson) + illustrative CDM3 corridor mock aligned to six WP activities.",
+      "Merged mil-p1 + mil-p2 AMAT speed, counts, RETE environmental proxy, and accessibility DSS rows.",
     methodologyNotes:
-      "Speed shapefiles are unavailable for mil-p3 — use walk graph underlay with explicit illustrative mock labels until observed CDM3 evaluation workbooks are camera-linked.",
+      "Load and clip segments from both pilot buffers; local points filter on source pilotId (mil-p1 or mil-p2).",
     observatoryType: "street-segment",
   },
 };

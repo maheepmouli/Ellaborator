@@ -86,7 +86,7 @@ export interface RenderTrikalaMobilityHubStackOptions {
   singleHubMarker?: boolean;
 }
 
-/** Full Copenhagen mobility hub: FOV wedge + pulse + radar rings/spokes + camera markers. */
+/** Aggregated mobility hub: FOV wedge + pulse + threshold rings (no flow spokes). */
 export function renderTrikalaMobilityHubStack(options: RenderTrikalaMobilityHubStackOptions): void {
   const {
     map,
@@ -179,6 +179,8 @@ export function renderTrikalaMobilityHubStack(options: RenderTrikalaMobilityHubS
     getValueColor,
     markersOut,
     ringScale,
+    hideFlowSpokes: true,
+    hideFlowEndpointMarkers: true,
     featureSelected,
     buildPopup,
   });
@@ -193,7 +195,7 @@ export function renderTrikalaMobilityHubStack(options: RenderTrikalaMobilityHubS
     circleMarkers,
     hubLabel,
     {
-      workbookKey: hubSegmentId,
+      segmentId: hubSegmentId,
       segmentHandlers,
       wireCircleMarker,
       selectedSegmentId,

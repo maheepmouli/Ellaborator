@@ -13,6 +13,7 @@ import type { LocalCityPoint } from "@/services/localCityData";
 import type { MilanSegmentDataset, MilanSegmentRecord } from "@/services/milanSegmentData";
 import { MILAN_PILOT_ANCHORS } from "@/lib/milanMapConfig";
 import type { MilanPilotId } from "@/data/milanPilotProfiles";
+import { milanHubSegmentId } from "@/lib/milanMapLayers/milanFlowGeometry";
 
 import {
   milanModeSharePct,
@@ -135,24 +136,27 @@ export function filterMilanObservatoryPoints(
   points: LocalCityPoint[],
   selectionId: string
 ): LocalCityPoint[] {
+  if (!selectionId) return points;
   const normalizedSelection = selectionId.replace(/^milan-site-/, "");
-  const direct = points.filter((p) => {
-    const sid = String(p.properties?.segmentId ?? p.properties?.siteId ?? p.id ?? "");
-    const siteKey = String(p.properties?.siteKey ?? "");
-    const junctionId = String(p.properties?.junctionId ?? "");
-    const rid = String(p.properties?.id ?? p.id);
+  return points.filter((p) => {
+    const props = (p.properties ?? {}) as Record<string, unknown>;
+    const sid = String(props.segmentId ?? props.siteId ?? p.id ?? "");
+    const siteKey = String(props.siteKey ?? "");
+    const junctionId = String(props.junctionId ?? "");
+    const rid = String(props.id ?? p.id);
+    const hubId = milanHubSegmentId(props);
     return (
+      hubId === selectionId ||
       sid === selectionId ||
       rid === selectionId ||
       junctionId === selectionId ||
       siteKey === normalizedSelection ||
-      siteKey === selectionId.replace(/^milan-site-/, "") ||
+      siteKey === selectionId ||
       sid.startsWith(`${normalizedSelection}-`) ||
-      sid.includes(selectionId) ||
-      selectionId.includes(sid)
+      sid.startsWith(`${selectionId}-`) ||
+      (junctionId.length > 0 && selectionId.startsWith(`${junctionId}-`))
     );
   });
-  return direct.length ? direct : points;
 }
 
 export function aggregateMilanObservedKpi(
@@ -479,9 +483,59 @@ export function buildMilanObservatoryView(
     };
     if (!options.segmentName) {
       const junctionLabel = String(a11yPoints[0]?.properties?.junctionLabel ?? "").trim();
+      const streetName = String(a11yPoints[0]?.properties?.streetName ?? "").trim();
+      const civic = String(
+        a11yPoints[0]?.properties?.civicAddress ?? a11yPoints[0]?.properties?.siteKey ?? ""
+      ).trim();
+      const category = String(
+        a11yPoints[0]?.properties?.facilityCategory ?? a11yPoints[0]?.properties?.category ?? ""
+      ).trim();
       displayName =
         junctionLabel ||
-        String(a11yPoints[0]?.properties?.streetName ?? "Accessibility features");
+        streetName ||
+        (civic && category ? `Civic ${civic} · ${category}` : category) ||
+        "Accessibility features";
+    }
+  } else if (selectedKpi === "kpi3.1") {
+    const facilityPoints = activePoints.filter((p) => p.properties?.datasetKind === "parking");
+    if (facilityPoints.length) {
+      const isIllustrative = facilityPoints.some(
+        (p) => p.properties?.parserStatus === "illustrative" || p.properties?.dataOrigin === "mock"
+      );
+      baselineValue = facilityPoints.reduce(
+        (s, p) => s + Number(p.properties?.baselineValue ?? 0),
+        0
+      );
+      interventionValue = facilityPoints.reduce(
+        (s, p) => s + Number(p.properties?.interventionValue ?? p.value ?? 0),
+        0
+      );
+      dataClass = isIllustrative ? "mock" : "observed";
+      sourceLabel = isIllustrative
+        ? "Illustrative zero-emission facility inventory (KPI 3.1)"
+        : "Milan zero-emission facility deployment inventory";
+      monitoringPeriod = `${facilityPoints.length} facility site${facilityPoints.length === 1 ? "" : "s"} · deployment units`;
+      segmentApiId = String(
+        facilityPoints[0]?.properties?.segmentId ??
+          facilityPoints[0]?.properties?.siteKey ??
+          segmentApiId
+      );
+      baselinePeriod = { ...base.baseline, dailyCycleCount: baselineValue };
+      interventionPeriod = {
+        ...base.intervention,
+        dailyCycleCount: interventionValue,
+      };
+      if (!options.segmentName) {
+        const junctionLabel = String(facilityPoints[0]?.properties?.junctionLabel ?? "").trim();
+        const streetName = String(facilityPoints[0]?.properties?.streetName ?? "").trim();
+        const category = String(
+          facilityPoints[0]?.properties?.facilityCategory ??
+            facilityPoints[0]?.properties?.category ??
+            ""
+        ).trim();
+        displayName =
+          junctionLabel || streetName || category || `${facilityPoints.length} zero-emission sites`;
+      }
     }
   } else if (selectedKpi === "kpi3.2") {
     const emissionsPoints = activePoints.filter((p) => p.properties?.datasetKind === "emissions");

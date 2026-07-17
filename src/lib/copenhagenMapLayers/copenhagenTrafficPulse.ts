@@ -2,12 +2,16 @@ import L from "leaflet";
 import {
   CPH_INBOUND_COLOR,
   CPH_OUTBOUND_COLOR,
+  destinationLatLng,
   directionPairSlot,
 } from "./copenhagenFlowGeometry";
 import type { SegmentInteractionHandlers } from "@/lib/wireMapSegmentInteraction";
 import { copenhagenSiteSegmentId } from "@/lib/copenhagenMapSelection";
 import type { CopenhagenObservedPoint } from "./renderCopenhagenMapLayers";
 import { bindCopenhagenMapTooltip } from "./copenhagenMapTooltips";
+
+/** Match radar outer ring (meters) so the CSS pulse stays visually on the hub rings. */
+const GEO_PULSE_OUTER_M = 78;
 
 export function sumDirectionalTraffic(
   flows: CopenhagenObservedPoint[],
@@ -48,10 +52,47 @@ export function trafficPulseHtml(isInboundDominant: boolean): string {
   `;
 }
 
-/** Minimum map zoom before hub ripple markers are drawn (Milan pilot fit often lands at 14). */
-export const HUB_PULSE_MIN_ZOOM = 14;
+/** Diameter in screen px for a geographic radius at the current map zoom. */
+export function geographicDiameterPx(
+  map: L.Map,
+  hubLat: number,
+  hubLon: number,
+  radiusM: number
+): number {
+  const center = L.latLng(hubLat, hubLon);
+  const [edgeLat, edgeLon] = destinationLatLng(hubLat, hubLon, 90, radiusM);
+  const edge = L.latLng(edgeLat, edgeLon);
+  const zoom = map.getZoom();
+  const px = map.project(center, zoom).distanceTo(map.project(edge, zoom)) * 2;
+  return Math.max(96, Math.min(480, Math.round(px * 1.45)));
+}
 
-/** Copenhagen-style expanding ripple rings at a map hub (Issy junction, CPH camera, etc.). */
+/** Show pulse from slightly earlier zoom so Milan pilot fits still animate. */
+export const HUB_PULSE_MIN_ZOOM = 12;
+
+export type HubPulseInteraction = {
+  segmentId: string;
+  segmentName: string;
+  segmentHandlers: SegmentInteractionHandlers;
+  selectedSegmentId?: string | null;
+  wireCircleMarker?: (
+    marker: L.CircleMarker,
+    meta: { segmentId: string; segmentName: string; speed: null; congestion: null },
+    handlers: SegmentInteractionHandlers,
+    opts: {
+      baseRadius: number;
+      highlightRadius?: number;
+      selectedSegmentId?: string | null;
+      baseStyle?: L.PathOptions;
+      highlightStyle?: L.PathOptions;
+    }
+  ) => void;
+};
+
+/**
+ * CSS ripple at hub + solid center point.
+ * Center point carries cursor + observatory click/hover when `interaction` is set.
+ */
 export function renderHubRipplePulseOverlay(
   map: L.Map,
   hubLat: number,
@@ -59,44 +100,114 @@ export function renderHubRipplePulseOverlay(
   isInboundDominant: boolean,
   markersOut: L.Marker[],
   circlesOut: L.CircleMarker[],
-  options?: { showAnchorDot?: boolean; minZoom?: number }
+  options?: {
+    showAnchorDot?: boolean;
+    minZoom?: number;
+    ringScale?: number;
+    interaction?: HubPulseInteraction;
+  }
 ): void {
   const minZoom = options?.minZoom ?? HUB_PULSE_MIN_ZOOM;
-  if (map.getZoom() < minZoom) return;
-
+  const interaction = options?.interaction;
+  const canWire = Boolean(interaction?.segmentId && interaction.segmentHandlers);
+  const showCenter = options?.showAnchorDot !== false;
   const anchorFill = isInboundDominant ? CPH_INBOUND_COLOR : CPH_OUTBOUND_COLOR;
+  const isSelected = Boolean(
+    interaction?.selectedSegmentId && interaction.selectedSegmentId === interaction.segmentId
+  );
 
-  const pulseMarker = L.marker([hubLat, hubLon], {
-    icon: L.divIcon({
-      html: trafficPulseHtml(isInboundDominant),
-      className: "custom-traffic-pulse",
-      iconSize: [200, 200],
-      iconAnchor: [100, 100],
-    }),
-    interactive: false,
-    zIndexOffset: 980,
-  }).addTo(map);
-  markersOut.push(pulseMarker);
+  if (map.getZoom() >= minZoom) {
+    const ringScale = options?.ringScale ?? 1;
+    const diameter = geographicDiameterPx(
+      map,
+      hubLat,
+      hubLon,
+      GEO_PULSE_OUTER_M * ringScale
+    );
+    const half = Math.round(diameter / 2);
 
-  if (options?.showAnchorDot !== false) {
-    const anchorDot = L.circleMarker([hubLat, hubLon], {
-      radius: 6,
-      fillColor: anchorFill,
-      color: "#ffffff",
-      weight: 2,
-      fillOpacity: 1,
-      opacity: 1,
+    const pulseMarker = L.marker([hubLat, hubLon], {
+      icon: L.divIcon({
+        html: trafficPulseHtml(isInboundDominant),
+        className: "custom-traffic-pulse",
+        iconSize: [diameter, diameter],
+        iconAnchor: [half, half],
+      }),
       interactive: false,
-      className: "cph-traffic-anchor-dot",
+      keyboard: false,
+      zIndexOffset: 980,
     }).addTo(map);
-    anchorDot.bringToFront();
-    circlesOut.push(anchorDot);
+    markersOut.push(pulseMarker);
   }
+
+  if (!showCenter && !canWire) return;
+
+  const detail = canWire && interaction
+    ? {
+        segmentId: interaction.segmentId,
+        segmentName: interaction.segmentName,
+        speed: null as null,
+        congestion: null as null,
+      }
+    : null;
+
+  const centerRadius = isSelected ? 10 : 8;
+  const centerPoint = L.circleMarker([hubLat, hubLon], {
+    radius: centerRadius,
+    fillColor: anchorFill,
+    color: "#ffffff",
+    weight: 2.5,
+    fillOpacity: 1,
+    opacity: 1,
+    interactive: canWire,
+    className: canWire ? "hub-ripple-center hub-ripple-center--interactive" : "hub-ripple-center",
+  }).addTo(map);
+
+  if (detail && interaction) {
+    bindCopenhagenMapTooltip(centerPoint, interaction.segmentName);
+    if (interaction.wireCircleMarker) {
+      interaction.wireCircleMarker(centerPoint, detail, interaction.segmentHandlers, {
+        baseRadius: 8,
+        highlightRadius: 12,
+        selectedSegmentId: interaction.selectedSegmentId,
+        baseStyle: {
+          fillColor: anchorFill,
+          color: "#ffffff",
+          weight: 2.5,
+          fillOpacity: 1,
+          opacity: 1,
+        },
+        highlightStyle: {
+          fillColor: "#00ffff",
+          color: "#ffffff",
+          weight: 3,
+          fillOpacity: 1,
+          opacity: 1,
+        },
+      });
+    } else {
+      centerPoint.on("click", () => {
+        interaction.segmentHandlers.onJunctionSegmentClick?.(detail);
+      });
+      centerPoint.on("mouseover", () => {
+        centerPoint.setRadius(12);
+        centerPoint.setStyle({ fillColor: "#00ffff" });
+        interaction.segmentHandlers.onSegmentHover?.(detail);
+      });
+      centerPoint.on("mouseout", () => {
+        centerPoint.setRadius(isSelected ? 10 : 8);
+        centerPoint.setStyle({ fillColor: anchorFill });
+        interaction.segmentHandlers.onSegmentHover?.(null);
+      });
+    }
+  }
+
+  centerPoint.bringToFront();
+  circlesOut.push(centerPoint);
 }
 
 /**
- * Hardware-accelerated CSS pulse at the camera hub — layered on top of flow arms / FOV,
- * without removing existing map geometry.
+ * Animated hub pulse + wired center point for observatory selection.
  */
 export function renderCopenhagenTrafficPulseOverlay(
   map: L.Map,
@@ -109,25 +220,34 @@ export function renderCopenhagenTrafficPulseOverlay(
   hubLabel?: string,
   options?: {
     workbookKey?: string;
+    segmentId?: string;
     segmentHandlers?: SegmentInteractionHandlers;
-    wireCircleMarker?: (
-      marker: L.CircleMarker,
-      meta: { segmentId: string; segmentName: string; speed: null; congestion: null },
-      handlers: SegmentInteractionHandlers,
-      opts: {
-        baseRadius: number;
-        highlightRadius?: number;
-        selectedSegmentId?: string | null;
-      }
-    ) => void;
+    wireCircleMarker?: HubPulseInteraction["wireCircleMarker"];
     selectedSegmentId?: string | null;
     showAnchorDot?: boolean;
+    ringScale?: number;
   }
 ): void {
   if (!flows.length) return;
 
   const { outbound, inbound } = sumDirectionalTraffic(flows, scenario);
   const isInboundDominant = inbound >= outbound;
+
+  const segmentId =
+    options?.segmentId ??
+    (options?.workbookKey ? copenhagenSiteSegmentId(options.workbookKey) : undefined);
+
+  const interaction: HubPulseInteraction | undefined =
+    segmentId && options?.segmentHandlers
+      ? {
+          segmentId,
+          segmentName: hubLabel?.trim() || segmentId,
+          segmentHandlers: options.segmentHandlers,
+          selectedSegmentId: options.selectedSegmentId,
+          wireCircleMarker: options.wireCircleMarker,
+        }
+      : undefined;
+
   renderHubRipplePulseOverlay(
     map,
     hubLat,
@@ -135,32 +255,10 @@ export function renderCopenhagenTrafficPulseOverlay(
     isInboundDominant,
     markersOut,
     circlesOut,
-    { showAnchorDot: options?.showAnchorDot }
-  );
-
-  if (hubLabel?.trim()) {
-    const hubHit = L.circleMarker([hubLat, hubLon], {
-      radius: 14,
-      fillOpacity: 0,
-      opacity: 0,
-      weight: 0,
-      interactive: true,
-    }).addTo(map);
-    bindCopenhagenMapTooltip(hubHit, hubLabel);
-    const workbookKey = options?.workbookKey;
-    if (workbookKey && options?.segmentHandlers && options?.wireCircleMarker) {
-      const segmentId = copenhagenSiteSegmentId(workbookKey);
-      options.wireCircleMarker(
-        hubHit,
-        { segmentId, segmentName: hubLabel, speed: null, congestion: null },
-        options.segmentHandlers,
-        {
-          baseRadius: 14,
-          highlightRadius: 18,
-          selectedSegmentId: options.selectedSegmentId,
-        }
-      );
+    {
+      showAnchorDot: options?.showAnchorDot ?? true,
+      ringScale: options?.ringScale,
+      interaction,
     }
-    circlesOut.push(hubHit);
-  }
+  );
 }

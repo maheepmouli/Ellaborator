@@ -362,6 +362,7 @@ const FLOW_CAMERAS: CopenhagenLocation[] = [
     lon: 12.575545,
     pilotIds: ["cph-p1"],
     linkedDatasetIds: ["cph-flow-cameras", "cph-platomo"],
+    otcWorkbookKey: "stormgade",
     mapVisible: true,
   },
   {
@@ -372,6 +373,7 @@ const FLOW_CAMERAS: CopenhagenLocation[] = [
     lon: 12.575545,
     pilotIds: ["cph-p1"],
     linkedDatasetIds: ["cph-flow-cameras", "cph-platomo"],
+    otcWorkbookKey: "stormgade",
     mapVisible: true,
   },
   {
@@ -382,6 +384,7 @@ const FLOW_CAMERAS: CopenhagenLocation[] = [
     lon: 12.572236,
     pilotIds: ["cph-p1"],
     linkedDatasetIds: ["cph-flow-cameras", "cph-platomo"],
+    otcWorkbookKey: "gammeltorv",
     mapVisible: true,
   },
   {
@@ -392,6 +395,7 @@ const FLOW_CAMERAS: CopenhagenLocation[] = [
     lon: 12.572236,
     pilotIds: ["cph-p1"],
     linkedDatasetIds: ["cph-flow-cameras", "cph-platomo"],
+    otcWorkbookKey: "vandkunsten",
     mapVisible: true,
   },
   {
@@ -402,6 +406,7 @@ const FLOW_CAMERAS: CopenhagenLocation[] = [
     lon: 12.579961,
     pilotIds: ["cph-p1"],
     linkedDatasetIds: ["cph-flow-cameras", "cph-platomo"],
+    otcWorkbookKey: "hojbro",
     mapVisible: true,
   },
   {
@@ -412,6 +417,7 @@ const FLOW_CAMERAS: CopenhagenLocation[] = [
     lon: 12.570922,
     pilotIds: ["cph-p1"],
     linkedDatasetIds: ["cph-flow-cameras", "cph-platomo"],
+    otcWorkbookKey: "norreport",
     mapVisible: true,
   },
 ];
