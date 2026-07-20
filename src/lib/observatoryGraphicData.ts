@@ -45,7 +45,20 @@ import {
 } from "@/lib/trikalaObservatoryView";
 import {
   filterHelsinkiObservatoryPoints,
+  helsinkiClimateAttitudeLikert,
+  helsinkiClimateAttitudeModeShare,
+  helsinkiClimateStatCards,
+  helsinkiEvidenceStatCards,
+  helsinkiExpansionModeShare,
+  helsinkiExpansionPlanStatCards,
+  helsinkiHazardCategoryLikert,
+  helsinkiHazardCategoryModeShare,
+  helsinkiHazardDirectionRows,
+  helsinkiObservatoryMarkers,
   helsinkiTelraamStatCards,
+  helsinkiTelraamTrend,
+  helsinkiUxSatisfactionLikert,
+  helsinkiUxSatisfactionModeShare,
 } from "@/lib/helsinkiObservatoryView";
 import {
   filterZaragozaObservatoryPoints,
@@ -658,17 +671,22 @@ export function buildObservatoryGraphicPayload(
         ? mobilityFlowRowsFromPoints(activeObserved)
         : cityName === "Milan" && selectedKpi === "kpi1.2"
           ? cameraRowsFromPoints(activeObserved, selectedModeTypes)
-          : [];
+          : cityName === "Helsinki" && selectedKpi === "kpi2.1"
+            ? helsinkiHazardDirectionRows(activeObserved)
+            : [];
   const activeDirectionId =
     selectedDirectionId ?? cameraDirections[0]?.id ?? null;
 
-  const markers =
+  const profileMarkers =
     profile?.interventionMarkers?.map((m, i) => ({
       id: m.id,
       x: 20 + (i % 3) * 28,
       y: 25 + Math.floor(i / 3) * 30,
       label: m.title,
     })) ?? [];
+  const helsinkiMarkers =
+    cityName === "Helsinki" ? helsinkiObservatoryMarkers(activeObserved, selectedKpi) : [];
+  const markers = helsinkiMarkers.length ? helsinkiMarkers : profileMarkers;
 
   const perfDelta = performanceDeltaFromPoints(activeObserved);
 
@@ -695,10 +713,31 @@ export function buildObservatoryGraphicPayload(
     if (zarShare.some((r) => r.before > 0 || r.after > 0)) modeShare = zarShare;
   }
   if (cityName === "Helsinki" && selectedKpi === "kpi1.2" && activeObserved.length > 0) {
-    const fromTelraam = modeShareFromCopenhagenPoints(activeObserved);
-    if (fromTelraam.some((r) => r.before > 0 || r.after > 0)) {
+    const fromTelraam = modeShareFromTelraamPoints(activeObserved);
+    if (fromTelraam.length) {
       modeShare = fromTelraam;
+    } else {
+      const fromShare = modeShareFromCopenhagenPoints(activeObserved);
+      if (fromShare.some((r) => r.before > 0 || r.after > 0)) {
+        modeShare = fromShare;
+      }
     }
+  }
+  if (cityName === "Helsinki" && selectedKpi === "kpi2.1") {
+    const hazardShare = helsinkiHazardCategoryModeShare(activeObserved);
+    if (hazardShare.length) modeShare = hazardShare;
+  }
+  if (cityName === "Helsinki" && selectedKpi === "kpi3.2") {
+    const climateShare = helsinkiClimateAttitudeModeShare(activeObserved);
+    if (climateShare.length) modeShare = climateShare;
+  }
+  if (cityName === "Helsinki" && selectedKpi === "kpi4.1") {
+    const uxShare = helsinkiUxSatisfactionModeShare(activeObserved);
+    if (uxShare.length) modeShare = uxShare;
+  }
+  if (cityName === "Helsinki" && selectedKpi === "kpi1.1") {
+    const expansionShare = helsinkiExpansionModeShare(activeObserved);
+    if (expansionShare.length) modeShare = expansionShare;
   }
   if (
     cityName === "Trikala" &&
@@ -817,35 +856,70 @@ export function buildObservatoryGraphicPayload(
     if (tubeCards.length) tubeSpeedCards = tubeCards;
   }
 
+  const helsinkiHazardLikert =
+    cityName === "Helsinki" && (selectedKpi === "kpi2.1" || selectedKpi === "kpi1.2")
+      ? helsinkiHazardCategoryLikert(activeObserved)
+      : [];
+  const helsinkiClimateLikert =
+    cityName === "Helsinki" && selectedKpi === "kpi3.2"
+      ? helsinkiClimateAttitudeLikert(activeObserved)
+      : [];
+  const helsinkiUxLikert =
+    cityName === "Helsinki" && selectedKpi === "kpi4.1"
+      ? helsinkiUxSatisfactionLikert(activeObserved)
+      : [];
+
   const facilityLikert =
-    spec.graphicId === "facilityInventory"
-      ? (() => {
-          const byType = new Map<string, number>();
-          for (const p of activeObserved.filter((pt) => pt.properties?.datasetKind === "parking")) {
-            const t = String(p.properties?.facilityCategory || "Parking");
-            byType.set(t, (byType.get(t) || 0) + Number(p.value || 0));
-          }
-          return [...byType.entries()].map(([label, value]) => ({ label, value }));
-        })()
-      : spec.graphicId === "accessibilityBars" && accessibilityLikert?.length
-        ? accessibilityLikert
-        : (spec.graphicId === "dssBars" || spec.graphicId === "accessLikert") &&
-            accessibilityLikert?.length
+    helsinkiUxLikert.length &&
+    (spec.graphicId === "likertRadar" ||
+      spec.graphicId === "modeShareBars" ||
+      spec.graphicId === "accessibilityBars" ||
+      spec.graphicId === "sentimentGauge")
+      ? helsinkiUxLikert
+      : helsinkiClimateLikert.length &&
+    (spec.graphicId === "climateComparison" ||
+      spec.graphicId === "modeShareBars" ||
+      spec.graphicId === "sentimentGauge" ||
+      spec.graphicId === "likertRadar")
+      ? helsinkiClimateLikert
+      : helsinkiHazardLikert.length &&
+    (spec.graphicId === "safetyDensity" ||
+      spec.graphicId === "facilityInventory" ||
+      spec.graphicId === "junctionPressure" ||
+      spec.graphicId === "flowPressure" ||
+      spec.graphicId === "likertRadar" ||
+      spec.graphicId === "modeShareBars")
+      ? helsinkiHazardLikert
+      : spec.graphicId === "facilityInventory"
+        ? (() => {
+            const byType = new Map<string, number>();
+            for (const p of activeObserved.filter((pt) => pt.properties?.datasetKind === "parking")) {
+              const t = String(p.properties?.facilityCategory || "Parking");
+              byType.set(t, (byType.get(t) || 0) + Number(p.value || 0));
+            }
+            return [...byType.entries()].map(([label, value]) => ({ label, value }));
+          })()
+        : spec.graphicId === "accessibilityBars" && accessibilityLikert?.length
           ? accessibilityLikert
-        : cityName === "Trikala" &&
-            pilotId === "tri-p3" &&
-            selectedKpi === "kpi4.2" &&
-            spec.graphicId === "accessibilityBars"
-          ? trikalaBikeLaneAccessibilityLikert(activeObserved)
-          : cityName === "Copenhagen" &&
-            (spec.graphicId === "likertRadar" || spec.graphicId === "surveyLikert")
-          ? activeObserved
-              .filter((p) => p.properties?.datasetKind === "survey")
-              .map((p) => ({
-                label: String(p.properties?.likertLabel || p.properties?.category || "Response"),
-                value: Number(p.properties?.interventionValue ?? p.value),
-              }))
-          : likertFromPoints(activeObserved);
+          : (spec.graphicId === "dssBars" || spec.graphicId === "accessLikert") &&
+              accessibilityLikert?.length
+            ? accessibilityLikert
+            : cityName === "Trikala" &&
+                pilotId === "tri-p3" &&
+                selectedKpi === "kpi4.2" &&
+                spec.graphicId === "accessibilityBars"
+              ? trikalaBikeLaneAccessibilityLikert(activeObserved)
+              : cityName === "Copenhagen" &&
+                  (spec.graphicId === "likertRadar" || spec.graphicId === "surveyLikert")
+                ? activeObserved
+                    .filter((p) => p.properties?.datasetKind === "survey")
+                    .map((p) => ({
+                      label: String(p.properties?.likertLabel || p.properties?.category || "Response"),
+                      value: Number(p.properties?.interventionValue ?? p.value),
+                    }))
+                : likertFromPoints(activeObserved);
+
+  const helsinkiTrend = cityName === "Helsinki" ? helsinkiTelraamTrend(activeObserved) : [];
 
   const trikalaA11yCards =
     cityName === "Trikala" && pilotId === "tri-p3" && selectedKpi === "kpi4.2"
@@ -853,7 +927,17 @@ export function buildObservatoryGraphicPayload(
       : null;
 
   const helsinkiCards =
-    cityName === "Helsinki" ? helsinkiTelraamStatCards(activeObserved) : null;
+    cityName === "Helsinki"
+      ? (() => {
+          const merged = [
+            ...(selectedKpi === "kpi1.1" ? helsinkiExpansionPlanStatCards() : []),
+            ...(selectedKpi === "kpi3.2" ? helsinkiClimateStatCards(activeObserved) ?? [] : []),
+            ...(selectedKpi !== "kpi3.2" ? helsinkiTelraamStatCards(activeObserved) ?? [] : []),
+            ...(selectedKpi !== "kpi3.2" ? helsinkiEvidenceStatCards(activeObserved) ?? [] : []),
+          ];
+          return merged.length ? merged : null;
+        })()
+      : null;
   const zaragozaCards =
     cityName === "Zaragoza" ? zaragozaCountStatCards(activeObserved) : null;
   const milanA11yCards =
@@ -919,7 +1003,17 @@ export function buildObservatoryGraphicPayload(
         : milanSpeedCards
           ? "Milan AMAT speed shapefile · SharePoint"
           : helsinkiCards
-            ? "Helsinki Telraam flow export · SharePoint"
+            ? selectedKpi === "kpi1.1"
+              ? "Helsinki Evaluation Plan · expansion readiness (KPI 1.1)"
+              : selectedKpi === "kpi4.1" || selectedKpi === "kpi4.2"
+                ? "Helsinki Viikki UX survey + Kallio eScooter observations · SharePoint"
+                : selectedKpi === "kpi3.1"
+                  ? "Helsinki Kallio eScooter parking observation study · SharePoint"
+                  : selectedKpi === "kpi3.2"
+                    ? "Helsinki citywide safety-attitude survey · SharePoint"
+                    : selectedKpi === "kpi2.1"
+                      ? "Helsinki dangerous-locations / conflicts + Mobilysis · SharePoint"
+                      : "Helsinki Telraam + Viikki lighthouse package · SharePoint"
             : zaragozaCards
               ? "Zaragoza mobility workbooks & manual counts · SharePoint"
               : sourceLabel;
@@ -941,17 +1035,44 @@ export function buildObservatoryGraphicPayload(
     sourceLabel: effectiveSourceLabel,
     kpiValue: view.kpiValue,
     modeShare,
-    trend: trendFromView(view),
+    trend: helsinkiTrend.length ? helsinkiTrend : trendFromView(view),
     cameraDirections,
     activeDirectionId,
     likert: facilityLikert,
     statCards: surveyStatCards,
     markers,
     segmentGradient: view.intervention.peakCongestion,
-    streetNS: view.streetNS,
-    streetEW: view.streetEW,
+    streetNS:
+      cityName === "Helsinki"
+        ? selectedKpi === "kpi1.1" || selectedKpi === "kpi4.1" || selectedKpi === "kpi4.2"
+          ? "Viikki crossing arms"
+          : selectedKpi === "kpi3.2"
+            ? "Safety-climate survey arms"
+            : selectedKpi === "kpi2.1" || selectedKpi === "kpi1.2"
+              ? "Near-miss survey arms"
+              : view.streetNS
+        : view.streetNS,
+    streetEW:
+      cityName === "Helsinki"
+        ? selectedKpi === "kpi1.1" || selectedKpi === "kpi4.1" || selectedKpi === "kpi4.2"
+          ? "Koetilantie · Raide-Jokeri"
+          : selectedKpi === "kpi3.2"
+            ? "FVH1 climate pressure corridor"
+            : selectedKpi === "kpi2.1" || selectedKpi === "kpi1.2"
+              ? "FVH1 hazard corridor"
+              : view.streetEW
+        : view.streetEW,
     highlightArmId: view.armId,
-    pilotTitle: profile?.title,
+    pilotTitle:
+      cityName === "Helsinki" && selectedKpi === "kpi1.1"
+        ? "Viikki warning-system expansion readiness"
+        : cityName === "Helsinki" && (selectedKpi === "kpi4.1" || selectedKpi === "kpi4.2")
+          ? "Viikki UX crossing junction"
+          : cityName === "Helsinki" && selectedKpi === "kpi3.2"
+            ? "Safety-climate attitude & mobility pressure"
+            : cityName === "Helsinki" && (selectedKpi === "kpi2.1" || selectedKpi === "kpi1.2")
+              ? "Near-miss & dangerous-location junction"
+              : profile?.title,
   };
 
   if (perfDelta != null && zone === "beforeAfter") {

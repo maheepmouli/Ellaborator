@@ -29,6 +29,7 @@ const PILOT_ZONE_RADIUS_DEG: Record<string, number> = {
 function defaultRadiusForPilot(pilotId: string): number {
   if (PILOT_ZONE_RADIUS_DEG[pilotId]) return PILOT_ZONE_RADIUS_DEG[pilotId];
   if (pilotId.startsWith("cph-")) return 0.012;
+  if (pilotId === "hel-p2") return 0.022;
   if (pilotId.startsWith("hel-")) return 0.015;
   if (pilotId.startsWith("zar-")) return 0.018;
   if (pilotId === "tri-p2") return 0.022;

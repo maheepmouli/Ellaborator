@@ -34,7 +34,11 @@ export function whenLeafletMapSettled(map: LeafletMap, fn: () => void): () => vo
 }
 
 /** Force divIcon markers to repaint (fixes invisible markers until the next pan). */
-export function nudgeLeafletMarkers(map: LeafletMap, markers: Marker[]): void {
+export function nudgeLeafletMarkers(map: LeafletMap, markers: Marker[] | null | undefined = []): void {
+  if (!Array.isArray(markers) || markers.length === 0) {
+    map.invalidateSize({ pan: false });
+    return;
+  }
   for (const marker of markers) {
     const latLng = marker.getLatLng();
     if (!latLng) continue;
@@ -52,57 +56,52 @@ export function nudgeLeafletMarkers(map: LeafletMap, markers: Marker[]): void {
   map.invalidateSize({ pan: false });
 }
 
-/** CircleMarker uses pixel radius; L.Circle climate hex / zones use metres — only nudge pixel markers. */
-function isPixelCircleMarker(circle: CircleMarker): boolean {
-  const radius = circle.getRadius?.();
-  return typeof radius === "number" && radius <= 24;
-}
-
-/** Circle markers share the same _leaflet_pos sync bug after zoom — nudge them too. */
-export function nudgeLeafletCircleMarkers(map: LeafletMap, circles: CircleMarker[]): void {
+/** Circle markers share a paint-sync issue after zoom — redraw only (never DomUtil.setPosition on SVG paths). */
+export function nudgeLeafletCircleMarkers(
+  map: LeafletMap,
+  circles: CircleMarker[] | null | undefined = []
+): void {
+  if (!Array.isArray(circles) || circles.length === 0) {
+    map.invalidateSize({ pan: false });
+    return;
+  }
   for (const circle of circles) {
     const latLng = circle.getLatLng();
     if (!latLng) continue;
     const internal = circle as CircleMarker & {
-      _path?: SVGElement;
-      _map?: LeafletMap;
       redraw?: () => void;
     };
-    if (!isPixelCircleMarker(circle)) {
-      internal.redraw?.();
-      continue;
-    }
-    if (internal._path && internal._map) {
-      const point = internal._map.latLngToLayerPoint(latLng);
-      L.DomUtil.setPosition(internal._path, point);
-      internal.redraw?.();
-    } else {
-      circle.setLatLng(latLng);
-      internal.redraw?.();
-    }
+    // SVG CircleMarkers live inside a transformed overlay SVG. Applying
+    // L.DomUtil.setPosition on `_path` double-transforms them so points drift on zoom.
+    circle.setLatLng(latLng);
+    internal.redraw?.();
   }
   map.invalidateSize({ pan: false });
 }
 
 export function nudgeLeafletMapLayers(
   map: LeafletMap,
-  markers: Marker[],
-  circles: CircleMarker[] = []
+  markers: Marker[] | null | undefined = [],
+  circles: CircleMarker[] | null | undefined = []
 ): void {
-  nudgeLeafletMarkers(map, markers);
-  if (circles.length) nudgeLeafletCircleMarkers(map, circles);
+  const safeMarkers = Array.isArray(markers) ? markers : [];
+  const safeCircles = Array.isArray(circles) ? circles : [];
+  nudgeLeafletMarkers(map, safeMarkers);
+  if (safeCircles.length) nudgeLeafletCircleMarkers(map, safeCircles);
 }
 
 /** Run nudge twice on the next frames — divIcon markers often miss the first paint after flyTo. */
 export function scheduleLeafletLayerRepaint(
   map: LeafletMap,
-  markers: Marker[],
-  circles: CircleMarker[] = []
+  markers: Marker[] | null | undefined = [],
+  circles: CircleMarker[] | null | undefined = []
 ): void {
-  nudgeLeafletMapLayers(map, markers, circles);
+  const safeMarkers = Array.isArray(markers) ? markers : [];
+  const safeCircles = Array.isArray(circles) ? circles : [];
+  nudgeLeafletMapLayers(map, safeMarkers, safeCircles);
   requestAnimationFrame(() => {
-    nudgeLeafletMapLayers(map, markers, circles);
-    requestAnimationFrame(() => nudgeLeafletMapLayers(map, markers, circles));
+    nudgeLeafletMapLayers(map, safeMarkers, safeCircles);
+    requestAnimationFrame(() => nudgeLeafletMapLayers(map, safeMarkers, safeCircles));
   });
 }
 
@@ -121,6 +120,18 @@ export function kpiUsesZoomDependentMarkerLayout(
   }
   if (cityName?.toLowerCase().includes("issy")) {
     if (kpi === "kpi3.2" || kpi === "kpi4.1" || kpi === "kpi4.2") return false;
+  }
+  if (cityName?.toLowerCase().includes("helsinki")) {
+    // Colour-rated / single-hub layers must not re-layout / re-fit on zoom tiers.
+    if (
+      kpi === "kpi1.1" ||
+      kpi === "kpi3.1" ||
+      kpi === "kpi3.2" ||
+      kpi === "kpi4.1" ||
+      kpi === "kpi4.2"
+    ) {
+      return false;
+    }
   }
   if (cityName?.toLowerCase().includes("milan")) {
     // Resize CSS hub pulse to geographic ring diameter when zoom tier changes.

@@ -1,0 +1,173 @@
+{
+  "location": "Viikki intersection (Viikintie/Koetilantie), 2024-10-03 AM survey period",
+  "coordinates": {
+    "lat": 60.224599,
+    "lng": 25.017236
+  },
+  "gateObservations": [
+    {
+      "mode": "vehicle",
+      "gate": "rb_entry_ktt",
+      "totalCount": 22,
+      "windows": 3
+    },
+    {
+      "mode": "vehicle",
+      "gate": "rb_entry_ne",
+      "totalCount": 260,
+      "windows": 3
+    },
+    {
+      "mode": "vehicle",
+      "gate": "rb_entry_nw",
+      "totalCount": 29,
+      "windows": 3
+    },
+    {
+      "mode": "vehicle",
+      "gate": "rb_entry_w",
+      "totalCount": 308,
+      "windows": 3
+    },
+    {
+      "mode": "vehicle",
+      "gate": "rb_exit_e",
+      "totalCount": 270,
+      "windows": 3
+    },
+    {
+      "mode": "vehicle",
+      "gate": "rb_exit_ktt",
+      "totalCount": 67,
+      "windows": 3
+    },
+    {
+      "mode": "vehicle",
+      "gate": "rb_exit_nw",
+      "totalCount": 54,
+      "windows": 3
+    },
+    {
+      "mode": "vehicle",
+      "gate": "rb_exit_w",
+      "totalCount": 227,
+      "windows": 3
+    },
+    {
+      "mode": "pedestrian",
+      "gate": "ktt_p_cross_e",
+      "totalCount": 10,
+      "windows": 3
+    },
+    {
+      "mode": "pedestrian",
+      "gate": "ktt_p_cross_w",
+      "totalCount": 11,
+      "windows": 3
+    },
+    {
+      "mode": "pedestrian",
+      "gate": "tc_east_e",
+      "totalCount": 22,
+      "windows": 3
+    },
+    {
+      "mode": "pedestrian",
+      "gate": "tc_east_w",
+      "totalCount": 0,
+      "windows": 3
+    },
+    {
+      "mode": "pedestrian",
+      "gate": "tc_west_e",
+      "totalCount": 20,
+      "windows": 3
+    },
+    {
+      "mode": "pedestrian",
+      "gate": "tc_west_w",
+      "totalCount": 48,
+      "windows": 3
+    },
+    {
+      "mode": "bike",
+      "gate": "ktt_p_cross_e",
+      "totalCount": 25,
+      "windows": 3
+    },
+    {
+      "mode": "bike",
+      "gate": "ktt_p_cross_w",
+      "totalCount": 41,
+      "windows": 3
+    },
+    {
+      "mode": "bike",
+      "gate": "tc_east_e",
+      "totalCount": 25,
+      "windows": 3
+    },
+    {
+      "mode": "bike",
+      "gate": "tc_east_w",
+      "totalCount": 0,
+      "windows": 3
+    },
+    {
+      "mode": "bike",
+      "gate": "tc_west_e",
+      "totalCount": 26,
+      "windows": 3
+    },
+    {
+      "mode": "bike",
+      "gate": "tc_west_w",
+      "totalCount": 48,
+      "windows": 3
+    },
+    {
+      "mode": "vru",
+      "gate": "ktt_p_cross_e",
+      "totalCount": 26,
+      "windows": 3
+    },
+    {
+      "mode": "vru",
+      "gate": "ktt_p_cross_w",
+      "totalCount": 36,
+      "windows": 3
+    },
+    {
+      "mode": "vru",
+      "gate": "tc_east_e",
+      "totalCount": 40,
+      "windows": 3
+    },
+    {
+      "mode": "vru",
+      "gate": "tc_east_w",
+      "totalCount": 0,
+      "windows": 3
+    },
+    {
+      "mode": "vru",
+      "gate": "tc_west_e",
+      "totalCount": 41,
+      "windows": 3
+    },
+    {
+      "mode": "vru",
+      "gate": "tc_west_w",
+      "totalCount": 81,
+      "windows": 3
+    }
+  ],
+  "modeTotals": {
+    "vehicle": 1237,
+    "pedestrian": 111,
+    "bike": 165,
+    "vru": 224
+  },
+  "note": "Aggregated from Mobilysis short-duration gate-count workbooks (AM1-AM3 survey windows); full vehicle/pedestrian trajectory CSVs and gate photos are not shipped to the browser bundle.",
+  "source": "SharePoint Helsinki/Data from Helsinki/Viikki traffic trajectories/Mobilysis_*.zip (KPI 1.2/2.1 context)"
+}

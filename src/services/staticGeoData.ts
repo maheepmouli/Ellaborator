@@ -1,3 +1,10 @@
+import {
+  HELSINKI_CONFLICTS_GEOJSON,
+  HELSINKI_DANGEROUS_LOCATIONS_GEOJSON,
+  HELSINKI_ESCOOTER_OBSERVATIONS_GEOJSON,
+  HELSINKI_INTERVENTION_LOCATIONS_GEOJSON,
+} from "@/lib/helsinkiDataPaths";
+
 type JsonObject = Record<string, unknown>;
 
 interface GeoJsonFeatureCollection<TProps extends JsonObject, TGeometry extends string> {
@@ -25,6 +32,27 @@ export interface HelsinkiInterventionLocationProperties {
 export interface HelsinkiDangerousLocationProperties {
   layer?: string;
   status?: string;
+  locationType?: string;
+  greatestDangerTo?: string;
+  submitted?: string;
+}
+
+export interface HelsinkiConflictProperties {
+  layer?: string;
+  status?: string;
+  incidentType?: string;
+  travelMode?: string;
+  eventDescription?: string;
+  locationDescription?: string;
+  submitted?: string;
+}
+
+export interface HelsinkiEscooterObservationProperties {
+  category?: string;
+  vehicleCount?: number | null;
+  obstructsOthers?: string | null;
+  hazardToOthers?: string | null;
+  submittedAt?: string | null;
 }
 
 export interface ZaragozaInterventionAreaProperties {
@@ -38,10 +66,18 @@ export type CopenhagenCountSitesGeoJson = GeoJsonFeatureCollection<
 >;
 export type HelsinkiInterventionLocationsGeoJson = GeoJsonFeatureCollection<
   HelsinkiInterventionLocationProperties,
-  "Point"
+  "Point" | "Polygon" | "MultiPolygon"
 >;
 export type HelsinkiDangerousLocationsGeoJson = GeoJsonFeatureCollection<
   HelsinkiDangerousLocationProperties,
+  "Point"
+>;
+export type HelsinkiConflictsGeoJson = GeoJsonFeatureCollection<
+  HelsinkiConflictProperties,
+  "Point"
+>;
+export type HelsinkiEscooterObservationsGeoJson = GeoJsonFeatureCollection<
+  HelsinkiEscooterObservationProperties,
   "Point"
 >;
 export type ZaragozaInterventionAreasGeoJson = GeoJsonFeatureCollection<
@@ -112,6 +148,22 @@ function isPolygonFeature<TProps extends JsonObject>(
   return propertyGuard(value.properties);
 }
 
+function isHelsinkiInterventionFeature(
+  value: unknown
+): value is {
+  type: "Feature";
+  properties: HelsinkiInterventionLocationProperties;
+  geometry: {
+    type: "Point" | "Polygon" | "MultiPolygon";
+    coordinates: unknown;
+  };
+} {
+  return (
+    isPointFeature(value, isHelsinkiInterventionProperties) ||
+    isPolygonFeature(value, isHelsinkiInterventionProperties)
+  );
+}
+
 function isFeatureCollection<TFeature>(
   value: unknown,
   featureGuard: (feature: unknown) => feature is TFeature
@@ -144,8 +196,10 @@ function emptyCollection<TProps extends JsonObject, TGeometry extends string>():
 }
 
 const copenhagenUrl = "/data/copenhagen_count_sites.geojson";
-const helsinkiInterventionsUrl = "/data/helsinki_intervention_locations.geojson";
-const helsinkiDangerousUrl = "/data/helsinki_dangerous_locations.geojson";
+const helsinkiInterventionsUrl = HELSINKI_INTERVENTION_LOCATIONS_GEOJSON;
+const helsinkiDangerousUrl = HELSINKI_DANGEROUS_LOCATIONS_GEOJSON;
+const helsinkiConflictsUrl = HELSINKI_CONFLICTS_GEOJSON;
+const helsinkiEscooterUrl = HELSINKI_ESCOOTER_OBSERVATIONS_GEOJSON;
 const zaragozaAreasUrl = "/data/zaragoza_intervention_areas.geojson";
 
 function isCopenhagenProperties(value: unknown): value is CopenhagenCountSiteProperties {
@@ -172,6 +226,14 @@ function isZaragozaProperties(value: unknown): value is ZaragozaInterventionArea
   return isObject(value) && typeof value.pilotId === "string";
 }
 
+function isHelsinkiConflictProperties(value: unknown): value is HelsinkiConflictProperties {
+  return isObject(value);
+}
+
+function isHelsinkiEscooterProperties(value: unknown): value is HelsinkiEscooterObservationProperties {
+  return isObject(value);
+}
+
 export async function loadCopenhagenCountSitesGeoJson(): Promise<CopenhagenCountSitesGeoJson> {
   try {
     return await fetchJsonWithCache(copenhagenUrl, (json) => {
@@ -188,13 +250,13 @@ export async function loadCopenhagenCountSitesGeoJson(): Promise<CopenhagenCount
 export async function loadHelsinkiInterventionLocationsGeoJson(): Promise<HelsinkiInterventionLocationsGeoJson> {
   try {
     return await fetchJsonWithCache(helsinkiInterventionsUrl, (json) => {
-      if (!isFeatureCollection(json, (feature) => isPointFeature(feature, isHelsinkiInterventionProperties))) {
+      if (!isFeatureCollection(json, isHelsinkiInterventionFeature)) {
         throw new Error("Invalid Helsinki intervention locations GeoJSON");
       }
       return json;
     });
   } catch {
-    return emptyCollection<HelsinkiInterventionLocationProperties, "Point">();
+    return emptyCollection<HelsinkiInterventionLocationProperties, "Point" | "Polygon" | "MultiPolygon">();
   }
 }
 
@@ -208,6 +270,32 @@ export async function loadHelsinkiDangerousLocationsGeoJson(): Promise<HelsinkiD
     });
   } catch {
     return emptyCollection<HelsinkiDangerousLocationProperties, "Point">();
+  }
+}
+
+export async function loadHelsinkiConflictsGeoJson(): Promise<HelsinkiConflictsGeoJson> {
+  try {
+    return await fetchJsonWithCache(helsinkiConflictsUrl, (json) => {
+      if (!isFeatureCollection(json, (feature) => isPointFeature(feature, isHelsinkiConflictProperties))) {
+        throw new Error("Invalid Helsinki conflicts GeoJSON");
+      }
+      return json;
+    });
+  } catch {
+    return emptyCollection<HelsinkiConflictProperties, "Point">();
+  }
+}
+
+export async function loadHelsinkiEscooterObservationsGeoJson(): Promise<HelsinkiEscooterObservationsGeoJson> {
+  try {
+    return await fetchJsonWithCache(helsinkiEscooterUrl, (json) => {
+      if (!isFeatureCollection(json, (feature) => isPointFeature(feature, isHelsinkiEscooterProperties))) {
+        throw new Error("Invalid Helsinki eScooter observations GeoJSON");
+      }
+      return json;
+    });
+  } catch {
+    return emptyCollection<HelsinkiEscooterObservationProperties, "Point">();
   }
 }
 

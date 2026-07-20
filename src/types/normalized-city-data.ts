@@ -58,4 +58,16 @@ export interface NormalizedCityRecord {
   busyPct?: number;
   availabilityPct?: number;
   observationCount?: number;
+  /** Helsinki FVH1 — top dangerous-location type counts for observatory charts. */
+  hazardCategories?: Array<{ label: string; count: number }>;
+  /** Helsinki FVH1 — near-miss / conflict incident mix. */
+  conflictCategories?: Array<{ label: string; count: number }>;
+  /** Helsinki FVH1 — travel mode mix among conflict reports. */
+  conflictModes?: Array<{ label: string; count: number }>;
+  /** Helsinki KPI 3.2 — attitude survey positive/negative/neutral shares. */
+  climateAttitudeRows?: Array<{ label: string; count: number }>;
+  /** Helsinki FVH3 UX — satisfaction % by survey question. */
+  uxSatisfactionRows?: Array<{ label: string; count: number }>;
+  /** Helsinki Telraam — monthly sustainable-share trend for observatory charts. */
+  monthlyTrend?: Array<{ t: string; v: number }>;
 }

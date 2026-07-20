@@ -1,0 +1,138 @@
+{
+  "generatedAt": "2026-07-20T10:17:53.165Z",
+  "pilots": {
+    "hel-p1": {
+      "label": "FVH1 — Accident / near-miss data",
+      "delivered": [
+        "dangerous-locations.geojson (2,663 citizen-reported hazard locations)",
+        "conflicts.geojson (3,202 citizen-reported near-miss/conflict points)",
+        "Citywide safety-attitude survey aggregate (dangerous-locations-survey-insights.json)"
+      ],
+      "pending": [
+        "See.Sense connected-bike near-miss feed — not present in SharePoint drop",
+        "ViaNova AI risk-scoring output — not present in SharePoint drop"
+      ]
+    },
+    "hel-p2": {
+      "label": "FVH2 — E-scooter parking (Kallio)",
+      "delivered": [
+        "escooter-observations.geojson (509 field observations across 5 categories)",
+        "Kallio summer-streets baseline PDF + bachelor's thesis referenced as methodology"
+      ],
+      "pending": [
+        "20 planned e-scooter parking sensors — not delivered per Evaluation Plan (observation study only)"
+      ]
+    },
+    "hel-p3": {
+      "label": "FVH3 — Viikki tramway-crossing warning system",
+      "delivered": [
+        "telraam-koetilantie.json (Telraam street counts, 2024-06 to 2025-09)",
+        "viikki-ux-survey.json (50 completed UX responses vs 75% satisfaction target)",
+        "mobilysis-viikki-gates.json (Mobilysis gate counts, 2024-10-03 AM survey)",
+        "hsl-tram15-sample.json (HSL tram line 15 position sample, 2025-06-09)",
+        "Innotrafik alarm-duration evidence charts (5 PNGs)",
+        "innotrafik-alarm-summary.json (chart-derived alarm intensity proxy)",
+        "telraam-sensors.json (per-workbook Telraam exports)"
+      ],
+      "pending": [
+        "Innotrafik raw alarm-event table (only chart PNGs provided, not a structured export)",
+        "Lidar raw .pcap (~647MB) intentionally not shipped; setup photo + sensor metadata referenced instead",
+        "Full Mobilysis vehicle/pedestrian trajectory CSVs intentionally not shipped; gate-count aggregates only"
+      ]
+    }
+  },
+  "media": {
+    "innotrafik": [
+      "/sharepoint-data/Helsinki/innotrafik/alarm_durations_boxplot.png",
+      "/sharepoint-data/Helsinki/innotrafik/alarm_durations_histogram_20250601_20250614.png",
+      "/sharepoint-data/Helsinki/innotrafik/alarm_durations_histogram_20250701_20250714.png",
+      "/sharepoint-data/Helsinki/innotrafik/alarm_durations_histogram_20250801_20250814.png",
+      "/sharepoint-data/Helsinki/innotrafik/alarm_heatmap_weekday_minute.png"
+    ]
+  },
+  "lidarSample": {
+    "sensorModel": "OS-1-128",
+    "serialNumber": "122341000441",
+    "note": "Full .pcap capture (~647MB) stays out of the web bundle; only sensor metadata + a setup photo are referenced."
+  },
+  "documentReferences": [
+    "HELSINKI Intervention Evaluation Plan_DRAFT.docx",
+    "Bachelors_Thesis_Matias_Innamaa (e-scooters in kallio).pdf",
+    "kallion_kesakadut_havainnointi_ja_haastattelut_2024_ENNEN_raportti.pdf",
+    "Hotspot_analysis_Mesimäki.pdf",
+    "Helsinki_FVH3_Survey on user experience_Sep2025.pptx.pdf",
+    "Viikki tramway crossing intervention.docx"
+  ],
+  "extraction": [
+    {
+      "label": "Telraam/raw-data-9000007091-16eb11c.xlsx",
+      "status": "ok",
+      "bytes": 5024627
+    },
+    {
+      "label": "Telraam/raw-data-9000007091-79245e.xlsx",
+      "status": "ok",
+      "bytes": 3583459
+    },
+    {
+      "label": "DangerousLocationsSurvey_ENG_EPSG3067.gpkg",
+      "status": "ok",
+      "bytes": 1511424
+    },
+    {
+      "label": "Helsinki_Intervention_Locations_EPSG3067.gpkg",
+      "status": "ok",
+      "bytes": 241664
+    },
+    {
+      "label": "Helsinki_eScooter_Observations.zip",
+      "status": "ok",
+      "bytes": 72654
+    },
+    {
+      "label": "DangerousLocationsSurvey2.zip",
+      "status": "ok",
+      "bytes": 888911
+    },
+    {
+      "label": "viikki-ux-survey.xlsx",
+      "status": "ok",
+      "bytes": 458444
+    },
+    {
+      "label": "hsl-tram15-2025-06-09.geoparquet",
+      "status": "ok",
+      "bytes": 31496242
+    },
+    {
+      "label": "innotrafik/alarm_durations_boxplot.png",
+      "status": "ok",
+      "bytes": 64483
+    },
+    {
+      "label": "innotrafik/alarm_durations_histogram_20250601_20250614.png",
+      "status": "ok",
+      "bytes": 145487
+    },
+    {
+      "label": "innotrafik/alarm_durations_histogram_20250701_20250714.png",
+      "status": "ok",
+      "bytes": 140768
+    },
+    {
+      "label": "innotrafik/alarm_durations_histogram_20250801_20250814.png",
+      "status": "ok",
+      "bytes": 147117
+    },
+    {
+      "label": "innotrafik/alarm_heatmap_weekday_minute.png",
+      "status": "ok",
+      "bytes": 214543
+    },
+    {
+      "label": "lidar-sample-metadata.json",
+      "status": "ok",
+      "bytes": 3629
+    }
+  ]
+}

@@ -110,7 +110,18 @@ function renderGraphic(
     case "telraamModeBars":
     case "segmentModeShare":
     case "manualCountBars":
-      return <ModeShareBarChart payload={payload} compact={compact} />;
+      return (
+        <ModeShareBarChart
+          payload={payload}
+          compact={compact}
+          onSelectMode={(mode) => {
+            const match = payload.cameraDirections?.find(
+              (d) => d.direction === mode || d.direction.startsWith(mode.slice(0, 12))
+            );
+            if (match) onSelectDirectionId?.(match.id);
+          }}
+        />
+      );
     case "prePostTrend":
       return <PrePostTrendChart payload={payload} compact={compact} />;
     case "junctionPressure":
@@ -315,7 +326,8 @@ export function ObservatoryGraphicSlot({
 
   const pilot = getPilotById(cityName, pilotId);
   const missingNotice = getKpiMissingDataNotice(cityName, selectedKpi, pilot);
-  const compact = zone === "header" || spec?.variant === "compact";
+  // Only the header strip is compact — overview / before-after / analysis need full hit targets.
+  const compact = Boolean(headerMode) || zone === "header";
   const showTrikalaPilot2Illustrative =
     isTrikala &&
     pilotId === "tri-p2" &&

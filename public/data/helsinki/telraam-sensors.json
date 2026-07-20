@@ -1,0 +1,8113 @@
+{
+  "merged": {
+    "sensorId": "9000007091",
+    "street": "Koetilantie",
+    "city": "Helsinki",
+    "location": {
+      "lat": 60.224599,
+      "lng": 25.017236,
+      "note": "Fixed Viikintie-Koetilantie tramway crossing anchor (FVH3)"
+    },
+    "periodStart": "2024-06-28T09:30:00.000Z",
+    "periodEnd": "2025-09-15T11:45:00.000Z",
+    "totals": {
+      "pedestrian": 123891,
+      "bike": 364302,
+      "car": 1988855,
+      "heavy": 108820,
+      "all": 2585868
+    },
+    "modeShare": {
+      "pedestrianPct": 4.8,
+      "bikePct": 14.1,
+      "carPct": 76.9,
+      "heavyPct": 4.2
+    },
+    "v85SpeedKmh": 32.5,
+    "dailyAggregates": [
+      {
+        "date": "2024-06-28",
+        "pedestrian": 506,
+        "bike": 989,
+        "car": 2672,
+        "heavy": 97,
+        "total": 4264,
+        "v85SpeedKmh": 32
+      },
+      {
+        "date": "2024-06-29",
+        "pedestrian": 297,
+        "bike": 952,
+        "car": 3951,
+        "heavy": 126,
+        "total": 5326,
+        "v85SpeedKmh": 36.6
+      },
+      {
+        "date": "2024-06-30",
+        "pedestrian": 407,
+        "bike": 1244,
+        "car": 4366,
+        "heavy": 100,
+        "total": 6117,
+        "v85SpeedKmh": 36.9
+      },
+      {
+        "date": "2024-07-01",
+        "pedestrian": 371,
+        "bike": 1186,
+        "car": 6827,
+        "heavy": 338,
+        "total": 8722,
+        "v85SpeedKmh": 36.1
+      },
+      {
+        "date": "2024-07-02",
+        "pedestrian": 511,
+        "bike": 1731,
+        "car": 6096,
+        "heavy": 534,
+        "total": 8872,
+        "v85SpeedKmh": 35.5
+      },
+      {
+        "date": "2024-07-03",
+        "pedestrian": 370,
+        "bike": 891,
+        "car": 5862,
+        "heavy": 293,
+        "total": 7416,
+        "v85SpeedKmh": 35.6
+      },
+      {
+        "date": "2024-07-04",
+        "pedestrian": 405,
+        "bike": 1454,
+        "car": 6062,
+        "heavy": 381,
+        "total": 8302,
+        "v85SpeedKmh": 34.2
+      },
+      {
+        "date": "2024-07-05",
+        "pedestrian": 508,
+        "bike": 1071,
+        "car": 5516,
+        "heavy": 391,
+        "total": 7486,
+        "v85SpeedKmh": 35.6
+      },
+      {
+        "date": "2024-07-06",
+        "pedestrian": 378,
+        "bike": 891,
+        "car": 3703,
+        "heavy": 75,
+        "total": 5047,
+        "v85SpeedKmh": 35.6
+      },
+      {
+        "date": "2024-07-07",
+        "pedestrian": 173,
+        "bike": 556,
+        "car": 3573,
+        "heavy": 44,
+        "total": 4346,
+        "v85SpeedKmh": 36.4
+      },
+      {
+        "date": "2024-07-08",
+        "pedestrian": 405,
+        "bike": 1649,
+        "car": 5957,
+        "heavy": 586,
+        "total": 8597,
+        "v85SpeedKmh": 36.1
+      },
+      {
+        "date": "2024-07-09",
+        "pedestrian": 379,
+        "bike": 1533,
+        "car": 5571,
+        "heavy": 524,
+        "total": 8007,
+        "v85SpeedKmh": 35.8
+      },
+      {
+        "date": "2024-07-10",
+        "pedestrian": 491,
+        "bike": 1714,
+        "car": 5483,
+        "heavy": 698,
+        "total": 8386,
+        "v85SpeedKmh": 35.7
+      },
+      {
+        "date": "2024-07-11",
+        "pedestrian": 433,
+        "bike": 902,
+        "car": 5927,
+        "heavy": 486,
+        "total": 7748,
+        "v85SpeedKmh": 34.5
+      },
+      {
+        "date": "2024-07-12",
+        "pedestrian": 531,
+        "bike": 1176,
+        "car": 5774,
+        "heavy": 388,
+        "total": 7869,
+        "v85SpeedKmh": 35.1
+      },
+      {
+        "date": "2024-07-13",
+        "pedestrian": 640,
+        "bike": 1463,
+        "car": 4104,
+        "heavy": 192,
+        "total": 6399,
+        "v85SpeedKmh": 34.8
+      },
+      {
+        "date": "2024-07-14",
+        "pedestrian": 254,
+        "bike": 727,
+        "car": 3756,
+        "heavy": 62,
+        "total": 4799,
+        "v85SpeedKmh": 34.9
+      },
+      {
+        "date": "2024-07-15",
+        "pedestrian": 373,
+        "bike": 1482,
+        "car": 5199,
+        "heavy": 663,
+        "total": 7717,
+        "v85SpeedKmh": 36.5
+      },
+      {
+        "date": "2024-07-16",
+        "pedestrian": 385,
+        "bike": 1565,
+        "car": 5364,
+        "heavy": 577,
+        "total": 7891,
+        "v85SpeedKmh": 35.9
+      },
+      {
+        "date": "2024-07-17",
+        "pedestrian": 418,
+        "bike": 1019,
+        "car": 5867,
+        "heavy": 507,
+        "total": 7811,
+        "v85SpeedKmh": 35.7
+      },
+      {
+        "date": "2024-07-18",
+        "pedestrian": 478,
+        "bike": 1456,
+        "car": 5805,
+        "heavy": 545,
+        "total": 8284,
+        "v85SpeedKmh": 34.7
+      },
+      {
+        "date": "2024-07-19",
+        "pedestrian": 494,
+        "bike": 693,
+        "car": 5474,
+        "heavy": 394,
+        "total": 7055,
+        "v85SpeedKmh": 36.3
+      },
+      {
+        "date": "2024-07-20",
+        "pedestrian": 374,
+        "bike": 679,
+        "car": 4062,
+        "heavy": 157,
+        "total": 5272,
+        "v85SpeedKmh": 36.5
+      },
+      {
+        "date": "2024-07-21",
+        "pedestrian": 433,
+        "bike": 912,
+        "car": 3891,
+        "heavy": 135,
+        "total": 5371,
+        "v85SpeedKmh": 36.4
+      },
+      {
+        "date": "2024-07-22",
+        "pedestrian": 380,
+        "bike": 1514,
+        "car": 5295,
+        "heavy": 740,
+        "total": 7929,
+        "v85SpeedKmh": 36.6
+      },
+      {
+        "date": "2024-07-23",
+        "pedestrian": 391,
+        "bike": 1608,
+        "car": 5825,
+        "heavy": 611,
+        "total": 8435,
+        "v85SpeedKmh": 36.1
+      },
+      {
+        "date": "2024-07-24",
+        "pedestrian": 409,
+        "bike": 1432,
+        "car": 5485,
+        "heavy": 644,
+        "total": 7970,
+        "v85SpeedKmh": 36.5
+      },
+      {
+        "date": "2024-07-25",
+        "pedestrian": 343,
+        "bike": 1534,
+        "car": 5309,
+        "heavy": 664,
+        "total": 7850,
+        "v85SpeedKmh": 37
+      },
+      {
+        "date": "2024-07-26",
+        "pedestrian": 352,
+        "bike": 1317,
+        "car": 5085,
+        "heavy": 483,
+        "total": 7237,
+        "v85SpeedKmh": 35.9
+      },
+      {
+        "date": "2024-07-27",
+        "pedestrian": 577,
+        "bike": 1295,
+        "car": 3989,
+        "heavy": 127,
+        "total": 5988,
+        "v85SpeedKmh": 35.6
+      },
+      {
+        "date": "2024-07-28",
+        "pedestrian": 269,
+        "bike": 1128,
+        "car": 3947,
+        "heavy": 60,
+        "total": 5404,
+        "v85SpeedKmh": 33.6
+      },
+      {
+        "date": "2024-07-29",
+        "pedestrian": 316,
+        "bike": 1254,
+        "car": 6184,
+        "heavy": 309,
+        "total": 8063,
+        "v85SpeedKmh": 33.5
+      },
+      {
+        "date": "2024-07-30",
+        "pedestrian": 368,
+        "bike": 1550,
+        "car": 6115,
+        "heavy": 447,
+        "total": 8480,
+        "v85SpeedKmh": 34.8
+      },
+      {
+        "date": "2024-07-31",
+        "pedestrian": 346,
+        "bike": 1308,
+        "car": 6349,
+        "heavy": 470,
+        "total": 8473,
+        "v85SpeedKmh": 34.5
+      },
+      {
+        "date": "2024-08-01",
+        "pedestrian": 352,
+        "bike": 1427,
+        "car": 6417,
+        "heavy": 343,
+        "total": 8539,
+        "v85SpeedKmh": 33.4
+      },
+      {
+        "date": "2024-08-02",
+        "pedestrian": 427,
+        "bike": 1029,
+        "car": 6196,
+        "heavy": 297,
+        "total": 7949,
+        "v85SpeedKmh": 34.7
+      },
+      {
+        "date": "2024-08-03",
+        "pedestrian": 300,
+        "bike": 729,
+        "car": 4244,
+        "heavy": 97,
+        "total": 5370,
+        "v85SpeedKmh": 36.3
+      },
+      {
+        "date": "2024-08-04",
+        "pedestrian": 290,
+        "bike": 928,
+        "car": 4239,
+        "heavy": 86,
+        "total": 5543,
+        "v85SpeedKmh": 36
+      },
+      {
+        "date": "2024-08-05",
+        "pedestrian": 459,
+        "bike": 1489,
+        "car": 6800,
+        "heavy": 512,
+        "total": 9260,
+        "v85SpeedKmh": 36
+      },
+      {
+        "date": "2024-08-06",
+        "pedestrian": 330,
+        "bike": 1588,
+        "car": 6526,
+        "heavy": 437,
+        "total": 8881,
+        "v85SpeedKmh": 35.7
+      },
+      {
+        "date": "2024-08-07",
+        "pedestrian": 425,
+        "bike": 1787,
+        "car": 6469,
+        "heavy": 483,
+        "total": 9164,
+        "v85SpeedKmh": 34.8
+      },
+      {
+        "date": "2024-08-08",
+        "pedestrian": 425,
+        "bike": 1848,
+        "car": 6142,
+        "heavy": 573,
+        "total": 8988,
+        "v85SpeedKmh": 35.1
+      },
+      {
+        "date": "2024-08-09",
+        "pedestrian": 446,
+        "bike": 1738,
+        "car": 6705,
+        "heavy": 516,
+        "total": 9405,
+        "v85SpeedKmh": 35.5
+      },
+      {
+        "date": "2024-08-10",
+        "pedestrian": 252,
+        "bike": 631,
+        "car": 4330,
+        "heavy": 95,
+        "total": 5308,
+        "v85SpeedKmh": 35.9
+      },
+      {
+        "date": "2024-08-11",
+        "pedestrian": 274,
+        "bike": 906,
+        "car": 4438,
+        "heavy": 98,
+        "total": 5716,
+        "v85SpeedKmh": 35.3
+      },
+      {
+        "date": "2024-08-12",
+        "pedestrian": 292,
+        "bike": 1244,
+        "car": 6806,
+        "heavy": 366,
+        "total": 8708,
+        "v85SpeedKmh": 33.9
+      },
+      {
+        "date": "2024-08-13",
+        "pedestrian": 496,
+        "bike": 2048,
+        "car": 6686,
+        "heavy": 575,
+        "total": 9805,
+        "v85SpeedKmh": 35.1
+      },
+      {
+        "date": "2024-08-14",
+        "pedestrian": 461,
+        "bike": 2015,
+        "car": 6226,
+        "heavy": 510,
+        "total": 9212,
+        "v85SpeedKmh": 35.9
+      },
+      {
+        "date": "2024-08-15",
+        "pedestrian": 379,
+        "bike": 1846,
+        "car": 6581,
+        "heavy": 517,
+        "total": 9323,
+        "v85SpeedKmh": 35.2
+      },
+      {
+        "date": "2024-08-16",
+        "pedestrian": 291,
+        "bike": 1227,
+        "car": 7008,
+        "heavy": 292,
+        "total": 8818,
+        "v85SpeedKmh": 32.7
+      },
+      {
+        "date": "2024-08-17",
+        "pedestrian": 531,
+        "bike": 1299,
+        "car": 4905,
+        "heavy": 124,
+        "total": 6859,
+        "v85SpeedKmh": 34
+      },
+      {
+        "date": "2024-08-18",
+        "pedestrian": 318,
+        "bike": 1454,
+        "car": 4527,
+        "heavy": 102,
+        "total": 6401,
+        "v85SpeedKmh": 36.1
+      },
+      {
+        "date": "2024-08-19",
+        "pedestrian": 351,
+        "bike": 1636,
+        "car": 6748,
+        "heavy": 447,
+        "total": 9182,
+        "v85SpeedKmh": 34.5
+      },
+      {
+        "date": "2024-08-20",
+        "pedestrian": 389,
+        "bike": 1961,
+        "car": 6682,
+        "heavy": 508,
+        "total": 9540,
+        "v85SpeedKmh": 35.2
+      },
+      {
+        "date": "2024-08-21",
+        "pedestrian": 412,
+        "bike": 1808,
+        "car": 6644,
+        "heavy": 520,
+        "total": 9384,
+        "v85SpeedKmh": 35.1
+      },
+      {
+        "date": "2024-08-22",
+        "pedestrian": 309,
+        "bike": 1260,
+        "car": 6759,
+        "heavy": 378,
+        "total": 8706,
+        "v85SpeedKmh": 33.8
+      },
+      {
+        "date": "2024-08-23",
+        "pedestrian": 348,
+        "bike": 1216,
+        "car": 7023,
+        "heavy": 457,
+        "total": 9044,
+        "v85SpeedKmh": 34.5
+      },
+      {
+        "date": "2024-08-24",
+        "pedestrian": 377,
+        "bike": 838,
+        "car": 4436,
+        "heavy": 89,
+        "total": 5740,
+        "v85SpeedKmh": 34.4
+      },
+      {
+        "date": "2024-08-25",
+        "pedestrian": 358,
+        "bike": 1338,
+        "car": 4675,
+        "heavy": 115,
+        "total": 6486,
+        "v85SpeedKmh": 36
+      },
+      {
+        "date": "2024-08-26",
+        "pedestrian": 470,
+        "bike": 1650,
+        "car": 6506,
+        "heavy": 597,
+        "total": 9223,
+        "v85SpeedKmh": 35.9
+      },
+      {
+        "date": "2024-08-27",
+        "pedestrian": 447,
+        "bike": 1640,
+        "car": 6695,
+        "heavy": 486,
+        "total": 9268,
+        "v85SpeedKmh": 34.8
+      },
+      {
+        "date": "2024-08-28",
+        "pedestrian": 483,
+        "bike": 1488,
+        "car": 5929,
+        "heavy": 534,
+        "total": 8434,
+        "v85SpeedKmh": 35.3
+      },
+      {
+        "date": "2024-08-29",
+        "pedestrian": 405,
+        "bike": 1497,
+        "car": 6072,
+        "heavy": 482,
+        "total": 8456,
+        "v85SpeedKmh": 34.7
+      },
+      {
+        "date": "2024-08-30",
+        "pedestrian": 429,
+        "bike": 1230,
+        "car": 5935,
+        "heavy": 494,
+        "total": 8088,
+        "v85SpeedKmh": 34.8
+      },
+      {
+        "date": "2024-08-31",
+        "pedestrian": 238,
+        "bike": 523,
+        "car": 4265,
+        "heavy": 110,
+        "total": 5136,
+        "v85SpeedKmh": 34.5
+      },
+      {
+        "date": "2024-09-01",
+        "pedestrian": 365,
+        "bike": 988,
+        "car": 4430,
+        "heavy": 127,
+        "total": 5910,
+        "v85SpeedKmh": 35.6
+      },
+      {
+        "date": "2024-09-02",
+        "pedestrian": 497,
+        "bike": 1214,
+        "car": 6525,
+        "heavy": 672,
+        "total": 8908,
+        "v85SpeedKmh": 35.6
+      },
+      {
+        "date": "2024-09-03",
+        "pedestrian": 409,
+        "bike": 1591,
+        "car": 6915,
+        "heavy": 288,
+        "total": 9203,
+        "v85SpeedKmh": 32.4
+      },
+      {
+        "date": "2024-09-04",
+        "pedestrian": 486,
+        "bike": 1569,
+        "car": 5931,
+        "heavy": 567,
+        "total": 8553,
+        "v85SpeedKmh": 35.9
+      },
+      {
+        "date": "2024-09-05",
+        "pedestrian": 480,
+        "bike": 1763,
+        "car": 6523,
+        "heavy": 695,
+        "total": 9461,
+        "v85SpeedKmh": 35.5
+      },
+      {
+        "date": "2024-09-06",
+        "pedestrian": 516,
+        "bike": 1466,
+        "car": 6336,
+        "heavy": 658,
+        "total": 8976,
+        "v85SpeedKmh": 36.1
+      },
+      {
+        "date": "2024-09-07",
+        "pedestrian": 416,
+        "bike": 1220,
+        "car": 4319,
+        "heavy": 189,
+        "total": 6144,
+        "v85SpeedKmh": 36.8
+      },
+      {
+        "date": "2024-09-08",
+        "pedestrian": 296,
+        "bike": 1220,
+        "car": 4564,
+        "heavy": 138,
+        "total": 6218,
+        "v85SpeedKmh": 36.5
+      },
+      {
+        "date": "2024-09-09",
+        "pedestrian": 534,
+        "bike": 1676,
+        "car": 6452,
+        "heavy": 657,
+        "total": 9319,
+        "v85SpeedKmh": 35.9
+      },
+      {
+        "date": "2024-09-10",
+        "pedestrian": 434,
+        "bike": 1546,
+        "car": 6868,
+        "heavy": 613,
+        "total": 9461,
+        "v85SpeedKmh": 34.6
+      },
+      {
+        "date": "2024-09-11",
+        "pedestrian": 440,
+        "bike": 1105,
+        "car": 6501,
+        "heavy": 488,
+        "total": 8534,
+        "v85SpeedKmh": 34.4
+      },
+      {
+        "date": "2024-09-12",
+        "pedestrian": 424,
+        "bike": 1517,
+        "car": 6348,
+        "heavy": 600,
+        "total": 8889,
+        "v85SpeedKmh": 33.8
+      },
+      {
+        "date": "2024-09-13",
+        "pedestrian": 250,
+        "bike": 476,
+        "car": 6346,
+        "heavy": 301,
+        "total": 7373,
+        "v85SpeedKmh": 31.7
+      },
+      {
+        "date": "2024-09-14",
+        "pedestrian": 305,
+        "bike": 508,
+        "car": 4404,
+        "heavy": 79,
+        "total": 5296,
+        "v85SpeedKmh": 35.4
+      },
+      {
+        "date": "2024-09-15",
+        "pedestrian": 214,
+        "bike": 670,
+        "car": 4216,
+        "heavy": 32,
+        "total": 5132,
+        "v85SpeedKmh": 33.7
+      },
+      {
+        "date": "2024-09-16",
+        "pedestrian": 247,
+        "bike": 1125,
+        "car": 6180,
+        "heavy": 210,
+        "total": 7762,
+        "v85SpeedKmh": 31.5
+      },
+      {
+        "date": "2024-09-17",
+        "pedestrian": 256,
+        "bike": 1044,
+        "car": 5360,
+        "heavy": 272,
+        "total": 6932,
+        "v85SpeedKmh": 31.4
+      },
+      {
+        "date": "2024-09-18",
+        "pedestrian": 266,
+        "bike": 989,
+        "car": 5119,
+        "heavy": 346,
+        "total": 6720,
+        "v85SpeedKmh": 36.2
+      },
+      {
+        "date": "2024-09-19",
+        "pedestrian": 440,
+        "bike": 1293,
+        "car": 6093,
+        "heavy": 536,
+        "total": 8362,
+        "v85SpeedKmh": 34.6
+      },
+      {
+        "date": "2024-09-20",
+        "pedestrian": 470,
+        "bike": 1212,
+        "car": 6236,
+        "heavy": 605,
+        "total": 8523,
+        "v85SpeedKmh": 35.4
+      },
+      {
+        "date": "2024-09-21",
+        "pedestrian": 252,
+        "bike": 791,
+        "car": 4154,
+        "heavy": 162,
+        "total": 5359,
+        "v85SpeedKmh": 36.9
+      },
+      {
+        "date": "2024-09-22",
+        "pedestrian": 299,
+        "bike": 804,
+        "car": 4234,
+        "heavy": 141,
+        "total": 5478,
+        "v85SpeedKmh": 36.7
+      },
+      {
+        "date": "2024-09-23",
+        "pedestrian": 289,
+        "bike": 996,
+        "car": 4091,
+        "heavy": 204,
+        "total": 5580,
+        "v85SpeedKmh": 28.8
+      },
+      {
+        "date": "2024-09-24",
+        "pedestrian": 347,
+        "bike": 1204,
+        "car": 3433,
+        "heavy": 121,
+        "total": 5105,
+        "v85SpeedKmh": 28.6
+      },
+      {
+        "date": "2024-09-25",
+        "pedestrian": 316,
+        "bike": 891,
+        "car": 3784,
+        "heavy": 96,
+        "total": 5087,
+        "v85SpeedKmh": 27.2
+      },
+      {
+        "date": "2024-09-26",
+        "pedestrian": 444,
+        "bike": 735,
+        "car": 3755,
+        "heavy": 150,
+        "total": 5084,
+        "v85SpeedKmh": 28.4
+      },
+      {
+        "date": "2024-09-27",
+        "pedestrian": 304,
+        "bike": 465,
+        "car": 3809,
+        "heavy": 135,
+        "total": 4713,
+        "v85SpeedKmh": 27.9
+      },
+      {
+        "date": "2024-09-28",
+        "pedestrian": 229,
+        "bike": 381,
+        "car": 2542,
+        "heavy": 33,
+        "total": 3185,
+        "v85SpeedKmh": 30.3
+      },
+      {
+        "date": "2024-09-29",
+        "pedestrian": 386,
+        "bike": 792,
+        "car": 2330,
+        "heavy": 83,
+        "total": 3591,
+        "v85SpeedKmh": 28.7
+      },
+      {
+        "date": "2024-09-30",
+        "pedestrian": 552,
+        "bike": 1122,
+        "car": 3414,
+        "heavy": 125,
+        "total": 5213,
+        "v85SpeedKmh": 28.2
+      },
+      {
+        "date": "2024-10-01",
+        "pedestrian": 352,
+        "bike": 979,
+        "car": 3791,
+        "heavy": 210,
+        "total": 5332,
+        "v85SpeedKmh": 27.4
+      },
+      {
+        "date": "2024-10-02",
+        "pedestrian": 389,
+        "bike": 525,
+        "car": 3667,
+        "heavy": 119,
+        "total": 4700,
+        "v85SpeedKmh": 26.4
+      },
+      {
+        "date": "2024-10-03",
+        "pedestrian": 391,
+        "bike": 997,
+        "car": 3550,
+        "heavy": 143,
+        "total": 5081,
+        "v85SpeedKmh": 27.7
+      },
+      {
+        "date": "2024-10-04",
+        "pedestrian": 383,
+        "bike": 828,
+        "car": 3817,
+        "heavy": 135,
+        "total": 5163,
+        "v85SpeedKmh": 28.3
+      },
+      {
+        "date": "2024-10-05",
+        "pedestrian": 233,
+        "bike": 635,
+        "car": 2227,
+        "heavy": 146,
+        "total": 3241,
+        "v85SpeedKmh": 30.8
+      },
+      {
+        "date": "2024-10-06",
+        "pedestrian": 196,
+        "bike": 462,
+        "car": 2221,
+        "heavy": 23,
+        "total": 2902,
+        "v85SpeedKmh": 29.3
+      },
+      {
+        "date": "2024-10-07",
+        "pedestrian": 201,
+        "bike": 825,
+        "car": 3363,
+        "heavy": 112,
+        "total": 4501,
+        "v85SpeedKmh": 26.8
+      },
+      {
+        "date": "2024-10-08",
+        "pedestrian": 206,
+        "bike": 714,
+        "car": 3264,
+        "heavy": 76,
+        "total": 4260,
+        "v85SpeedKmh": 25.9
+      },
+      {
+        "date": "2024-10-09",
+        "pedestrian": 281,
+        "bike": 390,
+        "car": 3350,
+        "heavy": 65,
+        "total": 4086,
+        "v85SpeedKmh": 26.2
+      },
+      {
+        "date": "2024-10-10",
+        "pedestrian": 203,
+        "bike": 483,
+        "car": 3542,
+        "heavy": 73,
+        "total": 4301,
+        "v85SpeedKmh": 26.5
+      },
+      {
+        "date": "2024-10-11",
+        "pedestrian": 267,
+        "bike": 489,
+        "car": 3693,
+        "heavy": 80,
+        "total": 4529,
+        "v85SpeedKmh": 27.1
+      },
+      {
+        "date": "2024-10-12",
+        "pedestrian": 219,
+        "bike": 488,
+        "car": 2416,
+        "heavy": 50,
+        "total": 3173,
+        "v85SpeedKmh": 30.2
+      },
+      {
+        "date": "2024-10-13",
+        "pedestrian": 180,
+        "bike": 593,
+        "car": 2084,
+        "heavy": 132,
+        "total": 2989,
+        "v85SpeedKmh": 31.5
+      },
+      {
+        "date": "2024-10-14",
+        "pedestrian": 240,
+        "bike": 437,
+        "car": 3067,
+        "heavy": 73,
+        "total": 3817,
+        "v85SpeedKmh": 26.7
+      },
+      {
+        "date": "2024-10-15",
+        "pedestrian": 148,
+        "bike": 494,
+        "car": 3022,
+        "heavy": 33,
+        "total": 3697,
+        "v85SpeedKmh": 26.9
+      },
+      {
+        "date": "2024-10-16",
+        "pedestrian": 251,
+        "bike": 597,
+        "car": 2725,
+        "heavy": 300,
+        "total": 3873,
+        "v85SpeedKmh": 29.6
+      },
+      {
+        "date": "2024-10-17",
+        "pedestrian": 212,
+        "bike": 548,
+        "car": 4720,
+        "heavy": 344,
+        "total": 5824,
+        "v85SpeedKmh": 33.7
+      },
+      {
+        "date": "2024-10-18",
+        "pedestrian": 195,
+        "bike": 495,
+        "car": 4779,
+        "heavy": 271,
+        "total": 5740,
+        "v85SpeedKmh": 33
+      },
+      {
+        "date": "2024-10-19",
+        "pedestrian": 203,
+        "bike": 530,
+        "car": 3698,
+        "heavy": 112,
+        "total": 4543,
+        "v85SpeedKmh": 34.5
+      },
+      {
+        "date": "2024-10-20",
+        "pedestrian": 146,
+        "bike": 409,
+        "car": 3317,
+        "heavy": 43,
+        "total": 3915,
+        "v85SpeedKmh": 32.6
+      },
+      {
+        "date": "2024-10-21",
+        "pedestrian": 134,
+        "bike": 447,
+        "car": 4472,
+        "heavy": 212,
+        "total": 5265,
+        "v85SpeedKmh": 31.4
+      },
+      {
+        "date": "2024-10-22",
+        "pedestrian": 207,
+        "bike": 676,
+        "car": 4778,
+        "heavy": 241,
+        "total": 5902,
+        "v85SpeedKmh": 32.6
+      },
+      {
+        "date": "2024-10-23",
+        "pedestrian": 202,
+        "bike": 629,
+        "car": 4488,
+        "heavy": 374,
+        "total": 5693,
+        "v85SpeedKmh": 33.4
+      },
+      {
+        "date": "2024-10-24",
+        "pedestrian": 190,
+        "bike": 621,
+        "car": 5032,
+        "heavy": 373,
+        "total": 6216,
+        "v85SpeedKmh": 32.7
+      },
+      {
+        "date": "2024-10-25",
+        "pedestrian": 220,
+        "bike": 527,
+        "car": 5190,
+        "heavy": 295,
+        "total": 6232,
+        "v85SpeedKmh": 31.7
+      },
+      {
+        "date": "2024-10-26",
+        "pedestrian": 151,
+        "bike": 364,
+        "car": 3488,
+        "heavy": 24,
+        "total": 4027,
+        "v85SpeedKmh": 30.1
+      },
+      {
+        "date": "2024-10-27",
+        "pedestrian": 115,
+        "bike": 309,
+        "car": 2899,
+        "heavy": 29,
+        "total": 3352,
+        "v85SpeedKmh": 35.5
+      },
+      {
+        "date": "2024-10-28",
+        "pedestrian": 168,
+        "bike": 602,
+        "car": 4396,
+        "heavy": 328,
+        "total": 5494,
+        "v85SpeedKmh": 34.7
+      },
+      {
+        "date": "2024-10-29",
+        "pedestrian": 155,
+        "bike": 539,
+        "car": 4061,
+        "heavy": 327,
+        "total": 5082,
+        "v85SpeedKmh": 33.4
+      },
+      {
+        "date": "2024-10-30",
+        "pedestrian": 130,
+        "bike": 488,
+        "car": 4071,
+        "heavy": 367,
+        "total": 5056,
+        "v85SpeedKmh": 34.1
+      },
+      {
+        "date": "2024-10-31",
+        "pedestrian": 113,
+        "bike": 411,
+        "car": 4589,
+        "heavy": 243,
+        "total": 5356,
+        "v85SpeedKmh": 31.6
+      },
+      {
+        "date": "2024-11-01",
+        "pedestrian": 78,
+        "bike": 133,
+        "car": 4359,
+        "heavy": 223,
+        "total": 4793,
+        "v85SpeedKmh": 32.2
+      },
+      {
+        "date": "2024-11-02",
+        "pedestrian": 138,
+        "bike": 280,
+        "car": 3515,
+        "heavy": 74,
+        "total": 4007,
+        "v85SpeedKmh": 34.9
+      },
+      {
+        "date": "2024-11-03",
+        "pedestrian": 84,
+        "bike": 229,
+        "car": 2037,
+        "heavy": 20,
+        "total": 2370,
+        "v85SpeedKmh": 35.2
+      },
+      {
+        "date": "2024-11-04",
+        "pedestrian": 56,
+        "bike": 163,
+        "car": 2004,
+        "heavy": 131,
+        "total": 2354,
+        "v85SpeedKmh": 30.7
+      },
+      {
+        "date": "2024-11-05",
+        "pedestrian": 126,
+        "bike": 304,
+        "car": 4268,
+        "heavy": 201,
+        "total": 4899,
+        "v85SpeedKmh": 32.9
+      },
+      {
+        "date": "2024-11-06",
+        "pedestrian": 160,
+        "bike": 356,
+        "car": 4267,
+        "heavy": 210,
+        "total": 4993,
+        "v85SpeedKmh": 34.3
+      },
+      {
+        "date": "2024-11-07",
+        "pedestrian": 185,
+        "bike": 383,
+        "car": 4260,
+        "heavy": 210,
+        "total": 5038,
+        "v85SpeedKmh": 32.8
+      },
+      {
+        "date": "2024-11-08",
+        "pedestrian": 168,
+        "bike": 348,
+        "car": 4356,
+        "heavy": 278,
+        "total": 5150,
+        "v85SpeedKmh": 32.9
+      },
+      {
+        "date": "2024-11-09",
+        "pedestrian": 122,
+        "bike": 247,
+        "car": 2980,
+        "heavy": 38,
+        "total": 3387,
+        "v85SpeedKmh": 34.1
+      },
+      {
+        "date": "2024-11-10",
+        "pedestrian": 114,
+        "bike": 193,
+        "car": 2708,
+        "heavy": 11,
+        "total": 3026,
+        "v85SpeedKmh": 30.1
+      },
+      {
+        "date": "2024-11-11",
+        "pedestrian": 112,
+        "bike": 281,
+        "car": 3539,
+        "heavy": 160,
+        "total": 4092,
+        "v85SpeedKmh": 30.7
+      },
+      {
+        "date": "2024-11-12",
+        "pedestrian": 136,
+        "bike": 357,
+        "car": 3711,
+        "heavy": 198,
+        "total": 4402,
+        "v85SpeedKmh": 32.5
+      },
+      {
+        "date": "2024-11-13",
+        "pedestrian": 115,
+        "bike": 265,
+        "car": 3513,
+        "heavy": 154,
+        "total": 4047,
+        "v85SpeedKmh": 32.7
+      },
+      {
+        "date": "2024-11-14",
+        "pedestrian": 125,
+        "bike": 328,
+        "car": 3372,
+        "heavy": 202,
+        "total": 4027,
+        "v85SpeedKmh": 32.8
+      },
+      {
+        "date": "2024-11-15",
+        "pedestrian": 147,
+        "bike": 267,
+        "car": 3612,
+        "heavy": 221,
+        "total": 4247,
+        "v85SpeedKmh": 31.3
+      },
+      {
+        "date": "2024-11-16",
+        "pedestrian": 116,
+        "bike": 160,
+        "car": 3081,
+        "heavy": 37,
+        "total": 3394,
+        "v85SpeedKmh": 34.8
+      },
+      {
+        "date": "2024-11-17",
+        "pedestrian": 114,
+        "bike": 268,
+        "car": 2106,
+        "heavy": 29,
+        "total": 2517,
+        "v85SpeedKmh": 33.3
+      },
+      {
+        "date": "2024-11-18",
+        "pedestrian": 124,
+        "bike": 225,
+        "car": 3375,
+        "heavy": 232,
+        "total": 3956,
+        "v85SpeedKmh": 34.7
+      },
+      {
+        "date": "2024-11-19",
+        "pedestrian": 134,
+        "bike": 229,
+        "car": 3185,
+        "heavy": 299,
+        "total": 3847,
+        "v85SpeedKmh": 30.8
+      },
+      {
+        "date": "2024-11-20",
+        "pedestrian": 31,
+        "bike": 91,
+        "car": 374,
+        "heavy": 22,
+        "total": 518,
+        "v85SpeedKmh": 26.5
+      },
+      {
+        "date": "2024-11-21",
+        "pedestrian": 11,
+        "bike": 91,
+        "car": 1143,
+        "heavy": 75,
+        "total": 1320,
+        "v85SpeedKmh": 31.2
+      },
+      {
+        "date": "2024-11-22",
+        "pedestrian": 106,
+        "bike": 127,
+        "car": 1320,
+        "heavy": 49,
+        "total": 1602,
+        "v85SpeedKmh": 25.9
+      },
+      {
+        "date": "2024-11-23",
+        "pedestrian": 72,
+        "bike": 64,
+        "car": 837,
+        "heavy": 2,
+        "total": 975,
+        "v85SpeedKmh": 21.8
+      },
+      {
+        "date": "2024-11-24",
+        "pedestrian": 106,
+        "bike": 378,
+        "car": 858,
+        "heavy": 9,
+        "total": 1351,
+        "v85SpeedKmh": 32.1
+      },
+      {
+        "date": "2024-11-25",
+        "pedestrian": 4,
+        "bike": 343,
+        "car": 1300,
+        "heavy": 64,
+        "total": 1711,
+        "v85SpeedKmh": 30.3
+      },
+      {
+        "date": "2024-11-26",
+        "pedestrian": 111,
+        "bike": 116,
+        "car": 2920,
+        "heavy": 176,
+        "total": 3323,
+        "v85SpeedKmh": 30.7
+      },
+      {
+        "date": "2024-11-27",
+        "pedestrian": 77,
+        "bike": 84,
+        "car": 2781,
+        "heavy": 186,
+        "total": 3128,
+        "v85SpeedKmh": 30.3
+      },
+      {
+        "date": "2024-11-28",
+        "pedestrian": 64,
+        "bike": 101,
+        "car": 2621,
+        "heavy": 195,
+        "total": 2981,
+        "v85SpeedKmh": 31.3
+      },
+      {
+        "date": "2024-11-29",
+        "pedestrian": 103,
+        "bike": 168,
+        "car": 2979,
+        "heavy": 119,
+        "total": 3369,
+        "v85SpeedKmh": 30.3
+      },
+      {
+        "date": "2024-11-30",
+        "pedestrian": 78,
+        "bike": 114,
+        "car": 2300,
+        "heavy": 48,
+        "total": 2540,
+        "v85SpeedKmh": 31.3
+      },
+      {
+        "date": "2024-12-01",
+        "pedestrian": 111,
+        "bike": 167,
+        "car": 2045,
+        "heavy": 23,
+        "total": 2346,
+        "v85SpeedKmh": 34
+      },
+      {
+        "date": "2024-12-02",
+        "pedestrian": 68,
+        "bike": 122,
+        "car": 2849,
+        "heavy": 93,
+        "total": 3132,
+        "v85SpeedKmh": 30.3
+      },
+      {
+        "date": "2024-12-03",
+        "pedestrian": 16,
+        "bike": 30,
+        "car": 765,
+        "heavy": 61,
+        "total": 872,
+        "v85SpeedKmh": 28.8
+      },
+      {
+        "date": "2024-12-04",
+        "pedestrian": 7,
+        "bike": 28,
+        "car": 132,
+        "heavy": 81,
+        "total": 248,
+        "v85SpeedKmh": 22.3
+      },
+      {
+        "date": "2024-12-05",
+        "pedestrian": 89,
+        "bike": 129,
+        "car": 1243,
+        "heavy": 49,
+        "total": 1510,
+        "v85SpeedKmh": 30.2
+      },
+      {
+        "date": "2024-12-06",
+        "pedestrian": 7,
+        "bike": 15,
+        "car": 92,
+        "heavy": 5,
+        "total": 119,
+        "v85SpeedKmh": 29.6
+      },
+      {
+        "date": "2024-12-07",
+        "pedestrian": 37,
+        "bike": 28,
+        "car": 211,
+        "heavy": 20,
+        "total": 296,
+        "v85SpeedKmh": 27.6
+      },
+      {
+        "date": "2024-12-08",
+        "pedestrian": 0,
+        "bike": 1,
+        "car": 39,
+        "heavy": 2,
+        "total": 42,
+        "v85SpeedKmh": 28.3
+      },
+      {
+        "date": "2024-12-09",
+        "pedestrian": 0,
+        "bike": 14,
+        "car": 119,
+        "heavy": 25,
+        "total": 158,
+        "v85SpeedKmh": 28.9
+      },
+      {
+        "date": "2024-12-10",
+        "pedestrian": 15,
+        "bike": 67,
+        "car": 222,
+        "heavy": 83,
+        "total": 387,
+        "v85SpeedKmh": 35.7
+      },
+      {
+        "date": "2024-12-11",
+        "pedestrian": 23,
+        "bike": 48,
+        "car": 133,
+        "heavy": 91,
+        "total": 295,
+        "v85SpeedKmh": 29.7
+      },
+      {
+        "date": "2024-12-12",
+        "pedestrian": 17,
+        "bike": 28,
+        "car": 79,
+        "heavy": 56,
+        "total": 180,
+        "v85SpeedKmh": 25.5
+      },
+      {
+        "date": "2024-12-13",
+        "pedestrian": 0,
+        "bike": 5,
+        "car": 62,
+        "heavy": 20,
+        "total": 87,
+        "v85SpeedKmh": 26.6
+      },
+      {
+        "date": "2024-12-14",
+        "pedestrian": 54,
+        "bike": 31,
+        "car": 171,
+        "heavy": 14,
+        "total": 270,
+        "v85SpeedKmh": 29.9
+      },
+      {
+        "date": "2024-12-15",
+        "pedestrian": 4,
+        "bike": 3,
+        "car": 56,
+        "heavy": 5,
+        "total": 68,
+        "v85SpeedKmh": 19.9
+      },
+      {
+        "date": "2024-12-16",
+        "pedestrian": 22,
+        "bike": 79,
+        "car": 522,
+        "heavy": 31,
+        "total": 654,
+        "v85SpeedKmh": 35.3
+      },
+      {
+        "date": "2024-12-17",
+        "pedestrian": 8,
+        "bike": 39,
+        "car": 235,
+        "heavy": 34,
+        "total": 316,
+        "v85SpeedKmh": 36.1
+      },
+      {
+        "date": "2024-12-18",
+        "pedestrian": 14,
+        "bike": 31,
+        "car": 454,
+        "heavy": 30,
+        "total": 529,
+        "v85SpeedKmh": 33.7
+      },
+      {
+        "date": "2024-12-19",
+        "pedestrian": 2,
+        "bike": 20,
+        "car": 87,
+        "heavy": 22,
+        "total": 131,
+        "v85SpeedKmh": 22.5
+      },
+      {
+        "date": "2024-12-20",
+        "pedestrian": 15,
+        "bike": 28,
+        "car": 187,
+        "heavy": 28,
+        "total": 258,
+        "v85SpeedKmh": 27.4
+      },
+      {
+        "date": "2024-12-21",
+        "pedestrian": 75,
+        "bike": 121,
+        "car": 725,
+        "heavy": 11,
+        "total": 932,
+        "v85SpeedKmh": 29.6
+      },
+      {
+        "date": "2024-12-22",
+        "pedestrian": 0,
+        "bike": 4,
+        "car": 503,
+        "heavy": 13,
+        "total": 520,
+        "v85SpeedKmh": 34.3
+      },
+      {
+        "date": "2024-12-23",
+        "pedestrian": 45,
+        "bike": 44,
+        "car": 2654,
+        "heavy": 133,
+        "total": 2876,
+        "v85SpeedKmh": 31.1
+      },
+      {
+        "date": "2024-12-24",
+        "pedestrian": 53,
+        "bike": 46,
+        "car": 1874,
+        "heavy": 43,
+        "total": 2016,
+        "v85SpeedKmh": 30.3
+      },
+      {
+        "date": "2024-12-25",
+        "pedestrian": 82,
+        "bike": 83,
+        "car": 1191,
+        "heavy": 48,
+        "total": 1404,
+        "v85SpeedKmh": 29.1
+      },
+      {
+        "date": "2024-12-26",
+        "pedestrian": 127,
+        "bike": 132,
+        "car": 1473,
+        "heavy": 81,
+        "total": 1813,
+        "v85SpeedKmh": 30
+      },
+      {
+        "date": "2024-12-27",
+        "pedestrian": 104,
+        "bike": 103,
+        "car": 2214,
+        "heavy": 96,
+        "total": 2517,
+        "v85SpeedKmh": 30.4
+      },
+      {
+        "date": "2024-12-28",
+        "pedestrian": 109,
+        "bike": 118,
+        "car": 1903,
+        "heavy": 82,
+        "total": 2212,
+        "v85SpeedKmh": 30
+      },
+      {
+        "date": "2024-12-29",
+        "pedestrian": 77,
+        "bike": 64,
+        "car": 1523,
+        "heavy": 43,
+        "total": 1707,
+        "v85SpeedKmh": 33.1
+      },
+      {
+        "date": "2024-12-30",
+        "pedestrian": 79,
+        "bike": 104,
+        "car": 2615,
+        "heavy": 119,
+        "total": 2917,
+        "v85SpeedKmh": 30.4
+      },
+      {
+        "date": "2024-12-31",
+        "pedestrian": 79,
+        "bike": 92,
+        "car": 2599,
+        "heavy": 150,
+        "total": 2920,
+        "v85SpeedKmh": 29.6
+      },
+      {
+        "date": "2025-01-01",
+        "pedestrian": 43,
+        "bike": 56,
+        "car": 231,
+        "heavy": 24,
+        "total": 354,
+        "v85SpeedKmh": 31.6
+      },
+      {
+        "date": "2025-01-02",
+        "pedestrian": 33,
+        "bike": 20,
+        "car": 739,
+        "heavy": 13,
+        "total": 805,
+        "v85SpeedKmh": 38.6
+      },
+      {
+        "date": "2025-01-03",
+        "pedestrian": 69,
+        "bike": 56,
+        "car": 364,
+        "heavy": 15,
+        "total": 504,
+        "v85SpeedKmh": 27.8
+      },
+      {
+        "date": "2025-01-04",
+        "pedestrian": 85,
+        "bike": 54,
+        "car": 181,
+        "heavy": 0,
+        "total": 320,
+        "v85SpeedKmh": 35.8
+      },
+      {
+        "date": "2025-01-05",
+        "pedestrian": 111,
+        "bike": 42,
+        "car": 269,
+        "heavy": 11,
+        "total": 433,
+        "v85SpeedKmh": 36.4
+      },
+      {
+        "date": "2025-01-06",
+        "pedestrian": 72,
+        "bike": 52,
+        "car": 142,
+        "heavy": 1,
+        "total": 267,
+        "v85SpeedKmh": 34.8
+      },
+      {
+        "date": "2025-01-07",
+        "pedestrian": 52,
+        "bike": 122,
+        "car": 541,
+        "heavy": 48,
+        "total": 763,
+        "v85SpeedKmh": 29.8
+      },
+      {
+        "date": "2025-01-08",
+        "pedestrian": 1,
+        "bike": 18,
+        "car": 72,
+        "heavy": 11,
+        "total": 102,
+        "v85SpeedKmh": 16.4
+      },
+      {
+        "date": "2025-01-09",
+        "pedestrian": 5,
+        "bike": 4,
+        "car": 48,
+        "heavy": 15,
+        "total": 72,
+        "v85SpeedKmh": 25.1
+      },
+      {
+        "date": "2025-01-10",
+        "pedestrian": 140,
+        "bike": 261,
+        "car": 1040,
+        "heavy": 83,
+        "total": 1524,
+        "v85SpeedKmh": 26.8
+      },
+      {
+        "date": "2025-01-11",
+        "pedestrian": 244,
+        "bike": 78,
+        "car": 935,
+        "heavy": 53,
+        "total": 1310,
+        "v85SpeedKmh": 30.7
+      },
+      {
+        "date": "2025-01-12",
+        "pedestrian": 308,
+        "bike": 86,
+        "car": 402,
+        "heavy": 34,
+        "total": 830,
+        "v85SpeedKmh": 24.4
+      },
+      {
+        "date": "2025-01-13",
+        "pedestrian": 57,
+        "bike": 75,
+        "car": 134,
+        "heavy": 11,
+        "total": 277,
+        "v85SpeedKmh": 31
+      },
+      {
+        "date": "2025-01-14",
+        "pedestrian": 0,
+        "bike": 33,
+        "car": 164,
+        "heavy": 28,
+        "total": 225,
+        "v85SpeedKmh": 28.9
+      },
+      {
+        "date": "2025-01-15",
+        "pedestrian": 27,
+        "bike": 84,
+        "car": 467,
+        "heavy": 31,
+        "total": 609,
+        "v85SpeedKmh": 31.8
+      },
+      {
+        "date": "2025-01-16",
+        "pedestrian": 23,
+        "bike": 108,
+        "car": 901,
+        "heavy": 49,
+        "total": 1081,
+        "v85SpeedKmh": 28.5
+      },
+      {
+        "date": "2025-01-17",
+        "pedestrian": 47,
+        "bike": 87,
+        "car": 974,
+        "heavy": 44,
+        "total": 1152,
+        "v85SpeedKmh": 31.5
+      },
+      {
+        "date": "2025-01-18",
+        "pedestrian": 105,
+        "bike": 144,
+        "car": 1435,
+        "heavy": 38,
+        "total": 1722,
+        "v85SpeedKmh": 29
+      },
+      {
+        "date": "2025-01-19",
+        "pedestrian": 163,
+        "bike": 168,
+        "car": 988,
+        "heavy": 6,
+        "total": 1325,
+        "v85SpeedKmh": 31.9
+      },
+      {
+        "date": "2025-01-20",
+        "pedestrian": 101,
+        "bike": 165,
+        "car": 1928,
+        "heavy": 102,
+        "total": 2296,
+        "v85SpeedKmh": 29.9
+      },
+      {
+        "date": "2025-01-21",
+        "pedestrian": 111,
+        "bike": 168,
+        "car": 1883,
+        "heavy": 97,
+        "total": 2259,
+        "v85SpeedKmh": 32.9
+      },
+      {
+        "date": "2025-01-22",
+        "pedestrian": 35,
+        "bike": 49,
+        "car": 73,
+        "heavy": 11,
+        "total": 168,
+        "v85SpeedKmh": 19.4
+      },
+      {
+        "date": "2025-01-23",
+        "pedestrian": 23,
+        "bike": 53,
+        "car": 1758,
+        "heavy": 61,
+        "total": 1895,
+        "v85SpeedKmh": 32.3
+      },
+      {
+        "date": "2025-01-24",
+        "pedestrian": 80,
+        "bike": 78,
+        "car": 2515,
+        "heavy": 76,
+        "total": 2749,
+        "v85SpeedKmh": 34.1
+      },
+      {
+        "date": "2025-01-25",
+        "pedestrian": 124,
+        "bike": 73,
+        "car": 2336,
+        "heavy": 24,
+        "total": 2557,
+        "v85SpeedKmh": 33.6
+      },
+      {
+        "date": "2025-01-26",
+        "pedestrian": 255,
+        "bike": 196,
+        "car": 2607,
+        "heavy": 38,
+        "total": 3096,
+        "v85SpeedKmh": 31
+      },
+      {
+        "date": "2025-01-27",
+        "pedestrian": 143,
+        "bike": 215,
+        "car": 3401,
+        "heavy": 328,
+        "total": 4087,
+        "v85SpeedKmh": 29.5
+      },
+      {
+        "date": "2025-01-28",
+        "pedestrian": 119,
+        "bike": 157,
+        "car": 2849,
+        "heavy": 143,
+        "total": 3268,
+        "v85SpeedKmh": 31.1
+      },
+      {
+        "date": "2025-01-29",
+        "pedestrian": 48,
+        "bike": 80,
+        "car": 2370,
+        "heavy": 186,
+        "total": 2684,
+        "v85SpeedKmh": 27.9
+      },
+      {
+        "date": "2025-01-30",
+        "pedestrian": 162,
+        "bike": 138,
+        "car": 3454,
+        "heavy": 197,
+        "total": 3951,
+        "v85SpeedKmh": 29.6
+      },
+      {
+        "date": "2025-01-31",
+        "pedestrian": 178,
+        "bike": 186,
+        "car": 3816,
+        "heavy": 167,
+        "total": 4347,
+        "v85SpeedKmh": 30.4
+      },
+      {
+        "date": "2025-02-01",
+        "pedestrian": 246,
+        "bike": 218,
+        "car": 3031,
+        "heavy": 47,
+        "total": 3542,
+        "v85SpeedKmh": 31.9
+      },
+      {
+        "date": "2025-02-02",
+        "pedestrian": 147,
+        "bike": 157,
+        "car": 2642,
+        "heavy": 25,
+        "total": 2971,
+        "v85SpeedKmh": 34.1
+      },
+      {
+        "date": "2025-02-03",
+        "pedestrian": 146,
+        "bike": 302,
+        "car": 3768,
+        "heavy": 153,
+        "total": 4369,
+        "v85SpeedKmh": 32.5
+      },
+      {
+        "date": "2025-02-04",
+        "pedestrian": 168,
+        "bike": 178,
+        "car": 3821,
+        "heavy": 212,
+        "total": 4379,
+        "v85SpeedKmh": 31.1
+      },
+      {
+        "date": "2025-02-05",
+        "pedestrian": 0,
+        "bike": 49,
+        "car": 416,
+        "heavy": 19,
+        "total": 484,
+        "v85SpeedKmh": 28.3
+      },
+      {
+        "date": "2025-02-06",
+        "pedestrian": 225,
+        "bike": 233,
+        "car": 4036,
+        "heavy": 234,
+        "total": 4728,
+        "v85SpeedKmh": 30.3
+      },
+      {
+        "date": "2025-02-07",
+        "pedestrian": 160,
+        "bike": 153,
+        "car": 4023,
+        "heavy": 114,
+        "total": 4450,
+        "v85SpeedKmh": 30.8
+      },
+      {
+        "date": "2025-02-08",
+        "pedestrian": 195,
+        "bike": 149,
+        "car": 3234,
+        "heavy": 43,
+        "total": 3621,
+        "v85SpeedKmh": 30.4
+      },
+      {
+        "date": "2025-02-09",
+        "pedestrian": 191,
+        "bike": 140,
+        "car": 2848,
+        "heavy": 32,
+        "total": 3211,
+        "v85SpeedKmh": 30.4
+      },
+      {
+        "date": "2025-02-10",
+        "pedestrian": 177,
+        "bike": 279,
+        "car": 3913,
+        "heavy": 290,
+        "total": 4659,
+        "v85SpeedKmh": 31.2
+      },
+      {
+        "date": "2025-02-11",
+        "pedestrian": 178,
+        "bike": 262,
+        "car": 4322,
+        "heavy": 218,
+        "total": 4980,
+        "v85SpeedKmh": 31.3
+      },
+      {
+        "date": "2025-02-12",
+        "pedestrian": 179,
+        "bike": 206,
+        "car": 4278,
+        "heavy": 277,
+        "total": 4940,
+        "v85SpeedKmh": 32.4
+      },
+      {
+        "date": "2025-02-13",
+        "pedestrian": 8,
+        "bike": 52,
+        "car": 126,
+        "heavy": 52,
+        "total": 238,
+        "v85SpeedKmh": 20.7
+      },
+      {
+        "date": "2025-02-14",
+        "pedestrian": 0,
+        "bike": 28,
+        "car": 58,
+        "heavy": 2,
+        "total": 88,
+        "v85SpeedKmh": 14.9
+      },
+      {
+        "date": "2025-02-15",
+        "pedestrian": 4,
+        "bike": 34,
+        "car": 81,
+        "heavy": 6,
+        "total": 125,
+        "v85SpeedKmh": 18.3
+      },
+      {
+        "date": "2025-02-16",
+        "pedestrian": 45,
+        "bike": 105,
+        "car": 728,
+        "heavy": 61,
+        "total": 939,
+        "v85SpeedKmh": 32.8
+      },
+      {
+        "date": "2025-02-17",
+        "pedestrian": 230,
+        "bike": 235,
+        "car": 3956,
+        "heavy": 160,
+        "total": 4581,
+        "v85SpeedKmh": 32.1
+      },
+      {
+        "date": "2025-02-18",
+        "pedestrian": 92,
+        "bike": 177,
+        "car": 2715,
+        "heavy": 56,
+        "total": 3040,
+        "v85SpeedKmh": 37
+      },
+      {
+        "date": "2025-02-19",
+        "pedestrian": 55,
+        "bike": 170,
+        "car": 1285,
+        "heavy": 251,
+        "total": 1761,
+        "v85SpeedKmh": 37.5
+      },
+      {
+        "date": "2025-02-20",
+        "pedestrian": 6,
+        "bike": 103,
+        "car": 308,
+        "heavy": 40,
+        "total": 457,
+        "v85SpeedKmh": 32
+      },
+      {
+        "date": "2025-02-21",
+        "pedestrian": 2,
+        "bike": 55,
+        "car": 122,
+        "heavy": 18,
+        "total": 197,
+        "v85SpeedKmh": 21.6
+      },
+      {
+        "date": "2025-02-22",
+        "pedestrian": 0,
+        "bike": 31,
+        "car": 68,
+        "heavy": 10,
+        "total": 109,
+        "v85SpeedKmh": 10.4
+      },
+      {
+        "date": "2025-02-23",
+        "pedestrian": 39,
+        "bike": 163,
+        "car": 359,
+        "heavy": 37,
+        "total": 598,
+        "v85SpeedKmh": 33.9
+      },
+      {
+        "date": "2025-02-24",
+        "pedestrian": 14,
+        "bike": 74,
+        "car": 156,
+        "heavy": 38,
+        "total": 282,
+        "v85SpeedKmh": 16
+      },
+      {
+        "date": "2025-02-25",
+        "pedestrian": 86,
+        "bike": 354,
+        "car": 2080,
+        "heavy": 137,
+        "total": 2657,
+        "v85SpeedKmh": 35.6
+      },
+      {
+        "date": "2025-02-26",
+        "pedestrian": 41,
+        "bike": 309,
+        "car": 1519,
+        "heavy": 70,
+        "total": 1939,
+        "v85SpeedKmh": 30.2
+      },
+      {
+        "date": "2025-02-27",
+        "pedestrian": 129,
+        "bike": 313,
+        "car": 4332,
+        "heavy": 193,
+        "total": 4967,
+        "v85SpeedKmh": 30.6
+      },
+      {
+        "date": "2025-02-28",
+        "pedestrian": 207,
+        "bike": 302,
+        "car": 5231,
+        "heavy": 228,
+        "total": 5968,
+        "v85SpeedKmh": 31.6
+      },
+      {
+        "date": "2025-03-01",
+        "pedestrian": 176,
+        "bike": 203,
+        "car": 3830,
+        "heavy": 54,
+        "total": 4263,
+        "v85SpeedKmh": 33
+      },
+      {
+        "date": "2025-03-02",
+        "pedestrian": 242,
+        "bike": 238,
+        "car": 3358,
+        "heavy": 23,
+        "total": 3861,
+        "v85SpeedKmh": 33.5
+      },
+      {
+        "date": "2025-03-03",
+        "pedestrian": 234,
+        "bike": 402,
+        "car": 5202,
+        "heavy": 271,
+        "total": 6109,
+        "v85SpeedKmh": 32.2
+      },
+      {
+        "date": "2025-03-04",
+        "pedestrian": 290,
+        "bike": 427,
+        "car": 4948,
+        "heavy": 435,
+        "total": 6100,
+        "v85SpeedKmh": 34.6
+      },
+      {
+        "date": "2025-03-05",
+        "pedestrian": 224,
+        "bike": 339,
+        "car": 5133,
+        "heavy": 321,
+        "total": 6017,
+        "v85SpeedKmh": 31.9
+      },
+      {
+        "date": "2025-03-06",
+        "pedestrian": 300,
+        "bike": 498,
+        "car": 5321,
+        "heavy": 341,
+        "total": 6460,
+        "v85SpeedKmh": 34.3
+      },
+      {
+        "date": "2025-03-07",
+        "pedestrian": 361,
+        "bike": 452,
+        "car": 5698,
+        "heavy": 305,
+        "total": 6816,
+        "v85SpeedKmh": 32.4
+      },
+      {
+        "date": "2025-03-08",
+        "pedestrian": 300,
+        "bike": 518,
+        "car": 4265,
+        "heavy": 121,
+        "total": 5204,
+        "v85SpeedKmh": 35.7
+      },
+      {
+        "date": "2025-03-09",
+        "pedestrian": 303,
+        "bike": 413,
+        "car": 3784,
+        "heavy": 62,
+        "total": 4562,
+        "v85SpeedKmh": 31.9
+      },
+      {
+        "date": "2025-03-10",
+        "pedestrian": 258,
+        "bike": 490,
+        "car": 5456,
+        "heavy": 307,
+        "total": 6511,
+        "v85SpeedKmh": 31.4
+      },
+      {
+        "date": "2025-03-11",
+        "pedestrian": 269,
+        "bike": 438,
+        "car": 5526,
+        "heavy": 314,
+        "total": 6547,
+        "v85SpeedKmh": 31
+      },
+      {
+        "date": "2025-03-12",
+        "pedestrian": 221,
+        "bike": 361,
+        "car": 5475,
+        "heavy": 186,
+        "total": 6243,
+        "v85SpeedKmh": 31.1
+      },
+      {
+        "date": "2025-03-13",
+        "pedestrian": 33,
+        "bike": 111,
+        "car": 192,
+        "heavy": 31,
+        "total": 367,
+        "v85SpeedKmh": 20.7
+      },
+      {
+        "date": "2025-03-14",
+        "pedestrian": 83,
+        "bike": 612,
+        "car": 2478,
+        "heavy": 248,
+        "total": 3421,
+        "v85SpeedKmh": 34.3
+      },
+      {
+        "date": "2025-03-15",
+        "pedestrian": 42,
+        "bike": 270,
+        "car": 2795,
+        "heavy": 40,
+        "total": 3147,
+        "v85SpeedKmh": 35.4
+      },
+      {
+        "date": "2025-03-16",
+        "pedestrian": 205,
+        "bike": 298,
+        "car": 3363,
+        "heavy": 82,
+        "total": 3948,
+        "v85SpeedKmh": 37
+      },
+      {
+        "date": "2025-03-17",
+        "pedestrian": 133,
+        "bike": 334,
+        "car": 4780,
+        "heavy": 368,
+        "total": 5615,
+        "v85SpeedKmh": 34.1
+      },
+      {
+        "date": "2025-03-18",
+        "pedestrian": 199,
+        "bike": 513,
+        "car": 5714,
+        "heavy": 406,
+        "total": 6832,
+        "v85SpeedKmh": 33.5
+      },
+      {
+        "date": "2025-03-19",
+        "pedestrian": 300,
+        "bike": 625,
+        "car": 5876,
+        "heavy": 594,
+        "total": 7395,
+        "v85SpeedKmh": 37.2
+      },
+      {
+        "date": "2025-03-20",
+        "pedestrian": 249,
+        "bike": 487,
+        "car": 5899,
+        "heavy": 329,
+        "total": 6964,
+        "v85SpeedKmh": 32.7
+      },
+      {
+        "date": "2025-03-21",
+        "pedestrian": 298,
+        "bike": 525,
+        "car": 6112,
+        "heavy": 554,
+        "total": 7489,
+        "v85SpeedKmh": 36.9
+      },
+      {
+        "date": "2025-03-22",
+        "pedestrian": 283,
+        "bike": 603,
+        "car": 4489,
+        "heavy": 192,
+        "total": 5567,
+        "v85SpeedKmh": 36.6
+      },
+      {
+        "date": "2025-03-23",
+        "pedestrian": 292,
+        "bike": 686,
+        "car": 4189,
+        "heavy": 200,
+        "total": 5367,
+        "v85SpeedKmh": 36.4
+      },
+      {
+        "date": "2025-03-24",
+        "pedestrian": 218,
+        "bike": 475,
+        "car": 4753,
+        "heavy": 441,
+        "total": 5887,
+        "v85SpeedKmh": 32.9
+      },
+      {
+        "date": "2025-03-25",
+        "pedestrian": 289,
+        "bike": 527,
+        "car": 5940,
+        "heavy": 292,
+        "total": 7048,
+        "v85SpeedKmh": 30.6
+      },
+      {
+        "date": "2025-03-26",
+        "pedestrian": 414,
+        "bike": 706,
+        "car": 6013,
+        "heavy": 559,
+        "total": 7692,
+        "v85SpeedKmh": 34.9
+      },
+      {
+        "date": "2025-03-27",
+        "pedestrian": 310,
+        "bike": 618,
+        "car": 5979,
+        "heavy": 589,
+        "total": 7496,
+        "v85SpeedKmh": 35
+      },
+      {
+        "date": "2025-03-28",
+        "pedestrian": 271,
+        "bike": 403,
+        "car": 6071,
+        "heavy": 280,
+        "total": 7025,
+        "v85SpeedKmh": 31
+      },
+      {
+        "date": "2025-03-29",
+        "pedestrian": 336,
+        "bike": 845,
+        "car": 4816,
+        "heavy": 160,
+        "total": 6157,
+        "v85SpeedKmh": 35.8
+      },
+      {
+        "date": "2025-03-30",
+        "pedestrian": 289,
+        "bike": 543,
+        "car": 4482,
+        "heavy": 91,
+        "total": 5405,
+        "v85SpeedKmh": 34.7
+      },
+      {
+        "date": "2025-03-31",
+        "pedestrian": 336,
+        "bike": 815,
+        "car": 6416,
+        "heavy": 433,
+        "total": 8000,
+        "v85SpeedKmh": 32.8
+      },
+      {
+        "date": "2025-04-01",
+        "pedestrian": 419,
+        "bike": 1077,
+        "car": 6662,
+        "heavy": 570,
+        "total": 8728,
+        "v85SpeedKmh": 35.1
+      },
+      {
+        "date": "2025-04-02",
+        "pedestrian": 398,
+        "bike": 1272,
+        "car": 6595,
+        "heavy": 604,
+        "total": 8869,
+        "v85SpeedKmh": 35.2
+      },
+      {
+        "date": "2025-04-03",
+        "pedestrian": 390,
+        "bike": 1183,
+        "car": 6430,
+        "heavy": 564,
+        "total": 8567,
+        "v85SpeedKmh": 36.1
+      },
+      {
+        "date": "2025-04-04",
+        "pedestrian": 340,
+        "bike": 687,
+        "car": 6604,
+        "heavy": 513,
+        "total": 8144,
+        "v85SpeedKmh": 34
+      },
+      {
+        "date": "2025-04-05",
+        "pedestrian": 186,
+        "bike": 318,
+        "car": 4644,
+        "heavy": 98,
+        "total": 5246,
+        "v85SpeedKmh": 34.5
+      },
+      {
+        "date": "2025-04-06",
+        "pedestrian": 266,
+        "bike": 473,
+        "car": 4565,
+        "heavy": 111,
+        "total": 5415,
+        "v85SpeedKmh": 34.6
+      },
+      {
+        "date": "2025-04-07",
+        "pedestrian": 313,
+        "bike": 783,
+        "car": 6501,
+        "heavy": 553,
+        "total": 8150,
+        "v85SpeedKmh": 35.9
+      },
+      {
+        "date": "2025-04-08",
+        "pedestrian": 337,
+        "bike": 869,
+        "car": 6468,
+        "heavy": 628,
+        "total": 8302,
+        "v85SpeedKmh": 36.5
+      },
+      {
+        "date": "2025-04-09",
+        "pedestrian": 281,
+        "bike": 537,
+        "car": 6591,
+        "heavy": 577,
+        "total": 7986,
+        "v85SpeedKmh": 33.4
+      },
+      {
+        "date": "2025-04-10",
+        "pedestrian": 296,
+        "bike": 563,
+        "car": 6502,
+        "heavy": 557,
+        "total": 7918,
+        "v85SpeedKmh": 34.8
+      },
+      {
+        "date": "2025-04-11",
+        "pedestrian": 229,
+        "bike": 577,
+        "car": 5043,
+        "heavy": 176,
+        "total": 6025,
+        "v85SpeedKmh": 33.9
+      },
+      {
+        "date": "2025-04-12",
+        "pedestrian": 243,
+        "bike": 358,
+        "car": 4723,
+        "heavy": 127,
+        "total": 5451,
+        "v85SpeedKmh": 35.2
+      },
+      {
+        "date": "2025-04-13",
+        "pedestrian": 334,
+        "bike": 876,
+        "car": 4962,
+        "heavy": 126,
+        "total": 6298,
+        "v85SpeedKmh": 36.1
+      },
+      {
+        "date": "2025-04-14",
+        "pedestrian": 365,
+        "bike": 995,
+        "car": 6869,
+        "heavy": 363,
+        "total": 8592,
+        "v85SpeedKmh": 32.4
+      },
+      {
+        "date": "2025-04-15",
+        "pedestrian": 395,
+        "bike": 1322,
+        "car": 6827,
+        "heavy": 587,
+        "total": 9131,
+        "v85SpeedKmh": 35.4
+      },
+      {
+        "date": "2025-04-16",
+        "pedestrian": 408,
+        "bike": 1210,
+        "car": 7080,
+        "heavy": 539,
+        "total": 9237,
+        "v85SpeedKmh": 34.3
+      },
+      {
+        "date": "2025-04-17",
+        "pedestrian": 353,
+        "bike": 785,
+        "car": 7204,
+        "heavy": 325,
+        "total": 8667,
+        "v85SpeedKmh": 31.1
+      },
+      {
+        "date": "2025-04-18",
+        "pedestrian": 268,
+        "bike": 756,
+        "car": 4159,
+        "heavy": 57,
+        "total": 5240,
+        "v85SpeedKmh": 32.2
+      },
+      {
+        "date": "2025-04-19",
+        "pedestrian": 230,
+        "bike": 631,
+        "car": 4418,
+        "heavy": 95,
+        "total": 5374,
+        "v85SpeedKmh": 34
+      },
+      {
+        "date": "2025-04-20",
+        "pedestrian": 156,
+        "bike": 178,
+        "car": 3549,
+        "heavy": 56,
+        "total": 3939,
+        "v85SpeedKmh": 33.5
+      },
+      {
+        "date": "2025-04-21",
+        "pedestrian": 222,
+        "bike": 298,
+        "car": 4530,
+        "heavy": 72,
+        "total": 5122,
+        "v85SpeedKmh": 33.6
+      },
+      {
+        "date": "2025-04-22",
+        "pedestrian": 328,
+        "bike": 878,
+        "car": 6747,
+        "heavy": 362,
+        "total": 8315,
+        "v85SpeedKmh": 32.2
+      },
+      {
+        "date": "2025-04-23",
+        "pedestrian": 350,
+        "bike": 857,
+        "car": 7068,
+        "heavy": 348,
+        "total": 8623,
+        "v85SpeedKmh": 32.4
+      },
+      {
+        "date": "2025-04-24",
+        "pedestrian": 421,
+        "bike": 1044,
+        "car": 7205,
+        "heavy": 524,
+        "total": 9194,
+        "v85SpeedKmh": 33.3
+      },
+      {
+        "date": "2025-04-25",
+        "pedestrian": 378,
+        "bike": 837,
+        "car": 6907,
+        "heavy": 536,
+        "total": 8658,
+        "v85SpeedKmh": 34.5
+      },
+      {
+        "date": "2025-04-26",
+        "pedestrian": 299,
+        "bike": 642,
+        "car": 5180,
+        "heavy": 133,
+        "total": 6254,
+        "v85SpeedKmh": 34.5
+      },
+      {
+        "date": "2025-04-27",
+        "pedestrian": 327,
+        "bike": 776,
+        "car": 5371,
+        "heavy": 101,
+        "total": 6575,
+        "v85SpeedKmh": 34
+      },
+      {
+        "date": "2025-04-28",
+        "pedestrian": 346,
+        "bike": 951,
+        "car": 7286,
+        "heavy": 466,
+        "total": 9049,
+        "v85SpeedKmh": 33.4
+      },
+      {
+        "date": "2025-04-29",
+        "pedestrian": 404,
+        "bike": 1098,
+        "car": 7458,
+        "heavy": 494,
+        "total": 9454,
+        "v85SpeedKmh": 33.7
+      },
+      {
+        "date": "2025-04-30",
+        "pedestrian": 314,
+        "bike": 734,
+        "car": 7270,
+        "heavy": 304,
+        "total": 8622,
+        "v85SpeedKmh": 30.1
+      },
+      {
+        "date": "2025-05-01",
+        "pedestrian": 287,
+        "bike": 742,
+        "car": 4146,
+        "heavy": 89,
+        "total": 5264,
+        "v85SpeedKmh": 33.3
+      },
+      {
+        "date": "2025-05-02",
+        "pedestrian": 260,
+        "bike": 630,
+        "car": 6635,
+        "heavy": 309,
+        "total": 7834,
+        "v85SpeedKmh": 32.4
+      },
+      {
+        "date": "2025-05-03",
+        "pedestrian": 733,
+        "bike": 1218,
+        "car": 5548,
+        "heavy": 124,
+        "total": 7623,
+        "v85SpeedKmh": 32.1
+      },
+      {
+        "date": "2025-05-04",
+        "pedestrian": 302,
+        "bike": 827,
+        "car": 5350,
+        "heavy": 95,
+        "total": 6574,
+        "v85SpeedKmh": 32.2
+      },
+      {
+        "date": "2025-05-05",
+        "pedestrian": 340,
+        "bike": 1136,
+        "car": 7465,
+        "heavy": 543,
+        "total": 9484,
+        "v85SpeedKmh": 34.7
+      },
+      {
+        "date": "2025-05-06",
+        "pedestrian": 330,
+        "bike": 743,
+        "car": 7283,
+        "heavy": 372,
+        "total": 8728,
+        "v85SpeedKmh": 33.5
+      },
+      {
+        "date": "2025-05-07",
+        "pedestrian": 337,
+        "bike": 1029,
+        "car": 7236,
+        "heavy": 429,
+        "total": 9031,
+        "v85SpeedKmh": 31.6
+      },
+      {
+        "date": "2025-05-08",
+        "pedestrian": 299,
+        "bike": 1001,
+        "car": 7377,
+        "heavy": 381,
+        "total": 9058,
+        "v85SpeedKmh": 31.6
+      },
+      {
+        "date": "2025-05-09",
+        "pedestrian": 413,
+        "bike": 991,
+        "car": 7474,
+        "heavy": 394,
+        "total": 9272,
+        "v85SpeedKmh": 32
+      },
+      {
+        "date": "2025-05-10",
+        "pedestrian": 336,
+        "bike": 975,
+        "car": 6252,
+        "heavy": 128,
+        "total": 7691,
+        "v85SpeedKmh": 33.7
+      },
+      {
+        "date": "2025-05-11",
+        "pedestrian": 322,
+        "bike": 1173,
+        "car": 6179,
+        "heavy": 127,
+        "total": 7801,
+        "v85SpeedKmh": 36.6
+      },
+      {
+        "date": "2025-05-12",
+        "pedestrian": 434,
+        "bike": 1591,
+        "car": 6782,
+        "heavy": 511,
+        "total": 9318,
+        "v85SpeedKmh": 35.4
+      },
+      {
+        "date": "2025-05-13",
+        "pedestrian": 372,
+        "bike": 1444,
+        "car": 7531,
+        "heavy": 502,
+        "total": 9849,
+        "v85SpeedKmh": 33.4
+      },
+      {
+        "date": "2025-05-14",
+        "pedestrian": 299,
+        "bike": 1041,
+        "car": 7125,
+        "heavy": 392,
+        "total": 8857,
+        "v85SpeedKmh": 32.6
+      },
+      {
+        "date": "2025-05-15",
+        "pedestrian": 321,
+        "bike": 1144,
+        "car": 7512,
+        "heavy": 334,
+        "total": 9311,
+        "v85SpeedKmh": 31.4
+      },
+      {
+        "date": "2025-05-16",
+        "pedestrian": 446,
+        "bike": 1392,
+        "car": 7211,
+        "heavy": 605,
+        "total": 9654,
+        "v85SpeedKmh": 34.5
+      },
+      {
+        "date": "2025-05-17",
+        "pedestrian": 320,
+        "bike": 1033,
+        "car": 4996,
+        "heavy": 128,
+        "total": 6477,
+        "v85SpeedKmh": 35.4
+      },
+      {
+        "date": "2025-05-18",
+        "pedestrian": 281,
+        "bike": 995,
+        "car": 4907,
+        "heavy": 82,
+        "total": 6265,
+        "v85SpeedKmh": 32.8
+      },
+      {
+        "date": "2025-05-19",
+        "pedestrian": 441,
+        "bike": 1772,
+        "car": 7251,
+        "heavy": 618,
+        "total": 10082,
+        "v85SpeedKmh": 35.5
+      },
+      {
+        "date": "2025-05-20",
+        "pedestrian": 403,
+        "bike": 1807,
+        "car": 6765,
+        "heavy": 497,
+        "total": 9472,
+        "v85SpeedKmh": 34.9
+      },
+      {
+        "date": "2025-05-21",
+        "pedestrian": 326,
+        "bike": 1317,
+        "car": 7337,
+        "heavy": 456,
+        "total": 9436,
+        "v85SpeedKmh": 32.9
+      },
+      {
+        "date": "2025-05-22",
+        "pedestrian": 360,
+        "bike": 1365,
+        "car": 7354,
+        "heavy": 459,
+        "total": 9538,
+        "v85SpeedKmh": 32.7
+      },
+      {
+        "date": "2025-05-23",
+        "pedestrian": 327,
+        "bike": 635,
+        "car": 7453,
+        "heavy": 333,
+        "total": 8748,
+        "v85SpeedKmh": 32.3
+      },
+      {
+        "date": "2025-05-24",
+        "pedestrian": 257,
+        "bike": 796,
+        "car": 5390,
+        "heavy": 98,
+        "total": 6541,
+        "v85SpeedKmh": 31.3
+      },
+      {
+        "date": "2025-05-25",
+        "pedestrian": 406,
+        "bike": 1310,
+        "car": 4701,
+        "heavy": 77,
+        "total": 6494,
+        "v85SpeedKmh": 34.5
+      },
+      {
+        "date": "2025-05-26",
+        "pedestrian": 465,
+        "bike": 1663,
+        "car": 7476,
+        "heavy": 510,
+        "total": 10114,
+        "v85SpeedKmh": 35.2
+      },
+      {
+        "date": "2025-05-27",
+        "pedestrian": 404,
+        "bike": 1819,
+        "car": 6686,
+        "heavy": 548,
+        "total": 9457,
+        "v85SpeedKmh": 34
+      },
+      {
+        "date": "2025-05-28",
+        "pedestrian": 399,
+        "bike": 1443,
+        "car": 7894,
+        "heavy": 342,
+        "total": 10078,
+        "v85SpeedKmh": 30.4
+      },
+      {
+        "date": "2025-05-29",
+        "pedestrian": 425,
+        "bike": 1381,
+        "car": 5194,
+        "heavy": 133,
+        "total": 7133,
+        "v85SpeedKmh": 32.5
+      },
+      {
+        "date": "2025-05-30",
+        "pedestrian": 356,
+        "bike": 1445,
+        "car": 7355,
+        "heavy": 382,
+        "total": 9538,
+        "v85SpeedKmh": 33.2
+      },
+      {
+        "date": "2025-05-31",
+        "pedestrian": 366,
+        "bike": 951,
+        "car": 5402,
+        "heavy": 84,
+        "total": 6803,
+        "v85SpeedKmh": 32.6
+      },
+      {
+        "date": "2025-06-01",
+        "pedestrian": 376,
+        "bike": 1473,
+        "car": 4757,
+        "heavy": 132,
+        "total": 6738,
+        "v85SpeedKmh": 36.2
+      },
+      {
+        "date": "2025-06-02",
+        "pedestrian": 292,
+        "bike": 960,
+        "car": 7372,
+        "heavy": 336,
+        "total": 8960,
+        "v85SpeedKmh": 32.1
+      },
+      {
+        "date": "2025-06-03",
+        "pedestrian": 474,
+        "bike": 1783,
+        "car": 6656,
+        "heavy": 413,
+        "total": 9326,
+        "v85SpeedKmh": 34.2
+      },
+      {
+        "date": "2025-06-04",
+        "pedestrian": 365,
+        "bike": 1923,
+        "car": 7306,
+        "heavy": 527,
+        "total": 10121,
+        "v85SpeedKmh": 34.9
+      },
+      {
+        "date": "2025-06-05",
+        "pedestrian": 298,
+        "bike": 1075,
+        "car": 6890,
+        "heavy": 261,
+        "total": 8524,
+        "v85SpeedKmh": 31.7
+      },
+      {
+        "date": "2025-06-06",
+        "pedestrian": 443,
+        "bike": 1393,
+        "car": 7140,
+        "heavy": 336,
+        "total": 9312,
+        "v85SpeedKmh": 32.2
+      },
+      {
+        "date": "2025-06-07",
+        "pedestrian": 312,
+        "bike": 932,
+        "car": 4799,
+        "heavy": 82,
+        "total": 6125,
+        "v85SpeedKmh": 34.7
+      },
+      {
+        "date": "2025-06-08",
+        "pedestrian": 361,
+        "bike": 1525,
+        "car": 4905,
+        "heavy": 98,
+        "total": 6889,
+        "v85SpeedKmh": 34.9
+      },
+      {
+        "date": "2025-06-09",
+        "pedestrian": 163,
+        "bike": 789,
+        "car": 7617,
+        "heavy": 344,
+        "total": 8913,
+        "v85SpeedKmh": 31.2
+      },
+      {
+        "date": "2025-06-10",
+        "pedestrian": 381,
+        "bike": 1797,
+        "car": 7038,
+        "heavy": 314,
+        "total": 9530,
+        "v85SpeedKmh": 32.6
+      },
+      {
+        "date": "2025-06-11",
+        "pedestrian": 249,
+        "bike": 631,
+        "car": 7061,
+        "heavy": 317,
+        "total": 8258,
+        "v85SpeedKmh": 32.4
+      },
+      {
+        "date": "2025-06-12",
+        "pedestrian": 398,
+        "bike": 837,
+        "car": 7515,
+        "heavy": 306,
+        "total": 9056,
+        "v85SpeedKmh": 32.5
+      },
+      {
+        "date": "2025-06-13",
+        "pedestrian": 509,
+        "bike": 1565,
+        "car": 7072,
+        "heavy": 449,
+        "total": 9595,
+        "v85SpeedKmh": 33.7
+      },
+      {
+        "date": "2025-06-14",
+        "pedestrian": 453,
+        "bike": 2084,
+        "car": 4488,
+        "heavy": 162,
+        "total": 7187,
+        "v85SpeedKmh": 35.1
+      },
+      {
+        "date": "2025-06-15",
+        "pedestrian": 364,
+        "bike": 1619,
+        "car": 4596,
+        "heavy": 90,
+        "total": 6669,
+        "v85SpeedKmh": 35.3
+      },
+      {
+        "date": "2025-06-16",
+        "pedestrian": 430,
+        "bike": 1576,
+        "car": 7150,
+        "heavy": 370,
+        "total": 9526,
+        "v85SpeedKmh": 31.2
+      },
+      {
+        "date": "2025-06-17",
+        "pedestrian": 389,
+        "bike": 1249,
+        "car": 6734,
+        "heavy": 256,
+        "total": 8628,
+        "v85SpeedKmh": 31.9
+      },
+      {
+        "date": "2025-06-18",
+        "pedestrian": 299,
+        "bike": 979,
+        "car": 7464,
+        "heavy": 361,
+        "total": 9103,
+        "v85SpeedKmh": 32.1
+      },
+      {
+        "date": "2025-06-19",
+        "pedestrian": 235,
+        "bike": 607,
+        "car": 7251,
+        "heavy": 254,
+        "total": 8347,
+        "v85SpeedKmh": 30.6
+      },
+      {
+        "date": "2025-06-20",
+        "pedestrian": 248,
+        "bike": 919,
+        "car": 3576,
+        "heavy": 69,
+        "total": 4812,
+        "v85SpeedKmh": 34.6
+      },
+      {
+        "date": "2025-06-21",
+        "pedestrian": 143,
+        "bike": 356,
+        "car": 2449,
+        "heavy": 43,
+        "total": 2991,
+        "v85SpeedKmh": 33.6
+      },
+      {
+        "date": "2025-06-22",
+        "pedestrian": 291,
+        "bike": 991,
+        "car": 3829,
+        "heavy": 68,
+        "total": 5179,
+        "v85SpeedKmh": 33.2
+      },
+      {
+        "date": "2025-06-23",
+        "pedestrian": 285,
+        "bike": 1135,
+        "car": 6008,
+        "heavy": 240,
+        "total": 7668,
+        "v85SpeedKmh": 30.9
+      },
+      {
+        "date": "2025-06-24",
+        "pedestrian": 272,
+        "bike": 908,
+        "car": 6452,
+        "heavy": 201,
+        "total": 7833,
+        "v85SpeedKmh": 31.7
+      },
+      {
+        "date": "2025-06-25",
+        "pedestrian": 351,
+        "bike": 1059,
+        "car": 6619,
+        "heavy": 249,
+        "total": 8278,
+        "v85SpeedKmh": 31.2
+      },
+      {
+        "date": "2025-06-26",
+        "pedestrian": 346,
+        "bike": 1596,
+        "car": 5836,
+        "heavy": 320,
+        "total": 8098,
+        "v85SpeedKmh": 32.8
+      },
+      {
+        "date": "2025-06-27",
+        "pedestrian": 409,
+        "bike": 1295,
+        "car": 6454,
+        "heavy": 270,
+        "total": 8428,
+        "v85SpeedKmh": 31.9
+      },
+      {
+        "date": "2025-06-28",
+        "pedestrian": 279,
+        "bike": 725,
+        "car": 4532,
+        "heavy": 54,
+        "total": 5590,
+        "v85SpeedKmh": 32.9
+      },
+      {
+        "date": "2025-06-29",
+        "pedestrian": 230,
+        "bike": 706,
+        "car": 4257,
+        "heavy": 80,
+        "total": 5273,
+        "v85SpeedKmh": 33.3
+      },
+      {
+        "date": "2025-06-30",
+        "pedestrian": 372,
+        "bike": 1340,
+        "car": 6215,
+        "heavy": 280,
+        "total": 8207,
+        "v85SpeedKmh": 32.4
+      },
+      {
+        "date": "2025-07-01",
+        "pedestrian": 397,
+        "bike": 1866,
+        "car": 6051,
+        "heavy": 387,
+        "total": 8701,
+        "v85SpeedKmh": 34.2
+      },
+      {
+        "date": "2025-07-02",
+        "pedestrian": 464,
+        "bike": 1905,
+        "car": 6125,
+        "heavy": 387,
+        "total": 8881,
+        "v85SpeedKmh": 33.9
+      },
+      {
+        "date": "2025-07-03",
+        "pedestrian": 415,
+        "bike": 1338,
+        "car": 6463,
+        "heavy": 243,
+        "total": 8459,
+        "v85SpeedKmh": 30.6
+      },
+      {
+        "date": "2025-07-04",
+        "pedestrian": 477,
+        "bike": 1050,
+        "car": 5717,
+        "heavy": 301,
+        "total": 7545,
+        "v85SpeedKmh": 33.2
+      },
+      {
+        "date": "2025-07-05",
+        "pedestrian": 444,
+        "bike": 989,
+        "car": 4731,
+        "heavy": 79,
+        "total": 6243,
+        "v85SpeedKmh": 32.4
+      },
+      {
+        "date": "2025-07-06",
+        "pedestrian": 261,
+        "bike": 769,
+        "car": 4073,
+        "heavy": 35,
+        "total": 5138,
+        "v85SpeedKmh": 34.2
+      },
+      {
+        "date": "2025-07-07",
+        "pedestrian": 301,
+        "bike": 1366,
+        "car": 6496,
+        "heavy": 185,
+        "total": 8348,
+        "v85SpeedKmh": 31.3
+      },
+      {
+        "date": "2025-07-08",
+        "pedestrian": 273,
+        "bike": 984,
+        "car": 5790,
+        "heavy": 184,
+        "total": 7231,
+        "v85SpeedKmh": 32
+      },
+      {
+        "date": "2025-07-09",
+        "pedestrian": 462,
+        "bike": 1877,
+        "car": 5770,
+        "heavy": 400,
+        "total": 8509,
+        "v85SpeedKmh": 34.2
+      },
+      {
+        "date": "2025-07-10",
+        "pedestrian": 384,
+        "bike": 1416,
+        "car": 6264,
+        "heavy": 328,
+        "total": 8392,
+        "v85SpeedKmh": 30.2
+      },
+      {
+        "date": "2025-07-11",
+        "pedestrian": 497,
+        "bike": 1310,
+        "car": 5977,
+        "heavy": 193,
+        "total": 7977,
+        "v85SpeedKmh": 30.5
+      },
+      {
+        "date": "2025-07-12",
+        "pedestrian": 488,
+        "bike": 1416,
+        "car": 4092,
+        "heavy": 91,
+        "total": 6087,
+        "v85SpeedKmh": 33.3
+      },
+      {
+        "date": "2025-07-13",
+        "pedestrian": 345,
+        "bike": 1270,
+        "car": 3843,
+        "heavy": 73,
+        "total": 5531,
+        "v85SpeedKmh": 33.1
+      },
+      {
+        "date": "2025-07-14",
+        "pedestrian": 396,
+        "bike": 1592,
+        "car": 5920,
+        "heavy": 434,
+        "total": 8342,
+        "v85SpeedKmh": 34.1
+      },
+      {
+        "date": "2025-07-15",
+        "pedestrian": 404,
+        "bike": 1683,
+        "car": 5874,
+        "heavy": 398,
+        "total": 8359,
+        "v85SpeedKmh": 35.2
+      },
+      {
+        "date": "2025-07-16",
+        "pedestrian": 381,
+        "bike": 1483,
+        "car": 5022,
+        "heavy": 416,
+        "total": 7302,
+        "v85SpeedKmh": 36.4
+      },
+      {
+        "date": "2025-07-17",
+        "pedestrian": 375,
+        "bike": 1438,
+        "car": 5570,
+        "heavy": 376,
+        "total": 7759,
+        "v85SpeedKmh": 35.4
+      },
+      {
+        "date": "2025-07-18",
+        "pedestrian": 553,
+        "bike": 1317,
+        "car": 5171,
+        "heavy": 368,
+        "total": 7409,
+        "v85SpeedKmh": 35.6
+      },
+      {
+        "date": "2025-07-19",
+        "pedestrian": 408,
+        "bike": 1150,
+        "car": 3665,
+        "heavy": 76,
+        "total": 5299,
+        "v85SpeedKmh": 34.7
+      },
+      {
+        "date": "2025-07-20",
+        "pedestrian": 327,
+        "bike": 1076,
+        "car": 3670,
+        "heavy": 70,
+        "total": 5143,
+        "v85SpeedKmh": 35.4
+      },
+      {
+        "date": "2025-07-21",
+        "pedestrian": 367,
+        "bike": 1382,
+        "car": 5684,
+        "heavy": 346,
+        "total": 7779,
+        "v85SpeedKmh": 33.4
+      },
+      {
+        "date": "2025-07-22",
+        "pedestrian": 365,
+        "bike": 1248,
+        "car": 5374,
+        "heavy": 258,
+        "total": 7245,
+        "v85SpeedKmh": 31.4
+      },
+      {
+        "date": "2025-07-23",
+        "pedestrian": 399,
+        "bike": 1500,
+        "car": 5199,
+        "heavy": 414,
+        "total": 7512,
+        "v85SpeedKmh": 34.8
+      },
+      {
+        "date": "2025-07-24",
+        "pedestrian": 364,
+        "bike": 1474,
+        "car": 5253,
+        "heavy": 395,
+        "total": 7486,
+        "v85SpeedKmh": 35.8
+      },
+      {
+        "date": "2025-07-25",
+        "pedestrian": 407,
+        "bike": 1250,
+        "car": 5330,
+        "heavy": 388,
+        "total": 7375,
+        "v85SpeedKmh": 35.1
+      },
+      {
+        "date": "2025-07-26",
+        "pedestrian": 414,
+        "bike": 1207,
+        "car": 4026,
+        "heavy": 123,
+        "total": 5770,
+        "v85SpeedKmh": 35.3
+      },
+      {
+        "date": "2025-07-27",
+        "pedestrian": 294,
+        "bike": 1214,
+        "car": 3823,
+        "heavy": 110,
+        "total": 5441,
+        "v85SpeedKmh": 35.5
+      },
+      {
+        "date": "2025-07-28",
+        "pedestrian": 197,
+        "bike": 832,
+        "car": 3495,
+        "heavy": 468,
+        "total": 4992,
+        "v85SpeedKmh": 35.2
+      },
+      {
+        "date": "2025-07-29",
+        "pedestrian": 342,
+        "bike": 1322,
+        "car": 6280,
+        "heavy": 359,
+        "total": 8303,
+        "v85SpeedKmh": 31.5
+      },
+      {
+        "date": "2025-07-30",
+        "pedestrian": 404,
+        "bike": 1665,
+        "car": 5949,
+        "heavy": 510,
+        "total": 8528,
+        "v85SpeedKmh": 34.1
+      },
+      {
+        "date": "2025-07-31",
+        "pedestrian": 440,
+        "bike": 1672,
+        "car": 6485,
+        "heavy": 554,
+        "total": 9151,
+        "v85SpeedKmh": 33.5
+      },
+      {
+        "date": "2025-08-01",
+        "pedestrian": 370,
+        "bike": 1147,
+        "car": 6493,
+        "heavy": 436,
+        "total": 8446,
+        "v85SpeedKmh": 31.7
+      },
+      {
+        "date": "2025-08-02",
+        "pedestrian": 375,
+        "bike": 1172,
+        "car": 4004,
+        "heavy": 132,
+        "total": 5683,
+        "v85SpeedKmh": 35.9
+      },
+      {
+        "date": "2025-08-03",
+        "pedestrian": 345,
+        "bike": 1444,
+        "car": 4379,
+        "heavy": 97,
+        "total": 6265,
+        "v85SpeedKmh": 35.9
+      },
+      {
+        "date": "2025-08-04",
+        "pedestrian": 425,
+        "bike": 1485,
+        "car": 6979,
+        "heavy": 568,
+        "total": 9457,
+        "v85SpeedKmh": 33.7
+      },
+      {
+        "date": "2025-08-05",
+        "pedestrian": 353,
+        "bike": 1449,
+        "car": 7091,
+        "heavy": 352,
+        "total": 9245,
+        "v85SpeedKmh": 31.2
+      },
+      {
+        "date": "2025-08-06",
+        "pedestrian": 347,
+        "bike": 1370,
+        "car": 7036,
+        "heavy": 478,
+        "total": 9231,
+        "v85SpeedKmh": 33.2
+      },
+      {
+        "date": "2025-08-07",
+        "pedestrian": 535,
+        "bike": 1732,
+        "car": 6422,
+        "heavy": 511,
+        "total": 9200,
+        "v85SpeedKmh": 34.3
+      },
+      {
+        "date": "2025-08-08",
+        "pedestrian": 367,
+        "bike": 1193,
+        "car": 7001,
+        "heavy": 325,
+        "total": 8886,
+        "v85SpeedKmh": 30.6
+      },
+      {
+        "date": "2025-08-09",
+        "pedestrian": 432,
+        "bike": 1457,
+        "car": 4541,
+        "heavy": 108,
+        "total": 6538,
+        "v85SpeedKmh": 34.8
+      },
+      {
+        "date": "2025-08-10",
+        "pedestrian": 338,
+        "bike": 1093,
+        "car": 4577,
+        "heavy": 61,
+        "total": 6069,
+        "v85SpeedKmh": 31.8
+      },
+      {
+        "date": "2025-08-11",
+        "pedestrian": 456,
+        "bike": 2005,
+        "car": 6737,
+        "heavy": 473,
+        "total": 9671,
+        "v85SpeedKmh": 33.1
+      },
+      {
+        "date": "2025-08-12",
+        "pedestrian": 409,
+        "bike": 1240,
+        "car": 7017,
+        "heavy": 373,
+        "total": 9039,
+        "v85SpeedKmh": 32.2
+      },
+      {
+        "date": "2025-08-13",
+        "pedestrian": 462,
+        "bike": 2040,
+        "car": 6694,
+        "heavy": 552,
+        "total": 9748,
+        "v85SpeedKmh": 33.6
+      },
+      {
+        "date": "2025-08-14",
+        "pedestrian": 452,
+        "bike": 1942,
+        "car": 6677,
+        "heavy": 565,
+        "total": 9636,
+        "v85SpeedKmh": 33.9
+      },
+      {
+        "date": "2025-08-15",
+        "pedestrian": 465,
+        "bike": 1437,
+        "car": 6779,
+        "heavy": 426,
+        "total": 9107,
+        "v85SpeedKmh": 31.9
+      },
+      {
+        "date": "2025-08-16",
+        "pedestrian": 467,
+        "bike": 838,
+        "car": 5144,
+        "heavy": 129,
+        "total": 6578,
+        "v85SpeedKmh": 32.6
+      },
+      {
+        "date": "2025-08-17",
+        "pedestrian": 353,
+        "bike": 1160,
+        "car": 4808,
+        "heavy": 82,
+        "total": 6403,
+        "v85SpeedKmh": 34
+      },
+      {
+        "date": "2025-08-18",
+        "pedestrian": 418,
+        "bike": 1722,
+        "car": 6229,
+        "heavy": 429,
+        "total": 8798,
+        "v85SpeedKmh": 33.3
+      },
+      {
+        "date": "2025-08-19",
+        "pedestrian": 355,
+        "bike": 1795,
+        "car": 6864,
+        "heavy": 485,
+        "total": 9499,
+        "v85SpeedKmh": 32.1
+      },
+      {
+        "date": "2025-08-20",
+        "pedestrian": 408,
+        "bike": 1657,
+        "car": 6575,
+        "heavy": 610,
+        "total": 9250,
+        "v85SpeedKmh": 34.3
+      },
+      {
+        "date": "2025-08-21",
+        "pedestrian": 342,
+        "bike": 1415,
+        "car": 6887,
+        "heavy": 398,
+        "total": 9042,
+        "v85SpeedKmh": 33
+      },
+      {
+        "date": "2025-08-22",
+        "pedestrian": 364,
+        "bike": 1216,
+        "car": 6545,
+        "heavy": 342,
+        "total": 8467,
+        "v85SpeedKmh": 32.7
+      },
+      {
+        "date": "2025-08-23",
+        "pedestrian": 2005,
+        "bike": 1137,
+        "car": 4763,
+        "heavy": 139,
+        "total": 8044,
+        "v85SpeedKmh": 33.3
+      },
+      {
+        "date": "2025-08-24",
+        "pedestrian": 280,
+        "bike": 868,
+        "car": 4758,
+        "heavy": 71,
+        "total": 5977,
+        "v85SpeedKmh": 32.5
+      },
+      {
+        "date": "2025-08-25",
+        "pedestrian": 403,
+        "bike": 1218,
+        "car": 6909,
+        "heavy": 346,
+        "total": 8876,
+        "v85SpeedKmh": 33.6
+      },
+      {
+        "date": "2025-08-26",
+        "pedestrian": 447,
+        "bike": 1691,
+        "car": 6877,
+        "heavy": 410,
+        "total": 9425,
+        "v85SpeedKmh": 31.8
+      },
+      {
+        "date": "2025-08-27",
+        "pedestrian": 421,
+        "bike": 1596,
+        "car": 6840,
+        "heavy": 401,
+        "total": 9258,
+        "v85SpeedKmh": 32.5
+      },
+      {
+        "date": "2025-08-28",
+        "pedestrian": 475,
+        "bike": 1550,
+        "car": 6881,
+        "heavy": 498,
+        "total": 9404,
+        "v85SpeedKmh": 33.3
+      },
+      {
+        "date": "2025-08-29",
+        "pedestrian": 260,
+        "bike": 738,
+        "car": 6787,
+        "heavy": 189,
+        "total": 7974,
+        "v85SpeedKmh": 30.3
+      },
+      {
+        "date": "2025-08-30",
+        "pedestrian": 287,
+        "bike": 716,
+        "car": 4653,
+        "heavy": 81,
+        "total": 5737,
+        "v85SpeedKmh": 33.2
+      },
+      {
+        "date": "2025-08-31",
+        "pedestrian": 287,
+        "bike": 936,
+        "car": 4737,
+        "heavy": 44,
+        "total": 6004,
+        "v85SpeedKmh": 32.1
+      },
+      {
+        "date": "2025-09-01",
+        "pedestrian": 342,
+        "bike": 1571,
+        "car": 6748,
+        "heavy": 184,
+        "total": 8845,
+        "v85SpeedKmh": 30.8
+      },
+      {
+        "date": "2025-09-02",
+        "pedestrian": 329,
+        "bike": 1429,
+        "car": 6622,
+        "heavy": 191,
+        "total": 8571,
+        "v85SpeedKmh": 30.2
+      },
+      {
+        "date": "2025-09-03",
+        "pedestrian": 341,
+        "bike": 1224,
+        "car": 6712,
+        "heavy": 385,
+        "total": 8662,
+        "v85SpeedKmh": 31.9
+      },
+      {
+        "date": "2025-09-04",
+        "pedestrian": 485,
+        "bike": 1508,
+        "car": 6290,
+        "heavy": 387,
+        "total": 8670,
+        "v85SpeedKmh": 34
+      },
+      {
+        "date": "2025-09-05",
+        "pedestrian": 520,
+        "bike": 1287,
+        "car": 6674,
+        "heavy": 357,
+        "total": 8838,
+        "v85SpeedKmh": 32.1
+      },
+      {
+        "date": "2025-09-06",
+        "pedestrian": 360,
+        "bike": 1013,
+        "car": 4622,
+        "heavy": 87,
+        "total": 6082,
+        "v85SpeedKmh": 32.7
+      },
+      {
+        "date": "2025-09-07",
+        "pedestrian": 326,
+        "bike": 1019,
+        "car": 4405,
+        "heavy": 39,
+        "total": 5789,
+        "v85SpeedKmh": 32.9
+      },
+      {
+        "date": "2025-09-08",
+        "pedestrian": 463,
+        "bike": 1674,
+        "car": 6673,
+        "heavy": 423,
+        "total": 9233,
+        "v85SpeedKmh": 33.3
+      },
+      {
+        "date": "2025-09-09",
+        "pedestrian": 419,
+        "bike": 1239,
+        "car": 5111,
+        "heavy": 435,
+        "total": 7204,
+        "v85SpeedKmh": 32.7
+      },
+      {
+        "date": "2025-09-10",
+        "pedestrian": 684,
+        "bike": 1605,
+        "car": 6652,
+        "heavy": 445,
+        "total": 9386,
+        "v85SpeedKmh": 32.9
+      },
+      {
+        "date": "2025-09-11",
+        "pedestrian": 480,
+        "bike": 1432,
+        "car": 6804,
+        "heavy": 615,
+        "total": 9331,
+        "v85SpeedKmh": 34.8
+      },
+      {
+        "date": "2025-09-12",
+        "pedestrian": 272,
+        "bike": 641,
+        "car": 6627,
+        "heavy": 224,
+        "total": 7764,
+        "v85SpeedKmh": 30.4
+      },
+      {
+        "date": "2025-09-13",
+        "pedestrian": 296,
+        "bike": 774,
+        "car": 4760,
+        "heavy": 68,
+        "total": 5898,
+        "v85SpeedKmh": 33.1
+      },
+      {
+        "date": "2025-09-14",
+        "pedestrian": 235,
+        "bike": 555,
+        "car": 4035,
+        "heavy": 18,
+        "total": 4843,
+        "v85SpeedKmh": 31.5
+      },
+      {
+        "date": "2025-09-15",
+        "pedestrian": 90,
+        "bike": 284,
+        "car": 2999,
+        "heavy": 146,
+        "total": 3519,
+        "v85SpeedKmh": 30.8
+      }
+    ],
+    "source": "SharePoint Helsinki/Telraam/raw-data-9000007091-*.xlsx (KPI 1.2)"
+  },
+  "sensors": [
+    {
+      "sensorId": "9000007091",
+      "street": "Koetilantie",
+      "city": "Helsinki",
+      "location": {
+        "lat": 60.224599,
+        "lng": 25.017236,
+        "note": "Fixed Viikintie-Koetilantie tramway crossing anchor (FVH3)"
+      },
+      "periodStart": "2024-12-31T23:00:00.000Z",
+      "periodEnd": "2025-09-15T11:45:00.000Z",
+      "totals": {
+        "pedestrian": 76062,
+        "bike": 220688,
+        "car": 1253149,
+        "heavy": 64591,
+        "all": 1614490
+      },
+      "modeShare": {
+        "pedestrianPct": 4.7,
+        "bikePct": 13.7,
+        "carPct": 77.6,
+        "heavyPct": 4
+      },
+      "v85SpeedKmh": 32.8,
+      "dailyAggregates": [
+        {
+          "date": "2024-12-31",
+          "pedestrian": 0,
+          "bike": 0,
+          "car": 0,
+          "heavy": 0,
+          "total": 0,
+          "v85SpeedKmh": null
+        },
+        {
+          "date": "2025-01-01",
+          "pedestrian": 43,
+          "bike": 56,
+          "car": 231,
+          "heavy": 24,
+          "total": 354,
+          "v85SpeedKmh": 31.6
+        },
+        {
+          "date": "2025-01-02",
+          "pedestrian": 33,
+          "bike": 20,
+          "car": 739,
+          "heavy": 13,
+          "total": 805,
+          "v85SpeedKmh": 38.6
+        },
+        {
+          "date": "2025-01-03",
+          "pedestrian": 69,
+          "bike": 56,
+          "car": 364,
+          "heavy": 15,
+          "total": 504,
+          "v85SpeedKmh": 27.8
+        },
+        {
+          "date": "2025-01-04",
+          "pedestrian": 85,
+          "bike": 54,
+          "car": 181,
+          "heavy": 0,
+          "total": 320,
+          "v85SpeedKmh": 35.8
+        },
+        {
+          "date": "2025-01-05",
+          "pedestrian": 111,
+          "bike": 42,
+          "car": 269,
+          "heavy": 11,
+          "total": 433,
+          "v85SpeedKmh": 36.4
+        },
+        {
+          "date": "2025-01-06",
+          "pedestrian": 72,
+          "bike": 52,
+          "car": 142,
+          "heavy": 1,
+          "total": 267,
+          "v85SpeedKmh": 34.8
+        },
+        {
+          "date": "2025-01-07",
+          "pedestrian": 52,
+          "bike": 122,
+          "car": 541,
+          "heavy": 48,
+          "total": 763,
+          "v85SpeedKmh": 29.8
+        },
+        {
+          "date": "2025-01-08",
+          "pedestrian": 1,
+          "bike": 18,
+          "car": 72,
+          "heavy": 11,
+          "total": 102,
+          "v85SpeedKmh": 16.4
+        },
+        {
+          "date": "2025-01-09",
+          "pedestrian": 5,
+          "bike": 4,
+          "car": 48,
+          "heavy": 15,
+          "total": 72,
+          "v85SpeedKmh": 25.1
+        },
+        {
+          "date": "2025-01-10",
+          "pedestrian": 140,
+          "bike": 261,
+          "car": 1040,
+          "heavy": 83,
+          "total": 1524,
+          "v85SpeedKmh": 26.8
+        },
+        {
+          "date": "2025-01-11",
+          "pedestrian": 244,
+          "bike": 78,
+          "car": 935,
+          "heavy": 53,
+          "total": 1310,
+          "v85SpeedKmh": 30.7
+        },
+        {
+          "date": "2025-01-12",
+          "pedestrian": 308,
+          "bike": 86,
+          "car": 402,
+          "heavy": 34,
+          "total": 830,
+          "v85SpeedKmh": 24.4
+        },
+        {
+          "date": "2025-01-13",
+          "pedestrian": 57,
+          "bike": 75,
+          "car": 134,
+          "heavy": 11,
+          "total": 277,
+          "v85SpeedKmh": 31
+        },
+        {
+          "date": "2025-01-14",
+          "pedestrian": 0,
+          "bike": 33,
+          "car": 164,
+          "heavy": 28,
+          "total": 225,
+          "v85SpeedKmh": 28.9
+        },
+        {
+          "date": "2025-01-15",
+          "pedestrian": 27,
+          "bike": 84,
+          "car": 467,
+          "heavy": 31,
+          "total": 609,
+          "v85SpeedKmh": 31.8
+        },
+        {
+          "date": "2025-01-16",
+          "pedestrian": 23,
+          "bike": 108,
+          "car": 901,
+          "heavy": 49,
+          "total": 1081,
+          "v85SpeedKmh": 28.5
+        },
+        {
+          "date": "2025-01-17",
+          "pedestrian": 47,
+          "bike": 87,
+          "car": 974,
+          "heavy": 44,
+          "total": 1152,
+          "v85SpeedKmh": 31.5
+        },
+        {
+          "date": "2025-01-18",
+          "pedestrian": 105,
+          "bike": 144,
+          "car": 1435,
+          "heavy": 38,
+          "total": 1722,
+          "v85SpeedKmh": 29
+        },
+        {
+          "date": "2025-01-19",
+          "pedestrian": 163,
+          "bike": 168,
+          "car": 988,
+          "heavy": 6,
+          "total": 1325,
+          "v85SpeedKmh": 31.9
+        },
+        {
+          "date": "2025-01-20",
+          "pedestrian": 101,
+          "bike": 165,
+          "car": 1928,
+          "heavy": 102,
+          "total": 2296,
+          "v85SpeedKmh": 29.9
+        },
+        {
+          "date": "2025-01-21",
+          "pedestrian": 111,
+          "bike": 168,
+          "car": 1883,
+          "heavy": 97,
+          "total": 2259,
+          "v85SpeedKmh": 32.9
+        },
+        {
+          "date": "2025-01-22",
+          "pedestrian": 35,
+          "bike": 49,
+          "car": 73,
+          "heavy": 11,
+          "total": 168,
+          "v85SpeedKmh": 19.4
+        },
+        {
+          "date": "2025-01-23",
+          "pedestrian": 23,
+          "bike": 53,
+          "car": 1758,
+          "heavy": 61,
+          "total": 1895,
+          "v85SpeedKmh": 32.3
+        },
+        {
+          "date": "2025-01-24",
+          "pedestrian": 80,
+          "bike": 78,
+          "car": 2515,
+          "heavy": 76,
+          "total": 2749,
+          "v85SpeedKmh": 34.1
+        },
+        {
+          "date": "2025-01-25",
+          "pedestrian": 124,
+          "bike": 73,
+          "car": 2336,
+          "heavy": 24,
+          "total": 2557,
+          "v85SpeedKmh": 33.6
+        },
+        {
+          "date": "2025-01-26",
+          "pedestrian": 255,
+          "bike": 196,
+          "car": 2607,
+          "heavy": 38,
+          "total": 3096,
+          "v85SpeedKmh": 31
+        },
+        {
+          "date": "2025-01-27",
+          "pedestrian": 143,
+          "bike": 215,
+          "car": 3401,
+          "heavy": 328,
+          "total": 4087,
+          "v85SpeedKmh": 29.5
+        },
+        {
+          "date": "2025-01-28",
+          "pedestrian": 119,
+          "bike": 157,
+          "car": 2849,
+          "heavy": 143,
+          "total": 3268,
+          "v85SpeedKmh": 31.1
+        },
+        {
+          "date": "2025-01-29",
+          "pedestrian": 48,
+          "bike": 80,
+          "car": 2370,
+          "heavy": 186,
+          "total": 2684,
+          "v85SpeedKmh": 27.9
+        },
+        {
+          "date": "2025-01-30",
+          "pedestrian": 162,
+          "bike": 138,
+          "car": 3454,
+          "heavy": 197,
+          "total": 3951,
+          "v85SpeedKmh": 29.6
+        },
+        {
+          "date": "2025-01-31",
+          "pedestrian": 178,
+          "bike": 186,
+          "car": 3816,
+          "heavy": 167,
+          "total": 4347,
+          "v85SpeedKmh": 30.4
+        },
+        {
+          "date": "2025-02-01",
+          "pedestrian": 246,
+          "bike": 218,
+          "car": 3031,
+          "heavy": 47,
+          "total": 3542,
+          "v85SpeedKmh": 31.9
+        },
+        {
+          "date": "2025-02-02",
+          "pedestrian": 147,
+          "bike": 157,
+          "car": 2642,
+          "heavy": 25,
+          "total": 2971,
+          "v85SpeedKmh": 34.1
+        },
+        {
+          "date": "2025-02-03",
+          "pedestrian": 146,
+          "bike": 302,
+          "car": 3768,
+          "heavy": 153,
+          "total": 4369,
+          "v85SpeedKmh": 32.5
+        },
+        {
+          "date": "2025-02-04",
+          "pedestrian": 168,
+          "bike": 178,
+          "car": 3821,
+          "heavy": 212,
+          "total": 4379,
+          "v85SpeedKmh": 31.1
+        },
+        {
+          "date": "2025-02-05",
+          "pedestrian": 0,
+          "bike": 49,
+          "car": 416,
+          "heavy": 19,
+          "total": 484,
+          "v85SpeedKmh": 28.3
+        },
+        {
+          "date": "2025-02-06",
+          "pedestrian": 225,
+          "bike": 233,
+          "car": 4036,
+          "heavy": 234,
+          "total": 4728,
+          "v85SpeedKmh": 30.3
+        },
+        {
+          "date": "2025-02-07",
+          "pedestrian": 160,
+          "bike": 153,
+          "car": 4023,
+          "heavy": 114,
+          "total": 4450,
+          "v85SpeedKmh": 30.8
+        },
+        {
+          "date": "2025-02-08",
+          "pedestrian": 195,
+          "bike": 149,
+          "car": 3234,
+          "heavy": 43,
+          "total": 3621,
+          "v85SpeedKmh": 30.4
+        },
+        {
+          "date": "2025-02-09",
+          "pedestrian": 191,
+          "bike": 140,
+          "car": 2848,
+          "heavy": 32,
+          "total": 3211,
+          "v85SpeedKmh": 30.4
+        },
+        {
+          "date": "2025-02-10",
+          "pedestrian": 177,
+          "bike": 279,
+          "car": 3913,
+          "heavy": 290,
+          "total": 4659,
+          "v85SpeedKmh": 31.2
+        },
+        {
+          "date": "2025-02-11",
+          "pedestrian": 178,
+          "bike": 262,
+          "car": 4322,
+          "heavy": 218,
+          "total": 4980,
+          "v85SpeedKmh": 31.3
+        },
+        {
+          "date": "2025-02-12",
+          "pedestrian": 179,
+          "bike": 206,
+          "car": 4278,
+          "heavy": 277,
+          "total": 4940,
+          "v85SpeedKmh": 32.4
+        },
+        {
+          "date": "2025-02-13",
+          "pedestrian": 8,
+          "bike": 52,
+          "car": 126,
+          "heavy": 52,
+          "total": 238,
+          "v85SpeedKmh": 20.7
+        },
+        {
+          "date": "2025-02-14",
+          "pedestrian": 0,
+          "bike": 28,
+          "car": 58,
+          "heavy": 2,
+          "total": 88,
+          "v85SpeedKmh": 14.9
+        },
+        {
+          "date": "2025-02-15",
+          "pedestrian": 4,
+          "bike": 34,
+          "car": 81,
+          "heavy": 6,
+          "total": 125,
+          "v85SpeedKmh": 18.3
+        },
+        {
+          "date": "2025-02-16",
+          "pedestrian": 45,
+          "bike": 105,
+          "car": 728,
+          "heavy": 61,
+          "total": 939,
+          "v85SpeedKmh": 32.8
+        },
+        {
+          "date": "2025-02-17",
+          "pedestrian": 230,
+          "bike": 235,
+          "car": 3956,
+          "heavy": 160,
+          "total": 4581,
+          "v85SpeedKmh": 32.1
+        },
+        {
+          "date": "2025-02-18",
+          "pedestrian": 92,
+          "bike": 177,
+          "car": 2715,
+          "heavy": 56,
+          "total": 3040,
+          "v85SpeedKmh": 37
+        },
+        {
+          "date": "2025-02-19",
+          "pedestrian": 55,
+          "bike": 170,
+          "car": 1285,
+          "heavy": 251,
+          "total": 1761,
+          "v85SpeedKmh": 37.5
+        },
+        {
+          "date": "2025-02-20",
+          "pedestrian": 6,
+          "bike": 103,
+          "car": 308,
+          "heavy": 40,
+          "total": 457,
+          "v85SpeedKmh": 32
+        },
+        {
+          "date": "2025-02-21",
+          "pedestrian": 2,
+          "bike": 55,
+          "car": 122,
+          "heavy": 18,
+          "total": 197,
+          "v85SpeedKmh": 21.6
+        },
+        {
+          "date": "2025-02-22",
+          "pedestrian": 0,
+          "bike": 31,
+          "car": 68,
+          "heavy": 10,
+          "total": 109,
+          "v85SpeedKmh": 10.4
+        },
+        {
+          "date": "2025-02-23",
+          "pedestrian": 39,
+          "bike": 163,
+          "car": 359,
+          "heavy": 37,
+          "total": 598,
+          "v85SpeedKmh": 33.9
+        },
+        {
+          "date": "2025-02-24",
+          "pedestrian": 14,
+          "bike": 74,
+          "car": 156,
+          "heavy": 38,
+          "total": 282,
+          "v85SpeedKmh": 16
+        },
+        {
+          "date": "2025-02-25",
+          "pedestrian": 86,
+          "bike": 354,
+          "car": 2080,
+          "heavy": 137,
+          "total": 2657,
+          "v85SpeedKmh": 35.6
+        },
+        {
+          "date": "2025-02-26",
+          "pedestrian": 41,
+          "bike": 309,
+          "car": 1519,
+          "heavy": 70,
+          "total": 1939,
+          "v85SpeedKmh": 30.2
+        },
+        {
+          "date": "2025-02-27",
+          "pedestrian": 129,
+          "bike": 313,
+          "car": 4332,
+          "heavy": 193,
+          "total": 4967,
+          "v85SpeedKmh": 30.6
+        },
+        {
+          "date": "2025-02-28",
+          "pedestrian": 207,
+          "bike": 302,
+          "car": 5231,
+          "heavy": 228,
+          "total": 5968,
+          "v85SpeedKmh": 31.6
+        },
+        {
+          "date": "2025-03-01",
+          "pedestrian": 176,
+          "bike": 203,
+          "car": 3830,
+          "heavy": 54,
+          "total": 4263,
+          "v85SpeedKmh": 33
+        },
+        {
+          "date": "2025-03-02",
+          "pedestrian": 242,
+          "bike": 238,
+          "car": 3358,
+          "heavy": 23,
+          "total": 3861,
+          "v85SpeedKmh": 33.5
+        },
+        {
+          "date": "2025-03-03",
+          "pedestrian": 234,
+          "bike": 402,
+          "car": 5202,
+          "heavy": 271,
+          "total": 6109,
+          "v85SpeedKmh": 32.2
+        },
+        {
+          "date": "2025-03-04",
+          "pedestrian": 290,
+          "bike": 427,
+          "car": 4948,
+          "heavy": 435,
+          "total": 6100,
+          "v85SpeedKmh": 34.6
+        },
+        {
+          "date": "2025-03-05",
+          "pedestrian": 224,
+          "bike": 339,
+          "car": 5133,
+          "heavy": 321,
+          "total": 6017,
+          "v85SpeedKmh": 31.9
+        },
+        {
+          "date": "2025-03-06",
+          "pedestrian": 300,
+          "bike": 498,
+          "car": 5321,
+          "heavy": 341,
+          "total": 6460,
+          "v85SpeedKmh": 34.3
+        },
+        {
+          "date": "2025-03-07",
+          "pedestrian": 361,
+          "bike": 452,
+          "car": 5698,
+          "heavy": 305,
+          "total": 6816,
+          "v85SpeedKmh": 32.4
+        },
+        {
+          "date": "2025-03-08",
+          "pedestrian": 300,
+          "bike": 518,
+          "car": 4265,
+          "heavy": 121,
+          "total": 5204,
+          "v85SpeedKmh": 35.7
+        },
+        {
+          "date": "2025-03-09",
+          "pedestrian": 303,
+          "bike": 413,
+          "car": 3784,
+          "heavy": 62,
+          "total": 4562,
+          "v85SpeedKmh": 31.9
+        },
+        {
+          "date": "2025-03-10",
+          "pedestrian": 258,
+          "bike": 490,
+          "car": 5456,
+          "heavy": 307,
+          "total": 6511,
+          "v85SpeedKmh": 31.4
+        },
+        {
+          "date": "2025-03-11",
+          "pedestrian": 269,
+          "bike": 438,
+          "car": 5526,
+          "heavy": 314,
+          "total": 6547,
+          "v85SpeedKmh": 31
+        },
+        {
+          "date": "2025-03-12",
+          "pedestrian": 221,
+          "bike": 361,
+          "car": 5475,
+          "heavy": 186,
+          "total": 6243,
+          "v85SpeedKmh": 31.1
+        },
+        {
+          "date": "2025-03-13",
+          "pedestrian": 33,
+          "bike": 111,
+          "car": 192,
+          "heavy": 31,
+          "total": 367,
+          "v85SpeedKmh": 20.7
+        },
+        {
+          "date": "2025-03-14",
+          "pedestrian": 83,
+          "bike": 612,
+          "car": 2478,
+          "heavy": 248,
+          "total": 3421,
+          "v85SpeedKmh": 34.3
+        },
+        {
+          "date": "2025-03-15",
+          "pedestrian": 42,
+          "bike": 270,
+          "car": 2795,
+          "heavy": 40,
+          "total": 3147,
+          "v85SpeedKmh": 35.4
+        },
+        {
+          "date": "2025-03-16",
+          "pedestrian": 205,
+          "bike": 298,
+          "car": 3363,
+          "heavy": 82,
+          "total": 3948,
+          "v85SpeedKmh": 37
+        },
+        {
+          "date": "2025-03-17",
+          "pedestrian": 133,
+          "bike": 334,
+          "car": 4780,
+          "heavy": 368,
+          "total": 5615,
+          "v85SpeedKmh": 34.1
+        },
+        {
+          "date": "2025-03-18",
+          "pedestrian": 199,
+          "bike": 513,
+          "car": 5714,
+          "heavy": 406,
+          "total": 6832,
+          "v85SpeedKmh": 33.5
+        },
+        {
+          "date": "2025-03-19",
+          "pedestrian": 300,
+          "bike": 625,
+          "car": 5876,
+          "heavy": 594,
+          "total": 7395,
+          "v85SpeedKmh": 37.2
+        },
+        {
+          "date": "2025-03-20",
+          "pedestrian": 249,
+          "bike": 487,
+          "car": 5899,
+          "heavy": 329,
+          "total": 6964,
+          "v85SpeedKmh": 32.7
+        },
+        {
+          "date": "2025-03-21",
+          "pedestrian": 298,
+          "bike": 525,
+          "car": 6112,
+          "heavy": 554,
+          "total": 7489,
+          "v85SpeedKmh": 36.9
+        },
+        {
+          "date": "2025-03-22",
+          "pedestrian": 283,
+          "bike": 603,
+          "car": 4489,
+          "heavy": 192,
+          "total": 5567,
+          "v85SpeedKmh": 36.6
+        },
+        {
+          "date": "2025-03-23",
+          "pedestrian": 292,
+          "bike": 686,
+          "car": 4189,
+          "heavy": 200,
+          "total": 5367,
+          "v85SpeedKmh": 36.4
+        },
+        {
+          "date": "2025-03-24",
+          "pedestrian": 218,
+          "bike": 475,
+          "car": 4753,
+          "heavy": 441,
+          "total": 5887,
+          "v85SpeedKmh": 32.9
+        },
+        {
+          "date": "2025-03-25",
+          "pedestrian": 289,
+          "bike": 527,
+          "car": 5940,
+          "heavy": 292,
+          "total": 7048,
+          "v85SpeedKmh": 30.6
+        },
+        {
+          "date": "2025-03-26",
+          "pedestrian": 414,
+          "bike": 706,
+          "car": 6013,
+          "heavy": 559,
+          "total": 7692,
+          "v85SpeedKmh": 34.9
+        },
+        {
+          "date": "2025-03-27",
+          "pedestrian": 310,
+          "bike": 618,
+          "car": 5979,
+          "heavy": 589,
+          "total": 7496,
+          "v85SpeedKmh": 35
+        },
+        {
+          "date": "2025-03-28",
+          "pedestrian": 271,
+          "bike": 403,
+          "car": 6071,
+          "heavy": 280,
+          "total": 7025,
+          "v85SpeedKmh": 31
+        },
+        {
+          "date": "2025-03-29",
+          "pedestrian": 336,
+          "bike": 845,
+          "car": 4816,
+          "heavy": 160,
+          "total": 6157,
+          "v85SpeedKmh": 35.8
+        },
+        {
+          "date": "2025-03-30",
+          "pedestrian": 289,
+          "bike": 543,
+          "car": 4482,
+          "heavy": 91,
+          "total": 5405,
+          "v85SpeedKmh": 34.7
+        },
+        {
+          "date": "2025-03-31",
+          "pedestrian": 336,
+          "bike": 815,
+          "car": 6416,
+          "heavy": 433,
+          "total": 8000,
+          "v85SpeedKmh": 32.8
+        },
+        {
+          "date": "2025-04-01",
+          "pedestrian": 419,
+          "bike": 1077,
+          "car": 6662,
+          "heavy": 570,
+          "total": 8728,
+          "v85SpeedKmh": 35.1
+        },
+        {
+          "date": "2025-04-02",
+          "pedestrian": 398,
+          "bike": 1272,
+          "car": 6595,
+          "heavy": 604,
+          "total": 8869,
+          "v85SpeedKmh": 35.2
+        },
+        {
+          "date": "2025-04-03",
+          "pedestrian": 390,
+          "bike": 1183,
+          "car": 6430,
+          "heavy": 564,
+          "total": 8567,
+          "v85SpeedKmh": 36.1
+        },
+        {
+          "date": "2025-04-04",
+          "pedestrian": 340,
+          "bike": 687,
+          "car": 6604,
+          "heavy": 513,
+          "total": 8144,
+          "v85SpeedKmh": 34
+        },
+        {
+          "date": "2025-04-05",
+          "pedestrian": 186,
+          "bike": 318,
+          "car": 4644,
+          "heavy": 98,
+          "total": 5246,
+          "v85SpeedKmh": 34.5
+        },
+        {
+          "date": "2025-04-06",
+          "pedestrian": 266,
+          "bike": 473,
+          "car": 4565,
+          "heavy": 111,
+          "total": 5415,
+          "v85SpeedKmh": 34.6
+        },
+        {
+          "date": "2025-04-07",
+          "pedestrian": 313,
+          "bike": 783,
+          "car": 6501,
+          "heavy": 553,
+          "total": 8150,
+          "v85SpeedKmh": 35.9
+        },
+        {
+          "date": "2025-04-08",
+          "pedestrian": 337,
+          "bike": 869,
+          "car": 6468,
+          "heavy": 628,
+          "total": 8302,
+          "v85SpeedKmh": 36.5
+        },
+        {
+          "date": "2025-04-09",
+          "pedestrian": 281,
+          "bike": 537,
+          "car": 6591,
+          "heavy": 577,
+          "total": 7986,
+          "v85SpeedKmh": 33.4
+        },
+        {
+          "date": "2025-04-10",
+          "pedestrian": 296,
+          "bike": 563,
+          "car": 6502,
+          "heavy": 557,
+          "total": 7918,
+          "v85SpeedKmh": 34.8
+        },
+        {
+          "date": "2025-04-11",
+          "pedestrian": 229,
+          "bike": 577,
+          "car": 5043,
+          "heavy": 176,
+          "total": 6025,
+          "v85SpeedKmh": 33.9
+        },
+        {
+          "date": "2025-04-12",
+          "pedestrian": 243,
+          "bike": 358,
+          "car": 4723,
+          "heavy": 127,
+          "total": 5451,
+          "v85SpeedKmh": 35.2
+        },
+        {
+          "date": "2025-04-13",
+          "pedestrian": 334,
+          "bike": 876,
+          "car": 4962,
+          "heavy": 126,
+          "total": 6298,
+          "v85SpeedKmh": 36.1
+        },
+        {
+          "date": "2025-04-14",
+          "pedestrian": 365,
+          "bike": 995,
+          "car": 6869,
+          "heavy": 363,
+          "total": 8592,
+          "v85SpeedKmh": 32.4
+        },
+        {
+          "date": "2025-04-15",
+          "pedestrian": 395,
+          "bike": 1322,
+          "car": 6827,
+          "heavy": 587,
+          "total": 9131,
+          "v85SpeedKmh": 35.4
+        },
+        {
+          "date": "2025-04-16",
+          "pedestrian": 408,
+          "bike": 1210,
+          "car": 7080,
+          "heavy": 539,
+          "total": 9237,
+          "v85SpeedKmh": 34.3
+        },
+        {
+          "date": "2025-04-17",
+          "pedestrian": 353,
+          "bike": 785,
+          "car": 7204,
+          "heavy": 325,
+          "total": 8667,
+          "v85SpeedKmh": 31.1
+        },
+        {
+          "date": "2025-04-18",
+          "pedestrian": 268,
+          "bike": 756,
+          "car": 4159,
+          "heavy": 57,
+          "total": 5240,
+          "v85SpeedKmh": 32.2
+        },
+        {
+          "date": "2025-04-19",
+          "pedestrian": 230,
+          "bike": 631,
+          "car": 4418,
+          "heavy": 95,
+          "total": 5374,
+          "v85SpeedKmh": 34
+        },
+        {
+          "date": "2025-04-20",
+          "pedestrian": 156,
+          "bike": 178,
+          "car": 3549,
+          "heavy": 56,
+          "total": 3939,
+          "v85SpeedKmh": 33.5
+        },
+        {
+          "date": "2025-04-21",
+          "pedestrian": 222,
+          "bike": 298,
+          "car": 4530,
+          "heavy": 72,
+          "total": 5122,
+          "v85SpeedKmh": 33.6
+        },
+        {
+          "date": "2025-04-22",
+          "pedestrian": 328,
+          "bike": 878,
+          "car": 6747,
+          "heavy": 362,
+          "total": 8315,
+          "v85SpeedKmh": 32.2
+        },
+        {
+          "date": "2025-04-23",
+          "pedestrian": 350,
+          "bike": 857,
+          "car": 7068,
+          "heavy": 348,
+          "total": 8623,
+          "v85SpeedKmh": 32.4
+        },
+        {
+          "date": "2025-04-24",
+          "pedestrian": 421,
+          "bike": 1044,
+          "car": 7205,
+          "heavy": 524,
+          "total": 9194,
+          "v85SpeedKmh": 33.3
+        },
+        {
+          "date": "2025-04-25",
+          "pedestrian": 378,
+          "bike": 837,
+          "car": 6907,
+          "heavy": 536,
+          "total": 8658,
+          "v85SpeedKmh": 34.5
+        },
+        {
+          "date": "2025-04-26",
+          "pedestrian": 299,
+          "bike": 642,
+          "car": 5180,
+          "heavy": 133,
+          "total": 6254,
+          "v85SpeedKmh": 34.5
+        },
+        {
+          "date": "2025-04-27",
+          "pedestrian": 327,
+          "bike": 776,
+          "car": 5371,
+          "heavy": 101,
+          "total": 6575,
+          "v85SpeedKmh": 34
+        },
+        {
+          "date": "2025-04-28",
+          "pedestrian": 346,
+          "bike": 951,
+          "car": 7286,
+          "heavy": 466,
+          "total": 9049,
+          "v85SpeedKmh": 33.4
+        },
+        {
+          "date": "2025-04-29",
+          "pedestrian": 404,
+          "bike": 1098,
+          "car": 7458,
+          "heavy": 494,
+          "total": 9454,
+          "v85SpeedKmh": 33.7
+        },
+        {
+          "date": "2025-04-30",
+          "pedestrian": 314,
+          "bike": 734,
+          "car": 7270,
+          "heavy": 304,
+          "total": 8622,
+          "v85SpeedKmh": 30.1
+        },
+        {
+          "date": "2025-05-01",
+          "pedestrian": 287,
+          "bike": 742,
+          "car": 4146,
+          "heavy": 89,
+          "total": 5264,
+          "v85SpeedKmh": 33.3
+        },
+        {
+          "date": "2025-05-02",
+          "pedestrian": 260,
+          "bike": 630,
+          "car": 6635,
+          "heavy": 309,
+          "total": 7834,
+          "v85SpeedKmh": 32.4
+        },
+        {
+          "date": "2025-05-03",
+          "pedestrian": 733,
+          "bike": 1218,
+          "car": 5548,
+          "heavy": 124,
+          "total": 7623,
+          "v85SpeedKmh": 32.1
+        },
+        {
+          "date": "2025-05-04",
+          "pedestrian": 302,
+          "bike": 827,
+          "car": 5350,
+          "heavy": 95,
+          "total": 6574,
+          "v85SpeedKmh": 32.2
+        },
+        {
+          "date": "2025-05-05",
+          "pedestrian": 340,
+          "bike": 1136,
+          "car": 7465,
+          "heavy": 543,
+          "total": 9484,
+          "v85SpeedKmh": 34.7
+        },
+        {
+          "date": "2025-05-06",
+          "pedestrian": 330,
+          "bike": 743,
+          "car": 7283,
+          "heavy": 372,
+          "total": 8728,
+          "v85SpeedKmh": 33.5
+        },
+        {
+          "date": "2025-05-07",
+          "pedestrian": 337,
+          "bike": 1029,
+          "car": 7236,
+          "heavy": 429,
+          "total": 9031,
+          "v85SpeedKmh": 31.6
+        },
+        {
+          "date": "2025-05-08",
+          "pedestrian": 299,
+          "bike": 1001,
+          "car": 7377,
+          "heavy": 381,
+          "total": 9058,
+          "v85SpeedKmh": 31.6
+        },
+        {
+          "date": "2025-05-09",
+          "pedestrian": 413,
+          "bike": 991,
+          "car": 7474,
+          "heavy": 394,
+          "total": 9272,
+          "v85SpeedKmh": 32
+        },
+        {
+          "date": "2025-05-10",
+          "pedestrian": 336,
+          "bike": 975,
+          "car": 6252,
+          "heavy": 128,
+          "total": 7691,
+          "v85SpeedKmh": 33.7
+        },
+        {
+          "date": "2025-05-11",
+          "pedestrian": 322,
+          "bike": 1173,
+          "car": 6179,
+          "heavy": 127,
+          "total": 7801,
+          "v85SpeedKmh": 36.6
+        },
+        {
+          "date": "2025-05-12",
+          "pedestrian": 434,
+          "bike": 1591,
+          "car": 6782,
+          "heavy": 511,
+          "total": 9318,
+          "v85SpeedKmh": 35.4
+        },
+        {
+          "date": "2025-05-13",
+          "pedestrian": 372,
+          "bike": 1444,
+          "car": 7531,
+          "heavy": 502,
+          "total": 9849,
+          "v85SpeedKmh": 33.4
+        },
+        {
+          "date": "2025-05-14",
+          "pedestrian": 299,
+          "bike": 1041,
+          "car": 7125,
+          "heavy": 392,
+          "total": 8857,
+          "v85SpeedKmh": 32.6
+        },
+        {
+          "date": "2025-05-15",
+          "pedestrian": 321,
+          "bike": 1144,
+          "car": 7512,
+          "heavy": 334,
+          "total": 9311,
+          "v85SpeedKmh": 31.4
+        },
+        {
+          "date": "2025-05-16",
+          "pedestrian": 446,
+          "bike": 1392,
+          "car": 7211,
+          "heavy": 605,
+          "total": 9654,
+          "v85SpeedKmh": 34.5
+        },
+        {
+          "date": "2025-05-17",
+          "pedestrian": 320,
+          "bike": 1033,
+          "car": 4996,
+          "heavy": 128,
+          "total": 6477,
+          "v85SpeedKmh": 35.4
+        },
+        {
+          "date": "2025-05-18",
+          "pedestrian": 281,
+          "bike": 995,
+          "car": 4907,
+          "heavy": 82,
+          "total": 6265,
+          "v85SpeedKmh": 32.8
+        },
+        {
+          "date": "2025-05-19",
+          "pedestrian": 441,
+          "bike": 1772,
+          "car": 7251,
+          "heavy": 618,
+          "total": 10082,
+          "v85SpeedKmh": 35.5
+        },
+        {
+          "date": "2025-05-20",
+          "pedestrian": 403,
+          "bike": 1807,
+          "car": 6765,
+          "heavy": 497,
+          "total": 9472,
+          "v85SpeedKmh": 34.9
+        },
+        {
+          "date": "2025-05-21",
+          "pedestrian": 326,
+          "bike": 1317,
+          "car": 7337,
+          "heavy": 456,
+          "total": 9436,
+          "v85SpeedKmh": 32.9
+        },
+        {
+          "date": "2025-05-22",
+          "pedestrian": 360,
+          "bike": 1365,
+          "car": 7354,
+          "heavy": 459,
+          "total": 9538,
+          "v85SpeedKmh": 32.7
+        },
+        {
+          "date": "2025-05-23",
+          "pedestrian": 327,
+          "bike": 635,
+          "car": 7453,
+          "heavy": 333,
+          "total": 8748,
+          "v85SpeedKmh": 32.3
+        },
+        {
+          "date": "2025-05-24",
+          "pedestrian": 257,
+          "bike": 796,
+          "car": 5390,
+          "heavy": 98,
+          "total": 6541,
+          "v85SpeedKmh": 31.3
+        },
+        {
+          "date": "2025-05-25",
+          "pedestrian": 406,
+          "bike": 1310,
+          "car": 4701,
+          "heavy": 77,
+          "total": 6494,
+          "v85SpeedKmh": 34.5
+        },
+        {
+          "date": "2025-05-26",
+          "pedestrian": 465,
+          "bike": 1663,
+          "car": 7476,
+          "heavy": 510,
+          "total": 10114,
+          "v85SpeedKmh": 35.2
+        },
+        {
+          "date": "2025-05-27",
+          "pedestrian": 404,
+          "bike": 1819,
+          "car": 6686,
+          "heavy": 548,
+          "total": 9457,
+          "v85SpeedKmh": 34
+        },
+        {
+          "date": "2025-05-28",
+          "pedestrian": 399,
+          "bike": 1443,
+          "car": 7894,
+          "heavy": 342,
+          "total": 10078,
+          "v85SpeedKmh": 30.4
+        },
+        {
+          "date": "2025-05-29",
+          "pedestrian": 425,
+          "bike": 1381,
+          "car": 5194,
+          "heavy": 133,
+          "total": 7133,
+          "v85SpeedKmh": 32.5
+        },
+        {
+          "date": "2025-05-30",
+          "pedestrian": 356,
+          "bike": 1445,
+          "car": 7355,
+          "heavy": 382,
+          "total": 9538,
+          "v85SpeedKmh": 33.2
+        },
+        {
+          "date": "2025-05-31",
+          "pedestrian": 366,
+          "bike": 951,
+          "car": 5402,
+          "heavy": 84,
+          "total": 6803,
+          "v85SpeedKmh": 32.6
+        },
+        {
+          "date": "2025-06-01",
+          "pedestrian": 376,
+          "bike": 1473,
+          "car": 4757,
+          "heavy": 132,
+          "total": 6738,
+          "v85SpeedKmh": 36.2
+        },
+        {
+          "date": "2025-06-02",
+          "pedestrian": 292,
+          "bike": 960,
+          "car": 7372,
+          "heavy": 336,
+          "total": 8960,
+          "v85SpeedKmh": 32.1
+        },
+        {
+          "date": "2025-06-03",
+          "pedestrian": 474,
+          "bike": 1783,
+          "car": 6656,
+          "heavy": 413,
+          "total": 9326,
+          "v85SpeedKmh": 34.2
+        },
+        {
+          "date": "2025-06-04",
+          "pedestrian": 365,
+          "bike": 1923,
+          "car": 7306,
+          "heavy": 527,
+          "total": 10121,
+          "v85SpeedKmh": 34.9
+        },
+        {
+          "date": "2025-06-05",
+          "pedestrian": 298,
+          "bike": 1075,
+          "car": 6890,
+          "heavy": 261,
+          "total": 8524,
+          "v85SpeedKmh": 31.7
+        },
+        {
+          "date": "2025-06-06",
+          "pedestrian": 443,
+          "bike": 1393,
+          "car": 7140,
+          "heavy": 336,
+          "total": 9312,
+          "v85SpeedKmh": 32.2
+        },
+        {
+          "date": "2025-06-07",
+          "pedestrian": 312,
+          "bike": 932,
+          "car": 4799,
+          "heavy": 82,
+          "total": 6125,
+          "v85SpeedKmh": 34.7
+        },
+        {
+          "date": "2025-06-08",
+          "pedestrian": 361,
+          "bike": 1525,
+          "car": 4905,
+          "heavy": 98,
+          "total": 6889,
+          "v85SpeedKmh": 34.9
+        },
+        {
+          "date": "2025-06-09",
+          "pedestrian": 163,
+          "bike": 789,
+          "car": 7617,
+          "heavy": 344,
+          "total": 8913,
+          "v85SpeedKmh": 31.2
+        },
+        {
+          "date": "2025-06-10",
+          "pedestrian": 381,
+          "bike": 1797,
+          "car": 7038,
+          "heavy": 314,
+          "total": 9530,
+          "v85SpeedKmh": 32.6
+        },
+        {
+          "date": "2025-06-11",
+          "pedestrian": 249,
+          "bike": 631,
+          "car": 7061,
+          "heavy": 317,
+          "total": 8258,
+          "v85SpeedKmh": 32.4
+        },
+        {
+          "date": "2025-06-12",
+          "pedestrian": 398,
+          "bike": 837,
+          "car": 7515,
+          "heavy": 306,
+          "total": 9056,
+          "v85SpeedKmh": 32.5
+        },
+        {
+          "date": "2025-06-13",
+          "pedestrian": 509,
+          "bike": 1565,
+          "car": 7072,
+          "heavy": 449,
+          "total": 9595,
+          "v85SpeedKmh": 33.7
+        },
+        {
+          "date": "2025-06-14",
+          "pedestrian": 453,
+          "bike": 2084,
+          "car": 4488,
+          "heavy": 162,
+          "total": 7187,
+          "v85SpeedKmh": 35.1
+        },
+        {
+          "date": "2025-06-15",
+          "pedestrian": 364,
+          "bike": 1619,
+          "car": 4596,
+          "heavy": 90,
+          "total": 6669,
+          "v85SpeedKmh": 35.3
+        },
+        {
+          "date": "2025-06-16",
+          "pedestrian": 430,
+          "bike": 1576,
+          "car": 7150,
+          "heavy": 370,
+          "total": 9526,
+          "v85SpeedKmh": 31.2
+        },
+        {
+          "date": "2025-06-17",
+          "pedestrian": 389,
+          "bike": 1249,
+          "car": 6734,
+          "heavy": 256,
+          "total": 8628,
+          "v85SpeedKmh": 31.9
+        },
+        {
+          "date": "2025-06-18",
+          "pedestrian": 299,
+          "bike": 979,
+          "car": 7464,
+          "heavy": 361,
+          "total": 9103,
+          "v85SpeedKmh": 32.1
+        },
+        {
+          "date": "2025-06-19",
+          "pedestrian": 235,
+          "bike": 607,
+          "car": 7251,
+          "heavy": 254,
+          "total": 8347,
+          "v85SpeedKmh": 30.6
+        },
+        {
+          "date": "2025-06-20",
+          "pedestrian": 248,
+          "bike": 919,
+          "car": 3576,
+          "heavy": 69,
+          "total": 4812,
+          "v85SpeedKmh": 34.6
+        },
+        {
+          "date": "2025-06-21",
+          "pedestrian": 143,
+          "bike": 356,
+          "car": 2449,
+          "heavy": 43,
+          "total": 2991,
+          "v85SpeedKmh": 33.6
+        },
+        {
+          "date": "2025-06-22",
+          "pedestrian": 291,
+          "bike": 991,
+          "car": 3829,
+          "heavy": 68,
+          "total": 5179,
+          "v85SpeedKmh": 33.2
+        },
+        {
+          "date": "2025-06-23",
+          "pedestrian": 285,
+          "bike": 1135,
+          "car": 6008,
+          "heavy": 240,
+          "total": 7668,
+          "v85SpeedKmh": 30.9
+        },
+        {
+          "date": "2025-06-24",
+          "pedestrian": 272,
+          "bike": 908,
+          "car": 6452,
+          "heavy": 201,
+          "total": 7833,
+          "v85SpeedKmh": 31.7
+        },
+        {
+          "date": "2025-06-25",
+          "pedestrian": 351,
+          "bike": 1059,
+          "car": 6619,
+          "heavy": 249,
+          "total": 8278,
+          "v85SpeedKmh": 31.2
+        },
+        {
+          "date": "2025-06-26",
+          "pedestrian": 346,
+          "bike": 1596,
+          "car": 5836,
+          "heavy": 320,
+          "total": 8098,
+          "v85SpeedKmh": 32.8
+        },
+        {
+          "date": "2025-06-27",
+          "pedestrian": 409,
+          "bike": 1295,
+          "car": 6454,
+          "heavy": 270,
+          "total": 8428,
+          "v85SpeedKmh": 31.9
+        },
+        {
+          "date": "2025-06-28",
+          "pedestrian": 279,
+          "bike": 725,
+          "car": 4532,
+          "heavy": 54,
+          "total": 5590,
+          "v85SpeedKmh": 32.9
+        },
+        {
+          "date": "2025-06-29",
+          "pedestrian": 230,
+          "bike": 706,
+          "car": 4257,
+          "heavy": 80,
+          "total": 5273,
+          "v85SpeedKmh": 33.3
+        },
+        {
+          "date": "2025-06-30",
+          "pedestrian": 372,
+          "bike": 1340,
+          "car": 6215,
+          "heavy": 280,
+          "total": 8207,
+          "v85SpeedKmh": 32.4
+        },
+        {
+          "date": "2025-07-01",
+          "pedestrian": 397,
+          "bike": 1866,
+          "car": 6051,
+          "heavy": 387,
+          "total": 8701,
+          "v85SpeedKmh": 34.2
+        },
+        {
+          "date": "2025-07-02",
+          "pedestrian": 464,
+          "bike": 1905,
+          "car": 6125,
+          "heavy": 387,
+          "total": 8881,
+          "v85SpeedKmh": 33.9
+        },
+        {
+          "date": "2025-07-03",
+          "pedestrian": 415,
+          "bike": 1338,
+          "car": 6463,
+          "heavy": 243,
+          "total": 8459,
+          "v85SpeedKmh": 30.6
+        },
+        {
+          "date": "2025-07-04",
+          "pedestrian": 477,
+          "bike": 1050,
+          "car": 5717,
+          "heavy": 301,
+          "total": 7545,
+          "v85SpeedKmh": 33.2
+        },
+        {
+          "date": "2025-07-05",
+          "pedestrian": 444,
+          "bike": 989,
+          "car": 4731,
+          "heavy": 79,
+          "total": 6243,
+          "v85SpeedKmh": 32.4
+        },
+        {
+          "date": "2025-07-06",
+          "pedestrian": 261,
+          "bike": 769,
+          "car": 4073,
+          "heavy": 35,
+          "total": 5138,
+          "v85SpeedKmh": 34.2
+        },
+        {
+          "date": "2025-07-07",
+          "pedestrian": 301,
+          "bike": 1366,
+          "car": 6496,
+          "heavy": 185,
+          "total": 8348,
+          "v85SpeedKmh": 31.3
+        },
+        {
+          "date": "2025-07-08",
+          "pedestrian": 273,
+          "bike": 984,
+          "car": 5790,
+          "heavy": 184,
+          "total": 7231,
+          "v85SpeedKmh": 32
+        },
+        {
+          "date": "2025-07-09",
+          "pedestrian": 462,
+          "bike": 1877,
+          "car": 5770,
+          "heavy": 400,
+          "total": 8509,
+          "v85SpeedKmh": 34.2
+        },
+        {
+          "date": "2025-07-10",
+          "pedestrian": 384,
+          "bike": 1416,
+          "car": 6264,
+          "heavy": 328,
+          "total": 8392,
+          "v85SpeedKmh": 30.2
+        },
+        {
+          "date": "2025-07-11",
+          "pedestrian": 497,
+          "bike": 1310,
+          "car": 5977,
+          "heavy": 193,
+          "total": 7977,
+          "v85SpeedKmh": 30.5
+        },
+        {
+          "date": "2025-07-12",
+          "pedestrian": 488,
+          "bike": 1416,
+          "car": 4092,
+          "heavy": 91,
+          "total": 6087,
+          "v85SpeedKmh": 33.3
+        },
+        {
+          "date": "2025-07-13",
+          "pedestrian": 345,
+          "bike": 1270,
+          "car": 3843,
+          "heavy": 73,
+          "total": 5531,
+          "v85SpeedKmh": 33.1
+        },
+        {
+          "date": "2025-07-14",
+          "pedestrian": 396,
+          "bike": 1592,
+          "car": 5920,
+          "heavy": 434,
+          "total": 8342,
+          "v85SpeedKmh": 34.1
+        },
+        {
+          "date": "2025-07-15",
+          "pedestrian": 404,
+          "bike": 1683,
+          "car": 5874,
+          "heavy": 398,
+          "total": 8359,
+          "v85SpeedKmh": 35.2
+        },
+        {
+          "date": "2025-07-16",
+          "pedestrian": 381,
+          "bike": 1483,
+          "car": 5022,
+          "heavy": 416,
+          "total": 7302,
+          "v85SpeedKmh": 36.4
+        },
+        {
+          "date": "2025-07-17",
+          "pedestrian": 375,
+          "bike": 1438,
+          "car": 5570,
+          "heavy": 376,
+          "total": 7759,
+          "v85SpeedKmh": 35.4
+        },
+        {
+          "date": "2025-07-18",
+          "pedestrian": 553,
+          "bike": 1317,
+          "car": 5171,
+          "heavy": 368,
+          "total": 7409,
+          "v85SpeedKmh": 35.6
+        },
+        {
+          "date": "2025-07-19",
+          "pedestrian": 408,
+          "bike": 1150,
+          "car": 3665,
+          "heavy": 76,
+          "total": 5299,
+          "v85SpeedKmh": 34.7
+        },
+        {
+          "date": "2025-07-20",
+          "pedestrian": 327,
+          "bike": 1076,
+          "car": 3670,
+          "heavy": 70,
+          "total": 5143,
+          "v85SpeedKmh": 35.4
+        },
+        {
+          "date": "2025-07-21",
+          "pedestrian": 367,
+          "bike": 1382,
+          "car": 5684,
+          "heavy": 346,
+          "total": 7779,
+          "v85SpeedKmh": 33.4
+        },
+        {
+          "date": "2025-07-22",
+          "pedestrian": 365,
+          "bike": 1248,
+          "car": 5374,
+          "heavy": 258,
+          "total": 7245,
+          "v85SpeedKmh": 31.4
+        },
+        {
+          "date": "2025-07-23",
+          "pedestrian": 399,
+          "bike": 1500,
+          "car": 5199,
+          "heavy": 414,
+          "total": 7512,
+          "v85SpeedKmh": 34.8
+        },
+        {
+          "date": "2025-07-24",
+          "pedestrian": 364,
+          "bike": 1474,
+          "car": 5253,
+          "heavy": 395,
+          "total": 7486,
+          "v85SpeedKmh": 35.8
+        },
+        {
+          "date": "2025-07-25",
+          "pedestrian": 407,
+          "bike": 1250,
+          "car": 5330,
+          "heavy": 388,
+          "total": 7375,
+          "v85SpeedKmh": 35.1
+        },
+        {
+          "date": "2025-07-26",
+          "pedestrian": 414,
+          "bike": 1207,
+          "car": 4026,
+          "heavy": 123,
+          "total": 5770,
+          "v85SpeedKmh": 35.3
+        },
+        {
+          "date": "2025-07-27",
+          "pedestrian": 294,
+          "bike": 1214,
+          "car": 3823,
+          "heavy": 110,
+          "total": 5441,
+          "v85SpeedKmh": 35.5
+        },
+        {
+          "date": "2025-07-28",
+          "pedestrian": 197,
+          "bike": 832,
+          "car": 3495,
+          "heavy": 468,
+          "total": 4992,
+          "v85SpeedKmh": 35.2
+        },
+        {
+          "date": "2025-07-29",
+          "pedestrian": 342,
+          "bike": 1322,
+          "car": 6280,
+          "heavy": 359,
+          "total": 8303,
+          "v85SpeedKmh": 31.5
+        },
+        {
+          "date": "2025-07-30",
+          "pedestrian": 404,
+          "bike": 1665,
+          "car": 5949,
+          "heavy": 510,
+          "total": 8528,
+          "v85SpeedKmh": 34.1
+        },
+        {
+          "date": "2025-07-31",
+          "pedestrian": 440,
+          "bike": 1672,
+          "car": 6485,
+          "heavy": 554,
+          "total": 9151,
+          "v85SpeedKmh": 33.5
+        },
+        {
+          "date": "2025-08-01",
+          "pedestrian": 370,
+          "bike": 1147,
+          "car": 6493,
+          "heavy": 436,
+          "total": 8446,
+          "v85SpeedKmh": 31.7
+        },
+        {
+          "date": "2025-08-02",
+          "pedestrian": 375,
+          "bike": 1172,
+          "car": 4004,
+          "heavy": 132,
+          "total": 5683,
+          "v85SpeedKmh": 35.9
+        },
+        {
+          "date": "2025-08-03",
+          "pedestrian": 345,
+          "bike": 1444,
+          "car": 4379,
+          "heavy": 97,
+          "total": 6265,
+          "v85SpeedKmh": 35.9
+        },
+        {
+          "date": "2025-08-04",
+          "pedestrian": 425,
+          "bike": 1485,
+          "car": 6979,
+          "heavy": 568,
+          "total": 9457,
+          "v85SpeedKmh": 33.7
+        },
+        {
+          "date": "2025-08-05",
+          "pedestrian": 353,
+          "bike": 1449,
+          "car": 7091,
+          "heavy": 352,
+          "total": 9245,
+          "v85SpeedKmh": 31.2
+        },
+        {
+          "date": "2025-08-06",
+          "pedestrian": 347,
+          "bike": 1370,
+          "car": 7036,
+          "heavy": 478,
+          "total": 9231,
+          "v85SpeedKmh": 33.2
+        },
+        {
+          "date": "2025-08-07",
+          "pedestrian": 535,
+          "bike": 1732,
+          "car": 6422,
+          "heavy": 511,
+          "total": 9200,
+          "v85SpeedKmh": 34.3
+        },
+        {
+          "date": "2025-08-08",
+          "pedestrian": 367,
+          "bike": 1193,
+          "car": 7001,
+          "heavy": 325,
+          "total": 8886,
+          "v85SpeedKmh": 30.6
+        },
+        {
+          "date": "2025-08-09",
+          "pedestrian": 432,
+          "bike": 1457,
+          "car": 4541,
+          "heavy": 108,
+          "total": 6538,
+          "v85SpeedKmh": 34.8
+        },
+        {
+          "date": "2025-08-10",
+          "pedestrian": 338,
+          "bike": 1093,
+          "car": 4577,
+          "heavy": 61,
+          "total": 6069,
+          "v85SpeedKmh": 31.8
+        },
+        {
+          "date": "2025-08-11",
+          "pedestrian": 456,
+          "bike": 2005,
+          "car": 6737,
+          "heavy": 473,
+          "total": 9671,
+          "v85SpeedKmh": 33.1
+        },
+        {
+          "date": "2025-08-12",
+          "pedestrian": 409,
+          "bike": 1240,
+          "car": 7017,
+          "heavy": 373,
+          "total": 9039,
+          "v85SpeedKmh": 32.2
+        },
+        {
+          "date": "2025-08-13",
+          "pedestrian": 462,
+          "bike": 2040,
+          "car": 6694,
+          "heavy": 552,
+          "total": 9748,
+          "v85SpeedKmh": 33.6
+        },
+        {
+          "date": "2025-08-14",
+          "pedestrian": 452,
+          "bike": 1942,
+          "car": 6677,
+          "heavy": 565,
+          "total": 9636,
+          "v85SpeedKmh": 33.9
+        },
+        {
+          "date": "2025-08-15",
+          "pedestrian": 465,
+          "bike": 1437,
+          "car": 6779,
+          "heavy": 426,
+          "total": 9107,
+          "v85SpeedKmh": 31.9
+        },
+        {
+          "date": "2025-08-16",
+          "pedestrian": 467,
+          "bike": 838,
+          "car": 5144,
+          "heavy": 129,
+          "total": 6578,
+          "v85SpeedKmh": 32.6
+        },
+        {
+          "date": "2025-08-17",
+          "pedestrian": 353,
+          "bike": 1160,
+          "car": 4808,
+          "heavy": 82,
+          "total": 6403,
+          "v85SpeedKmh": 34
+        },
+        {
+          "date": "2025-08-18",
+          "pedestrian": 418,
+          "bike": 1722,
+          "car": 6229,
+          "heavy": 429,
+          "total": 8798,
+          "v85SpeedKmh": 33.3
+        },
+        {
+          "date": "2025-08-19",
+          "pedestrian": 355,
+          "bike": 1795,
+          "car": 6864,
+          "heavy": 485,
+          "total": 9499,
+          "v85SpeedKmh": 32.1
+        },
+        {
+          "date": "2025-08-20",
+          "pedestrian": 408,
+          "bike": 1657,
+          "car": 6575,
+          "heavy": 610,
+          "total": 9250,
+          "v85SpeedKmh": 34.3
+        },
+        {
+          "date": "2025-08-21",
+          "pedestrian": 342,
+          "bike": 1415,
+          "car": 6887,
+          "heavy": 398,
+          "total": 9042,
+          "v85SpeedKmh": 33
+        },
+        {
+          "date": "2025-08-22",
+          "pedestrian": 364,
+          "bike": 1216,
+          "car": 6545,
+          "heavy": 342,
+          "total": 8467,
+          "v85SpeedKmh": 32.7
+        },
+        {
+          "date": "2025-08-23",
+          "pedestrian": 2005,
+          "bike": 1137,
+          "car": 4763,
+          "heavy": 139,
+          "total": 8044,
+          "v85SpeedKmh": 33.3
+        },
+        {
+          "date": "2025-08-24",
+          "pedestrian": 280,
+          "bike": 868,
+          "car": 4758,
+          "heavy": 71,
+          "total": 5977,
+          "v85SpeedKmh": 32.5
+        },
+        {
+          "date": "2025-08-25",
+          "pedestrian": 403,
+          "bike": 1218,
+          "car": 6909,
+          "heavy": 346,
+          "total": 8876,
+          "v85SpeedKmh": 33.6
+        },
+        {
+          "date": "2025-08-26",
+          "pedestrian": 447,
+          "bike": 1691,
+          "car": 6877,
+          "heavy": 410,
+          "total": 9425,
+          "v85SpeedKmh": 31.8
+        },
+        {
+          "date": "2025-08-27",
+          "pedestrian": 421,
+          "bike": 1596,
+          "car": 6840,
+          "heavy": 401,
+          "total": 9258,
+          "v85SpeedKmh": 32.5
+        },
+        {
+          "date": "2025-08-28",
+          "pedestrian": 475,
+          "bike": 1550,
+          "car": 6881,
+          "heavy": 498,
+          "total": 9404,
+          "v85SpeedKmh": 33.3
+        },
+        {
+          "date": "2025-08-29",
+          "pedestrian": 260,
+          "bike": 738,
+          "car": 6787,
+          "heavy": 189,
+          "total": 7974,
+          "v85SpeedKmh": 30.3
+        },
+        {
+          "date": "2025-08-30",
+          "pedestrian": 287,
+          "bike": 716,
+          "car": 4653,
+          "heavy": 81,
+          "total": 5737,
+          "v85SpeedKmh": 33.2
+        },
+        {
+          "date": "2025-08-31",
+          "pedestrian": 287,
+          "bike": 936,
+          "car": 4737,
+          "heavy": 44,
+          "total": 6004,
+          "v85SpeedKmh": 32.1
+        },
+        {
+          "date": "2025-09-01",
+          "pedestrian": 342,
+          "bike": 1571,
+          "car": 6748,
+          "heavy": 184,
+          "total": 8845,
+          "v85SpeedKmh": 30.8
+        },
+        {
+          "date": "2025-09-02",
+          "pedestrian": 329,
+          "bike": 1429,
+          "car": 6622,
+          "heavy": 191,
+          "total": 8571,
+          "v85SpeedKmh": 30.2
+        },
+        {
+          "date": "2025-09-03",
+          "pedestrian": 341,
+          "bike": 1224,
+          "car": 6712,
+          "heavy": 385,
+          "total": 8662,
+          "v85SpeedKmh": 31.9
+        },
+        {
+          "date": "2025-09-04",
+          "pedestrian": 485,
+          "bike": 1508,
+          "car": 6290,
+          "heavy": 387,
+          "total": 8670,
+          "v85SpeedKmh": 34
+        },
+        {
+          "date": "2025-09-05",
+          "pedestrian": 520,
+          "bike": 1287,
+          "car": 6674,
+          "heavy": 357,
+          "total": 8838,
+          "v85SpeedKmh": 32.1
+        },
+        {
+          "date": "2025-09-06",
+          "pedestrian": 360,
+          "bike": 1013,
+          "car": 4622,
+          "heavy": 87,
+          "total": 6082,
+          "v85SpeedKmh": 32.7
+        },
+        {
+          "date": "2025-09-07",
+          "pedestrian": 326,
+          "bike": 1019,
+          "car": 4405,
+          "heavy": 39,
+          "total": 5789,
+          "v85SpeedKmh": 32.9
+        },
+        {
+          "date": "2025-09-08",
+          "pedestrian": 463,
+          "bike": 1674,
+          "car": 6673,
+          "heavy": 423,
+          "total": 9233,
+          "v85SpeedKmh": 33.3
+        },
+        {
+          "date": "2025-09-09",
+          "pedestrian": 419,
+          "bike": 1239,
+          "car": 5111,
+          "heavy": 435,
+          "total": 7204,
+          "v85SpeedKmh": 32.7
+        },
+        {
+          "date": "2025-09-10",
+          "pedestrian": 684,
+          "bike": 1605,
+          "car": 6652,
+          "heavy": 445,
+          "total": 9386,
+          "v85SpeedKmh": 32.9
+        },
+        {
+          "date": "2025-09-11",
+          "pedestrian": 480,
+          "bike": 1432,
+          "car": 6804,
+          "heavy": 615,
+          "total": 9331,
+          "v85SpeedKmh": 34.8
+        },
+        {
+          "date": "2025-09-12",
+          "pedestrian": 272,
+          "bike": 641,
+          "car": 6627,
+          "heavy": 224,
+          "total": 7764,
+          "v85SpeedKmh": 30.4
+        },
+        {
+          "date": "2025-09-13",
+          "pedestrian": 296,
+          "bike": 774,
+          "car": 4760,
+          "heavy": 68,
+          "total": 5898,
+          "v85SpeedKmh": 33.1
+        },
+        {
+          "date": "2025-09-14",
+          "pedestrian": 235,
+          "bike": 555,
+          "car": 4035,
+          "heavy": 18,
+          "total": 4843,
+          "v85SpeedKmh": 31.5
+        },
+        {
+          "date": "2025-09-15",
+          "pedestrian": 90,
+          "bike": 284,
+          "car": 2999,
+          "heavy": 146,
+          "total": 3519,
+          "v85SpeedKmh": 30.8
+        }
+      ],
+      "source": "SharePoint Helsinki/Telraam/raw-data-9000007091-*.xlsx (KPI 1.2)",
+      "sourceFile": "raw-data-9000007091-16eb11c.xlsx"
+    },
+    {
+      "sensorId": "9000007091",
+      "street": "Koetilantie",
+      "city": "Helsinki",
+      "location": {
+        "lat": 60.224599,
+        "lng": 25.017236,
+        "note": "Fixed Viikintie-Koetilantie tramway crossing anchor (FVH3)"
+      },
+      "periodStart": "2024-06-28T09:30:00.000Z",
+      "periodEnd": "2024-12-31T22:45:00.000Z",
+      "totals": {
+        "pedestrian": 47829,
+        "bike": 143614,
+        "car": 735706,
+        "heavy": 44229,
+        "all": 971378
+      },
+      "modeShare": {
+        "pedestrianPct": 4.9,
+        "bikePct": 14.8,
+        "carPct": 75.7,
+        "heavyPct": 4.6
+      },
+      "v85SpeedKmh": 33.3,
+      "dailyAggregates": [
+        {
+          "date": "2024-06-28",
+          "pedestrian": 506,
+          "bike": 989,
+          "car": 2672,
+          "heavy": 97,
+          "total": 4264,
+          "v85SpeedKmh": 32
+        },
+        {
+          "date": "2024-06-29",
+          "pedestrian": 297,
+          "bike": 952,
+          "car": 3951,
+          "heavy": 126,
+          "total": 5326,
+          "v85SpeedKmh": 36.6
+        },
+        {
+          "date": "2024-06-30",
+          "pedestrian": 407,
+          "bike": 1244,
+          "car": 4366,
+          "heavy": 100,
+          "total": 6117,
+          "v85SpeedKmh": 36.9
+        },
+        {
+          "date": "2024-07-01",
+          "pedestrian": 371,
+          "bike": 1186,
+          "car": 6827,
+          "heavy": 338,
+          "total": 8722,
+          "v85SpeedKmh": 36.1
+        },
+        {
+          "date": "2024-07-02",
+          "pedestrian": 511,
+          "bike": 1731,
+          "car": 6096,
+          "heavy": 534,
+          "total": 8872,
+          "v85SpeedKmh": 35.5
+        },
+        {
+          "date": "2024-07-03",
+          "pedestrian": 370,
+          "bike": 891,
+          "car": 5862,
+          "heavy": 293,
+          "total": 7416,
+          "v85SpeedKmh": 35.6
+        },
+        {
+          "date": "2024-07-04",
+          "pedestrian": 405,
+          "bike": 1454,
+          "car": 6062,
+          "heavy": 381,
+          "total": 8302,
+          "v85SpeedKmh": 34.2
+        },
+        {
+          "date": "2024-07-05",
+          "pedestrian": 508,
+          "bike": 1071,
+          "car": 5516,
+          "heavy": 391,
+          "total": 7486,
+          "v85SpeedKmh": 35.6
+        },
+        {
+          "date": "2024-07-06",
+          "pedestrian": 378,
+          "bike": 891,
+          "car": 3703,
+          "heavy": 75,
+          "total": 5047,
+          "v85SpeedKmh": 35.6
+        },
+        {
+          "date": "2024-07-07",
+          "pedestrian": 173,
+          "bike": 556,
+          "car": 3573,
+          "heavy": 44,
+          "total": 4346,
+          "v85SpeedKmh": 36.4
+        },
+        {
+          "date": "2024-07-08",
+          "pedestrian": 405,
+          "bike": 1649,
+          "car": 5957,
+          "heavy": 586,
+          "total": 8597,
+          "v85SpeedKmh": 36.1
+        },
+        {
+          "date": "2024-07-09",
+          "pedestrian": 379,
+          "bike": 1533,
+          "car": 5571,
+          "heavy": 524,
+          "total": 8007,
+          "v85SpeedKmh": 35.8
+        },
+        {
+          "date": "2024-07-10",
+          "pedestrian": 491,
+          "bike": 1714,
+          "car": 5483,
+          "heavy": 698,
+          "total": 8386,
+          "v85SpeedKmh": 35.7
+        },
+        {
+          "date": "2024-07-11",
+          "pedestrian": 433,
+          "bike": 902,
+          "car": 5927,
+          "heavy": 486,
+          "total": 7748,
+          "v85SpeedKmh": 34.5
+        },
+        {
+          "date": "2024-07-12",
+          "pedestrian": 531,
+          "bike": 1176,
+          "car": 5774,
+          "heavy": 388,
+          "total": 7869,
+          "v85SpeedKmh": 35.1
+        },
+        {
+          "date": "2024-07-13",
+          "pedestrian": 640,
+          "bike": 1463,
+          "car": 4104,
+          "heavy": 192,
+          "total": 6399,
+          "v85SpeedKmh": 34.8
+        },
+        {
+          "date": "2024-07-14",
+          "pedestrian": 254,
+          "bike": 727,
+          "car": 3756,
+          "heavy": 62,
+          "total": 4799,
+          "v85SpeedKmh": 34.9
+        },
+        {
+          "date": "2024-07-15",
+          "pedestrian": 373,
+          "bike": 1482,
+          "car": 5199,
+          "heavy": 663,
+          "total": 7717,
+          "v85SpeedKmh": 36.5
+        },
+        {
+          "date": "2024-07-16",
+          "pedestrian": 385,
+          "bike": 1565,
+          "car": 5364,
+          "heavy": 577,
+          "total": 7891,
+          "v85SpeedKmh": 35.9
+        },
+        {
+          "date": "2024-07-17",
+          "pedestrian": 418,
+          "bike": 1019,
+          "car": 5867,
+          "heavy": 507,
+          "total": 7811,
+          "v85SpeedKmh": 35.7
+        },
+        {
+          "date": "2024-07-18",
+          "pedestrian": 478,
+          "bike": 1456,
+          "car": 5805,
+          "heavy": 545,
+          "total": 8284,
+          "v85SpeedKmh": 34.7
+        },
+        {
+          "date": "2024-07-19",
+          "pedestrian": 494,
+          "bike": 693,
+          "car": 5474,
+          "heavy": 394,
+          "total": 7055,
+          "v85SpeedKmh": 36.3
+        },
+        {
+          "date": "2024-07-20",
+          "pedestrian": 374,
+          "bike": 679,
+          "car": 4062,
+          "heavy": 157,
+          "total": 5272,
+          "v85SpeedKmh": 36.5
+        },
+        {
+          "date": "2024-07-21",
+          "pedestrian": 433,
+          "bike": 912,
+          "car": 3891,
+          "heavy": 135,
+          "total": 5371,
+          "v85SpeedKmh": 36.4
+        },
+        {
+          "date": "2024-07-22",
+          "pedestrian": 380,
+          "bike": 1514,
+          "car": 5295,
+          "heavy": 740,
+          "total": 7929,
+          "v85SpeedKmh": 36.6
+        },
+        {
+          "date": "2024-07-23",
+          "pedestrian": 391,
+          "bike": 1608,
+          "car": 5825,
+          "heavy": 611,
+          "total": 8435,
+          "v85SpeedKmh": 36.1
+        },
+        {
+          "date": "2024-07-24",
+          "pedestrian": 409,
+          "bike": 1432,
+          "car": 5485,
+          "heavy": 644,
+          "total": 7970,
+          "v85SpeedKmh": 36.5
+        },
+        {
+          "date": "2024-07-25",
+          "pedestrian": 343,
+          "bike": 1534,
+          "car": 5309,
+          "heavy": 664,
+          "total": 7850,
+          "v85SpeedKmh": 37
+        },
+        {
+          "date": "2024-07-26",
+          "pedestrian": 352,
+          "bike": 1317,
+          "car": 5085,
+          "heavy": 483,
+          "total": 7237,
+          "v85SpeedKmh": 35.9
+        },
+        {
+          "date": "2024-07-27",
+          "pedestrian": 577,
+          "bike": 1295,
+          "car": 3989,
+          "heavy": 127,
+          "total": 5988,
+          "v85SpeedKmh": 35.6
+        },
+        {
+          "date": "2024-07-28",
+          "pedestrian": 269,
+          "bike": 1128,
+          "car": 3947,
+          "heavy": 60,
+          "total": 5404,
+          "v85SpeedKmh": 33.6
+        },
+        {
+          "date": "2024-07-29",
+          "pedestrian": 316,
+          "bike": 1254,
+          "car": 6184,
+          "heavy": 309,
+          "total": 8063,
+          "v85SpeedKmh": 33.5
+        },
+        {
+          "date": "2024-07-30",
+          "pedestrian": 368,
+          "bike": 1550,
+          "car": 6115,
+          "heavy": 447,
+          "total": 8480,
+          "v85SpeedKmh": 34.8
+        },
+        {
+          "date": "2024-07-31",
+          "pedestrian": 346,
+          "bike": 1308,
+          "car": 6349,
+          "heavy": 470,
+          "total": 8473,
+          "v85SpeedKmh": 34.5
+        },
+        {
+          "date": "2024-08-01",
+          "pedestrian": 352,
+          "bike": 1427,
+          "car": 6417,
+          "heavy": 343,
+          "total": 8539,
+          "v85SpeedKmh": 33.4
+        },
+        {
+          "date": "2024-08-02",
+          "pedestrian": 427,
+          "bike": 1029,
+          "car": 6196,
+          "heavy": 297,
+          "total": 7949,
+          "v85SpeedKmh": 34.7
+        },
+        {
+          "date": "2024-08-03",
+          "pedestrian": 300,
+          "bike": 729,
+          "car": 4244,
+          "heavy": 97,
+          "total": 5370,
+          "v85SpeedKmh": 36.3
+        },
+        {
+          "date": "2024-08-04",
+          "pedestrian": 290,
+          "bike": 928,
+          "car": 4239,
+          "heavy": 86,
+          "total": 5543,
+          "v85SpeedKmh": 36
+        },
+        {
+          "date": "2024-08-05",
+          "pedestrian": 459,
+          "bike": 1489,
+          "car": 6800,
+          "heavy": 512,
+          "total": 9260,
+          "v85SpeedKmh": 36
+        },
+        {
+          "date": "2024-08-06",
+          "pedestrian": 330,
+          "bike": 1588,
+          "car": 6526,
+          "heavy": 437,
+          "total": 8881,
+          "v85SpeedKmh": 35.7
+        },
+        {
+          "date": "2024-08-07",
+          "pedestrian": 425,
+          "bike": 1787,
+          "car": 6469,
+          "heavy": 483,
+          "total": 9164,
+          "v85SpeedKmh": 34.8
+        },
+        {
+          "date": "2024-08-08",
+          "pedestrian": 425,
+          "bike": 1848,
+          "car": 6142,
+          "heavy": 573,
+          "total": 8988,
+          "v85SpeedKmh": 35.1
+        },
+        {
+          "date": "2024-08-09",
+          "pedestrian": 446,
+          "bike": 1738,
+          "car": 6705,
+          "heavy": 516,
+          "total": 9405,
+          "v85SpeedKmh": 35.5
+        },
+        {
+          "date": "2024-08-10",
+          "pedestrian": 252,
+          "bike": 631,
+          "car": 4330,
+          "heavy": 95,
+          "total": 5308,
+          "v85SpeedKmh": 35.9
+        },
+        {
+          "date": "2024-08-11",
+          "pedestrian": 274,
+          "bike": 906,
+          "car": 4438,
+          "heavy": 98,
+          "total": 5716,
+          "v85SpeedKmh": 35.3
+        },
+        {
+          "date": "2024-08-12",
+          "pedestrian": 292,
+          "bike": 1244,
+          "car": 6806,
+          "heavy": 366,
+          "total": 8708,
+          "v85SpeedKmh": 33.9
+        },
+        {
+          "date": "2024-08-13",
+          "pedestrian": 496,
+          "bike": 2048,
+          "car": 6686,
+          "heavy": 575,
+          "total": 9805,
+          "v85SpeedKmh": 35.1
+        },
+        {
+          "date": "2024-08-14",
+          "pedestrian": 461,
+          "bike": 2015,
+          "car": 6226,
+          "heavy": 510,
+          "total": 9212,
+          "v85SpeedKmh": 35.9
+        },
+        {
+          "date": "2024-08-15",
+          "pedestrian": 379,
+          "bike": 1846,
+          "car": 6581,
+          "heavy": 517,
+          "total": 9323,
+          "v85SpeedKmh": 35.2
+        },
+        {
+          "date": "2024-08-16",
+          "pedestrian": 291,
+          "bike": 1227,
+          "car": 7008,
+          "heavy": 292,
+          "total": 8818,
+          "v85SpeedKmh": 32.7
+        },
+        {
+          "date": "2024-08-17",
+          "pedestrian": 531,
+          "bike": 1299,
+          "car": 4905,
+          "heavy": 124,
+          "total": 6859,
+          "v85SpeedKmh": 34
+        },
+        {
+          "date": "2024-08-18",
+          "pedestrian": 318,
+          "bike": 1454,
+          "car": 4527,
+          "heavy": 102,
+          "total": 6401,
+          "v85SpeedKmh": 36.1
+        },
+        {
+          "date": "2024-08-19",
+          "pedestrian": 351,
+          "bike": 1636,
+          "car": 6748,
+          "heavy": 447,
+          "total": 9182,
+          "v85SpeedKmh": 34.5
+        },
+        {
+          "date": "2024-08-20",
+          "pedestrian": 389,
+          "bike": 1961,
+          "car": 6682,
+          "heavy": 508,
+          "total": 9540,
+          "v85SpeedKmh": 35.2
+        },
+        {
+          "date": "2024-08-21",
+          "pedestrian": 412,
+          "bike": 1808,
+          "car": 6644,
+          "heavy": 520,
+          "total": 9384,
+          "v85SpeedKmh": 35.1
+        },
+        {
+          "date": "2024-08-22",
+          "pedestrian": 309,
+          "bike": 1260,
+          "car": 6759,
+          "heavy": 378,
+          "total": 8706,
+          "v85SpeedKmh": 33.8
+        },
+        {
+          "date": "2024-08-23",
+          "pedestrian": 348,
+          "bike": 1216,
+          "car": 7023,
+          "heavy": 457,
+          "total": 9044,
+          "v85SpeedKmh": 34.5
+        },
+        {
+          "date": "2024-08-24",
+          "pedestrian": 377,
+          "bike": 838,
+          "car": 4436,
+          "heavy": 89,
+          "total": 5740,
+          "v85SpeedKmh": 34.4
+        },
+        {
+          "date": "2024-08-25",
+          "pedestrian": 358,
+          "bike": 1338,
+          "car": 4675,
+          "heavy": 115,
+          "total": 6486,
+          "v85SpeedKmh": 36
+        },
+        {
+          "date": "2024-08-26",
+          "pedestrian": 470,
+          "bike": 1650,
+          "car": 6506,
+          "heavy": 597,
+          "total": 9223,
+          "v85SpeedKmh": 35.9
+        },
+        {
+          "date": "2024-08-27",
+          "pedestrian": 447,
+          "bike": 1640,
+          "car": 6695,
+          "heavy": 486,
+          "total": 9268,
+          "v85SpeedKmh": 34.8
+        },
+        {
+          "date": "2024-08-28",
+          "pedestrian": 483,
+          "bike": 1488,
+          "car": 5929,
+          "heavy": 534,
+          "total": 8434,
+          "v85SpeedKmh": 35.3
+        },
+        {
+          "date": "2024-08-29",
+          "pedestrian": 405,
+          "bike": 1497,
+          "car": 6072,
+          "heavy": 482,
+          "total": 8456,
+          "v85SpeedKmh": 34.7
+        },
+        {
+          "date": "2024-08-30",
+          "pedestrian": 429,
+          "bike": 1230,
+          "car": 5935,
+          "heavy": 494,
+          "total": 8088,
+          "v85SpeedKmh": 34.8
+        },
+        {
+          "date": "2024-08-31",
+          "pedestrian": 238,
+          "bike": 523,
+          "car": 4265,
+          "heavy": 110,
+          "total": 5136,
+          "v85SpeedKmh": 34.5
+        },
+        {
+          "date": "2024-09-01",
+          "pedestrian": 365,
+          "bike": 988,
+          "car": 4430,
+          "heavy": 127,
+          "total": 5910,
+          "v85SpeedKmh": 35.6
+        },
+        {
+          "date": "2024-09-02",
+          "pedestrian": 497,
+          "bike": 1214,
+          "car": 6525,
+          "heavy": 672,
+          "total": 8908,
+          "v85SpeedKmh": 35.6
+        },
+        {
+          "date": "2024-09-03",
+          "pedestrian": 409,
+          "bike": 1591,
+          "car": 6915,
+          "heavy": 288,
+          "total": 9203,
+          "v85SpeedKmh": 32.4
+        },
+        {
+          "date": "2024-09-04",
+          "pedestrian": 486,
+          "bike": 1569,
+          "car": 5931,
+          "heavy": 567,
+          "total": 8553,
+          "v85SpeedKmh": 35.9
+        },
+        {
+          "date": "2024-09-05",
+          "pedestrian": 480,
+          "bike": 1763,
+          "car": 6523,
+          "heavy": 695,
+          "total": 9461,
+          "v85SpeedKmh": 35.5
+        },
+        {
+          "date": "2024-09-06",
+          "pedestrian": 516,
+          "bike": 1466,
+          "car": 6336,
+          "heavy": 658,
+          "total": 8976,
+          "v85SpeedKmh": 36.1
+        },
+        {
+          "date": "2024-09-07",
+          "pedestrian": 416,
+          "bike": 1220,
+          "car": 4319,
+          "heavy": 189,
+          "total": 6144,
+          "v85SpeedKmh": 36.8
+        },
+        {
+          "date": "2024-09-08",
+          "pedestrian": 296,
+          "bike": 1220,
+          "car": 4564,
+          "heavy": 138,
+          "total": 6218,
+          "v85SpeedKmh": 36.5
+        },
+        {
+          "date": "2024-09-09",
+          "pedestrian": 534,
+          "bike": 1676,
+          "car": 6452,
+          "heavy": 657,
+          "total": 9319,
+          "v85SpeedKmh": 35.9
+        },
+        {
+          "date": "2024-09-10",
+          "pedestrian": 434,
+          "bike": 1546,
+          "car": 6868,
+          "heavy": 613,
+          "total": 9461,
+          "v85SpeedKmh": 34.6
+        },
+        {
+          "date": "2024-09-11",
+          "pedestrian": 440,
+          "bike": 1105,
+          "car": 6501,
+          "heavy": 488,
+          "total": 8534,
+          "v85SpeedKmh": 34.4
+        },
+        {
+          "date": "2024-09-12",
+          "pedestrian": 424,
+          "bike": 1517,
+          "car": 6348,
+          "heavy": 600,
+          "total": 8889,
+          "v85SpeedKmh": 33.8
+        },
+        {
+          "date": "2024-09-13",
+          "pedestrian": 250,
+          "bike": 476,
+          "car": 6346,
+          "heavy": 301,
+          "total": 7373,
+          "v85SpeedKmh": 31.7
+        },
+        {
+          "date": "2024-09-14",
+          "pedestrian": 305,
+          "bike": 508,
+          "car": 4404,
+          "heavy": 79,
+          "total": 5296,
+          "v85SpeedKmh": 35.4
+        },
+        {
+          "date": "2024-09-15",
+          "pedestrian": 214,
+          "bike": 670,
+          "car": 4216,
+          "heavy": 32,
+          "total": 5132,
+          "v85SpeedKmh": 33.7
+        },
+        {
+          "date": "2024-09-16",
+          "pedestrian": 247,
+          "bike": 1125,
+          "car": 6180,
+          "heavy": 210,
+          "total": 7762,
+          "v85SpeedKmh": 31.5
+        },
+        {
+          "date": "2024-09-17",
+          "pedestrian": 256,
+          "bike": 1044,
+          "car": 5360,
+          "heavy": 272,
+          "total": 6932,
+          "v85SpeedKmh": 31.4
+        },
+        {
+          "date": "2024-09-18",
+          "pedestrian": 266,
+          "bike": 989,
+          "car": 5119,
+          "heavy": 346,
+          "total": 6720,
+          "v85SpeedKmh": 36.2
+        },
+        {
+          "date": "2024-09-19",
+          "pedestrian": 440,
+          "bike": 1293,
+          "car": 6093,
+          "heavy": 536,
+          "total": 8362,
+          "v85SpeedKmh": 34.6
+        },
+        {
+          "date": "2024-09-20",
+          "pedestrian": 470,
+          "bike": 1212,
+          "car": 6236,
+          "heavy": 605,
+          "total": 8523,
+          "v85SpeedKmh": 35.4
+        },
+        {
+          "date": "2024-09-21",
+          "pedestrian": 252,
+          "bike": 791,
+          "car": 4154,
+          "heavy": 162,
+          "total": 5359,
+          "v85SpeedKmh": 36.9
+        },
+        {
+          "date": "2024-09-22",
+          "pedestrian": 299,
+          "bike": 804,
+          "car": 4234,
+          "heavy": 141,
+          "total": 5478,
+          "v85SpeedKmh": 36.7
+        },
+        {
+          "date": "2024-09-23",
+          "pedestrian": 289,
+          "bike": 996,
+          "car": 4091,
+          "heavy": 204,
+          "total": 5580,
+          "v85SpeedKmh": 28.8
+        },
+        {
+          "date": "2024-09-24",
+          "pedestrian": 347,
+          "bike": 1204,
+          "car": 3433,
+          "heavy": 121,
+          "total": 5105,
+          "v85SpeedKmh": 28.6
+        },
+        {
+          "date": "2024-09-25",
+          "pedestrian": 316,
+          "bike": 891,
+          "car": 3784,
+          "heavy": 96,
+          "total": 5087,
+          "v85SpeedKmh": 27.2
+        },
+        {
+          "date": "2024-09-26",
+          "pedestrian": 444,
+          "bike": 735,
+          "car": 3755,
+          "heavy": 150,
+          "total": 5084,
+          "v85SpeedKmh": 28.4
+        },
+        {
+          "date": "2024-09-27",
+          "pedestrian": 304,
+          "bike": 465,
+          "car": 3809,
+          "heavy": 135,
+          "total": 4713,
+          "v85SpeedKmh": 27.9
+        },
+        {
+          "date": "2024-09-28",
+          "pedestrian": 229,
+          "bike": 381,
+          "car": 2542,
+          "heavy": 33,
+          "total": 3185,
+          "v85SpeedKmh": 30.3
+        },
+        {
+          "date": "2024-09-29",
+          "pedestrian": 386,
+          "bike": 792,
+          "car": 2330,
+          "heavy": 83,
+          "total": 3591,
+          "v85SpeedKmh": 28.7
+        },
+        {
+          "date": "2024-09-30",
+          "pedestrian": 552,
+          "bike": 1122,
+          "car": 3414,
+          "heavy": 125,
+          "total": 5213,
+          "v85SpeedKmh": 28.2
+        },
+        {
+          "date": "2024-10-01",
+          "pedestrian": 352,
+          "bike": 979,
+          "car": 3791,
+          "heavy": 210,
+          "total": 5332,
+          "v85SpeedKmh": 27.4
+        },
+        {
+          "date": "2024-10-02",
+          "pedestrian": 389,
+          "bike": 525,
+          "car": 3667,
+          "heavy": 119,
+          "total": 4700,
+          "v85SpeedKmh": 26.4
+        },
+        {
+          "date": "2024-10-03",
+          "pedestrian": 391,
+          "bike": 997,
+          "car": 3550,
+          "heavy": 143,
+          "total": 5081,
+          "v85SpeedKmh": 27.7
+        },
+        {
+          "date": "2024-10-04",
+          "pedestrian": 383,
+          "bike": 828,
+          "car": 3817,
+          "heavy": 135,
+          "total": 5163,
+          "v85SpeedKmh": 28.3
+        },
+        {
+          "date": "2024-10-05",
+          "pedestrian": 233,
+          "bike": 635,
+          "car": 2227,
+          "heavy": 146,
+          "total": 3241,
+          "v85SpeedKmh": 30.8
+        },
+        {
+          "date": "2024-10-06",
+          "pedestrian": 196,
+          "bike": 462,
+          "car": 2221,
+          "heavy": 23,
+          "total": 2902,
+          "v85SpeedKmh": 29.3
+        },
+        {
+          "date": "2024-10-07",
+          "pedestrian": 201,
+          "bike": 825,
+          "car": 3363,
+          "heavy": 112,
+          "total": 4501,
+          "v85SpeedKmh": 26.8
+        },
+        {
+          "date": "2024-10-08",
+          "pedestrian": 206,
+          "bike": 714,
+          "car": 3264,
+          "heavy": 76,
+          "total": 4260,
+          "v85SpeedKmh": 25.9
+        },
+        {
+          "date": "2024-10-09",
+          "pedestrian": 281,
+          "bike": 390,
+          "car": 3350,
+          "heavy": 65,
+          "total": 4086,
+          "v85SpeedKmh": 26.2
+        },
+        {
+          "date": "2024-10-10",
+          "pedestrian": 203,
+          "bike": 483,
+          "car": 3542,
+          "heavy": 73,
+          "total": 4301,
+          "v85SpeedKmh": 26.5
+        },
+        {
+          "date": "2024-10-11",
+          "pedestrian": 267,
+          "bike": 489,
+          "car": 3693,
+          "heavy": 80,
+          "total": 4529,
+          "v85SpeedKmh": 27.1
+        },
+        {
+          "date": "2024-10-12",
+          "pedestrian": 219,
+          "bike": 488,
+          "car": 2416,
+          "heavy": 50,
+          "total": 3173,
+          "v85SpeedKmh": 30.2
+        },
+        {
+          "date": "2024-10-13",
+          "pedestrian": 180,
+          "bike": 593,
+          "car": 2084,
+          "heavy": 132,
+          "total": 2989,
+          "v85SpeedKmh": 31.5
+        },
+        {
+          "date": "2024-10-14",
+          "pedestrian": 240,
+          "bike": 437,
+          "car": 3067,
+          "heavy": 73,
+          "total": 3817,
+          "v85SpeedKmh": 26.7
+        },
+        {
+          "date": "2024-10-15",
+          "pedestrian": 148,
+          "bike": 494,
+          "car": 3022,
+          "heavy": 33,
+          "total": 3697,
+          "v85SpeedKmh": 26.9
+        },
+        {
+          "date": "2024-10-16",
+          "pedestrian": 251,
+          "bike": 597,
+          "car": 2725,
+          "heavy": 300,
+          "total": 3873,
+          "v85SpeedKmh": 29.6
+        },
+        {
+          "date": "2024-10-17",
+          "pedestrian": 212,
+          "bike": 548,
+          "car": 4720,
+          "heavy": 344,
+          "total": 5824,
+          "v85SpeedKmh": 33.7
+        },
+        {
+          "date": "2024-10-18",
+          "pedestrian": 195,
+          "bike": 495,
+          "car": 4779,
+          "heavy": 271,
+          "total": 5740,
+          "v85SpeedKmh": 33
+        },
+        {
+          "date": "2024-10-19",
+          "pedestrian": 203,
+          "bike": 530,
+          "car": 3698,
+          "heavy": 112,
+          "total": 4543,
+          "v85SpeedKmh": 34.5
+        },
+        {
+          "date": "2024-10-20",
+          "pedestrian": 146,
+          "bike": 409,
+          "car": 3317,
+          "heavy": 43,
+          "total": 3915,
+          "v85SpeedKmh": 32.6
+        },
+        {
+          "date": "2024-10-21",
+          "pedestrian": 134,
+          "bike": 447,
+          "car": 4472,
+          "heavy": 212,
+          "total": 5265,
+          "v85SpeedKmh": 31.4
+        },
+        {
+          "date": "2024-10-22",
+          "pedestrian": 207,
+          "bike": 676,
+          "car": 4778,
+          "heavy": 241,
+          "total": 5902,
+          "v85SpeedKmh": 32.6
+        },
+        {
+          "date": "2024-10-23",
+          "pedestrian": 202,
+          "bike": 629,
+          "car": 4488,
+          "heavy": 374,
+          "total": 5693,
+          "v85SpeedKmh": 33.4
+        },
+        {
+          "date": "2024-10-24",
+          "pedestrian": 190,
+          "bike": 621,
+          "car": 5032,
+          "heavy": 373,
+          "total": 6216,
+          "v85SpeedKmh": 32.7
+        },
+        {
+          "date": "2024-10-25",
+          "pedestrian": 220,
+          "bike": 527,
+          "car": 5190,
+          "heavy": 295,
+          "total": 6232,
+          "v85SpeedKmh": 31.7
+        },
+        {
+          "date": "2024-10-26",
+          "pedestrian": 151,
+          "bike": 364,
+          "car": 3488,
+          "heavy": 24,
+          "total": 4027,
+          "v85SpeedKmh": 30.1
+        },
+        {
+          "date": "2024-10-27",
+          "pedestrian": 115,
+          "bike": 309,
+          "car": 2899,
+          "heavy": 29,
+          "total": 3352,
+          "v85SpeedKmh": 35.5
+        },
+        {
+          "date": "2024-10-28",
+          "pedestrian": 168,
+          "bike": 602,
+          "car": 4396,
+          "heavy": 328,
+          "total": 5494,
+          "v85SpeedKmh": 34.7
+        },
+        {
+          "date": "2024-10-29",
+          "pedestrian": 155,
+          "bike": 539,
+          "car": 4061,
+          "heavy": 327,
+          "total": 5082,
+          "v85SpeedKmh": 33.4
+        },
+        {
+          "date": "2024-10-30",
+          "pedestrian": 130,
+          "bike": 488,
+          "car": 4071,
+          "heavy": 367,
+          "total": 5056,
+          "v85SpeedKmh": 34.1
+        },
+        {
+          "date": "2024-10-31",
+          "pedestrian": 113,
+          "bike": 411,
+          "car": 4589,
+          "heavy": 243,
+          "total": 5356,
+          "v85SpeedKmh": 31.6
+        },
+        {
+          "date": "2024-11-01",
+          "pedestrian": 78,
+          "bike": 133,
+          "car": 4359,
+          "heavy": 223,
+          "total": 4793,
+          "v85SpeedKmh": 32.2
+        },
+        {
+          "date": "2024-11-02",
+          "pedestrian": 138,
+          "bike": 280,
+          "car": 3515,
+          "heavy": 74,
+          "total": 4007,
+          "v85SpeedKmh": 34.9
+        },
+        {
+          "date": "2024-11-03",
+          "pedestrian": 84,
+          "bike": 229,
+          "car": 2037,
+          "heavy": 20,
+          "total": 2370,
+          "v85SpeedKmh": 35.2
+        },
+        {
+          "date": "2024-11-04",
+          "pedestrian": 56,
+          "bike": 163,
+          "car": 2004,
+          "heavy": 131,
+          "total": 2354,
+          "v85SpeedKmh": 30.7
+        },
+        {
+          "date": "2024-11-05",
+          "pedestrian": 126,
+          "bike": 304,
+          "car": 4268,
+          "heavy": 201,
+          "total": 4899,
+          "v85SpeedKmh": 32.9
+        },
+        {
+          "date": "2024-11-06",
+          "pedestrian": 160,
+          "bike": 356,
+          "car": 4267,
+          "heavy": 210,
+          "total": 4993,
+          "v85SpeedKmh": 34.3
+        },
+        {
+          "date": "2024-11-07",
+          "pedestrian": 185,
+          "bike": 383,
+          "car": 4260,
+          "heavy": 210,
+          "total": 5038,
+          "v85SpeedKmh": 32.8
+        },
+        {
+          "date": "2024-11-08",
+          "pedestrian": 168,
+          "bike": 348,
+          "car": 4356,
+          "heavy": 278,
+          "total": 5150,
+          "v85SpeedKmh": 32.9
+        },
+        {
+          "date": "2024-11-09",
+          "pedestrian": 122,
+          "bike": 247,
+          "car": 2980,
+          "heavy": 38,
+          "total": 3387,
+          "v85SpeedKmh": 34.1
+        },
+        {
+          "date": "2024-11-10",
+          "pedestrian": 114,
+          "bike": 193,
+          "car": 2708,
+          "heavy": 11,
+          "total": 3026,
+          "v85SpeedKmh": 30.1
+        },
+        {
+          "date": "2024-11-11",
+          "pedestrian": 112,
+          "bike": 281,
+          "car": 3539,
+          "heavy": 160,
+          "total": 4092,
+          "v85SpeedKmh": 30.7
+        },
+        {
+          "date": "2024-11-12",
+          "pedestrian": 136,
+          "bike": 357,
+          "car": 3711,
+          "heavy": 198,
+          "total": 4402,
+          "v85SpeedKmh": 32.5
+        },
+        {
+          "date": "2024-11-13",
+          "pedestrian": 115,
+          "bike": 265,
+          "car": 3513,
+          "heavy": 154,
+          "total": 4047,
+          "v85SpeedKmh": 32.7
+        },
+        {
+          "date": "2024-11-14",
+          "pedestrian": 125,
+          "bike": 328,
+          "car": 3372,
+          "heavy": 202,
+          "total": 4027,
+          "v85SpeedKmh": 32.8
+        },
+        {
+          "date": "2024-11-15",
+          "pedestrian": 147,
+          "bike": 267,
+          "car": 3612,
+          "heavy": 221,
+          "total": 4247,
+          "v85SpeedKmh": 31.3
+        },
+        {
+          "date": "2024-11-16",
+          "pedestrian": 116,
+          "bike": 160,
+          "car": 3081,
+          "heavy": 37,
+          "total": 3394,
+          "v85SpeedKmh": 34.8
+        },
+        {
+          "date": "2024-11-17",
+          "pedestrian": 114,
+          "bike": 268,
+          "car": 2106,
+          "heavy": 29,
+          "total": 2517,
+          "v85SpeedKmh": 33.3
+        },
+        {
+          "date": "2024-11-18",
+          "pedestrian": 124,
+          "bike": 225,
+          "car": 3375,
+          "heavy": 232,
+          "total": 3956,
+          "v85SpeedKmh": 34.7
+        },
+        {
+          "date": "2024-11-19",
+          "pedestrian": 134,
+          "bike": 229,
+          "car": 3185,
+          "heavy": 299,
+          "total": 3847,
+          "v85SpeedKmh": 30.8
+        },
+        {
+          "date": "2024-11-20",
+          "pedestrian": 31,
+          "bike": 91,
+          "car": 374,
+          "heavy": 22,
+          "total": 518,
+          "v85SpeedKmh": 26.5
+        },
+        {
+          "date": "2024-11-21",
+          "pedestrian": 11,
+          "bike": 91,
+          "car": 1143,
+          "heavy": 75,
+          "total": 1320,
+          "v85SpeedKmh": 31.2
+        },
+        {
+          "date": "2024-11-22",
+          "pedestrian": 106,
+          "bike": 127,
+          "car": 1320,
+          "heavy": 49,
+          "total": 1602,
+          "v85SpeedKmh": 25.9
+        },
+        {
+          "date": "2024-11-23",
+          "pedestrian": 72,
+          "bike": 64,
+          "car": 837,
+          "heavy": 2,
+          "total": 975,
+          "v85SpeedKmh": 21.8
+        },
+        {
+          "date": "2024-11-24",
+          "pedestrian": 106,
+          "bike": 378,
+          "car": 858,
+          "heavy": 9,
+          "total": 1351,
+          "v85SpeedKmh": 32.1
+        },
+        {
+          "date": "2024-11-25",
+          "pedestrian": 4,
+          "bike": 343,
+          "car": 1300,
+          "heavy": 64,
+          "total": 1711,
+          "v85SpeedKmh": 30.3
+        },
+        {
+          "date": "2024-11-26",
+          "pedestrian": 111,
+          "bike": 116,
+          "car": 2920,
+          "heavy": 176,
+          "total": 3323,
+          "v85SpeedKmh": 30.7
+        },
+        {
+          "date": "2024-11-27",
+          "pedestrian": 77,
+          "bike": 84,
+          "car": 2781,
+          "heavy": 186,
+          "total": 3128,
+          "v85SpeedKmh": 30.3
+        },
+        {
+          "date": "2024-11-28",
+          "pedestrian": 64,
+          "bike": 101,
+          "car": 2621,
+          "heavy": 195,
+          "total": 2981,
+          "v85SpeedKmh": 31.3
+        },
+        {
+          "date": "2024-11-29",
+          "pedestrian": 103,
+          "bike": 168,
+          "car": 2979,
+          "heavy": 119,
+          "total": 3369,
+          "v85SpeedKmh": 30.3
+        },
+        {
+          "date": "2024-11-30",
+          "pedestrian": 78,
+          "bike": 114,
+          "car": 2300,
+          "heavy": 48,
+          "total": 2540,
+          "v85SpeedKmh": 31.3
+        },
+        {
+          "date": "2024-12-01",
+          "pedestrian": 111,
+          "bike": 167,
+          "car": 2045,
+          "heavy": 23,
+          "total": 2346,
+          "v85SpeedKmh": 34
+        },
+        {
+          "date": "2024-12-02",
+          "pedestrian": 68,
+          "bike": 122,
+          "car": 2849,
+          "heavy": 93,
+          "total": 3132,
+          "v85SpeedKmh": 30.3
+        },
+        {
+          "date": "2024-12-03",
+          "pedestrian": 16,
+          "bike": 30,
+          "car": 765,
+          "heavy": 61,
+          "total": 872,
+          "v85SpeedKmh": 28.8
+        },
+        {
+          "date": "2024-12-04",
+          "pedestrian": 7,
+          "bike": 28,
+          "car": 132,
+          "heavy": 81,
+          "total": 248,
+          "v85SpeedKmh": 22.3
+        },
+        {
+          "date": "2024-12-05",
+          "pedestrian": 89,
+          "bike": 129,
+          "car": 1243,
+          "heavy": 49,
+          "total": 1510,
+          "v85SpeedKmh": 30.2
+        },
+        {
+          "date": "2024-12-06",
+          "pedestrian": 7,
+          "bike": 15,
+          "car": 92,
+          "heavy": 5,
+          "total": 119,
+          "v85SpeedKmh": 29.6
+        },
+        {
+          "date": "2024-12-07",
+          "pedestrian": 37,
+          "bike": 28,
+          "car": 211,
+          "heavy": 20,
+          "total": 296,
+          "v85SpeedKmh": 27.6
+        },
+        {
+          "date": "2024-12-08",
+          "pedestrian": 0,
+          "bike": 1,
+          "car": 39,
+          "heavy": 2,
+          "total": 42,
+          "v85SpeedKmh": 28.3
+        },
+        {
+          "date": "2024-12-09",
+          "pedestrian": 0,
+          "bike": 14,
+          "car": 119,
+          "heavy": 25,
+          "total": 158,
+          "v85SpeedKmh": 28.9
+        },
+        {
+          "date": "2024-12-10",
+          "pedestrian": 15,
+          "bike": 67,
+          "car": 222,
+          "heavy": 83,
+          "total": 387,
+          "v85SpeedKmh": 35.7
+        },
+        {
+          "date": "2024-12-11",
+          "pedestrian": 23,
+          "bike": 48,
+          "car": 133,
+          "heavy": 91,
+          "total": 295,
+          "v85SpeedKmh": 29.7
+        },
+        {
+          "date": "2024-12-12",
+          "pedestrian": 17,
+          "bike": 28,
+          "car": 79,
+          "heavy": 56,
+          "total": 180,
+          "v85SpeedKmh": 25.5
+        },
+        {
+          "date": "2024-12-13",
+          "pedestrian": 0,
+          "bike": 5,
+          "car": 62,
+          "heavy": 20,
+          "total": 87,
+          "v85SpeedKmh": 26.6
+        },
+        {
+          "date": "2024-12-14",
+          "pedestrian": 54,
+          "bike": 31,
+          "car": 171,
+          "heavy": 14,
+          "total": 270,
+          "v85SpeedKmh": 29.9
+        },
+        {
+          "date": "2024-12-15",
+          "pedestrian": 4,
+          "bike": 3,
+          "car": 56,
+          "heavy": 5,
+          "total": 68,
+          "v85SpeedKmh": 19.9
+        },
+        {
+          "date": "2024-12-16",
+          "pedestrian": 22,
+          "bike": 79,
+          "car": 522,
+          "heavy": 31,
+          "total": 654,
+          "v85SpeedKmh": 35.3
+        },
+        {
+          "date": "2024-12-17",
+          "pedestrian": 8,
+          "bike": 39,
+          "car": 235,
+          "heavy": 34,
+          "total": 316,
+          "v85SpeedKmh": 36.1
+        },
+        {
+          "date": "2024-12-18",
+          "pedestrian": 14,
+          "bike": 31,
+          "car": 454,
+          "heavy": 30,
+          "total": 529,
+          "v85SpeedKmh": 33.7
+        },
+        {
+          "date": "2024-12-19",
+          "pedestrian": 2,
+          "bike": 20,
+          "car": 87,
+          "heavy": 22,
+          "total": 131,
+          "v85SpeedKmh": 22.5
+        },
+        {
+          "date": "2024-12-20",
+          "pedestrian": 15,
+          "bike": 28,
+          "car": 187,
+          "heavy": 28,
+          "total": 258,
+          "v85SpeedKmh": 27.4
+        },
+        {
+          "date": "2024-12-21",
+          "pedestrian": 75,
+          "bike": 121,
+          "car": 725,
+          "heavy": 11,
+          "total": 932,
+          "v85SpeedKmh": 29.6
+        },
+        {
+          "date": "2024-12-22",
+          "pedestrian": 0,
+          "bike": 4,
+          "car": 503,
+          "heavy": 13,
+          "total": 520,
+          "v85SpeedKmh": 34.3
+        },
+        {
+          "date": "2024-12-23",
+          "pedestrian": 45,
+          "bike": 44,
+          "car": 2654,
+          "heavy": 133,
+          "total": 2876,
+          "v85SpeedKmh": 31.1
+        },
+        {
+          "date": "2024-12-24",
+          "pedestrian": 53,
+          "bike": 46,
+          "car": 1874,
+          "heavy": 43,
+          "total": 2016,
+          "v85SpeedKmh": 30.3
+        },
+        {
+          "date": "2024-12-25",
+          "pedestrian": 82,
+          "bike": 83,
+          "car": 1191,
+          "heavy": 48,
+          "total": 1404,
+          "v85SpeedKmh": 29.1
+        },
+        {
+          "date": "2024-12-26",
+          "pedestrian": 127,
+          "bike": 132,
+          "car": 1473,
+          "heavy": 81,
+          "total": 1813,
+          "v85SpeedKmh": 30
+        },
+        {
+          "date": "2024-12-27",
+          "pedestrian": 104,
+          "bike": 103,
+          "car": 2214,
+          "heavy": 96,
+          "total": 2517,
+          "v85SpeedKmh": 30.4
+        },
+        {
+          "date": "2024-12-28",
+          "pedestrian": 109,
+          "bike": 118,
+          "car": 1903,
+          "heavy": 82,
+          "total": 2212,
+          "v85SpeedKmh": 30
+        },
+        {
+          "date": "2024-12-29",
+          "pedestrian": 77,
+          "bike": 64,
+          "car": 1523,
+          "heavy": 43,
+          "total": 1707,
+          "v85SpeedKmh": 33.1
+        },
+        {
+          "date": "2024-12-30",
+          "pedestrian": 79,
+          "bike": 104,
+          "car": 2615,
+          "heavy": 119,
+          "total": 2917,
+          "v85SpeedKmh": 30.4
+        },
+        {
+          "date": "2024-12-31",
+          "pedestrian": 79,
+          "bike": 92,
+          "car": 2599,
+          "heavy": 150,
+          "total": 2920,
+          "v85SpeedKmh": 29.6
+        }
+      ],
+      "source": "SharePoint Helsinki/Telraam/raw-data-9000007091-*.xlsx (KPI 1.2)",
+      "sourceFile": "raw-data-9000007091-79245e.xlsx"
+    }
+  ],
+  "note": "One physical Telraam sensor (9000007091) with two SharePoint workbook exports merged for the full observation window."
+}

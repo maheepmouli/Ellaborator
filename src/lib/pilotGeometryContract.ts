@@ -109,9 +109,9 @@ export const PILOT_GEOMETRY_REGISTRY: Record<string, PilotGeometryRecord> = {
   "hel-p1": {
     pilotId: "hel-p1",
     regime: "point",
-    geometryTruth: { status: "derived", source: "mixed", spatialReliability: 0.55 },
-    renderEligibility: "render_with_uncertainty",
-    focus: pilotFocus("Helsinki", "hel-p1", 14),
+    geometryTruth: { status: "exact", source: "gis", spatialReliability: 0.9 },
+    renderEligibility: "render_safe",
+    focus: pilotFocus("Helsinki", "hel-p1", 12),
   },
   "hel-p2": {
     pilotId: "hel-p2",
@@ -122,10 +122,10 @@ export const PILOT_GEOMETRY_REGISTRY: Record<string, PilotGeometryRecord> = {
   },
   "hel-p3": {
     pilotId: "hel-p3",
-    regime: "hybrid_network",
-    geometryTruth: { status: "inferred", source: "api", spatialReliability: 0.35 },
-    renderEligibility: "render_with_uncertainty",
-    focus: pilotFocus("Helsinki", "hel-p3", 12),
+    regime: "point",
+    geometryTruth: { status: "exact", source: "gis", spatialReliability: 0.85 },
+    renderEligibility: "render_safe",
+    focus: pilotFocus("Helsinki", "hel-p3", 15),
   },
   "mil-p1": {
     pilotId: "mil-p1",

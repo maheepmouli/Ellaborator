@@ -96,8 +96,80 @@ const PILOT_GRAPHIC_OVERRIDES: Record<string, PilotGraphicOverride> = {
       "kpi4.2": "accessibilityBars",
     },
   },
-  "hel-p1": { header: { "kpi2.1": "interventionPointsSchematic" } },
-  "hel-p2": { header: { "kpi3.1": "interventionPointsSchematic" } },
+  "hel-p1": {
+    header: {
+      "kpi1.2": "junctionSchematic",
+      "kpi2.1": "junctionSchematic",
+      "kpi3.2": "junctionSchematic",
+    },
+    overview: {
+      "kpi1.2": "modeShareBars",
+      "kpi2.1": "modeShareBars",
+      "kpi3.2": "modeShareBars",
+    },
+    beforeAfter: {
+      "kpi1.2": "modeShareBars",
+      "kpi2.1": "modeShareBars",
+      "kpi3.2": "climateComparison",
+    },
+    kpiAnalysis: {
+      "kpi1.2": "modeShareBars",
+      "kpi2.1": "directionModeBreakdown",
+      "kpi3.2": "climateComparison",
+    },
+  },
+  "hel-p2": {
+    header: {
+      "kpi1.2": "junctionSchematic",
+      "kpi3.1": "facilityInventory",
+      "kpi4.2": "accessibilityBars",
+    },
+    overview: {
+      "kpi1.2": "modeShareBars",
+      "kpi3.1": "facilityInventory",
+      "kpi4.2": "accessibilityBars",
+    },
+    beforeAfter: {
+      "kpi1.2": "prePostTrend",
+      "kpi3.1": "facilityInventory",
+      "kpi4.2": "accessibilityBars",
+    },
+    kpiAnalysis: {
+      "kpi1.2": "modeShareBars",
+      "kpi3.1": "facilityInventory",
+      "kpi4.2": "accessibilityBars",
+    },
+  },
+  "hel-p3": {
+    header: {
+      "kpi1.1": "junctionSchematic",
+      "kpi1.2": "junctionSchematic",
+      "kpi2.1": "junctionSchematic",
+      "kpi4.1": "junctionSchematic",
+      "kpi4.2": "junctionSchematic",
+    },
+    overview: {
+      "kpi1.1": "modeShareBars",
+      "kpi1.2": "modeShareBars",
+      "kpi2.1": "modeShareBars",
+      "kpi4.1": "modeShareBars",
+      "kpi4.2": "accessibilityBars",
+    },
+    beforeAfter: {
+      "kpi1.1": "climateComparison",
+      "kpi1.2": "modeShareBars",
+      "kpi2.1": "modeShareBars",
+      "kpi4.1": "modeShareBars",
+      "kpi4.2": "accessibilityBars",
+    },
+    kpiAnalysis: {
+      "kpi1.1": "modeShareBars",
+      "kpi1.2": "modeShareBars",
+      "kpi2.1": "directionModeBreakdown",
+      "kpi4.1": "likertRadar",
+      "kpi4.2": "accessibilityBars",
+    },
+  },
   "mil-p1": {
     header: {
       "kpi1.2": "cameraCorridorSchematic",
@@ -393,7 +465,7 @@ export function resolveObservatoryGraphic(
     const graphicId = pilotOverride ?? OBSERVATORY_HEADER_SCHEMATIC[observatoryType];
     return {
       graphicId,
-      kind: "schematic",
+      kind: SCHEMATIC_IDS.has(graphicId) ? "schematic" : "chart",
       variant: "compact",
     };
   }

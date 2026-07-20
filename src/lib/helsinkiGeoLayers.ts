@@ -1,8 +1,8 @@
 import type { HelsinkiPilotId } from "@/data/helsinkiPilotProfiles";
 
 export const HELSINKI_GEO_JSON_LAYERS: Partial<Record<HelsinkiPilotId, string>> = {
-  "hel-p1": "/sharepoint-data/Helsinki/dangerous-locations.geojson",
-  "hel-p2": "/sharepoint-data/Helsinki/escooter-observations.geojson",
+  "hel-p1": "/data/helsinki/dangerous-locations.geojson",
+  "hel-p2": "/data/helsinki/escooter-observations.geojson",
 };
 
 export const HELSINKI_GEO_LAYER_LABELS: Partial<Record<HelsinkiPilotId, string>> = {

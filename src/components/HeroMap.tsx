@@ -30,7 +30,12 @@ import {
   renderIssyJunctionHubPulse,
   resolveJunctionModeAccent,
 } from "@/lib/renderIssyJunctionArms";
-import { renderHelsinkiKpi21Layers } from "@/lib/helsinkiMapLayers/renderHelsinkiKpi21Layers";
+import {
+  kpiMetricKind,
+  mapScenarioDisplayValue,
+} from "@/lib/mapScenarioValue";
+import { renderHelsinkiMapLayers } from "@/lib/helsinkiMapLayers";
+import { useHelsinkiHslTram, useHelsinkiInnotrafikSummary } from "@/hooks/use-helsinki-data";
 import { renderLocalCityInteractivePoints } from "@/lib/renderLocalCityInteractivePoints";
 import {
   segmentInteractionHandlers,
@@ -89,14 +94,8 @@ import { DeckLeafletOverlay } from "@/components/map/DeckLeafletOverlay";
 import { getLocalCityDiagnostics, type LocalCityPoint } from "@/services/localCityData";
 import {
   loadCopenhagenCountSitesGeoJson,
-  loadHelsinkiDangerousLocationsGeoJson,
-  loadHelsinkiInterventionLocationsGeoJson,
   loadZaragozaInterventionAreasGeoJson,
 } from "@/services/staticGeoData";
-import {
-  HELSINKI_GEO_LAYER_LABELS,
-  loadHelsinkiGeoSample,
-} from "@/lib/helsinkiGeoLayers";
 import { isMilanCityName, milanMapZoom, MILAN_PILOT_ANCHORS } from "@/lib/milanMapConfig";
 import { buildMilanKpi12MapPoints } from "@/lib/milanModeBreakdown";
 import {
@@ -512,6 +511,11 @@ const HeroMap = ({
     selectedPilotId,
     scenario
   );
+  const { data: helsinkiHslTram } = useHelsinkiHslTram(currentCity || "", selectedPilotId);
+  const { data: helsinkiInnotrafikSummary } = useHelsinkiInnotrafikSummary(
+    currentCity || "",
+    selectedPilotId
+  );
   const isTrikalaCity = !!currentCity?.toLowerCase().includes("trikala");
   const { data: trikalaSegmentInsights = [] } = useQuery({
     queryKey: ["trikala-segment-insights"],
@@ -609,8 +613,10 @@ const HeroMap = ({
     const isCopenhagenPilot =
       currentCity?.toLowerCase().includes("copenhagen") && selectedPilotId?.startsWith("cph-");
     const isMilanCity = currentCity?.toLowerCase().includes("milan");
+    const isHelsinkiCity = currentCity?.toLowerCase().includes("helsinki");
     // Milan: AMAT shapefile segments / count points define geography — no synthetic buffer disc.
-    if (!isCopenhagenPilot && !isMilanCity) {
+    // Helsinki: KPI renderers draw peer-style influence fields — skip duplicate purple buffer + GeoSample.
+    if (!isCopenhagenPilot && !isMilanCity && !isHelsinkiCity) {
       const interventionBoundary = L.circle([focusLat, focusLng], {
         radius: focusRadiusM,
         color: "#a78bfa",
@@ -645,29 +651,7 @@ const HeroMap = ({
         layer.addLayer(markerLayer);
       });
     }
-    const pilotId = selectedPilotId as HelsinkiPilotId | null;
-    if (pilotId && (pilotId === "hel-p1" || pilotId === "hel-p2")) {
-      void loadHelsinkiGeoSample(pilotId, pilotId === "hel-p1" ? 80 : 40).then((points) => {
-        if (!mapRef.current || interventionLayerRef.current !== layer) return;
-        const layerLabel = HELSINKI_GEO_LAYER_LABELS[pilotId] || "Observed Helsinki layer";
-        points.forEach((point, index) => {
-          const markerLayer = L.circleMarker([point.lat, point.lng], {
-            radius: 4,
-            color: "#7c3aed",
-            weight: 1,
-            fillColor: "#ddd6fe",
-            fillOpacity: 0.75,
-          });
-          markerLayer.bindPopup(`
-            <div style="font-family:'DM Sans',sans-serif;min-width:220px;padding:8px 10px;">
-              <p style="margin:0 0 4px;font-size:11px;font-weight:700;color:#2f1b6d;">${point.title}</p>
-              <p style="margin:0;font-size:10px;color:#5b4d84;">${layerLabel} · point ${index + 1}</p>
-            </div>
-          `);
-          layer.addLayer(markerLayer);
-        });
-      });
-    }
+    // Helsinki sampled clouds are owned by helsinkiMapLayers — do not double-paint via GeoSample.
     layer.addTo(mapRef.current);
     interventionLayerRef.current = layer;
   }, [currentCity, selectedPilotId, selectedPilotMeta?.lat, selectedPilotMeta?.lng, selectedPilotMeta?.scale, selectedPilotProfile]);
@@ -1567,6 +1551,7 @@ const HeroMap = ({
             selectedKpi,
             points: zemPoints,
             filterRange,
+            scenario,
             segmentHandlers,
             segmentInteractionEnabled,
             selectedSegmentId: activeMapSegmentId,
@@ -1723,6 +1708,7 @@ const HeroMap = ({
             selectedKpi,
             points: climateMockPoints,
             filterRange,
+            scenario,
             segmentHandlers,
             segmentInteractionEnabled,
             selectedSegmentId: activeMapSegmentId,
@@ -1875,6 +1861,7 @@ const HeroMap = ({
             selectedKpi,
             points: scopedA11yPoints,
             filterRange,
+            scenario,
             segmentHandlers,
             segmentInteractionEnabled,
             selectedSegmentId: activeMapSegmentId,
@@ -1902,6 +1889,7 @@ const HeroMap = ({
               selectedKpi,
               points: a11yMockPoints,
               filterRange,
+              scenario,
               segmentHandlers,
               segmentInteractionEnabled,
               selectedSegmentId: activeMapSegmentId,
@@ -2338,21 +2326,32 @@ const HeroMap = ({
         return;
       }
 
-      if (cityName.toLowerCase().includes("helsinki") && selectedKpi === "kpi2.1") {
-        void renderHelsinkiKpi21Layers({
+      if (cityName.toLowerCase().includes("helsinki")) {
+        void renderHelsinkiMapLayers({
           map: mapRef.current!,
-          localCityPoints,
-          filterRange,
+          selectedKpi,
           selectedPilotId,
-          activeMapSegmentId,
+          activeMapSegmentId: selectedJunctionSegmentId,
+          scenario,
           segmentInteractionEnabled,
           segmentHandlers,
+          localCityPoints: localCityPoints ?? [],
+          filterRange,
+          getValueColor,
+          wireCircleMarker: wireCircleMarkerSegment,
           circlesOut: circlesRef.current,
           polygonsOut: polygonsRef.current,
+          polylinesOut: polylinesRef.current,
           markersOut: markersRef.current,
-          getValueColor,
+          circlesInfluenceOut: circlesRef.current as unknown as L.Circle[],
+          hslTramSample: helsinkiHslTram,
+          innotrafikSummary: helsinkiInnotrafikSummary,
+          showInterventionLayer,
+        }).then((handled) => {
+          if (handled) {
+            addInterventionLayer(cityData, false);
+          }
         });
-        addInterventionLayer(cityData, showInterventionLayer);
         return;
       }
 
@@ -2616,6 +2615,7 @@ const HeroMap = ({
               selectedKpi,
               points: scopedLocal,
               filterRange,
+              scenario,
               segmentHandlers,
               segmentInteractionEnabled,
               selectedSegmentId: activeMapSegmentId,
@@ -2678,7 +2678,19 @@ const HeroMap = ({
           return;
         }
 
-        const values = points.map(p => p.value);
+        const values = points.map((p) => {
+          const props = p.properties || {};
+          const baseline = Number(props.baselineValue ?? p.value ?? 0);
+          const intervention = Number(props.interventionValue ?? p.value ?? 0);
+          const comparison =
+            typeof props.comparisonValue === "number"
+              ? Number(props.comparisonValue)
+              : intervention - baseline;
+          return mapScenarioDisplayValue(scenario, baseline, intervention, {
+            comparison,
+            kind: kpiMetricKind(selectedKpi),
+          });
+        });
         const minValue = Math.min(...values);
         const maxValue = Math.max(...values);
         const valueRange = maxValue - minValue || 1;
@@ -2686,8 +2698,9 @@ const HeroMap = ({
         // Filter by mode types for Mode Share KPI
         const shouldFilterByMode = selectedKpi === "kpi1.2" && selectedModeTypes && selectedModeTypes.length > 0;
         
-        points.forEach((point) => {
-          if (point.value < filterRange[0] || point.value > filterRange[1]) return;
+        points.forEach((point, pointIndex) => {
+          const displayValue = values[pointIndex] ?? point.value;
+          if (displayValue < filterRange[0] || displayValue > filterRange[1]) return;
           
           // For Mode Share, filter based on selected mode types
           // Since bicycle counting data represents cycling mode, only show if Cycle is selected
@@ -2705,12 +2718,12 @@ const HeroMap = ({
           }
           // Use infrastructure type for color if available (KPI3.1)
           const color = getValueColor(
-            point.value,
-            false,
+            displayValue,
+            selectedKpi === "kpi2.1",
             selectedKpi === "kpi3.1" ? props.type_amgt_cycl : undefined
           );
           
-          const normalizedValue = (point.value - minValue) / valueRange;
+          const normalizedValue = (displayValue - minValue) / valueRange;
           const size = Math.max(4, Math.min(20, 4 + normalizedValue * 16)); // 4-20px radius
           const opacity = selectedKpi === "kpi3.1" ? 0.8 : 0.7 + normalizedValue * 0.2;
 
@@ -2871,6 +2884,7 @@ const HeroMap = ({
               selectedKpi,
               points: scopedLocal,
               filterRange,
+              scenario,
               segmentHandlers,
               segmentInteractionEnabled,
               selectedSegmentId: activeMapSegmentId,
@@ -2908,19 +2922,30 @@ const HeroMap = ({
           >();
 
           climatePoints.forEach((point) => {
-            if (point.value < filterRange[0] || point.value > filterRange[1]) return;
+            const props = point.properties || {};
+            const baseline = Number(props.baselineValue ?? point.value ?? 0);
+            const intervention = Number(props.interventionValue ?? point.value ?? 0);
+            const comparison =
+              typeof props.comparisonValue === "number"
+                ? Number(props.comparisonValue)
+                : intervention - baseline;
+            const scenarioValue = mapScenarioDisplayValue(scenario, baseline, intervention, {
+              comparison,
+              kind: "pressure",
+            });
+            if (scenarioValue < filterRange[0] || scenarioValue > filterRange[1]) return;
             const key = `${Math.round(point.lat * 170)}_${Math.round(point.lon * 170)}`;
             const existing = climateBuckets.get(key);
             if (existing) {
               existing.lat += point.lat;
               existing.lon += point.lon;
-              existing.total += point.value;
+              existing.total += scenarioValue;
               existing.count += 1;
             } else {
               climateBuckets.set(key, {
                 lat: point.lat,
                 lon: point.lon,
-                total: point.value,
+                total: scenarioValue,
                 count: 1,
               });
             }
@@ -3110,13 +3135,15 @@ const HeroMap = ({
 
   useEffect(() => {
     if (!mapRef.current || pilotGeometrySpec?.maxZoom == null) return;
-    mapRef.current.setMaxZoom(pilotGeometrySpec.maxZoom);
-    if (pilotGeometrySpec.minZoom != null) {
+    const isHelsinki = currentCity?.toLowerCase().includes("helsinki");
+    // Helsinki GPKG surveys are exact — never inherit the inferred maxZoom=12 lock.
+    mapRef.current.setMaxZoom(isHelsinki ? 18 : pilotGeometrySpec.maxZoom);
+    if (pilotGeometrySpec.minZoom != null && !isHelsinki) {
       mapRef.current.setMinZoom(pilotGeometrySpec.minZoom);
-    } else if (!isTrikalaCity) {
+    } else {
       mapRef.current.setMinZoom(4);
     }
-  }, [pilotGeometrySpec?.maxZoom, pilotGeometrySpec?.minZoom, isTrikalaCity]);
+  }, [pilotGeometrySpec?.maxZoom, pilotGeometrySpec?.minZoom, isTrikalaCity, currentCity]);
 
   useEffect(() => {
     if (!currentCity || !onDataQualitySummaryChange) return;
@@ -3615,6 +3642,10 @@ const HeroMap = ({
     ) {
       return;
     }
+    // Helsinki KPI layers own their viewport (influence discs would otherwise over-zoom-out).
+    if (currentCity?.toLowerCase().includes("helsinki")) {
+      return;
+    }
     const map = mapRef.current;
     const bounds = L.latLngBounds([]);
     let hasGeometry = false;
@@ -3832,7 +3863,9 @@ const HeroMap = ({
     trikalaInfrastructureLocations,
     trikalaSegmentInsights,
     selectedJunctionSegmentId,
-    mapZoomRevision,
+    helsinkiHslTram,
+    helsinkiInnotrafikSummary,
+    showInterventionLayer,
   ]);
 
   useEffect(() => {

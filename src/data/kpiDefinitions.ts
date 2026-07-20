@@ -14,6 +14,18 @@ export interface KPIDefinition {
 
 export const ELABORATOR_KPIS: KPIDefinition[] = [
   {
+    id: "kpi1.1",
+    ref: "KPI1.1",
+    name: "Intervention Expansion",
+    shortName: "Intervention Expansion",
+    unit: "plans",
+    icon: "📐",
+    chartType: "gauge",
+    colorScheme: ["#38bdf8", "#96C2EF", "#657DF5", "#8578C3"],
+    description: "Tracks formal expansion plans and readiness of intervention monitoring assets",
+    question: "Is at least one formal expansion plan in place for the intervention?",
+  },
+  {
     id: "kpi1.2",
     ref: "KPI1.2",
     name: "Mobility Mode Share",
@@ -548,6 +560,17 @@ export const CITY_DATA: CityKPIData[] = [
     lon: 24.9384,
     population: "650K",
     kpiData: {
+      "kpi1.1": {
+        mainValue: 0,
+        unit: "plans",
+        change: 0,
+        status: "after",
+        breakdown: {
+          "Formal expansion plans": 0,
+          "Telraam coverage days": 445,
+          "Mobilysis gate counts": 1,
+        },
+      },
       "kpi1.2": {
         mainValue: 52,
         unit: "%",

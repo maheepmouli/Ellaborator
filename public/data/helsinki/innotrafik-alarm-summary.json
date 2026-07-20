@@ -1,0 +1,60 @@
+{
+  "location": "Viikintie-Koetilantie tramway crossing (Innotrafik warning system)",
+  "coordinates": {
+    "lat": 60.224599,
+    "lng": 25.017236
+  },
+  "periods": [
+    {
+      "label": "Jun 2025 (days 1–14)",
+      "startDate": "2025-06-01",
+      "endDate": "2025-06-14",
+      "relativeIntensity": 62,
+      "chartPath": "/sharepoint-data/Helsinki/innotrafik/alarm_durations_histogram_20250601_20250614.png"
+    },
+    {
+      "label": "Jul 2025 (days 1–14)",
+      "startDate": "2025-07-01",
+      "endDate": "2025-07-14",
+      "relativeIntensity": 71,
+      "chartPath": "/sharepoint-data/Helsinki/innotrafik/alarm_durations_histogram_20250701_20250714.png"
+    },
+    {
+      "label": "Aug 2025 (days 1–14)",
+      "startDate": "2025-08-01",
+      "endDate": "2025-08-14",
+      "relativeIntensity": 68,
+      "chartPath": "/sharepoint-data/Helsinki/innotrafik/alarm_durations_histogram_20250801_20250814.png"
+    }
+  ],
+  "weekdayMinutePeaks": [
+    {
+      "weekday": "Mon",
+      "minuteOfDay": 480,
+      "relativeIntensity": 78
+    },
+    {
+      "weekday": "Tue",
+      "minuteOfDay": 510,
+      "relativeIntensity": 82
+    },
+    {
+      "weekday": "Wed",
+      "minuteOfDay": 495,
+      "relativeIntensity": 80
+    },
+    {
+      "weekday": "Thu",
+      "minuteOfDay": 505,
+      "relativeIntensity": 76
+    },
+    {
+      "weekday": "Fri",
+      "minuteOfDay": 450,
+      "relativeIntensity": 74
+    }
+  ],
+  "medianDurationSec": null,
+  "note": "Relative intensities are chart-derived proxies until the raw Innotrafik alarm-event table is delivered. PNG evidence charts remain in evidence-manifest.json media.innotrafik.",
+  "source": "SharePoint Helsinki/Viikki Innotrafik warning system/*.png (structured summary for map + observatory)"
+}

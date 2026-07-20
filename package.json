@@ -25,6 +25,8 @@
     "build-milan-accessibility": "node scripts/build-milan-accessibility.mjs",
     "inventory-milan": "node scripts/inventory-milan-zip.mjs",
     "convert-helsinki-gpkg": "node scripts/convert-helsinki-gpkg.mjs",
+    "build-helsinki-data": "node scripts/build-helsinki-data.mjs",
+    "refresh-helsinki-snapshots": "node scripts/refresh-helsinki-snapshots.mjs",
     "prepare:geodata": "python scripts/prepare_geodata.py"
   },
   "dependencies": {

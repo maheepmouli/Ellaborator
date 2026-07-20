@@ -18,6 +18,13 @@ const KPI_METHOD_FALLBACKS: Record<
   string,
   { meaning: string; calculationMethod: string; limitations: string }
 > = {
+  "kpi1.1": {
+    meaning: "Formal intervention expansion-plan readiness at the pilot site.",
+    calculationMethod:
+      "Counts formal expansion plans against the ≥1 plan target; when the plan artifact is pending, monitoring coverage (Telraam / Mobilysis) is used as a readiness proxy.",
+    limitations:
+      "Helsinki FVH3 currently lacks a structured expansion-plan artifact — readiness is monitoring-based until the plan is delivered.",
+  },
   "kpi1.2": {
     meaning: "Mobility behavior change in intervention context.",
     calculationMethod: "Observed or derived mode-oriented counts are normalized and compared across baseline/intervention periods.",
@@ -55,7 +62,11 @@ export function getCityKpiMethodology(city: string): CityKpiMethodologyEntry[] {
 
   return ELABORATOR_KPIS.map((kpi) => {
     const datasets = DATASET_REGISTRY.filter((d) => d.city === city && d.linkedKpis.includes(kpi.id));
-    const fallback = KPI_METHOD_FALLBACKS[kpi.id];
+    const fallback = KPI_METHOD_FALLBACKS[kpi.id] ?? {
+      meaning: `${kpi.shortName} methodology is pending partner confirmation.`,
+      calculationMethod: "Method details follow city dataset linkage when available.",
+      limitations: "No city-specific methodology fallback is registered for this KPI yet.",
+    };
 
     return {
       city,

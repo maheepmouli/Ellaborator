@@ -4,6 +4,7 @@ export type VisualizationType = "segments" | "points" | "areas";
 export type MapGeometryHint = VisualizationType | "hexagons" | "grid";
 
 export type KPIFrameworkId =
+  | "kpi1.1"
   | "kpi1.2"
   | "kpi2.1"
   | "kpi3.1"
@@ -54,6 +55,26 @@ export interface KPIFrameworkConfig {
 }
 
 export const KPI_FRAMEWORK: Record<KPIFrameworkId, KPIFrameworkConfig> = {
+  "kpi1.1": {
+    id: "kpi1.1",
+    displayName: "Intervention Expansion",
+    description:
+      "Formal expansion-plan readiness for the intervention site, supported by linked monitoring assets when a structured plan artifact is still pending.",
+    question: "Is at least one formal expansion plan in place for the intervention?",
+    supportedMapGeometry: ["points", "areas"],
+    visualizationType: "points",
+    summaryFields: [
+      { id: "changeFromBaseline", label: "Expansion readiness change" },
+      { id: "countsByMode", label: "Monitoring asset coverage" },
+    ],
+    metadataFields: [
+      { id: "dataSource", label: "Data source" },
+      { id: "collectionPeriod", label: "Collection period" },
+      { id: "method", label: "Method" },
+      { id: "status", label: "Status" },
+    ],
+    isMock: false,
+  },
   "kpi1.2": {
     id: "kpi1.2",
     displayName: "Mobility Mode Share",

@@ -21,6 +21,24 @@ export interface KpiDefinitionConfig {
 }
 
 export const KPI_DEFINITIONS: Record<string, KpiDefinitionConfig> = {
+  "kpi1.1": {
+    id: "kpi1.1",
+    ref: "KPI1.1",
+    name: "Intervention Expansion",
+    type: "mobility",
+    mapType: "points",
+    indicator: "Formal expansion plans (≥1 target)",
+    supportingData: ["Expansion plan artifact", "Telraam / Mobilysis monitoring coverage"],
+    summary:
+      "This view tracks whether a formal intervention expansion plan is available, with monitoring readiness shown when the plan artifact is still pending.",
+    interpretation:
+      "KPI 1.1 expects at least one formal expansion plan. Helsinki FVH3 currently surfaces monitoring readiness while the structured plan artifact remains pending.",
+    dataSource: "Helsinki Evaluation Plan + Viikki monitoring feeds",
+    method: "Plan-count target with monitoring-readiness proxy when plan artifact is missing",
+    status: "ongoing",
+    dataLabel: "Derived",
+    isModelled: true,
+  },
   "kpi1.2": {
     id: "kpi1.2",
     ref: "KPI1.2",

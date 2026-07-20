@@ -125,7 +125,7 @@ export function resolveSpatialSystem(
     return "points";
   }
 
-  if (cityKey === "helsinki" && (kpiId === "kpi1.2" || kpiId === "kpi2.1" || kpiId === "kpi4.2")) {
+  if (cityKey === "helsinki" && (kpiId === "kpi1.1" || kpiId === "kpi1.2" || kpiId === "kpi2.1" || kpiId === "kpi3.1" || kpiId === "kpi4.1" || kpiId === "kpi4.2")) {
     return "points";
   }
 

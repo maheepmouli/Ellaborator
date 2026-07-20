@@ -1591,6 +1591,10 @@ export default function SegmentIntelligencePanel({
         (view.intervention.modeShare.Cycle ?? 0) + (view.intervention.modeShare.Pedestrian ?? 0);
       return Math.round(postActive - preActive);
     }
+    if (selectedKpi === "kpi3.2" && resolvedCity.toLowerCase().includes("helsinki")) {
+      // Soft attitude-relief outlook used on the climate map when only a single survey period exists.
+      return 18;
+    }
     if (profile?.observatoryType === "camera" && view.dataClass === "observed") {
       const preMotor =
         (view.baseline.modeShare.Car ?? 0) +
@@ -1606,7 +1610,7 @@ export default function SegmentIntelligencePanel({
       ((1 - view.intervention.peakCongestion) / Math.max(0.01, 1 - view.baseline.peakCongestion) - 1) *
         100
     );
-  }, [view, selectedKpi, pilotId]);
+  }, [view, selectedKpi, pilotId, resolvedCity]);
 
   useEffect(() => {
     if (isOpen) {

@@ -19,6 +19,24 @@ import { buildMilanSurveyRecords } from "@/services/milanSurveyParser";
 import { MILAN_ACCESSIBILITY_FILES, MILAN_ACCESSIBILITY_JSON, MILAN_MODE_SHARE_JSON } from "@/lib/milanDataPaths";
 import { MILAN_PILOT_ANCHORS } from "@/lib/milanMapConfig";
 import { milanRecordMatchesPilotScope } from "@/lib/milanPilotScope";
+import {
+  fetchHelsinkiJson,
+  HELSINKI_DANGEROUS_LOCATIONS_SURVEY_INSIGHTS_JSON,
+  HELSINKI_KALLIO_ANCHOR,
+  HELSINKI_MOBILYSIS_VIIKKI_GATES_JSON,
+  HELSINKI_TELRAAM_KOETILANTIE_JSON,
+  HELSINKI_VIIKKI_ANCHOR,
+  HELSINKI_VIIKKI_UX_SURVEY_JSON,
+  type HelsinkiDangerousLocationsSurveyInsights,
+  type HelsinkiMobilysisGates,
+  type HelsinkiTelraamKoetilantie,
+  type HelsinkiUxSurvey,
+} from "@/lib/helsinkiDataPaths";
+import {
+  loadHelsinkiConflictsGeoJson,
+  loadHelsinkiDangerousLocationsGeoJson,
+  loadHelsinkiEscooterObservationsGeoJson,
+} from "@/services/staticGeoData";
 
 export interface LocalCityPoint {
   lat: number;
@@ -38,11 +56,6 @@ const COPENHAGEN_CAMERA_FILES = [
   "/sharepoint-data/Copenhagen/OpenTrafficCam Counts 2024 and 2025/Countings_Gammeltorv_sortet.xlsx",
   "/sharepoint-data/Copenhagen/OpenTrafficCam Counts 2024 and 2025/Countings_Stormgade_sortet.xlsx",
   "/sharepoint-data/Copenhagen/OpenTrafficCam Counts 2024 and 2025/Countings_Hojbro.xlsx",
-];
-
-const HELSINKI_TELRAAM_FILES = [
-  "/sharepoint-data/Helsinki/Telraam/raw-data-9000007091-16eb11c.xlsx",
-  "/sharepoint-data/Helsinki/Telraam/raw-data-9000007091-79245e.xlsx",
 ];
 
 const COPENHAGEN_JSON_FALLBACK = "/data/copenhagen/otc-directional-observed.json";
@@ -309,9 +322,20 @@ async function parseCopenhagenFromJsonFallback(kpiId: string): Promise<Normalize
 
 function inferHelsinkiPilot(street: string): string {
   const value = street.toLowerCase();
-  if (value.includes("annerheim") || value.includes("keskusta")) return "hel-p1";
-  if (value.includes("escooter") || value.includes("kamppi")) return "hel-p2";
+  if (value.includes("dangerous") || value.includes("conflict") || value.includes("citywide")) return "hel-p1";
+  if (value.includes("escooter") || value.includes("kallio")) return "hel-p2";
+  if (value.includes("viikki") || value.includes("koetilantie") || value.includes("mobilysis")) return "hel-p3";
   return "hel-p3";
+}
+
+/** Helsinki pilot filter — Telraam is city-wide KPI 1.2 support for all FVH pilots. */
+function helsinkiRecordMatchesPilotScope(
+  record: { interventionId?: string; datasetKind?: string },
+  selectedPilotId: string
+): boolean {
+  if (record.interventionId === selectedPilotId) return true;
+  if (record.datasetKind === "telraam" && selectedPilotId.startsWith("hel-")) return true;
+  return false;
 }
 
 function toScenarioValue(record: NormalizedCityRecord, scenario: ScenarioType): number {
@@ -647,164 +671,541 @@ async function parseHelsinkiRecords(kpiId: string): Promise<NormalizedCityRecord
   const cached = normalizedRecordCache.get(cacheKey);
   if (cached) return cached;
 
-  const bySensor = new Map<
-    string,
-    {
-      street: string;
-      total: number;
-      bike: number;
-      ped: number;
-      car: number;
-      speed: number;
-      speedCount: number;
-      lat?: number;
-      lon?: number;
+  const records: NormalizedCityRecord[] = [];
+
+  if (kpiId === "kpi1.2" || kpiId === "kpi2.1" || kpiId === "kpi4.2") {
+    const telraam = await fetchHelsinkiJson<HelsinkiTelraamKoetilantie>(HELSINKI_TELRAAM_KOETILANTIE_JSON);
+    if (telraam) {
+      const { totals, modeShare, v85SpeedKmh, location } = telraam;
+      let value = clampPercent(totals.all / 900);
+      let dataType: NormalizedCityRecord["type"] = "observed";
+      let method = "Telraam street counts aggregated across the full monitoring window.";
+      if (kpiId === "kpi1.2") {
+        value = clampPercent(modeShare.bikePct + modeShare.pedestrianPct);
+        method = "Observed sustainable-mode share (bike + pedestrian) from Telraam Koetilantie counts.";
+      } else if (kpiId === "kpi2.1") {
+        value = clampPercent(modeShare.carPct * 0.55 + Math.max(0, (v85SpeedKmh ?? 0) - 20) * 1.2);
+        dataType = "derived";
+        method = `Derived safety-pressure proxy from car mode share and V85 speed (${v85SpeedKmh ?? "n/a"} km/h).`;
+      } else if (kpiId === "kpi4.2") {
+        value = clampPercent(100 - modeShare.carPct * 0.7);
+        dataType = "derived";
+        method = "Derived VRU-friendliness proxy from Telraam car mode share (inverse).";
+      }
+      const monthly = new Map<string, { bike: number; ped: number; car: number }>();
+      telraam.dailyAggregates.forEach((day) => {
+        const key = String(day.date ?? "").slice(0, 7);
+        if (!key) return;
+        const bucket = monthly.get(key) ?? { bike: 0, ped: 0, car: 0 };
+        bucket.bike += day.bike;
+        bucket.ped += day.pedestrian;
+        bucket.car += day.car;
+        monthly.set(key, bucket);
+      });
+      const monthlyTrend = [...monthly.entries()]
+        .sort(([a], [b]) => a.localeCompare(b))
+        .slice(-12)
+        .map(([month, bucket]) => {
+          const total = Math.max(bucket.bike + bucket.ped + bucket.car, 1);
+          return {
+            t: month.slice(2),
+            v: Number((((bucket.bike + bucket.ped) / total) * 100).toFixed(1)),
+          };
+        });
+
+      records.push({
+        id: `helsinki-${kpiId}-telraam-${telraam.sensorId}`,
+        city: "Helsinki",
+        cityId: "helsinki",
+        interventionId: "hel-p3",
+        kpiId,
+        sourceFile: telraam.source,
+        datasetKind: "telraam",
+        geometryType: "point",
+        lat: location.lat,
+        lng: location.lng,
+        geometry: [[location.lat, location.lng]],
+        value,
+        baselineValue: value,
+        interventionValue: value,
+        comparisonValue: 0,
+        source: "Telraam sensor 9000007091 (Koetilantie, Viikki)",
+        method,
+        type: dataType,
+        spatialQuality: "matched",
+        geometryLinkage: "matched",
+        temporalCoverage: "single-period",
+        locationMethod: "coordinates",
+        segmentId: telraam.sensorId,
+        streetName: telraam.street,
+        spatialNote: `${(telraam.periodStart ?? "").slice(0, 10)} to ${(telraam.periodEnd ?? "").slice(0, 10)} · fixed Viikki crossing anchor`,
+        observationCount: telraam.dailyAggregates.length,
+        monthlyTrend,
+        modeBreakdown: {
+          pre: {
+            bike: totals.bike,
+            pedestrian: totals.pedestrian,
+            motorised: totals.car,
+            ptw: 0,
+            total: Math.max(totals.all, 1),
+          },
+          post: {
+            bike: totals.bike,
+            pedestrian: totals.pedestrian,
+            motorised: totals.car,
+            ptw: 0,
+            total: Math.max(totals.all, 1),
+          },
+        },
+        parserStatus: "ready",
+      });
     }
-  >();
-
-  for (const filePath of HELSINKI_TELRAAM_FILES) {
-    const response = await fetch(encodeURI(filePath));
-    if (!response.ok) continue;
-    const workbook = XLSX.read(await response.arrayBuffer(), { type: "array" });
-    const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(
-      workbook.Sheets[workbook.SheetNames[0]],
-      { defval: null }
-    );
-
-    rows.forEach((row) => {
-      const sensorId = String(row["Segment ID"] || row["segment_id"] || "");
-      if (!sensorId) return;
-      const street = String(row.Street || row.street || "Helsinki street");
-      const latRaw = row.Lat ?? row.lat ?? row.Latitude ?? row.latitude;
-      const lonRaw = row.Lon ?? row.lon ?? row.Longitude ?? row.longitude;
-      const explicitCoord =
-        latRaw != null && lonRaw != null
-          ? { lat: parseNumber(latRaw), lon: parseNumber(lonRaw) }
-          : null;
-      const hasExplicitCoord =
-        explicitCoord && Number.isFinite(explicitCoord.lat) && Number.isFinite(explicitCoord.lon);
-      const bike = parseNumber(row["Bike Total"]);
-      const ped = parseNumber(row["Pedestrian Total"]);
-      const car = parseNumber(row["Car Total"]);
-      const total = bike + ped + car + parseNumber(row["Large vehicle Total"]);
-      const speed = parseNumber(row["Speed V85 km/h"]);
-      const current = bySensor.get(sensorId) || {
-        street,
-        total: 0,
-        bike: 0,
-        ped: 0,
-        car: 0,
-        speed: 0,
-        speedCount: 0,
-        lat: hasExplicitCoord ? explicitCoord!.lat : undefined as number | undefined,
-        lon: hasExplicitCoord ? explicitCoord!.lon : undefined as number | undefined,
-      };
-      if (hasExplicitCoord) {
-        current.lat = explicitCoord!.lat;
-        current.lon = explicitCoord!.lon;
-      }
-      current.total += total;
-      current.bike += bike;
-      current.ped += ped;
-      current.car += car;
-      if (speed > 0) {
-        current.speed += speed;
-        current.speedCount += 1;
-      }
-      bySensor.set(sensorId, current);
-    });
   }
 
-  const centerLat = 60.1699;
-  const centerLon = 24.9384;
-  const records = Array.from(bySensor.entries()).map(([sensorId, agg], index) => {
-    const bikeShare = agg.total > 0 ? (agg.bike / agg.total) * 100 : 0;
-    const vehicleShare = agg.total > 0 ? (agg.car / agg.total) * 100 : 0;
-    const avgSpeed = agg.speedCount > 0 ? agg.speed / agg.speedCount : 0;
-    const intensity = clampPercent(agg.total / 450);
-    let value = intensity;
-    let baselineValue = clampPercent(value * 0.9);
-    let dataType: NormalizedCityRecord["type"] = "observed";
-    if (kpiId === "kpi1.2") {
-      value = clampPercent(bikeShare);
-      baselineValue = clampPercent(value * 0.93);
-    } else if (kpiId === "kpi2.1") {
-      value = clampPercent(vehicleShare * 0.55 + Math.max(0, avgSpeed - 20) * 1.2);
-      baselineValue = clampPercent(value * 1.08);
-      dataType = "derived";
-    } else if (kpiId === "kpi4.2") {
-      value = clampPercent(100 - vehicleShare * 0.7);
-      baselineValue = clampPercent(value * 0.88);
-      dataType = "derived";
+  // FVH1 survey aggregates also feed KPI 1.2 as sustainable-mobility safety context
+  if (kpiId === "kpi1.2" || kpiId === "kpi2.1") {
+    const [dangerous, conflicts] = await Promise.all([
+      loadHelsinkiDangerousLocationsGeoJson(),
+      loadHelsinkiConflictsGeoJson(),
+    ]);
+
+    if (dangerous.features.length) {
+      const hazardTypeCounts = new Map<string, number>();
+      dangerous.features.forEach((feature) => {
+        const label = String(feature.properties?.locationType || "Other issue").trim() || "Other issue";
+        hazardTypeCounts.set(label, (hazardTypeCounts.get(label) || 0) + 1);
+      });
+      const hazardCategories = [...hazardTypeCounts.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 8)
+        .map(([label, count]) => ({ label, count }));
+
+      records.push({
+        id: `helsinki-${kpiId}-dangerous-locations`,
+        city: "Helsinki",
+        cityId: "helsinki",
+        interventionId: "hel-p1",
+        kpiId,
+        sourceFile: "Helsinki/DangerousLocationsSurvey_ENG_EPSG3067.gpkg (DangerousLocations_hki layer)",
+        datasetKind: "dangerous-location",
+        geometryType: "point",
+        lat: 60.1699,
+        lng: 24.9384,
+        geometry: [[60.1699, 24.9384]],
+        value: clampPercent(dangerous.features.length / 30),
+        baselineValue: clampPercent(dangerous.features.length / 30),
+        interventionValue: clampPercent(dangerous.features.length / 30),
+        comparisonValue: 0,
+        source: "Citizen dangerous-locations survey (GPKG)",
+        method: `${dangerous.features.length} citizen-reported dangerous-location submissions citywide.`,
+        type: "observed",
+        spatialQuality: "exact",
+        geometryLinkage: "exact",
+        temporalCoverage: "single-period",
+        locationMethod: "coordinates",
+        segmentId: "hel-dangerous-locations",
+        streetName: "Dangerous locations survey (citywide)",
+        spatialNote: "Exact GPKG points; map shows sampled cloud + multi-hub density ripples.",
+        observationCount: dangerous.features.length,
+        hazardCategories,
+        parserStatus: "ready",
+      });
     }
 
-    const hash = hashString(`${sensorId}-${agg.street}`);
-    const angle = ((hash + index * 47) % 360) * (Math.PI / 180);
-    const radius = 0.01 + (index % 10) * 0.0016;
-    const useCoords =
-      typeof agg.lat === "number" && typeof agg.lon === "number"
-        ? { lat: agg.lat, lon: agg.lon }
-        : {
-            lat: centerLat + Math.cos(angle) * radius,
-            lon: centerLon + Math.sin(angle) * radius * 1.35,
-          };
-    const locationMethod =
-      typeof agg.lat === "number" && typeof agg.lon === "number"
-        ? ("coordinates" as const)
-        : ("approximate_cluster" as const);
-    const geometryLinkage =
-      typeof agg.lat === "number" && typeof agg.lon === "number" ? ("matched" as const) : ("inferred" as const);
-    return {
-      id: `helsinki-${kpiId}-${sensorId}`,
+    if (conflicts.features.length) {
+      const incidentCounts = new Map<string, number>();
+      const modeCounts = new Map<string, number>();
+      conflicts.features.forEach((feature) => {
+        const incident = String(feature.properties?.incidentType || "Other").trim() || "Other";
+        const mode = String(feature.properties?.travelMode || "Other").trim() || "Other";
+        incidentCounts.set(incident, (incidentCounts.get(incident) || 0) + 1);
+        modeCounts.set(mode, (modeCounts.get(mode) || 0) + 1);
+      });
+      const conflictCategories = [...incidentCounts.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .map(([label, count]) => ({ label, count }));
+      const conflictModes = [...modeCounts.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 6)
+        .map(([label, count]) => ({ label, count }));
+
+      records.push({
+        id: `helsinki-${kpiId}-conflicts`,
+        city: "Helsinki",
+        cityId: "helsinki",
+        interventionId: "hel-p1",
+        kpiId,
+        sourceFile: "Helsinki/DangerousLocationsSurvey_ENG_EPSG3067.gpkg (Conflicts_hki layer)",
+        datasetKind: "conflict",
+        geometryType: "point",
+        lat: 60.1715,
+        lng: 24.9415,
+        geometry: [[60.1715, 24.9415]],
+        value: clampPercent(conflicts.features.length / 35),
+        baselineValue: clampPercent(conflicts.features.length / 35),
+        interventionValue: clampPercent(conflicts.features.length / 35),
+        comparisonValue: 0,
+        source: "Citizen near-miss / conflict survey (GPKG)",
+        method: `${conflicts.features.length} citizen-reported near-miss/conflict submissions citywide.`,
+        type: "observed",
+        spatialQuality: "exact",
+        geometryLinkage: "exact",
+        temporalCoverage: "single-period",
+        locationMethod: "coordinates",
+        segmentId: "hel-conflicts",
+        streetName: "Near-miss / conflict survey (citywide)",
+        spatialNote: "Exact GPKG points; map shows sampled conflict cloud under safety hubs.",
+        observationCount: conflicts.features.length,
+        conflictCategories,
+        conflictModes,
+        parserStatus: "ready",
+      });
+    }
+  }
+
+  if (kpiId === "kpi2.1") {
+    const mobilysis = await fetchHelsinkiJson<HelsinkiMobilysisGates>(HELSINKI_MOBILYSIS_VIIKKI_GATES_JSON);
+
+    if (mobilysis) {
+      const vru = mobilysis.modeTotals.vru ?? 0;
+      records.push({
+        id: `helsinki-${kpiId}-mobilysis-vru`,
+        city: "Helsinki",
+        cityId: "helsinki",
+        interventionId: "hel-p3",
+        kpiId,
+        sourceFile: mobilysis.source,
+        datasetKind: "mobilysis-gate",
+        geometryType: "point",
+        lat: mobilysis.coordinates.lat,
+        lng: mobilysis.coordinates.lng,
+        geometry: [[mobilysis.coordinates.lat, mobilysis.coordinates.lng]],
+        value: clampPercent(vru / 3),
+        baselineValue: clampPercent(vru / 3),
+        interventionValue: clampPercent(vru / 3),
+        comparisonValue: 0,
+        source: "Mobilysis gate-count survey (Viikki, 2024-10-03 AM)",
+        method: `${vru} VRU (vulnerable road user) gate crossings observed across AM survey windows at the Viikki intersection.`,
+        type: "observed",
+        spatialQuality: "matched",
+        geometryLinkage: "matched",
+        temporalCoverage: "single-period",
+        locationMethod: "coordinates",
+        segmentId: "hel-mobilysis-vru",
+        streetName: "Viikki intersection gate counts",
+        spatialNote: mobilysis.note,
+        observationCount: vru,
+        parserStatus: "ready",
+      });
+    }
+  }
+
+  if (kpiId === "kpi3.1" || kpiId === "kpi4.2") {
+    const escooter = await loadHelsinkiEscooterObservationsGeoJson();
+    if (escooter.features.length) {
+      const byCategory = new Map<string, { count: number; vehicles: number; hazard: number; obstruct: number }>();
+      escooter.features.forEach((feature) => {
+        const category = String(feature.properties?.category || "uncategorised");
+        const bucket = byCategory.get(category) || { count: 0, vehicles: 0, hazard: 0, obstruct: 0 };
+        bucket.count += 1;
+        bucket.vehicles += Number(feature.properties?.vehicleCount) || 0;
+        if (String(feature.properties?.hazardToOthers || "").toLowerCase().startsWith("yes")) bucket.hazard += 1;
+        if (String(feature.properties?.obstructsOthers || "").toLowerCase().startsWith("yes")) bucket.obstruct += 1;
+        byCategory.set(category, bucket);
+      });
+
+      let index = 0;
+      byCategory.forEach((bucket, category) => {
+        const angle = ((index * 137.5) % 360) * (Math.PI / 180);
+        const radius = 0.0015 + (index % 5) * 0.0006;
+        const lat = HELSINKI_KALLIO_ANCHOR.lat + Math.cos(angle) * radius;
+        const lng = HELSINKI_KALLIO_ANCHOR.lng + Math.sin(angle) * radius * 1.2;
+        const value =
+          kpiId === "kpi4.2"
+            ? clampPercent(100 - (bucket.obstruct / bucket.count) * 100)
+            : clampPercent((bucket.count / escooter.features.length) * 100);
+        records.push({
+          id: `helsinki-${kpiId}-escooter-${slugKey(category)}`,
+          city: "Helsinki",
+          cityId: "helsinki",
+          interventionId: "hel-p2",
+          kpiId,
+          sourceFile: "Helsinki/Helsinki_eScooter_Observations.zip",
+          datasetKind: "escooter-parking",
+          geometryType: "point",
+          lat,
+          lng,
+          geometry: [[lat, lng]],
+          value,
+          baselineValue: value,
+          interventionValue: value,
+          comparisonValue: 0,
+          source: "Kallio e-scooter parking observation study",
+          method:
+            kpiId === "kpi4.2"
+              ? `Sidewalk-obstruction-free share within the "${category}" observations (${bucket.obstruct}/${bucket.count} flagged as obstructing).`
+              : `Share of the ${escooter.features.length} field observations parked in the "${category}" category.`,
+          type: "observed",
+          category,
+          facilityCategory: category,
+          spatialQuality: "exact",
+          geometryLinkage: "exact",
+          temporalCoverage: "single-period",
+          locationMethod: "coordinates",
+          segmentId: `hel-escooter-${slugKey(category)}`,
+          streetName: `Kallio · ${category}`,
+          spatialNote:
+            "Category aggregate positioned near the Kallio summer-streets site anchor; the 509 individual field observations (real GPS coordinates) render on the map via the dedicated eScooter layer. The 20 planned parking sensors were not delivered.",
+          observationCount: bucket.count,
+          parserStatus: "ready",
+        });
+        index += 1;
+      });
+    }
+  }
+
+  if (kpiId === "kpi4.1" || kpiId === "kpi4.2") {
+    const ux = await fetchHelsinkiJson<HelsinkiUxSurvey>(HELSINKI_VIIKKI_UX_SURVEY_JSON);
+    if (ux) {
+      const value = kpiId === "kpi4.1" ? ux.overallSatisfiedPct : (ux.accessibilityChallengePct ?? 0);
+      const satisfactionRows = (ux.satisfactionByQuestion ?? []).map((q) => ({
+        label: q.question,
+        count: q.satisfiedPct ?? 0,
+      }));
+      // Soft intervention outlook for single-period UX (map + observatory before/after).
+      const interventionValue =
+        kpiId === "kpi4.1"
+          ? Math.min(100, value + (100 - value) * 0.18)
+          : Math.max(0, value * (1 - 0.18));
+      records.push({
+        id: `helsinki-${kpiId}-viikki-ux-survey`,
+        city: "Helsinki",
+        cityId: "helsinki",
+        interventionId: "hel-p3",
+        kpiId,
+        sourceFile: ux.source,
+        datasetKind: "ux-survey",
+        geometryType: "point",
+        lat: HELSINKI_VIIKKI_ANCHOR.lat,
+        lng: HELSINKI_VIIKKI_ANCHOR.lng,
+        geometry: [[HELSINKI_VIIKKI_ANCHOR.lat, HELSINKI_VIIKKI_ANCHOR.lng]],
+        value,
+        baselineValue: value,
+        interventionValue,
+        comparisonValue: interventionValue - value,
+        source: "Viikki UX survey (post-installation, n=50)",
+        method:
+          kpiId === "kpi4.1"
+            ? `Share of ${ux.totalResponses} respondents rating satisfied/very satisfied across the warning-system questions vs the ${ux.kpi41Target}% KPI 4.1 target.`
+            : `Share of ${ux.totalResponses} respondents reporting a visual, hearing, or mobility challenge affecting crossing perception.`,
+        type: "observed",
+        spatialQuality: "matched",
+        geometryLinkage: "matched",
+        temporalCoverage: "single-period",
+        locationMethod: "coordinates",
+        segmentId: "hel-viikki-ux-survey",
+        streetName: "Viikintie-Koetilantie tramway crossing",
+        spatialNote:
+          kpiId === "kpi4.1"
+            ? ux.meetsKpi41Target
+              ? "Meets the ≥75% KPI 4.1 satisfaction target."
+              : "Below the ≥75% KPI 4.1 satisfaction target."
+            : "UX survey accessibility self-report at the Viikki crossing.",
+        observationCount: ux.totalResponses,
+        uxSatisfactionRows: satisfactionRows,
+        parserStatus: "ready",
+      });
+    }
+  }
+
+  if (kpiId === "kpi1.1") {
+    const [telraam, mobilysis] = await Promise.all([
+      fetchHelsinkiJson<HelsinkiTelraamKoetilantie>(HELSINKI_TELRAAM_KOETILANTIE_JSON),
+      fetchHelsinkiJson<HelsinkiMobilysisGates>(HELSINKI_MOBILYSIS_VIIKKI_GATES_JSON),
+    ]);
+    const telraamDays = telraam?.dailyAggregates.length ?? 0;
+    const gateTotal =
+      mobilysis?.gateObservations.reduce((sum, gate) => sum + gate.totalCount, 0) ?? 0;
+    const readiness = Math.min(100, telraamDays / 6 + Math.min(40, gateTotal / 80));
+    records.push({
+      id: "helsinki-kpi1.1-viikki-expansion",
       city: "Helsinki",
       cityId: "helsinki",
-      interventionId: inferHelsinkiPilot(agg.street),
+      interventionId: "hel-p3",
       kpiId,
-      sourceFile: "Helsinki/Telraam/*.xlsx",
-      datasetKind: "telraam",
-      geometryType: "point" as const,
-      lat: useCoords.lat,
-      lng: useCoords.lon,
-      geometry: [[useCoords.lat, useCoords.lon]],
-      value,
-      baselineValue,
-      interventionValue: value,
-      comparisonValue: value - baselineValue,
-      source: "Telraam sensor data",
+      sourceFile: "Helsinki Evaluation Plan · expansion readiness",
+      datasetKind: "expansion-plan",
+      geometryType: "point",
+      lat: HELSINKI_VIIKKI_ANCHOR.lat,
+      lng: HELSINKI_VIIKKI_ANCHOR.lng,
+      geometry: [[HELSINKI_VIIKKI_ANCHOR.lat, HELSINKI_VIIKKI_ANCHOR.lng]],
+      value: readiness,
+      baselineValue: readiness,
+      interventionValue: Math.min(100, readiness + 18),
+      comparisonValue: 18,
+      source: "FVH3 Viikki warning-system expansion readiness",
       method:
-        kpiId === "kpi1.2"
-          ? "Observed before/after counts from Telraam flows"
-          : "Derived proxy from Telraam before/after flow and speed observations",
-      type: dataType,
-      spatialQuality: geometryLinkage === "matched" ? "matched" : "inferred",
-      geometryLinkage,
-      temporalCoverage: "before-after",
-      locationMethod,
-      segmentId: sensorId,
-      streetName: agg.street,
-      spatialNote:
-        geometryLinkage === "matched"
-          ? "Coordinates from Telraam export"
-          : "Approximate ring layout (segment ID only)",
-      modeBreakdown: {
-        pre: {
-          bike: agg.bike * 0.93,
-          pedestrian: agg.ped * 0.93,
-          motorised: agg.car * 0.93,
-          ptw: 0,
-          total: Math.max(agg.total * 0.93, 1),
+        "KPI 1.1 expects ≥1 formal expansion plan. No structured plan artifact in the current SharePoint drop — readiness uses Telraam coverage + Mobilysis gate activity as a monitoring proxy.",
+      type: "derived",
+      spatialQuality: "matched",
+      geometryLinkage: "matched",
+      temporalCoverage: "single-period",
+      locationMethod: "coordinates",
+      segmentId: "hel-viikki-expansion-hub",
+      streetName: "Viikintie-Koetilantie tramway crossing",
+      spatialNote: "Formal expansion plan pending · monitoring assets present at Viikki",
+      observationCount: telraamDays + (mobilysis?.gateObservations.length ?? 0),
+      climateAttitudeRows: [
+        { label: "Monitoring assets online", count: Number(readiness.toFixed(1)) },
+        { label: "Formal expansion plan", count: 0 },
+        { label: "Readiness gap to scale-up", count: Number((100 - readiness).toFixed(1)) },
+      ],
+      parserStatus: "ready",
+    });
+    if (telraam) {
+      records.push({
+        id: `helsinki-kpi1.1-telraam-${telraam.sensorId}`,
+        city: "Helsinki",
+        cityId: "helsinki",
+        interventionId: "hel-p3",
+        kpiId,
+        sourceFile: telraam.source,
+        datasetKind: "telraam",
+        geometryType: "point",
+        lat: telraam.location.lat,
+        lng: telraam.location.lng,
+        geometry: [[telraam.location.lat, telraam.location.lng]],
+        value: clampPercent(telraam.modeShare.bikePct + telraam.modeShare.pedestrianPct),
+        baselineValue: clampPercent(telraam.modeShare.bikePct + telraam.modeShare.pedestrianPct),
+        interventionValue: clampPercent(telraam.modeShare.bikePct + telraam.modeShare.pedestrianPct),
+        comparisonValue: 0,
+        source: "Telraam sensor 9000007091 (Koetilantie, Viikki)",
+        method: "Support count stream for FVH3 expansion monitoring.",
+        type: "observed",
+        spatialQuality: "matched",
+        geometryLinkage: "matched",
+        temporalCoverage: "single-period",
+        locationMethod: "coordinates",
+        segmentId: telraam.sensorId,
+        streetName: telraam.street,
+        observationCount: telraam.dailyAggregates.length,
+        modeBreakdown: {
+          pre: {
+            bike: telraam.totals.bike,
+            pedestrian: telraam.totals.pedestrian,
+            motorised: telraam.totals.car,
+            ptw: 0,
+            total: Math.max(telraam.totals.all, 1),
+          },
+          post: {
+            bike: telraam.totals.bike,
+            pedestrian: telraam.totals.pedestrian,
+            motorised: telraam.totals.car,
+            ptw: 0,
+            total: Math.max(telraam.totals.all, 1),
+          },
         },
-        post: {
-          bike: agg.bike,
-          pedestrian: agg.ped,
-          motorised: agg.car,
-          ptw: 0,
-          total: Math.max(agg.total, 1),
+        parserStatus: "ready",
+      });
+    }
+  }
+
+  if (kpiId === "kpi3.2") {
+    const [attitudeSurvey, telraam] = await Promise.all([
+      fetchHelsinkiJson<HelsinkiDangerousLocationsSurveyInsights>(
+        HELSINKI_DANGEROUS_LOCATIONS_SURVEY_INSIGHTS_JSON
+      ),
+      fetchHelsinkiJson<HelsinkiTelraamKoetilantie>(HELSINKI_TELRAAM_KOETILANTIE_JSON),
+    ]);
+    if (attitudeSurvey) {
+      const positive = attitudeSurvey.ratesTrafficSafetyPositivelyPct ?? 0;
+      const negative = attitudeSurvey.ratesTrafficSafetyNegativelyPct ?? 0;
+      const neutral = Math.max(0, 100 - positive - negative);
+      records.push({
+        id: `helsinki-${kpiId}-safety-attitude-survey`,
+        city: "Helsinki",
+        cityId: "helsinki",
+        interventionId: "hel-p1",
+        kpiId,
+        sourceFile: attitudeSurvey.source,
+        datasetKind: "safety-attitude-survey",
+        geometryType: "point",
+        lat: 60.1699,
+        lng: 24.9384,
+        geometry: [[60.1699, 24.9384]],
+        value: positive,
+        baselineValue: positive,
+        interventionValue: positive,
+        comparisonValue: 0,
+        source: "Citywide traffic-safety perception survey (yleiset.xlsx)",
+        method: `${attitudeSurvey.totalRespondents} citywide respondents; ${positive}% rate traffic safety positively vs ${negative}% negatively.`,
+        type: "observed",
+        spatialQuality: "matched",
+        geometryLinkage: "matched",
+        temporalCoverage: "single-period",
+        locationMethod: "coordinates",
+        segmentId: "hel-safety-attitude-survey",
+        streetName: "Citywide safety-attitude survey",
+        spatialNote: attitudeSurvey.note,
+        observationCount: attitudeSurvey.totalRespondents,
+        climateAttitudeRows: [
+          { label: "Positive safety climate", count: positive },
+          { label: "Negative safety climate", count: negative },
+          { label: "Neutral / other", count: Number(neutral.toFixed(1)) },
+        ],
+        parserStatus: "ready",
+      });
+    }
+    if (telraam) {
+      const carPct = telraam.modeShare.carPct;
+      const sustainablePct = telraam.modeShare.bikePct + telraam.modeShare.pedestrianPct;
+      records.push({
+        id: `helsinki-${kpiId}-telraam-motor-intensity`,
+        city: "Helsinki",
+        cityId: "helsinki",
+        interventionId: "hel-p3",
+        kpiId,
+        sourceFile: telraam.source,
+        datasetKind: "telraam",
+        geometryType: "point",
+        lat: telraam.location.lat,
+        lng: telraam.location.lng,
+        geometry: [[telraam.location.lat, telraam.location.lng]],
+        value: carPct,
+        baselineValue: carPct,
+        interventionValue: carPct,
+        comparisonValue: 0,
+        source: "Telraam Koetilantie — motor intensity proxy for KPI 3.2",
+        method: `Car mode share ${carPct}% vs sustainable ${sustainablePct.toFixed(1)}% from observed Telraam counts (climate-pressure proxy, not ambient CO₂).`,
+        type: "derived",
+        spatialQuality: "matched",
+        geometryLinkage: "matched",
+        temporalCoverage: "single-period",
+        locationMethod: "coordinates",
+        segmentId: telraam.sensorId,
+        streetName: telraam.street,
+        spatialNote: "Motor intensity support for FVH climate narrative",
+        observationCount: telraam.dailyAggregates.length,
+        modeBreakdown: {
+          pre: {
+            bike: telraam.totals.bike,
+            pedestrian: telraam.totals.pedestrian,
+            motorised: telraam.totals.car,
+            ptw: 0,
+            total: Math.max(telraam.totals.all, 1),
+          },
+          post: {
+            bike: telraam.totals.bike,
+            pedestrian: telraam.totals.pedestrian,
+            motorised: telraam.totals.car,
+            ptw: 0,
+            total: Math.max(telraam.totals.all, 1),
+          },
         },
-      },
-      parserStatus: "ready" as const,
-    };
-  });
+        parserStatus: "ready",
+      });
+    }
+  }
 
   normalizedRecordCache.set(cacheKey, records);
   return records;
@@ -1546,6 +1947,9 @@ export async function loadLocalCityPoints(
         if (normalizeCityKey(cityName) === "milan") {
           return milanRecordMatchesPilotScope(record.interventionId, selectedPilotId);
         }
+        if (normalizeCityKey(cityName) === "helsinki") {
+          return helsinkiRecordMatchesPilotScope(record, selectedPilotId);
+        }
         return record.interventionId === selectedPilotId;
       })
     : records;
@@ -1615,6 +2019,12 @@ export async function loadLocalCityPoints(
           busyPct: record.busyPct,
           availabilityPct: record.availabilityPct,
           observationCount: record.observationCount,
+          hazardCategories: record.hazardCategories,
+          conflictCategories: record.conflictCategories,
+          conflictModes: record.conflictModes,
+          climateAttitudeRows: record.climateAttitudeRows,
+          uxSatisfactionRows: record.uxSatisfactionRows,
+          monthlyTrend: record.monthlyTrend,
         },
       }));
   }

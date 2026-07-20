@@ -15,14 +15,20 @@ interface FacilityCategoryChartProps {
 
 export function FacilityCategoryChart({ payload, compact }: FacilityCategoryChartProps) {
   const categories =
-    payload.likert?.length && payload.kpiId === "kpi3.1"
+    payload.likert?.length
       ? payload.likert.map((l) => ({ label: l.label, value: l.value }))
       : DEFAULT_CATEGORIES;
   const max = Math.max(...categories.map((c) => c.value), 1);
+  const title =
+    payload.kpiId === "kpi2.1"
+      ? "Hazard categories"
+      : payload.kpiId === "kpi3.1"
+        ? "Facility categories"
+        : "Category breakdown";
 
   return (
     <div className={obsGlassCardClass(compact)} style={obsGlassCardStyle()}>
-      <p className="text-[11px] font-semibold text-white/70 mb-3">Facility categories</p>
+      <p className="text-[11px] font-semibold text-white/70 mb-3">{title}</p>
       <div className="space-y-2">
         {categories.map((cat) => (
           <div key={cat.label}>

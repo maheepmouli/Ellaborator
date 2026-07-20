@@ -5,6 +5,11 @@ import { resolveMapPointIconSpec } from "@/lib/mapPointIconTaxonomy";
 import { spreadOverlappingPositions } from "@/lib/copenhagenMarkerLayout";
 import { scheduleLeafletLayerRepaint } from "@/lib/leafletMapSync";
 import { milanHubSegmentId } from "@/lib/milanMapLayers/milanFlowGeometry";
+import {
+  kpiMetricKind,
+  mapScenarioDisplayValue,
+  type MapScenario,
+} from "@/lib/mapScenarioValue";
 import type { SegmentInteractionHandlers } from "@/lib/wireMapSegmentInteraction";
 
 /** Stable click id shared with Milan observatory segment list. */
@@ -29,6 +34,7 @@ export interface RenderLocalCityInteractivePointsOptions {
   selectedKpi: string;
   points: LocalCityPoint[];
   filterRange: [number, number];
+  scenario?: MapScenario;
   segmentHandlers?: SegmentInteractionHandlers;
   segmentInteractionEnabled?: boolean;
   selectedSegmentId?: string | null;
@@ -48,7 +54,9 @@ function popupForPoint(
   selectedKpi: string,
   point: LocalCityPoint,
   iconLabel: string,
-  valueLabel: string
+  valueLabel: string,
+  displayValue: number,
+  scenario: MapScenario
 ): string {
   const props = point.properties ?? {};
   const dataType =
@@ -74,14 +82,14 @@ function popupForPoint(
 
   return `
     <div style="font-family:'DM Sans',sans-serif;padding:6px;min-width:150px;">
-      <p style="font-size:10px;color:#2F1B6D;margin:0 0 3px 0;font-weight:700;">Data Quality</p>
+      <p style="font-size:10px;color:#2F1B6D;margin:0 0 3px 0;font-weight:700;">Data Quality · ${scenario}</p>
       <div style="margin-bottom:4px;">
         ${badge(props.spatialQuality === "inferred" ? "Inferred" : "Exact")}
         ${badge(String(props.type || "observed"))}
         ${badge("Point-level")}
       </div>
       <p style="font-size:11px;color:#8578C3;margin:0 0 4px 0;text-transform:uppercase;">${dataType}</p>
-      <p style="font-size:16px;font-weight:bold;color:#2F1B6D;margin:0 0 4px 0;">${point.value.toFixed(1)}${valueLabel}</p>
+      <p style="font-size:16px;font-weight:bold;color:#2F1B6D;margin:0 0 4px 0;">${displayValue.toFixed(1)}${valueLabel}</p>
       <p style="font-size:10px;color:#96C2EF;margin:0 0 2px 0;">${String(props.streetName ?? props.siteId ?? iconLabel)}</p>
       ${baselineNum !== undefined ? `<p style="font-size:10px;color:#96C2EF;margin:2px 0;">Baseline: ${baselineNum.toFixed(1)}${valueLabel}</p>` : ""}
       ${interventionNum !== undefined ? `<p style="font-size:10px;color:#96C2EF;margin:2px 0;">Intervention: ${interventionNum.toFixed(1)}${valueLabel}</p>` : ""}
@@ -105,6 +113,7 @@ export function renderLocalCityInteractivePoints(
     selectedKpi,
     points,
     filterRange,
+    scenario = "intervention",
     segmentHandlers,
     segmentInteractionEnabled = false,
     selectedSegmentId,
@@ -114,8 +123,24 @@ export function renderLocalCityInteractivePoints(
     getValueColor,
   } = options;
 
-  const filtered = points.filter(
-    (p) => p.value >= filterRange[0] && p.value <= filterRange[1]
+  const kind = kpiMetricKind(selectedKpi);
+  const withDisplay = points.map((p) => {
+    const props = p.properties ?? {};
+    const baseline = Number(props.baselineValue ?? p.value ?? 0);
+    const intervention = Number(props.interventionValue ?? p.value ?? 0);
+    const comparison =
+      typeof props.comparisonValue === "number"
+        ? Number(props.comparisonValue)
+        : intervention - baseline;
+    const displayValue = mapScenarioDisplayValue(scenario, baseline, intervention, {
+      comparison,
+      kind,
+    });
+    return { point: p, displayValue };
+  });
+
+  const filtered = withDisplay.filter(
+    (row) => row.displayValue >= filterRange[0] && row.displayValue <= filterRange[1]
   );
   if (!filtered.length) return 0;
 
@@ -125,14 +150,14 @@ export function renderLocalCityInteractivePoints(
       : selectedKpi === "kpi3.2"
         ? ""
         : "%";
-  const allValues = filtered.map((p) => p.value);
+  const allValues = filtered.map((row) => row.displayValue);
   const minV = Math.min(...allValues);
   const maxV = Math.max(...allValues);
   const span = Math.max(1, maxV - minV);
 
   const spreadMap = spreadOverlaps
     ? spreadOverlappingPositions(
-        filtered.map((p) => ({
+        filtered.map(({ point: p }) => ({
           id: String(p.properties?.id ?? p.id),
           lat: p.lat,
           lon: p.lon,
@@ -140,19 +165,23 @@ export function renderLocalCityInteractivePoints(
         map.getZoom(),
         { zoomStable: true }
       )
-    : new Map(filtered.map((p) => [String(p.properties?.id ?? p.id), [p.lat, p.lon] as [number, number]]));
+    : new Map(
+        filtered.map(({ point: p }) => [
+          String(p.properties?.id ?? p.id),
+          [p.lat, p.lon] as [number, number],
+        ])
+      );
 
-  // Wire observatory click/hover whenever handlers are supplied.
   const interactionOn = Boolean(segmentHandlers);
 
   let rendered = 0;
-  for (const point of filtered) {
+  for (const { point, displayValue } of filtered) {
     const props = point.properties ?? {};
     const pointId = String(props.id ?? point.id);
     const spread = spreadMap.get(pointId);
     const lat = spread?.[0] ?? point.lat;
     const lon = spread?.[1] ?? point.lon;
-    const normalizedValue = (point.value - minV) / span;
+    const normalizedValue = (displayValue - minV) / span;
     const iconSpec = resolveMapPointIconSpec({
       facilityCategory: props.facilityCategory ?? props.category,
       category: props.category,
@@ -161,14 +190,25 @@ export function renderLocalCityInteractivePoints(
       kind: props.kind,
     });
     const valueColor =
-      selectedKpi === "kpi1.2" || selectedKpi === "kpi4.2" || selectedKpi === "kpi3.2"
-        ? getValueColor(point.value, false)
+      selectedKpi === "kpi1.2" ||
+      selectedKpi === "kpi4.2" ||
+      selectedKpi === "kpi3.2" ||
+      selectedKpi === "kpi2.1"
+        ? getValueColor(displayValue, selectedKpi === "kpi2.1")
         : undefined;
     const segId = resolveInteractivePointSegmentId(cityName, point);
     const segName = `${iconSpec.label} · ${String(
       props.junctionLabel ?? props.streetName ?? props.siteId ?? props.category ?? "Site"
     )}`;
-    const popupContent = popupForPoint(cityName, selectedKpi, point, iconSpec.label, valueLabel);
+    const popupContent = popupForPoint(
+      cityName,
+      selectedKpi,
+      point,
+      iconSpec.label,
+      valueLabel,
+      displayValue,
+      scenario
+    );
     const hitRadius = Math.max(16, Math.min(26, 14 + normalizedValue * 10));
 
     const { visual, hit } = addNeonPointMarker(
@@ -180,7 +220,7 @@ export function renderLocalCityInteractivePoints(
         segmentId: segId,
         segmentName: segName,
         speed: null,
-        congestion: point.value / 100,
+        congestion: displayValue / 100,
         properties: props,
       },
       interactionOn || segmentInteractionEnabled ? segmentHandlers : undefined,
@@ -194,7 +234,6 @@ export function renderLocalCityInteractivePoints(
         glow: valueColor,
       }
     );
-    void getValueColor;
     markersOut.push(visual);
     circlesOut.push(hit);
     rendered += 1;

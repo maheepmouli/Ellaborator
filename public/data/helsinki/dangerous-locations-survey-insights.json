@@ -1,0 +1,9 @@
+{
+  "title": "Citywide traffic safety perception survey (Kysely Helsingin liikenneturvallisuudesta)",
+  "totalRespondents": 2026,
+  "answeredGeneralSafetyQuestion": 2026,
+  "ratesTrafficSafetyPositivelyPct": 60.4,
+  "ratesTrafficSafetyNegativelyPct": 22.6,
+  "note": "Citywide (not FVH1-corridor-specific) attitude survey feeding the same Evaluation Plan; underpins KPI 3.2 policy-alignment narrative alongside the 2,663 dangerous-location + 3,202 conflict point submissions.",
+  "source": "SharePoint Helsinki/DangerousLocationsSurvey2.zip -> yleiset.xlsx"
+}

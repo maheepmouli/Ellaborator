@@ -233,15 +233,84 @@ export function resolveMapLegend(
     };
   }
 
+  if (isHelsinki && kpiId === "kpi1.1") {
+    return {
+      marker: "point",
+      items: [
+        { label: "Viikki warning-system hub", color: "#38bdf8" },
+        { label: "Pilot influence field", color: "#94a3b8" },
+      ],
+      hint: "Single Viikki hub with expansion-plan status in the observatory (KPI 1.1 ≥1 plan pending).",
+    };
+  }
+
+  if (isHelsinki && kpiId === "kpi1.2") {
+    return {
+      marker: "point",
+      items: [
+        { label: "Sampled dangerous-location reports", color: "#ef4444" },
+        { label: "Primary mode-share hub", color: "#38bdf8" },
+        { label: "Hazard density cluster hubs", color: "#ef4444" },
+        { label: "HSL tram corridor (line 15)", color: "#8578C3" },
+      ],
+      hint: "FVH1: ~220 sampled survey points + 8 density hubs. FVH3: Telraam hub + HSL tram corridor. Full survey counts stay in the observatory.",
+    };
+  }
+
   if (isHelsinki && kpiId === "kpi2.1") {
     return {
       marker: "point",
       items: [
-        { label: "Hazard survey points (low)", color: "#ddd6fe" },
-        { label: "Hazard survey points (high)", color: "#7c3aed" },
-        { label: "Viikki anchor", color: "#2ecc71" },
+        { label: "Sampled dangerous locations", color: "#ef4444" },
+        { label: "Sampled near-miss / conflicts", color: "#f97316" },
+        { label: "Safety-pressure hub", color: "#2ecc71" },
+        { label: "HSL tram / Innotrafik (FVH3)", color: "#8578C3" },
       ],
-      hint: "Dangerous-location cloud from Helsinki GeoJSON with a fixed Viikki intervention anchor marker.",
+      hint: "FVH1 paints sampled hazard + conflict clouds under 8 pressure hubs (2,663 + 3,202 records). Zoom freely to street level.",
+    };
+  }
+
+  if (isHelsinki && kpiId === "kpi3.2") {
+    return {
+      marker: "ramp",
+      items: [
+        { label: "Lower pressure", color: "#6EE7B7" },
+        { label: "Medium", color: "#FBBF24" },
+        { label: "Raised", color: "#F97316" },
+        { label: "Higher pressure", color: "#E02020" },
+      ],
+      hint: "Colour-rated points only (no ripples). Hazard-sample density + attitude / Telraam motor-intensity rates. Not ambient CO₂.",
+    };
+  }
+
+  if (isHelsinki && kpiId === "kpi3.1") {
+    return {
+      marker: "point",
+      items: [
+        { label: "Sampled parking observations", color: "#38bdf8" },
+        { label: "Obstruction / hazard flagged", color: "#ef4444" },
+      ],
+      hint: "Sampled e-scooter parking observations (~50 of 509). Category totals live in the observatory.",
+    };
+  }
+
+  if (isHelsinki && (kpiId === "kpi4.1" || kpiId === "kpi4.2")) {
+    return {
+      marker: "point",
+      items:
+        kpiId === "kpi4.1"
+          ? [
+              { label: "Viikki UX survey hub", color: "#96c2ef" },
+              { label: "Pilot influence field", color: "#94a3b8" },
+            ]
+          : [
+              { label: "Viikki UX survey hub", color: "#96c2ef" },
+              { label: "Obstruction-flagged sample (FVH2)", color: "#f97316" },
+            ],
+      hint:
+        kpiId === "kpi4.1"
+          ? "Single Viikki UX satisfaction hub vs the ≥75% KPI 4.1 target."
+          : "Viikki UX accessibility note; FVH2 adds obstruction-flagged e-scooter points (no site boundary).",
     };
   }
 

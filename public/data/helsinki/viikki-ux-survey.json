@@ -1,0 +1,33 @@
+{
+  "location": "Viikintie-Koetilantie tramway crossing (Viikki, FVH3)",
+  "totalResponses": 50,
+  "kpi41Target": 75,
+  "overallSatisfiedPct": 61.5,
+  "meetsKpi41Target": false,
+  "satisfactionByQuestion": [
+    {
+      "question": "How satisfied would you be if similar warning systems were implemented at other light rail crossing points?",
+      "satisfiedPct": 68
+    },
+    {
+      "question": "How satisfied have you been with the functionality of the warning system?",
+      "satisfiedPct": 48
+    },
+    {
+      "question": "How satisfied have you been with the impact of the warning system on safety?",
+      "satisfiedPct": 50
+    },
+    {
+      "question": "How satisfied are you that the operation of the warning system has been initiated for testing?",
+      "satisfiedPct": 80
+    }
+  ],
+  "noticedWarningSystemPct": {
+    "signs": 72,
+    "sound": 76,
+    "lights": 70
+  },
+  "feltCrossingUnsafeBeforePct": 48,
+  "accessibilityChallengePct": 6,
+  "source": "SharePoint Helsinki UX survey (ENGLISH Muokattu_käyttäjäkokemuskysely-viikki-2025-08-12.xlsx), KPI 4.1/4.2"
+}

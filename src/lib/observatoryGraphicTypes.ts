@@ -97,7 +97,7 @@ export interface ObservatoryGraphicPayload extends ObservatoryGraphicMeta {
   activeDirectionId?: string | null;
   likert?: LikertRow[];
   statCards?: Array<{ label: string; value: string; note?: string; color?: string }>;
-  markers?: Array<{ id: string; x: number; y: number; label?: string }>;
+  markers?: Array<{ id: string; x: number; y: number; label?: string; tone?: string; count?: number }>;
   segmentGradient?: number;
   streetNS?: string;
   streetEW?: string;

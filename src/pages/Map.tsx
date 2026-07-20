@@ -978,12 +978,21 @@ const MapContent = () => {
 
   const resolvePilotDefaultKpi = useCallback((pilot: SelectedPilot | null, currentKpi: string) => {
     if (!pilot) return currentKpi;
+    const catalogIds = new Set(ELABORATOR_KPIS.map((kpi) => kpi.id));
+    const supportedInCatalog = pilot.supportedKpis.filter((id) => catalogIds.has(id));
     const issyProfile = getIssyPilotProfile(pilot.id);
-    if (issyProfile && pilot.supportedKpis.includes(issyProfile.defaultKpi)) {
+    if (
+      issyProfile &&
+      supportedInCatalog.includes(issyProfile.defaultKpi) &&
+      catalogIds.has(issyProfile.defaultKpi)
+    ) {
       return issyProfile.defaultKpi;
     }
-    if (pilot.supportedKpis.length && !pilot.supportedKpis.includes(currentKpi)) {
-      return pilot.supportedKpis[0];
+    if (supportedInCatalog.length && !supportedInCatalog.includes(currentKpi)) {
+      return supportedInCatalog[0];
+    }
+    if (!catalogIds.has(currentKpi) && supportedInCatalog.length) {
+      return supportedInCatalog[0];
     }
     return currentKpi;
   }, []);

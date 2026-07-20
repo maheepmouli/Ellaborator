@@ -101,6 +101,13 @@ function categoryFromText(text: string): MapPointIconKey | null {
     return "sharedMobility";
   }
   if (text.includes("parking")) return "parking";
+  if (
+    text.includes("dangerous") ||
+    text.includes("conflict") ||
+    text.includes("near-miss") ||
+    text.includes("near_miss")
+  ) return "pedestrian";
+  if (text.includes("gate") || text.includes("mobilysis")) return "sensor";
   if (text.includes("survey") || text.includes("acceptability") || text.includes("likert")) return "pedestrian";
   if (text.includes("near encounter") || text.includes("irap")) return "sensor";
   return null;

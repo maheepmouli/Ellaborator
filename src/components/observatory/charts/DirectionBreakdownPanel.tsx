@@ -28,7 +28,9 @@ export function DirectionBreakdownPanel({
     <div className="space-y-2">
       {!compact && <PrePostTrendChart payload={payload} compact />}
       <div className={obsGlassCardClass(compact)} style={obsGlassCardStyle()}>
-        <p className="text-[11px] font-semibold text-white/70 mb-2">Camera directions</p>
+        <p className="text-[11px] font-semibold text-white/70 mb-2">
+          {payload.kpiId === "kpi2.1" ? "Hazard types (click to focus)" : "Camera directions"}
+        </p>
         <div className="space-y-1.5 max-h-40 overflow-y-auto">
           {rows.map((row, index) => (
             <button

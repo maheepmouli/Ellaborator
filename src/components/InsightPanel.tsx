@@ -770,12 +770,16 @@ const InsightPanel = ({
   };
 
   useEffect(() => {
-    if (!kpiDef || !kpiValue) return;
-    if (!supportedKpisForPilot.includes(selectedKpi)) {
-      const fallbackKpi = supportedKpisForPilot[0];
-      if (fallbackKpi) onKpiChange(fallbackKpi);
+    // Always keep a catalog KPI that this pilot supports — unknown ids (e.g. kpi1.1
+    // before it was registered) would otherwise make this panel return null and hide
+    // the pilot / KPI selectors.
+    if (!availableKpis.length) return;
+    const selectedIsAvailable = availableKpis.some((kpi) => kpi.id === selectedKpi);
+    if (!selectedIsAvailable || !kpiDef || !kpiValue) {
+      const fallbackKpi = availableKpis[0]?.id;
+      if (fallbackKpi && fallbackKpi !== selectedKpi) onKpiChange(fallbackKpi);
     }
-  }, [kpiDef, kpiValue, selectedKpi, supportedKpisForPilot, onKpiChange]);
+  }, [kpiDef, kpiValue, selectedKpi, availableKpis, onKpiChange]);
 
   const missingDataNotice = useMemo(() => provenance.missingNotice, [provenance]);
 
