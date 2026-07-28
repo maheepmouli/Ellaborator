@@ -246,12 +246,16 @@ function buildSurveySamples(): MilanCdm3SurveySample[] {
   return themes.map((theme, index) => {
     const node = CDM3_CORRIDOR_NODES[index % CDM3_CORRIDOR_NODES.length];
     const u = seededUnit(`mil-p3-survey-${index}`);
+    const baselineScore = Math.round((3.1 + u * 0.5) * 10) / 10;
+    // ~+0.1 Likert (~+2pp on 0–100 scale) minimum improvement for BA charts.
+    const interventionScore =
+      Math.round((baselineScore + 0.1 + u * 0.35) * 10) / 10;
     return {
       id: `mil-p3-survey-${index + 1}`,
       nodeId: node.id,
       theme,
-      baselineScore: Math.round((3.1 + u * 0.5) * 10) / 10,
-      interventionScore: Math.round((3.6 + u * 0.55) * 10) / 10,
+      baselineScore,
+      interventionScore,
       lat: node.lat + 0.00015 * (index - 1),
       lon: node.lon - 0.00012 * index,
     };
@@ -518,6 +522,21 @@ export function milanCdm3ToLocalPoints(
       const baselineValue = sample.baselineScore * 20;
       const interventionValue = sample.interventionScore * 20;
       const value = useBaseline ? baselineValue : interventionValue;
+      const likertBucket = (score: number) => {
+        const pct = Math.max(0, Math.min(100, score * 20));
+        // Spread a soft 1–5 distribution around the mean score for gauge/pie charts.
+        const weights = [0.08, 0.14, 0.22, 0.28, 0.28];
+        const center = Math.max(1, Math.min(5, Math.round(score)));
+        return [1, 2, 3, 4, 5].map((s, i) => ({
+          score: s,
+          label: String(s),
+          pct: Math.round(weights[(i - (center - 3) + 5) % 5] * (0.7 + pct / 200) * 100),
+        }));
+      };
+      const normalizeDist = (rows: Array<{ score: number; label: string; pct: number }>) => {
+        const sum = rows.reduce((s, r) => s + r.pct, 0) || 1;
+        return rows.map((r) => ({ ...r, pct: Math.round((r.pct / sum) * 1000) / 10 }));
+      };
       return {
         lat: sample.lat,
         lon: sample.lon,
@@ -526,6 +545,7 @@ export function milanCdm3ToLocalPoints(
         properties: {
           type: "mock",
           dataOrigin: "mock",
+          mockLabel: "MOCK",
           datasetKind: "survey",
           parserStatus: "illustrative",
           interventionId: profile.pilotId,
@@ -533,9 +553,12 @@ export function milanCdm3ToLocalPoints(
           segmentId: sample.nodeId,
           streetName: sample.theme,
           likertLabel: sample.theme,
+          category: sample.theme,
           baselineValue,
           interventionValue,
           comparisonValue: interventionValue - baselineValue,
+          surveyDistributionBefore: normalizeDist(likertBucket(sample.baselineScore)),
+          surveyDistributionAfter: normalizeDist(likertBucket(sample.interventionScore)),
           source: "CDM3 stakeholder survey proxy (illustrative)",
           method: "Activity 5 web interface study · satisfaction Likert scale",
           spatialNote: MILAN_CDM3_MOCK_DISCLAIMER,

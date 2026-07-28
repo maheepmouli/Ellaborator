@@ -91,12 +91,17 @@ export function milanSatisfactionStatCards(
   const avg =
     surveys.reduce((s, r) => s + Number(r.properties?.interventionValue ?? r.properties?.value ?? 0), 0) /
     surveys.length;
+  const isMock = surveys.every(
+    (r) => r.properties?.dataOrigin === "mock" || r.properties?.type === "mock"
+  );
   return [
     {
       label: "User satisfaction",
       value: `${avg.toFixed(1)}%`,
       color: "#a78bfa",
-      note: `${surveys.length} pilot aggregate${surveys.length === 1 ? "" : "s"} · no map coordinates`,
+      note: isMock
+        ? `${surveys.length} CDM3 theme sample${surveys.length === 1 ? "" : "s"} · MOCK`
+        : `${surveys.length} pilot aggregate${surveys.length === 1 ? "" : "s"} · SharePoint`,
     },
     {
       label: "Target (WP7)",
@@ -105,8 +110,10 @@ export function milanSatisfactionStatCards(
     },
     {
       label: "Source",
-      value: "SharePoint",
-      note: "Folder 7 — Satisfaction LL",
+      value: isMock ? "MOCK" : "SharePoint",
+      note: isMock
+        ? "Folder 7 empty — CDM3 Activity 5 proxy"
+        : "Folder 7 — Satisfaction LL",
     },
   ];
 }

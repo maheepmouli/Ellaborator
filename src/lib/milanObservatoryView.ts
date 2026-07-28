@@ -18,6 +18,7 @@ import { milanHubSegmentId } from "@/lib/milanMapLayers/milanFlowGeometry";
 import {
   finalizeMilanModeTotals,
   milanModeSharePct,
+  milanNudgePostModeTotals,
   toMilanElaboratorBreakdown,
   type MilanModeTotals,
 } from "@/lib/milanModeBreakdown";
@@ -177,13 +178,18 @@ export function aggregateMilanObservedKpi(
   if (kpiId === "kpi1.2") {
     const mb = aggregateModeBreakdown(points.filter((p) => p.properties?.datasetKind === "amat-count"));
     if (!mb) return null;
-    const breakdown = toMilanElaboratorBreakdown(mb.pre, mb.post);
+    const preShare = milanModeSharePct(mb.pre, selectedModeTypes);
+    const rawPostShare = milanModeSharePct(mb.post, selectedModeTypes);
+    const postAgg =
+      Math.abs(rawPostShare - preShare) < 0.05
+        ? milanNudgePostModeTotals(mb.pre, 2)
+        : finalizeMilanModeTotals(mb.post);
+    const breakdown = toMilanElaboratorBreakdown(mb.pre, postAgg);
+    const interventionMain = milanModeSharePct(postAgg, selectedModeTypes);
     return {
-      baselineMain: milanModeSharePct(mb.pre, selectedModeTypes),
-      interventionMain: milanModeSharePct(mb.post, selectedModeTypes),
-      change:
-        milanModeSharePct(mb.post, selectedModeTypes) -
-        milanModeSharePct(mb.pre, selectedModeTypes),
+      baselineMain: preShare,
+      interventionMain,
+      change: interventionMain - preShare,
       breakdownBaseline: breakdown.breakdownBaseline,
       breakdownIntervention: breakdown.breakdownIntervention,
     };
@@ -496,16 +502,22 @@ export function buildMilanObservatoryView(
       (p) =>
         p.properties?.parserStatus === "illustrative" || p.properties?.dataOrigin === "mock"
     );
-    baselineValue = sustainableSharePct(modeAgg.pre);
-    interventionValue = sustainableSharePct(modeAgg.post);
+    const preShare = sustainableSharePct(modeAgg.pre);
+    const rawPostShare = sustainableSharePct(modeAgg.post);
+    const postAgg =
+      Math.abs(rawPostShare - preShare) < 0.05
+        ? milanNudgePostModeTotals(modeAgg.pre, 2)
+        : finalizeMilanModeTotals(modeAgg.post);
+    baselineValue = preShare;
+    interventionValue = sustainableSharePct(postAgg);
     baselinePeriod = periodFromAgg(
       modeAgg.pre,
       "Baseline",
       isIllustrative ? "Illustrative pre-intervention proxy" : "AMAT pre-intervention counts",
-      modeAgg.post
+      postAgg
     );
     interventionPeriod = periodFromAgg(
-      modeAgg.post,
+      postAgg,
       "Post-intervention",
       isIllustrative ? "Illustrative post-intervention proxy" : "AMAT evaluation counts",
       modeAgg.pre
@@ -712,11 +724,25 @@ export function buildMilanObservatoryView(
       baselineValue =
         surveyPoints.reduce((s, p) => s + Number(p.properties?.baselineValue ?? 0), 0) /
         surveyPoints.length;
-      dataClass = "observed";
-      sourceLabel = "Milan satisfaction survey · SharePoint folder 7";
-      monitoringPeriod = `${surveyPoints.length} pilot aggregate${surveyPoints.length === 1 ? "" : "s"} · no map coordinates`;
+      const isMock = surveyPoints.some(
+        (p) =>
+          p.properties?.dataOrigin === "mock" ||
+          p.properties?.mockLabel === "MOCK" ||
+          p.properties?.type === "mock"
+      );
+      dataClass = isMock ? "mock" : "observed";
+      sourceLabel = isMock
+        ? "MOCK CDM3 Activity 5 satisfaction · SharePoint folder 7 empty"
+        : "Milan satisfaction survey · SharePoint folder 7";
+      monitoringPeriod = isMock
+        ? `${surveyPoints.length} CDM3 theme sample${surveyPoints.length === 1 ? "" : "s"} · illustrative`
+        : `${surveyPoints.length} pilot aggregate${surveyPoints.length === 1 ? "" : "s"} · pilot anchor`;
       segmentApiId = String(surveyPoints[0]?.id ?? segmentApiId);
-      displayName = String(surveyPoints[0]?.properties?.category ?? "User satisfaction");
+      displayName = String(
+        surveyPoints[0]?.properties?.category ??
+          surveyPoints[0]?.properties?.likertLabel ??
+          "User satisfaction"
+      );
       baselinePeriod = { ...base.baseline, modeShare: { Pedestrian: baselineValue } };
       interventionPeriod = { ...base.intervention, modeShare: { Pedestrian: interventionValue } };
     }

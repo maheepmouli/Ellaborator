@@ -229,8 +229,8 @@ function spreadPilotOverviewPositions(
   meanLat /= n;
   meanLng /= n;
 
-  // Compact ring — 3× 320px cards must remain inside a ~z12–13 city frame.
-  const radiusDeg = Math.min(0.055, Math.max(0.028, 0.014 * n + 0.018));
+  // Compact ring — 3× 320px cards must remain inside a ~z11–12 city frame (metro overview).
+  const radiusDeg = Math.min(0.07, Math.max(0.038, 0.018 * n + 0.028));
 
   const indexed = coords.map((c, i) => {
     const dx = c.lng - meanLng;
@@ -261,22 +261,25 @@ function spreadPilotOverviewPositions(
 function fitMapToPilotOverviewCards(
   map: L.Map,
   positions: ReadonlyArray<[number, number]>,
+  options?: { cityName?: string }
 ): void {
   if (!positions.length) return;
+  const isMilan = (options?.cityName ?? "").toLowerCase().includes("milan");
+  const overviewZoom = isMilan ? 11 : 13;
   if (positions.length === 1) {
-    map.flyTo(positions[0], 13, { duration: 0.55 });
+    map.flyTo(positions[0], overviewZoom, { duration: 0.55 });
     return;
   }
   let bounds = L.latLngBounds(positions.map(([lat, lng]) => L.latLng(lat, lng)));
   if (!bounds.isValid()) return;
   // Expand beyond marker anchors so 280×220 HTML cards aren't clipped at the edge.
-  bounds = bounds.pad(0.95);
+  bounds = bounds.pad(isMilan ? 1.35 : 0.95);
   map.fitBounds(bounds, {
     // Left InsightPanel (~380) + right gap + half card (~140) horizontally;
     // header/legend + half card (~110) vertically.
     paddingTopLeft: L.point(420, 190),
     paddingBottomRight: L.point(110, 190),
-    maxZoom: 13,
+    maxZoom: overviewZoom,
     animate: true,
     duration: 0.55,
   });
@@ -405,6 +408,7 @@ const HeroMap = ({
   const [mapZoomRevision, setMapZoomRevision] = useState(0);
   const lastLayoutZoomTierRef = useRef(layoutZoomTier(14));
   const milanKpi12FitKeyRef = useRef("");
+  const milanPointFitKeyRef = useRef("");
   const layerRefreshCancelRef = useRef<(() => void) | null>(null);
   const currentCityData = currentCity ? CITY_DATA.find((c) => c.city === currentCity) || null : null;
   const selectedPilotMeta = getPilotById(currentCity || "", selectedPilotId);
@@ -863,6 +867,13 @@ const HeroMap = ({
         if (milanKpi12FitKeyRef.current === fitKey) return;
         milanKpi12FitKeyRef.current = fitKey;
         fitMapToLatLngs(coords, opts);
+      };
+
+      const fitMilanPointsOnce = (coords: Array<[number, number]>) => {
+        const fitKey = `${milanPilotId}:${selectedKpi}:${scenario}:points`;
+        if (milanPointFitKeyRef.current === fitKey) return;
+        milanPointFitKeyRef.current = fitKey;
+        fitMapToLatLngs(coords, { pilotScoped: true });
       };
 
       const attachPilotStoryPins = () => {
@@ -1814,6 +1825,61 @@ const HeroMap = ({
         return;
       }
 
+      // Milan KPI 4.1 — satisfaction survey (SharePoint folder 7, or CDM3 Activity 5 mock when empty).
+      if (isMilanCity && selectedKpi === "kpi4.1" && mapRef.current) {
+        const surveyPoints = filterMilanLocalPoints(localCityPoints ?? [], milanPilotId).filter(
+          (p) =>
+            p.properties?.datasetKind === "survey" ||
+            p.properties?.dataOrigin === "mock" ||
+            p.properties?.mockLabel === "MOCK"
+        );
+        if (surveyPoints.length) {
+          const usingMock = surveyPoints.every(
+            (p) =>
+              p.properties?.dataOrigin === "mock" ||
+              p.properties?.mockLabel === "MOCK" ||
+              p.properties?.type === "mock"
+          );
+          renderLocalCityInteractivePoints({
+            map: mapRef.current,
+            cityName,
+            selectedKpi,
+            points: surveyPoints,
+            filterRange,
+            scenario,
+            segmentHandlers,
+            segmentInteractionEnabled,
+            selectedSegmentId: activeMapSegmentId,
+            markersOut: markersRef.current,
+            circlesOut: circlesRef.current,
+            spreadOverlaps: true,
+            markerStyle: "filled",
+            getValueColor,
+          });
+          fitMilanPointsOnce(
+            surveyPoints.map((p) => [p.lat, p.lon] as [number, number])
+          );
+          setMilanLayerQa({
+            layer: "satisfaction",
+            parsed: surveyPoints.length,
+            rendered: surveyPoints.length,
+            missingJoins: 0,
+            invalidGeometry: 0,
+            avgValue:
+              surveyPoints.reduce((s, p) => s + Number(p.value ?? 0), 0) /
+              Math.max(surveyPoints.length, 1),
+            dataConfidence: usingMock ? "proxy" : "measured",
+            statusMessage: usingMock
+              ? `MOCK CDM3 Activity 5 · ${surveyPoints.length} theme samples (SharePoint folder 7 empty)`
+              : `Satisfaction survey · ${surveyPoints.length} pilot aggregate${surveyPoints.length === 1 ? "" : "s"}`,
+          });
+          addInterventionLayer(cityData, showInterventionLayer);
+          return;
+        }
+        addInterventionLayer(cityData, showInterventionLayer);
+        return;
+      }
+
       // Milan KPI 4.2 — DSS accessibility rows (observed).
       if (isMilanCity && selectedKpi === "kpi4.2" && mapRef.current) {
         if (milanSpeedLoading) {
@@ -1850,9 +1916,7 @@ const HeroMap = ({
             markerStyle: "filled",
             getValueColor,
           });
-          fitMapToLatLngs(scopedA11yPoints.map((p) => [p.lat, p.lon] as [number, number]), {
-            pilotScoped: true,
-          });
+          fitMilanPointsOnce(scopedA11yPoints.map((p) => [p.lat, p.lon] as [number, number]));
           addInterventionLayer(cityData, showInterventionLayer);
           return;
         }
@@ -1882,9 +1946,7 @@ const HeroMap = ({
               markerStyle: "filled",
               getValueColor,
             });
-            fitMapToLatLngs(a11yMockPoints.map((p) => [p.lat, p.lon] as [number, number]), {
-              pilotScoped: true,
-            });
+            fitMilanPointsOnce(a11yMockPoints.map((p) => [p.lat, p.lon] as [number, number]));
             addInterventionLayer(cityData, showInterventionLayer);
             return;
           }
@@ -3277,6 +3339,44 @@ const HeroMap = ({
       });
       return;
     }
+    if (currentCity.toLowerCase() === "milan" && selectedKpi === "kpi4.1") {
+      const scoped = filterMilanLocalPoints(localCityPoints ?? [], selectedPilotId).filter(
+        (p) =>
+          p.properties?.datasetKind === "survey" ||
+          p.properties?.dataOrigin === "mock" ||
+          p.properties?.mockLabel === "MOCK"
+      );
+      const usingMock =
+        scoped.length > 0 &&
+        scoped.every(
+          (p) =>
+            p.properties?.dataOrigin === "mock" ||
+            p.properties?.mockLabel === "MOCK" ||
+            p.properties?.type === "mock"
+        );
+      const diagnostics = getLocalCityDiagnostics("Milan", selectedKpi, selectedPilotId);
+      onDataQualitySummaryChange({
+        recordsLabel: scoped.length
+          ? usingMock
+            ? `${scoped.length} MOCK CDM3 Activity 5 theme samples`
+            : `${scoped.length} satisfaction survey aggregate${scoped.length === 1 ? "" : "s"}`
+          : diagnostics?.message || "No Milan satisfaction survey linked",
+        spatialQuality: usingMock
+          ? "CDM3 corridor theme pins · illustrative"
+          : "pilot-area anchor (no respondent geocoordinates)",
+        dataType: usingMock
+          ? "mock CDM3 Activity 5 satisfaction proxy"
+          : "satisfaction survey aggregate",
+        temporalCoverage: usingMock ? "illustrative before-after" : "evaluation period",
+        confidence: usingMock ? "Low" : scoped.length > 0 ? "Medium" : "Low",
+        provenanceType: usingMock ? "mock" : scoped.length > 0 ? "observed" : "mock",
+        geometryLinkage: usingMock ? "inferred" : "inferred",
+        spatialSystemHint: usingMock
+          ? "MOCK — SharePoint folder 7 (Satisfaction LL) is empty; pins use CDM3 Activity 5 theme samples."
+          : spatialPlan.legendHint,
+      });
+      return;
+    }
     if (currentCity.toLowerCase() === "milan" && selectedKpi === "kpi4.2") {
       const scoped = filterMilanLocalPoints(localCityPoints ?? [], selectedPilotId).filter(
         (p) => p.properties?.datasetKind === "accessibility"
@@ -3662,7 +3762,9 @@ const HeroMap = ({
         setViewLevel("CITY_INTERVENTIONS");
         onCitySelect?.(city.city);
         const map = mapRef.current!;
-        map.flyTo([city.lat, city.lon], 13, { duration: 1.2 });
+        map.flyTo([city.lat, city.lon], city.city.toLowerCase().includes("milan") ? 11 : 13, {
+          duration: 1.2,
+        });
         whenLeafletMapSettled(map, () => {
           if (!mapRef.current) return;
           clearLayers();
@@ -3696,7 +3798,7 @@ const HeroMap = ({
               );
             });
           });
-          fitMapToPilotOverviewCards(mapRef.current, spreadPts);
+          fitMapToPilotOverviewCards(mapRef.current, spreadPts, { cityName: city.city });
         });
       });
     });
@@ -3724,8 +3826,11 @@ const HeroMap = ({
     ) {
       return;
     }
-    // Helsinki KPI layers own their viewport (influence discs would otherwise over-zoom-out).
-    if (currentCity?.toLowerCase().includes("helsinki")) {
+    // Helsinki / Milan KPI layers own their viewport (auto-fit fights user zoom).
+    if (
+      currentCity?.toLowerCase().includes("helsinki") ||
+      currentCity?.toLowerCase().includes("milan")
+    ) {
       return;
     }
     const map = mapRef.current;
@@ -3857,7 +3962,11 @@ const HeroMap = ({
           setCurrentPilot(null);
           setViewLevel("CITY_INTERVENTIONS");
           const map = mapRef.current;
-          map.flyTo([cityData.lat, cityData.lon], 13, { duration: 1.2 });
+          map.flyTo(
+            [cityData.lat, cityData.lon],
+            isMilanCityName(selectedCity) ? 11 : 13,
+            { duration: 1.2 }
+          );
           whenLeafletMapSettled(map, () => {
             if (!mapRef.current) return;
             clearLayers();
@@ -3890,7 +3999,7 @@ const HeroMap = ({
                 );
               });
             });
-            fitMapToPilotOverviewCards(mapRef.current, spreadPts);
+            fitMapToPilotOverviewCards(mapRef.current, spreadPts, { cityName: selectedCity });
             scheduleLeafletLayerRepaint(mapRef.current, markersRef.current, circlesRef.current);
           });
         }
@@ -3953,6 +4062,7 @@ const HeroMap = ({
 
   useEffect(() => {
     milanKpi12FitKeyRef.current = "";
+    milanPointFitKeyRef.current = "";
   }, [currentCity, milanPilotId, selectedKpi]);
 
   useEffect(() => {

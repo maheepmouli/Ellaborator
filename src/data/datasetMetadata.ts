@@ -1087,7 +1087,7 @@ export const DATASET_REGISTRY: DatasetMetadata[] = [
     updateStatus: "static",
     responsiblePartner: "Milan",
     notes:
-      "Folder 7 in zip is empty (placeholder). Parser reads survey-insights.json when workbooks arrive; observatory shows pilot-level aggregate at anchor — no map points.",
+      "Folder 7 in zip is empty (placeholder). When workbooks arrive, parser reads survey-insights.json. Until then, Pilot 3 KPI 4.1 uses MOCK CDM3 Activity 5 theme samples on the map + observatory gauge.",
   },
 
   // ─── ZARAGOZA ────────────────────────────────────────────────────────────

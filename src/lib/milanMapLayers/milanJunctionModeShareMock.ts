@@ -35,15 +35,15 @@ function buildIllustrativeModeTotals(
   const ptwBase = 8 + seededUnit(`${seed}-ptw`) * 72;
   const ptBase = 12 + seededUnit(`${seed}-pt`) * 110;
 
-  const interventionBoost = phase === "post" ? 1.06 : 1;
-  const carScale = phase === "post" ? 0.94 : 1;
+  const interventionBoost = phase === "post" ? 1.08 : 1;
+  const carScale = phase === "post" ? 0.92 : 1;
 
   return finalizeMilanModeTotals({
     bike: Math.round(bikeBase * interventionBoost),
     pedestrian: Math.round(pedBase * interventionBoost),
     motorised: Math.round(carBase * carScale),
     ptw: Math.round(ptwBase),
-    pt: Math.round(ptBase * (phase === "post" ? 1.04 : 1)),
+    pt: Math.round(ptBase * (phase === "post" ? 1.05 : 1)),
     total: 0,
   });
 }

@@ -2196,6 +2196,65 @@ export async function loadLocalCityPoints(
     }
   }
 
+  if (cityKey === "milan" && kpiId === "kpi4.1") {
+    const surveyRecords = await buildMilanSurveyRecords(kpiId);
+    const pilotScoped = selectedPilotId
+      ? surveyRecords.filter((r) => milanRecordMatchesPilotScope(r.interventionId, selectedPilotId))
+      : surveyRecords;
+    if (pilotScoped.length) {
+      localCityDiagnosticsCache.set(localCityDiagnosticsKey(cityName, kpiId, selectedPilotId), {
+        reason: "ok",
+        message: `Milan satisfaction survey aggregates loaded (${pilotScoped.length}).`,
+      });
+      return pilotScoped
+        .filter((record) => typeof record.lat === "number" && typeof record.lng === "number")
+        .map((record, index) => ({
+          lat: record.lat as number,
+          lon: record.lng as number,
+          value: toScenarioValue(record, scenario),
+          id: `local-${record.cityId}-${record.kpiId}-${index}`,
+          properties: {
+            id: record.id,
+            city: record.city,
+            kpi: record.kpiId,
+            source: record.source,
+            method: record.method,
+            type: record.type,
+            datasetKind: record.datasetKind,
+            dataOrigin: "local-city-dataset",
+            baselineValue: record.baselineValue,
+            interventionValue: record.interventionValue ?? record.value,
+            comparisonValue: record.comparisonValue,
+            interventionId: record.interventionId,
+            pilotId: record.interventionId,
+            segmentId: record.segmentId,
+            streetName: record.streetName ?? record.category,
+            category: record.category,
+            spatialNote: record.spatialNote,
+            parserStatus: record.parserStatus || "ready",
+            scenario,
+          },
+        }));
+    }
+
+    // SharePoint folder 7 is empty — CDM3 Activity 5 web-interface study proxy for Pilot 3.
+    if (!selectedPilotId || selectedPilotId === "mil-p3") {
+      const { getMilanCdm3Mock, milanCdm3ToLocalPoints } = await import("@/data/milanCdm3Mock");
+      const points = milanCdm3ToLocalPoints(getMilanCdm3Mock(), "kpi4.1", scenario);
+      localCityDiagnosticsCache.set(localCityDiagnosticsKey(cityName, kpiId, selectedPilotId), {
+        reason: "mock",
+        message: `MOCK CDM3 satisfaction — SharePoint folder 7 empty (${points.length} Activity 5 theme samples).`,
+      });
+      return points;
+    }
+
+    localCityDiagnosticsCache.set(localCityDiagnosticsKey(cityName, kpiId, selectedPilotId), {
+      reason: "no-records",
+      message: "No Milan satisfaction survey for this pilot — SharePoint folder 7 empty.",
+    });
+    return [];
+  }
+
   if (cityKey === "milan" && kpiId === "kpi3.1" && selectedPilotId) {
     const { milanZeroEmissionToLocalPoints, milanZeroEmissionFacilityCount, placeMilanZeroEmissionAlongNetwork } =
       await import("@/data/milanZeroEmissionMock");

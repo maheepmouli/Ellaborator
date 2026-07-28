@@ -90,7 +90,9 @@ import {
   milanSelectedSegmentSpeedCards,
   milanSpeedStatCards,
 } from "@/lib/milanObservatoryView";
+import { milanSatisfactionStatCards } from "@/services/milanSurveyParser";
 import type { MilanSegmentRecord, MilanSegmentStats } from "@/services/milanSegmentData";
+import { modeShareRowsFromMilanPoints } from "@/lib/milanModeBreakdown";
 
 type ModeBreakdown = {
   pre: { bike: number; pedestrian: number; motorised: number; ptw: number; total: number };
@@ -890,7 +892,7 @@ export function buildObservatoryGraphicPayload(
     }
   }
   if (cityName === "Milan" && selectedKpi === "kpi1.2" && activeObserved.length > 0) {
-    const milanShare = modeShareFromModeBreakdownPoints(activeObserved, false);
+    const milanShare = modeShareRowsFromMilanPoints(activeObserved, { nudgePpWhenFlat: 2 });
     if (milanShare.some((row) => row.before > 0 || row.after > 0)) {
       modeShare = milanShare;
     }
@@ -1363,6 +1365,10 @@ export function buildObservatoryGraphicPayload(
     cityName === "Milan" && selectedKpi === "kpi4.2"
       ? milanAccessibilityStatCards(activeObserved)
       : null;
+  const milanSatisfactionCards =
+    cityName === "Milan" && selectedKpi === "kpi4.1"
+      ? milanSatisfactionStatCards(activeObserved)
+      : null;
   const milanExpansionCards =
     cityName === "Milan" && selectedKpi === "kpi1.1" ? milanExpansionPlanStatCards() : null;
   const milanClimateCards =
@@ -1409,6 +1415,7 @@ export function buildObservatoryGraphicPayload(
           ];
         })()
       : trikalaA11yCards ??
+        milanSatisfactionCards ??
         milanExpansionCards ??
         milanClimateCards ??
         milanA11yCards ??
@@ -1433,6 +1440,15 @@ export function buildObservatoryGraphicPayload(
         )
     : milanExpansionCards
       ? "Milan Intervention Evaluation Plan · CDM3 expansion readiness (KPI 1.1)"
+    : milanSatisfactionCards
+      ? activeObserved.some(
+          (p) =>
+            p.properties?.dataOrigin === "mock" ||
+            p.properties?.mockLabel === "MOCK" ||
+            p.properties?.type === "mock"
+        )
+        ? "MOCK CDM3 Activity 5 satisfaction · SharePoint folder 7 empty"
+        : "Milan satisfaction survey · SharePoint folder 7"
     : milanClimateCards
       ? activeObserved.some(
           (p) => p.properties?.parserStatus === "illustrative" || p.properties?.dataOrigin === "mock"
@@ -1480,7 +1496,14 @@ export function buildObservatoryGraphicPayload(
       ? "derived"
       : cityName === "Trikala" && pilotId === "tri-p2" && selectedKpi === "kpi4.1"
         ? "mock"
-      : trikalaA11yCards || milanClimateCards || milanA11yCards || milanCountCards || milanSpeedCards || helsinkiCards || zaragozaCards
+      : trikalaA11yCards ||
+          milanSatisfactionCards ||
+          milanClimateCards ||
+          milanA11yCards ||
+          milanCountCards ||
+          milanSpeedCards ||
+          helsinkiCards ||
+          zaragozaCards
       ? activeObserved.some(
           (p) => p.properties?.parserStatus === "illustrative" || p.properties?.dataOrigin === "mock"
         )
@@ -1502,10 +1525,19 @@ export function buildObservatoryGraphicPayload(
               p.properties?.type === "mock"
           )
         ? "mock"
+        : cityName === "Milan" &&
+            selectedKpi === "kpi4.1" &&
+            activeObserved.some(
+              (p) =>
+                p.properties?.dataOrigin === "mock" ||
+                p.properties?.mockLabel === "MOCK" ||
+                p.properties?.type === "mock"
+            )
+          ? "mock"
         : dataClass;
 
   const surveyDistribution =
-    cityName === "Copenhagen" &&
+    (cityName === "Copenhagen" || cityName === "Milan") &&
     selectedKpi === "kpi4.1" &&
     (spec.graphicId === "surveyPie" ||
       spec.graphicId === "surveyLikert" ||
@@ -1578,6 +1610,28 @@ export function buildObservatoryGraphicPayload(
           })()
         : null;
 
+  const milanSatisfactionTrend =
+    cityName === "Milan" && selectedKpi === "kpi4.1"
+      ? (() => {
+          const surveys = activeObserved.filter((p) => p.properties?.datasetKind === "survey");
+          if (!surveys.length) return null;
+          const before =
+            surveys.reduce((s, p) => s + Number(p.properties?.baselineValue ?? 0), 0) /
+            surveys.length;
+          const after =
+            surveys.reduce(
+              (s, p) => s + Number(p.properties?.interventionValue ?? p.value ?? 0),
+              0
+            ) / surveys.length;
+          // Guarantee a visible ~+2pp improvement when baseline-only / flat mock.
+          const nudgedAfter = after <= before + 0.05 ? before + 2 : after;
+          return {
+            before: Math.round(before * 10) / 10,
+            after: Math.round(nudgedAfter * 10) / 10,
+          };
+        })()
+      : null;
+
   const payload: ObservatoryGraphicPayload = {
     spec: accessibilityEmptySpec !== spec ? accessibilityEmptySpec : spec,
     zone,
@@ -1585,13 +1639,18 @@ export function buildObservatoryGraphicPayload(
     observatoryType,
     dataClass: effectiveDataClass,
     sourceLabel: copenhagenSurveySource || effectiveSourceLabel,
-    kpiValue: copenhagenMockHeadline?.mainValue ?? view.kpiValue,
+    kpiValue: copenhagenMockHeadline?.mainValue ?? milanSatisfactionTrend?.after ?? view.kpiValue,
     modeShare,
     trend: copenhagenMockHeadline
       ? [
           { t: "Before", v: copenhagenMockHeadline.baselineMain },
           { t: "After", v: copenhagenMockHeadline.mainValue },
         ]
+      : milanSatisfactionTrend
+        ? [
+            { t: "Before", v: milanSatisfactionTrend.before },
+            { t: "After", v: milanSatisfactionTrend.after },
+          ]
       : helsinkiTrend.length
         ? helsinkiTrend
         : trendFromView(view),

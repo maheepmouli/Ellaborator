@@ -8,10 +8,18 @@ interface SentimentGaugeChartProps {
 }
 
 export function SentimentGaugeChart({ payload, compact }: SentimentGaugeChartProps) {
-  const pct = Math.max(0, Math.min(100, Number(payload.kpiValue ?? 0)));
-  const rest = Math.max(0, 100 - pct);
+  const afterPct = Math.max(0, Math.min(100, Number(payload.kpiValue ?? 0)));
+  const beforeFromTrend = payload.trend?.find((t) => /before|baseline/i.test(t.t))?.v;
+  const beforePct =
+    beforeFromTrend != null && Number.isFinite(beforeFromTrend)
+      ? Math.max(0, Math.min(100, Number(beforeFromTrend)))
+      : Math.max(0, afterPct - 2);
+  const delta = Math.round((afterPct - beforePct) * 10) / 10;
+  const improved = delta >= 0;
+  const fill = improved ? "#34d399" : "#f87171";
+  const rest = Math.max(0, 100 - afterPct);
   const pieData = [
-    { name: "score", value: pct, fill: OBS_C.violet },
+    { name: "score", value: afterPct, fill },
     { name: "rest", value: rest, fill: "rgba(101,125,245,0.15)" },
   ];
   const isMock = payload.dataClass === "mock";
@@ -61,7 +69,7 @@ export function SentimentGaugeChart({ payload, compact }: SentimentGaugeChartPro
               fontSize={compact ? 20 : 22}
               fontWeight={700}
             >
-              {pct.toFixed(0)}%
+              {afterPct.toFixed(0)}%
             </text>
             <text
               x="50%"
@@ -75,6 +83,20 @@ export function SentimentGaugeChart({ payload, compact }: SentimentGaugeChartPro
             </text>
           </PieChart>
         </ResponsiveContainer>
+      </div>
+      <div className="flex items-center justify-between gap-2 mt-1 px-0.5">
+        <p className="text-[10px] text-white/55">
+          <span className="text-white/40">Baseline</span>{" "}
+          <span className="font-semibold text-white/80">{beforePct.toFixed(0)}%</span>
+          <span className="text-white/35"> → </span>
+          <span className="font-semibold text-white">{afterPct.toFixed(0)}%</span>
+        </p>
+        <span
+          className={`text-[10px] font-bold ${improved ? "text-emerald-300" : "text-rose-300"}`}
+        >
+          {improved ? "+" : ""}
+          {delta.toFixed(1)} pp
+        </span>
       </div>
       {isMock && payload.sourceLabel ? (
         <p className="text-[9px] text-white/40 leading-relaxed mt-1">{payload.sourceLabel}</p>

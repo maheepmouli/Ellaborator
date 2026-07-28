@@ -106,6 +106,18 @@ function resolveHeadlineSource(input: KpiProvenanceInput): HeadlineSource {
   if (city === "Copenhagen" && kpiId === "kpi4.2") return "mock";
   // Trikala Pilot 2 has no P+R user-satisfaction survey — CITY_DATA figure is mock only.
   if (city === "Trikala" && kpiId === "kpi4.1" && pilot?.id === "tri-p2") return "mock";
+  // Milan Pilot 3: SharePoint folder 7 empty — CDM3 Activity 5 satisfaction proxy.
+  if (city === "Milan" && kpiId === "kpi4.1") {
+    if (
+      diagnostics?.reason === "mock" ||
+      String(dataQualitySummary?.provenanceType ?? "").toLowerCase() === "mock" ||
+      pilot?.id === "mil-p3"
+    ) {
+      // Real survey workbooks win when diagnostics say ok.
+      if (diagnostics?.reason === "ok") return "observed";
+      return "mock";
+    }
+  }
   // Trikala Pilot 3 road safety: mock speed derived from LoRa FREE/BUSY occupancy (no radar).
   if (city === "Trikala" && kpiId === "kpi2.1" && pilot?.id === "tri-p3") return "derived";
 

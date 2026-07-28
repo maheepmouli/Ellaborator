@@ -476,7 +476,8 @@ const InsightPanel = ({
       : "mil-p2";
   const milanCenter = cityData ? { lat: cityData.lat, lon: cityData.lon } : null;
   const shouldUseMilanLocalPoints =
-    isMilanCity && (selectedKpi === "kpi1.2" || selectedKpi === "kpi4.2");
+    isMilanCity &&
+    (selectedKpi === "kpi1.2" || selectedKpi === "kpi4.1" || selectedKpi === "kpi4.2");
   const { data: milanLocalPoints } = useLocalCityData(
     "Milan",
     selectedKpi,
@@ -547,6 +548,38 @@ const InsightPanel = ({
     return aggregateMilanJunctionMockKpi(milanJunctionMockPoints, scenario);
   }, [milanJunctionMockPoints, selectedKpi, scenario]);
 
+  const milanIllustrativeSatisfactionKpi = useMemo(() => {
+    if (!isMilanCity || selectedKpi !== "kpi4.1" || !milanLocalPoints?.length) return null;
+    const surveys = milanLocalPoints.filter(
+      (p) =>
+        p.properties?.datasetKind === "survey" ||
+        p.properties?.dataOrigin === "mock" ||
+        p.properties?.mockLabel === "MOCK"
+    );
+    if (!surveys.length) return null;
+    const baselineMain =
+      Math.round(
+        (surveys.reduce((s, p) => s + Number(p.properties?.baselineValue ?? p.value), 0) /
+          surveys.length) *
+          10
+      ) / 10;
+    const interventionMain =
+      Math.round(
+        (surveys.reduce((s, p) => s + Number(p.properties?.interventionValue ?? p.value), 0) /
+          surveys.length) *
+          10
+      ) / 10;
+    return {
+      baselineMain,
+      interventionMain,
+      change: Math.round((interventionMain - baselineMain) * 10) / 10,
+      unit: "%",
+      isMock: surveys.every(
+        (p) => p.properties?.dataOrigin === "mock" || p.properties?.type === "mock"
+      ),
+    };
+  }, [isMilanCity, selectedKpi, milanLocalPoints]);
+
   const milanObservedPointKpi = useMemo(() => {
     if (!shouldUseMilanLocalPoints || !milanLocalPoints?.length) return null;
     const observed = milanLocalPoints.filter(
@@ -562,6 +595,8 @@ const InsightPanel = ({
     isMilanCity && selectedKpi === "kpi3.2" && !!milanIllustrativeClimateKpi;
   const usingMilanIllustrativeAccessibility =
     isMilanCity && selectedKpi === "kpi4.2" && !!milanIllustrativeAccessibilityKpi;
+  const usingMilanIllustrativeSatisfaction =
+    isMilanCity && selectedKpi === "kpi4.1" && !!milanIllustrativeSatisfactionKpi;
   const usingMilanObservedModeShare =
     isMilanCity && selectedKpi === "kpi1.2" && !!milanObservedPointKpi && !usingMilanIllustrativeModeShare;
   const milanSegmentHeadline = useMemo(() => {
@@ -602,6 +637,13 @@ const InsightPanel = ({
     if (selectedKpi === "kpi4.2" && milanIllustrativeAccessibilityKpi) {
       return milanIllustrativeAccessibilityKpi;
     }
+    if (selectedKpi === "kpi4.1" && milanIllustrativeSatisfactionKpi) {
+      return {
+        baselineMain: milanIllustrativeSatisfactionKpi.baselineMain,
+        interventionMain: milanIllustrativeSatisfactionKpi.interventionMain,
+        change: milanIllustrativeSatisfactionKpi.change,
+      };
+    }
     return null;
   }, [
     isMilanCity,
@@ -610,6 +652,7 @@ const InsightPanel = ({
     milanEnvDataset,
     milanIllustrativeClimateKpi,
     milanIllustrativeAccessibilityKpi,
+    milanIllustrativeSatisfactionKpi,
   ]);
   const copenhagenCenter = cityData ? { lat: cityData.lat, lon: cityData.lon } : null;
   const shouldUseCopenhagenObserved =
@@ -677,6 +720,13 @@ const InsightPanel = ({
     usingMilanIllustrativeAccessibility,
   ]);
 
+  const milanSatisfactionNote = useMemo(() => {
+    if (!usingMilanIllustrativeSatisfaction) return null;
+    return milanIllustrativeSatisfactionKpi?.isMock
+      ? "MOCK CDM3 Activity 5 satisfaction themes — SharePoint folder 7 (Satisfaction LL) has no survey workbooks yet."
+      : "Milan satisfaction survey aggregates from SharePoint folder 7.";
+  }, [usingMilanIllustrativeSatisfaction, milanIllustrativeSatisfactionKpi]);
+
   const provenance = useMemo(() => {
     const milanSegmentDiagnostics =
       isMilanCity && selectedKpi === "kpi2.1" && (milanSpeedDataset?.records?.length ?? 0) > 0
@@ -718,6 +768,24 @@ const InsightPanel = ({
                   reason: "mock" as const,
                   message: `${milanJunctionAnchorsForPilot(milanSpeedDataset!.records).length} illustrative junction accessibility proxies (mode-share anchors).`,
                 }
+            : isMilanCity &&
+                selectedKpi === "kpi4.1" &&
+                (milanLocalPoints?.filter((p) => p.properties?.datasetKind === "survey").length ?? 0) > 0
+              ? {
+                  reason: (milanLocalPoints!.some(
+                    (p) =>
+                      p.properties?.dataOrigin === "mock" ||
+                      p.properties?.mockLabel === "MOCK" ||
+                      p.properties?.type === "mock"
+                  )
+                    ? "mock"
+                    : "ok") as "mock" | "ok",
+                  message: `${milanLocalPoints!.filter((p) => p.properties?.datasetKind === "survey").length} satisfaction theme sample${
+                    milanLocalPoints!.filter((p) => p.properties?.datasetKind === "survey").length === 1
+                      ? ""
+                      : "s"
+                  } for ${milanPilotId}.`,
+                }
               : null;
     const diagnostics =
       milanSegmentDiagnostics ?? getLocalCityDiagnostics(selectedCity, selectedKpi, selectedPilotId);
@@ -741,6 +809,7 @@ const InsightPanel = ({
         (milanSegmentHeadline && !usingMilanIllustrativeClimate && !usingMilanIllustrativeAccessibility) ||
         usingMilanIllustrativeClimate ||
         usingMilanIllustrativeAccessibility ||
+        usingMilanIllustrativeSatisfaction ||
         (isCopenhagenCity && selectedKpi === "kpi3.2" && cphEmissionsModel)
     );
     return resolveKpiProvenance({
@@ -772,6 +841,10 @@ const InsightPanel = ({
     usingHelsinkiObservedKpi,
     milanModeShareKpi,
     milanSegmentHeadline,
+    usingMilanIllustrativeModeShare,
+    usingMilanIllustrativeClimate,
+    usingMilanIllustrativeAccessibility,
+    usingMilanIllustrativeSatisfaction,
     milanLocalPoints,
     milanSpeedDataset,
     milanEnvDataset,
@@ -792,6 +865,7 @@ const InsightPanel = ({
     if (isMilanCity && selectedKpi === "kpi3.2" && usingMilanIllustrativeClimate) return " env. idx";
     if (isMilanCity && selectedKpi === "kpi3.2" && milanSegmentHeadline) return "% reduction";
     if (isMilanCity && selectedKpi === "kpi4.2" && usingMilanIllustrativeAccessibility) return "%";
+    if (isMilanCity && selectedKpi === "kpi4.1" && milanSegmentHeadline) return "%";
     if (usingTrikalaBikeLaneSafety) return "km/h";
     if (usingTrikalaBikeLaneSurvey) return "%";
     return isTrikalaCity && trikalaObservedModeShare
@@ -1492,6 +1566,11 @@ const InsightPanel = ({
           {milanJunctionIllustrativeNote && (
             <div className="mt-2 rounded-lg border border-violet-400/30 bg-violet-500/10 px-3 py-2 text-[10px] text-violet-100/90 leading-relaxed">
               {milanJunctionIllustrativeNote}
+            </div>
+          )}
+          {milanSatisfactionNote && (
+            <div className="mt-2 rounded-lg border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-[10px] text-amber-100/90 leading-relaxed">
+              {milanSatisfactionNote}
             </div>
           )}
           {provenance.panelMapSplit && (

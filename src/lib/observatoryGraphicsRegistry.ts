@@ -218,7 +218,7 @@ const PILOT_GRAPHIC_OVERRIDES: Record<string, PilotGraphicOverride> = {
   },
   "mil-p1": {
     header: {
-      "kpi1.2": "modeShareBars",
+      "kpi1.2": "junctionSchematic",
       "kpi2.1": "streetSegmentSchematic",
       "kpi3.1": "streetSegmentSchematic",
       "kpi3.2": "streetSegmentSchematic",
@@ -229,6 +229,9 @@ const PILOT_GRAPHIC_OVERRIDES: Record<string, PilotGraphicOverride> = {
       "kpi3.1": "facilityInventory",
       "kpi3.2": "reteBand",
       "kpi4.2": "accessibilityBars",
+    },
+    beforeAfter: {
+      "kpi1.2": "modeShareBars",
     },
     kpiAnalysis: {
       "kpi1.2": "modeShareBars",
@@ -240,7 +243,7 @@ const PILOT_GRAPHIC_OVERRIDES: Record<string, PilotGraphicOverride> = {
   },
   "mil-p2": {
     header: {
-      "kpi1.2": "modeShareBars",
+      "kpi1.2": "junctionSchematic",
       "kpi2.1": "streetSegmentSchematic",
       "kpi3.1": "streetSegmentSchematic",
       "kpi3.2": "streetSegmentSchematic",
@@ -251,6 +254,9 @@ const PILOT_GRAPHIC_OVERRIDES: Record<string, PilotGraphicOverride> = {
       "kpi3.1": "facilityInventory",
       "kpi3.2": "reteBand",
       "kpi4.2": "accessibilityBars",
+    },
+    beforeAfter: {
+      "kpi1.2": "modeShareBars",
     },
     kpiAnalysis: {
       "kpi1.2": "modeShareBars",
@@ -267,11 +273,11 @@ const PILOT_GRAPHIC_OVERRIDES: Record<string, PilotGraphicOverride> = {
     },
     overview: {
       "kpi1.1": "modeShareBars",
-      "kpi4.1": "sentimentGauge",
+      "kpi4.1": "surveyLikert",
       "kpi4.2": "accessibilityBars",
     },
     beforeAfter: {
-      "kpi1.1": "climateComparison",
+      "kpi4.1": "surveyPie",
     },
     kpiAnalysis: {
       "kpi1.1": "modeShareBars",
@@ -598,13 +604,6 @@ export function resolveObservatoryGraphic(
     if (kpiId === "kpi3.2") {
       return { graphicId: "climateComparison", kind: "chart", variant: "expanded" };
     }
-  }
-
-  const milanSensorFocus =
-    pilotId?.startsWith("mil-") && selectedSegmentId && kpiId === "kpi1.2";
-
-  if (milanSensorFocus && (zone === "header" || zone === "overview")) {
-    return { graphicId: "modeShareBars", kind: "chart", variant: "compact" };
   }
 
   const pilotOverride = pilotId ? PILOT_GRAPHIC_OVERRIDES[pilotId]?.[zone]?.[kpi] : undefined;

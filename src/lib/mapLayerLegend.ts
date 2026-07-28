@@ -505,6 +505,17 @@ export function resolveMapLegend(
       hint: "RETE network segments: colour = relative environmental pressure within the loaded window.",
     };
   }
+  if (isMilan && kpiId === "kpi4.1") {
+    return {
+      marker: "point",
+      items: [
+        { label: "MOCK satisfaction theme", color: "#a78bfa" },
+        { label: "Higher satisfaction", color: "#22c55e" },
+        { label: "Lower satisfaction", color: "#f87171" },
+      ],
+      hint: "Pilot 3 · CDM3 Activity 5 satisfaction themes (MOCK while SharePoint folder 7 is empty). Colour = satisfaction %.",
+    };
+  }
   if (isMilan && kpiId === "kpi4.2") {
     if (options?.milanIllustrativeLayer) {
       return {
