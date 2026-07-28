@@ -803,12 +803,20 @@ const MapContent = () => {
       : null;
 
   const effectiveDirectionId = useMemo(() => {
-    if (!isCopenhagenMap) return selectedDirectionId;
     const hoverId = hoveredSegmentId;
-    if (!hoverId) return selectedDirectionId;
-    if (hoverId.startsWith("loc:") || hoverId.startsWith("site:")) return selectedDirectionId;
-    return hoverId;
-  }, [hoveredSegmentId, isCopenhagenMap, selectedDirectionId]);
+    if (isCopenhagenMap) {
+      if (!hoverId) return selectedDirectionId;
+      if (hoverId.startsWith("loc:") || hoverId.startsWith("site:")) return selectedDirectionId;
+      return hoverId;
+    }
+    if (selectedCity === "Milan" && selectedKpi === "kpi1.2" && hoverId) {
+      return hoverId;
+    }
+    if (isTrikalaMap && selectedKpi === "kpi1.2" && hoverId) {
+      return hoverId;
+    }
+    return selectedDirectionId;
+  }, [hoveredSegmentId, isCopenhagenMap, isTrikalaMap, selectedCity, selectedKpi, selectedDirectionId]);
 
   const activeJunctionView = useMemo(() => {
     if (!junctionConfig || !selectedPilot?.id) return null;

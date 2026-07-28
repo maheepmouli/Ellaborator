@@ -89,6 +89,8 @@ import {
   milanExpansionPlanStatCards,
   milanSelectedSegmentSpeedCards,
   milanSpeedStatCards,
+  milanAmatPointsForHub,
+  milanFlowBearingDeg,
 } from "@/lib/milanObservatoryView";
 import { milanSatisfactionStatCards } from "@/services/milanSurveyParser";
 import type { MilanSegmentRecord, MilanSegmentStats } from "@/services/milanSegmentData";
@@ -257,6 +259,21 @@ function cameraRowsFromPoints(
   }
 
   return [...byId.values()];
+}
+
+function milanCameraDirectionRows(
+  points: LocalCityPoint[],
+  selectedModeTypes: string[]
+): CameraDirectionRow[] {
+  return cameraRowsFromPoints(points, selectedModeTypes).map((row) => {
+    const point = points.find(
+      (p) => String(p.properties?.segmentId ?? p.id) === row.id
+    );
+    const bearing = point
+      ? milanFlowBearingDeg((point.properties ?? {}) as Record<string, unknown>)
+      : undefined;
+    return bearing != null ? { ...row, bearingDeg: bearing } : row;
+  });
 }
 
 /** Issy Pont d'Issy hub — three monitored arms as Copenhagen-style directional links. */
@@ -822,6 +839,11 @@ export function buildObservatoryGraphicPayload(
     );
   }
 
+  const milanAmatHubPoints =
+    cityName === "Milan" && selectedKpi === "kpi1.2"
+      ? milanAmatPointsForHub(observedPoints, selectedSegmentId)
+      : [];
+
   const cameraDirections =
     cityName === "Copenhagen"
       ? ensureKnownCameraDirections(
@@ -832,12 +854,31 @@ export function buildObservatoryGraphicPayload(
           (selectedKpi === "kpi1.2" || selectedKpi === "kpi2.1")
         ? issyCameraDirectionRows(view)
         : cityName === "Trikala" && selectedKpi === "kpi1.2"
-          ? mobilityFlowRowsFromPoints(activeObserved)
-          : cityName === "Milan" && selectedKpi === "kpi1.2"
-            ? cameraRowsFromPoints(activeObserved, selectedModeTypes)
-            : cityName === "Helsinki" && selectedKpi === "kpi2.1"
-              ? helsinkiHazardDirectionRows(activeObserved)
-              : [];
+          ? mobilityFlowRowsFromPoints(
+              selectedSegmentId && activeObserved.length
+                ? observedPoints.filter((p) => {
+                    const anchor = String(
+                      activeObserved[0]?.properties?.subSegment ??
+                        activeObserved[0]?.properties?.segmentId ??
+                        selectedSegmentId
+                    );
+                    const sub = String(p.properties?.subSegment ?? p.properties?.segmentId ?? "");
+                    return (
+                      sub === anchor ||
+                      sub.startsWith(`${anchor}-`) ||
+                      anchor.startsWith(sub) ||
+                      sub.startsWith(anchor)
+                    );
+                  })
+                : observedPoints
+            )
+          : cityName === "Milan" && selectedKpi === "kpi1.2" && milanAmatHubPoints.length
+            ? milanCameraDirectionRows(milanAmatHubPoints, selectedModeTypes)
+            : cityName === "Milan" && selectedKpi === "kpi1.2"
+              ? milanCameraDirectionRows(activeObserved, selectedModeTypes)
+              : cityName === "Helsinki" && selectedKpi === "kpi2.1"
+                ? helsinkiHazardDirectionRows(activeObserved)
+                : [];
   const activeDirectionId =
     selectedDirectionId ?? cameraDirections[0]?.id ?? null;
 
@@ -892,10 +933,18 @@ export function buildObservatoryGraphicPayload(
       modeShare = modeShareFromNamedBreakdown(headline.baselineBreakdown, headline.breakdown);
     }
   }
-  if (cityName === "Milan" && selectedKpi === "kpi1.2" && activeObserved.length > 0) {
-    const milanShare = modeShareRowsFromMilanPoints(activeObserved, { nudgePpWhenFlat: 2 });
-    if (milanShare.some((row) => row.before > 0 || row.after > 0)) {
-      modeShare = milanShare;
+  if (cityName === "Milan" && selectedKpi === "kpi1.2") {
+    const modeSharePoints =
+      selectedDirectionId || (selectedSegmentId && activeObserved.length <= 1)
+        ? activeObserved
+        : milanAmatHubPoints.length
+          ? milanAmatHubPoints
+          : activeObserved;
+    if (modeSharePoints.length > 0) {
+      const milanShare = modeShareRowsFromMilanPoints(modeSharePoints, { nudgePpWhenFlat: 2 });
+      if (milanShare.some((row) => row.before > 0 || row.after > 0)) {
+        modeShare = milanShare;
+      }
     }
   }
   if (cityName === "Copenhagen" && spec.graphicId === "telraamModeBars") {
@@ -1710,7 +1759,9 @@ export function buildObservatoryGraphicPayload(
               : view.streetNS
         : cityName === "Issy-les-Moulineaux"
           ? view.streetNS || "Pont d'Issy"
-          : view.streetNS,
+          : cityName === "Milan"
+            ? view.streetNS
+            : view.streetNS,
     streetEW:
       cityName === "Helsinki"
         ? pilotId === "hel-p2" && selectedKpi === "kpi4.2"
@@ -1724,10 +1775,14 @@ export function buildObservatoryGraphicPayload(
               : view.streetEW
         : cityName === "Issy-les-Moulineaux"
           ? view.streetEW || "Quai Roosevelt · Rouget de Lisle"
-          : view.streetEW,
+          : cityName === "Milan"
+            ? view.streetEW
+            : view.streetEW,
     highlightArmId: view.armId,
     cameraBearingDeg:
-      cityName === "Copenhagen" && copenhagenWorkbookFocus
+      cityName === "Milan" && selectedKpi === "kpi1.2"
+        ? 0
+        : cityName === "Copenhagen" && copenhagenWorkbookFocus
         ? workbookHubBearing(copenhagenWorkbookFocus)
         : cityName === "Issy-les-Moulineaux" && view.odLinks?.length
           ? view.odLinks.reduce((s, l) => s + l.bearingDeg, 0) / view.odLinks.length
@@ -1735,7 +1790,9 @@ export function buildObservatoryGraphicPayload(
             ? 270
             : undefined,
     pilotTitle:
-      cityName === "Milan" && selectedKpi === "kpi1.1"
+      cityName === "Milan" && selectedKpi === "kpi1.2"
+        ? view.name || view.shortName || "AMAT camera hub · approach flows"
+        : cityName === "Milan" && selectedKpi === "kpi1.1"
         ? "CDM3 DSS expansion readiness"
         : cityName === "Helsinki" && selectedKpi === "kpi1.1"
         ? "Viikki warning-system expansion readiness"

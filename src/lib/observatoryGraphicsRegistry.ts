@@ -218,7 +218,7 @@ const PILOT_GRAPHIC_OVERRIDES: Record<string, PilotGraphicOverride> = {
   },
   "mil-p1": {
     header: {
-      "kpi1.2": "junctionSchematic",
+      "kpi1.2": "cameraCorridorSchematic",
       "kpi2.1": "streetSegmentSchematic",
       "kpi3.1": "streetSegmentSchematic",
       "kpi3.2": "streetSegmentSchematic",
@@ -243,7 +243,7 @@ const PILOT_GRAPHIC_OVERRIDES: Record<string, PilotGraphicOverride> = {
   },
   "mil-p2": {
     header: {
-      "kpi1.2": "junctionSchematic",
+      "kpi1.2": "cameraCorridorSchematic",
       "kpi2.1": "streetSegmentSchematic",
       "kpi3.1": "streetSegmentSchematic",
       "kpi3.2": "streetSegmentSchematic",
@@ -333,7 +333,7 @@ const PILOT_GRAPHIC_OVERRIDES: Record<string, PilotGraphicOverride> = {
   },
   "tri-p2": {
     header: {
-      "kpi1.2": "areaPolygonSchematic",
+      "kpi1.2": "cameraCorridorSchematic",
       "kpi3.1": "areaPolygonSchematic",
       "kpi4.1": "areaPolygonSchematic",
     },
@@ -361,7 +361,7 @@ const PILOT_GRAPHIC_OVERRIDES: Record<string, PilotGraphicOverride> = {
   },
   "tri-p4": {
     header: {
-      "kpi1.2": "modeShareBars",
+      "kpi1.2": "cameraCorridorSchematic",
       "kpi3.2": "interventionPointsSchematic",
       "kpi4.1": "sentimentGauge",
     },
@@ -571,7 +571,10 @@ export function resolveObservatoryGraphic(
     !selectedSegmentId.endsWith("-environmental-sensor");
 
   if (trikalaSegmentHover && zone === "header") {
-    // Pilot 2 P+R hubs — area schematic, not Copenhagen camera FOV.
+    // Pilot 2 P+R — mode share uses camera-style OD links (same as Copenhagen/Issy).
+    if (pilotId === "tri-p2" && kpiId === "kpi1.2") {
+      return { graphicId: "cameraCorridorSchematic", kind: "schematic", variant: "compact" };
+    }
     if (pilotId === "tri-p2") {
       return { graphicId: "areaPolygonSchematic", kind: "schematic", variant: "compact" };
     }

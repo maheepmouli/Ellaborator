@@ -168,6 +168,51 @@ export function filterMilanObservatoryPoints(
   });
 }
 
+/** Stable AMAT camera site key (Harar_Tesio, PtaRomana_Rugabella, …). */
+export function milanAmatSiteKey(props: Record<string, unknown>): string {
+  const siteKey = String(props.siteKey ?? "").trim();
+  if (siteKey) return siteKey;
+  const seg = String(props.segmentId ?? "").trim();
+  const flowId = String(props.flowId ?? "").toLowerCase();
+  if (flowId && flowId !== "site" && seg.endsWith(`-${flowId}`)) {
+    return seg.slice(0, -(flowId.length + 1));
+  }
+  return seg;
+}
+
+/** All approach-level AMAT flows at the selected camera hub (for interactive corridor schematic). */
+export function milanAmatPointsForHub(
+  points: LocalCityPoint[],
+  selectionId?: string | null
+): LocalCityPoint[] {
+  const amat = points.filter((p) => p.properties?.datasetKind === "amat-count");
+  if (!amat.length) return [];
+  if (!selectionId) return amat;
+  const scoped = filterMilanObservatoryPoints(amat, selectionId);
+  if (!scoped.length) return amat;
+  const hubKey = milanAmatSiteKey((scoped[0]?.properties ?? {}) as Record<string, unknown>);
+  if (!hubKey) return scoped;
+  const hubFlows = amat.filter(
+    (p) => milanAmatSiteKey((p.properties ?? {}) as Record<string, unknown>) === hubKey
+  );
+  return hubFlows.length ? hubFlows : scoped;
+}
+
+/** Map AMAT flow ids to compass bearings for CameraCorridorSchematic arms. */
+export function milanFlowBearingDeg(props: Record<string, unknown>): number | undefined {
+  const flowId = String(props.flowId ?? "").toLowerCase();
+  if (flowId === "nb") return 0;
+  if (flowId === "sb") return 180;
+  if (flowId === "eb") return 90;
+  if (flowId === "wb") return 270;
+  const dir = String(props.direction ?? props.mode ?? "").toLowerCase();
+  if (/\bnorth\b|\bnb\b/.test(dir)) return 0;
+  if (/\bsouth\b|\bsb\b/.test(dir)) return 180;
+  if (/\beast\b|\beb\b/.test(dir)) return 90;
+  if (/\bwest\b|\bwb\b/.test(dir)) return 270;
+  return undefined;
+}
+
 export function aggregateMilanObservedKpi(
   points: LocalCityPoint[],
   kpiId: string,
