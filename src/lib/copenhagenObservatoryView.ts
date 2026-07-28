@@ -72,6 +72,9 @@ function aggregateModeBreakdown(points: LocalCityPoint[]): ModeBreakdown {
   const post: ModeAgg = { bike: 0, pedestrian: 0, motorised: 0, ptw: 0, total: 0 };
 
   for (const point of points) {
+    const kind = String(point.properties?.datasetKind ?? "");
+    // Skip Telraam/% proxy rows — they are not absolute OTC volumes.
+    if (kind && kind !== "otc") continue;
     const mb = point.properties?.modeBreakdown as ModeBreakdown | undefined;
     if (!mb) continue;
     const workbookKey = inferOtcWorkbookKey(String(point.properties?.streetName ?? ""));
@@ -101,13 +104,13 @@ function aggregateModeBreakdown(points: LocalCityPoint[]): ModeBreakdown {
     pre.pedestrian += preAgg.pedestrian;
     pre.motorised += preAgg.motorized;
     pre.ptw += preAgg.ptw;
-    pre.total += preAgg.total;
     post.bike += postAgg.bike;
     post.pedestrian += postAgg.pedestrian;
     post.motorised += postAgg.motorized;
     post.ptw += postAgg.ptw;
-    post.total += postAgg.total;
   }
+  pre.total = pre.bike + pre.pedestrian + pre.motorised + pre.ptw;
+  post.total = post.bike + post.pedestrian + post.motorised + post.ptw;
 
   return { pre, post };
 }
@@ -146,10 +149,10 @@ function kpiValueFromAgg(
   selectedKpi: string,
   selectedModeTypes: string[]
 ): number {
-  const total = Math.max(1, agg.total);
+  const total = Math.max(1, agg.bike + agg.pedestrian + agg.motorised + agg.ptw, agg.total);
   switch (selectedKpi) {
     case "kpi1.2":
-      return pct(selectedActiveCount(agg, selectedModeTypes), total);
+      return Math.max(0, Math.min(100, pct(selectedActiveCount(agg, selectedModeTypes), total)));
     case "kpi2.1": {
       const motor = agg.motorised + agg.ptw;
       return pct(motor, total) * 0.6 + Math.min(100, (total / 200) * 100) * 0.4;
@@ -159,7 +162,7 @@ function kpiValueFromAgg(
       return motorPct * 0.7 + Math.min(100, (total / 250) * 100) * 0.3;
     }
     default:
-      return pct(agg.bike + agg.pedestrian, total);
+      return Math.max(0, Math.min(100, pct(agg.bike + agg.pedestrian, total)));
   }
 }
 
@@ -210,13 +213,18 @@ export function filterCopenhagenObservatoryPoints(
   }
 
   if (selectionId.startsWith("a11y-")) {
-    const categoryKey = selectionId.slice("a11y-".length);
     return points.filter((p) => {
       const seg = String(p.properties?.segmentId ?? p.id);
       if (seg === selectionId) return true;
-      const category = String(
-        p.properties?.facilityCategory ?? p.properties?.category ?? p.properties?.streetName ?? ""
-      );
+      // Match street+category prefix: a11y-{street}-{category}-{featureId}
+      if (seg.startsWith(selectionId)) return true;
+      const street = String(p.properties?.streetName ?? "");
+      const category = String(p.properties?.facilityCategory ?? p.properties?.category ?? "");
+      if (street && category) {
+        const prefix = `a11y-${normalizeCopenhagenSegmentKey(street)}-${normalizeCopenhagenSegmentKey(category)}`;
+        if (seg.startsWith(prefix) || selectionId.startsWith(prefix)) return true;
+      }
+      const categoryKey = selectionId.slice("a11y-".length);
       return normalizeCopenhagenSegmentKey(category) === categoryKey;
     });
   }
@@ -354,7 +362,20 @@ export function buildCopenhagenObservatoryView(
     segmentName?: string | null;
   }
 ): JunctionStudyView {
-  const observed = points.filter((p) => p.properties?.dataOrigin === "local-city-dataset");
+  const observed = points.filter((p) => {
+    if (p.properties?.dataOrigin === "local-city-dataset") return true;
+    if (
+      (selectedKpi === "kpi4.1" || selectedKpi === "kpi4.2") &&
+      (p.properties?.dataOrigin === "mock" ||
+        p.properties?.mockLabel === "MOCK" ||
+        p.properties?.type === "mock" ||
+        p.properties?.datasetKind === "survey" ||
+        p.properties?.datasetKind === "accessibility")
+    ) {
+      return true;
+    }
+    return false;
+  });
   const base = buildMockJunctionStudyView(config, selectedKpi, scenario);
   if (!observed.length) {
     return {
@@ -380,9 +401,9 @@ export function buildCopenhagenObservatoryView(
   const activePoints = siteScoped.length ? siteScoped : scoped.length ? scoped : observed;
   const { pre, post } = aggregateModeBreakdown(activePoints);
   const modeTypes = options?.selectedModeTypes ?? [];
-  const infraPoints = activePoints.filter(
-    (p) =>
-      p.properties?.datasetKind === "parking" || p.properties?.datasetKind === "accessibility"
+  const infraPoints = activePoints.filter((p) => p.properties?.datasetKind === "parking");
+  const accessibilityPoints = activePoints.filter(
+    (p) => p.properties?.datasetKind === "accessibility"
   );
   const emissionsPoints = activePoints.filter((p) => p.properties?.datasetKind === "emissions");
   const surveyPoints = activePoints.filter((p) => p.properties?.datasetKind === "survey");
@@ -449,12 +470,21 @@ export function buildCopenhagenObservatoryView(
       (p) => Number(p.properties?.baselineValue ?? 0),
       (p) => Number(p.properties?.interventionValue ?? p.value ?? 0)
     );
+    const surveyIsMock = surveyPoints.some(
+      (p) =>
+        p.properties?.dataOrigin === "mock" ||
+        p.properties?.mockLabel === "MOCK" ||
+        p.properties?.type === "mock"
+    );
+    const surveySource = String(
+      surveyPoints[0]?.properties?.source ?? (surveyIsMock ? "MOCK satisfaction" : "Citizen survey")
+    );
     baselineValue = agg.baseline;
     interventionValue = agg.intervention;
     surveyPeriod = {
       baseline: {
-        label: "Pre-intervention",
-        period: String(surveyPoints[0]?.properties?.source ?? "Citizen survey"),
+        label: surveyIsMock ? "MOCK baseline" : "Pre-intervention",
+        period: surveySource,
         modeShare: {},
         dailyCycleCount: Math.round(agg.baseline),
         peakCongestion: 0,
@@ -464,8 +494,50 @@ export function buildCopenhagenObservatoryView(
         trendCar: [agg.baseline],
       },
       intervention: {
-        label: "Post-intervention",
-        period: String(surveyPoints[0]?.properties?.source ?? "Citizen survey"),
+        label: surveyIsMock ? "MOCK intervention" : "Post-intervention",
+        period: surveySource,
+        modeShare: {},
+        dailyCycleCount: Math.round(agg.intervention),
+        peakCongestion: 0,
+        avgSpeedKmh: agg.intervention,
+        co2ProxyKgDay: 0,
+        trendCycle: [agg.intervention],
+        trendCar: [agg.intervention],
+      },
+    };
+  } else if (selectedKpi === "kpi4.2" && accessibilityPoints.length) {
+    const agg = aggregateScalarPoints(
+      accessibilityPoints,
+      (p) => Number(p.properties?.baselineValue ?? 0),
+      (p) => Number(p.properties?.interventionValue ?? p.value ?? 0)
+    );
+    const a11yIsMock = accessibilityPoints.some(
+      (p) =>
+        p.properties?.dataOrigin === "mock" ||
+        p.properties?.mockLabel === "MOCK" ||
+        p.properties?.type === "mock"
+    );
+    const a11ySource = String(
+      accessibilityPoints[0]?.properties?.source ??
+        (a11yIsMock ? "MOCK accessibility" : "Accessibility inventory")
+    );
+    baselineValue = agg.baseline;
+    interventionValue = agg.intervention;
+    surveyPeriod = {
+      baseline: {
+        label: a11yIsMock ? "MOCK baseline" : "Pre-intervention",
+        period: a11ySource,
+        modeShare: {},
+        dailyCycleCount: Math.round(agg.baseline),
+        peakCongestion: 0,
+        avgSpeedKmh: agg.baseline,
+        co2ProxyKgDay: 0,
+        trendCycle: [agg.baseline],
+        trendCar: [agg.baseline],
+      },
+      intervention: {
+        label: a11yIsMock ? "MOCK intervention" : "Post-intervention",
+        period: a11ySource,
         modeShare: {},
         dailyCycleCount: Math.round(agg.intervention),
         peakCongestion: 0,
@@ -582,9 +654,25 @@ export function buildCopenhagenObservatoryView(
     coordinates: [lat, lon],
     monitoringPeriod:
       emissionsPoints.length && selectedKpi === "kpi3.2"
-        ? `Modelled emissions · ${emissionsPoints.length} flow node${emissionsPoints.length === 1 ? "" : "s"}`
+        ? `Modelled emissions · ${emissionsPoints.length} sensor${emissionsPoints.length === 1 ? "" : "s"} (directions aggregated)`
         : surveyPoints.length && selectedKpi === "kpi4.1"
-          ? `Citizen survey · ${surveyPoints.length} response${surveyPoints.length === 1 ? "" : "s"}`
+          ? surveyPoints.some(
+              (p) =>
+                p.properties?.dataOrigin === "mock" ||
+                p.properties?.mockLabel === "MOCK" ||
+                p.properties?.type === "mock"
+            )
+            ? `MOCK satisfaction · ${surveyPoints.length} mode-share site pin${surveyPoints.length === 1 ? "" : "s"}`
+            : `Citizen survey · ${surveyPoints.length} response${surveyPoints.length === 1 ? "" : "s"}`
+          : accessibilityPoints.length && selectedKpi === "kpi4.2"
+            ? accessibilityPoints.some(
+                (p) =>
+                  p.properties?.dataOrigin === "mock" ||
+                  p.properties?.mockLabel === "MOCK" ||
+                  p.properties?.type === "mock"
+              )
+              ? `MOCK accessibility · ${accessibilityPoints.length} mode-share site pin${accessibilityPoints.length === 1 ? "" : "s"}`
+              : `Accessibility inventory · ${accessibilityPoints.length} record${accessibilityPoints.length === 1 ? "" : "s"}`
           : infraPoints.length && !hasModeBreakdown
             ? `Parking inventory · ${infraPoints.length} matched record${infraPoints.length === 1 ? "" : "s"}`
             : `OpenTrafficCam · ${directionCount} observed direction${directionCount === 1 ? "" : "s"}`,
@@ -595,12 +683,34 @@ export function buildCopenhagenObservatoryView(
     baseline: baselinePeriod,
     intervention: interventionPeriod,
     dataSource: emissionsPoints.length && selectedKpi === "kpi3.2" ? "modelled" : "observed",
-    dataClass: emissionsPoints.length && selectedKpi === "kpi3.2" ? "derived" : "observed",
+    dataClass:
+      emissionsPoints.length && selectedKpi === "kpi3.2"
+        ? "derived"
+        : (surveyPoints.length &&
+            selectedKpi === "kpi4.1" &&
+            surveyPoints.some(
+              (p) =>
+                p.properties?.dataOrigin === "mock" ||
+                p.properties?.mockLabel === "MOCK" ||
+                p.properties?.type === "mock"
+            )) ||
+          (accessibilityPoints.length &&
+            selectedKpi === "kpi4.2" &&
+            accessibilityPoints.some(
+              (p) =>
+                p.properties?.dataOrigin === "mock" ||
+                p.properties?.mockLabel === "MOCK" ||
+                p.properties?.type === "mock"
+            ))
+          ? "mock"
+          : "observed",
     sourceLabel:
       emissionsPoints.length && selectedKpi === "kpi3.2"
         ? `${String(emissionsPoints[0]?.properties?.source ?? "COPERT-lite emissions model")} · ${pilotRecord?.code ?? "CPH"}`
         : surveyPoints.length && selectedKpi === "kpi4.1"
           ? `${String(surveyPoints[0]?.properties?.source ?? "Citizen survey")} · ${pilotRecord?.code ?? "CPH"}`
+          : accessibilityPoints.length && selectedKpi === "kpi4.2"
+            ? `${String(accessibilityPoints[0]?.properties?.source ?? "Accessibility")} · ${pilotRecord?.code ?? "CPH"}`
           : methodologyRule
             ? `OpenTrafficCam (methodology filtered) · ${pilotRecord?.code ?? "CPH"}`
             : `OpenTrafficCam directional counts · ${pilotRecord?.code ?? "CPH"}`,

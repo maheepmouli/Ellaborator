@@ -59,8 +59,18 @@ function diagnosticsUsesBundledFallback(diagnostics?: LocalCityDiagnostics | nul
 function resolveSourceLabel(
   city: string,
   kpiId: string,
-  diagnostics?: LocalCityDiagnostics | null
+  diagnostics?: LocalCityDiagnostics | null,
+  pilot?: PilotDefinition | null
 ): string {
+  if (city === "Copenhagen" && kpiId === "kpi4.1") {
+    return "MOCK satisfaction (mode-share sites)";
+  }
+  if (city === "Trikala" && kpiId === "kpi4.1" && pilot?.id === "tri-p2") {
+    return "MOCK satisfaction — no P+R user survey linked";
+  }
+  if (city === "Copenhagen" && kpiId === "kpi4.2") {
+    return "MOCK accessibility (mode-share sites)";
+  }
   if (diagnostics?.reason === "mock") {
     return "Illustrative junction mode-share mock";
   }
@@ -79,14 +89,43 @@ function resolveSourceLabel(
 }
 
 function resolveHeadlineSource(input: KpiProvenanceInput): HeadlineSource {
-  const { kpiId, pilot, diagnostics, panelUsesObservedSlice, copenhagenEmissionsActive, city } =
-    input;
+  const {
+    kpiId,
+    pilot,
+    diagnostics,
+    panelUsesObservedSlice,
+    copenhagenEmissionsActive,
+    city,
+    mapUsesLocalDataset,
+    dataQualitySummary,
+  } = input;
 
   if (diagnostics?.reason === "mock") return "mock";
+  if (String(dataQualitySummary?.provenanceType ?? "").toLowerCase() === "mock") return "mock";
+  if (city === "Copenhagen" && kpiId === "kpi4.1") return "mock";
+  if (city === "Copenhagen" && kpiId === "kpi4.2") return "mock";
+  // Trikala Pilot 2 has no P+R user-satisfaction survey — CITY_DATA figure is mock only.
+  if (city === "Trikala" && kpiId === "kpi4.1" && pilot?.id === "tri-p2") return "mock";
+  // Trikala Pilot 3 road safety: mock speed derived from LoRa FREE/BUSY occupancy (no radar).
+  if (city === "Trikala" && kpiId === "kpi2.1" && pilot?.id === "tri-p3") return "derived";
+
+  // Local partner datasets count as observed only when the panel uses a live slice.
+  if (
+    panelUsesObservedSlice &&
+    mapUsesLocalDataset &&
+    (kpiId === "kpi1.2" || kpiId === "kpi2.1" || kpiId === "kpi3.1") &&
+    (city === "Copenhagen" || city === "Helsinki" || city === "Milan")
+  ) {
+    return "observed";
+  }
 
   if (panelUsesObservedSlice) {
     if (copenhagenEmissionsActive && kpiId === "kpi3.2") return "modelled";
-    if (kpiId === "kpi3.2" && pilot?.datasetType === "derived" && !copenhagenEmissionsActive) {
+    // Climate KPI is always a composition/proxy index (RETE traffic mix, congestion, etc.) — not measured CO₂.
+    if (kpiId === "kpi3.2" && !copenhagenEmissionsActive) {
+      return "derived";
+    }
+    if (pilot?.datasetType === "derived") {
       return "derived";
     }
     return "observed";
@@ -108,8 +147,13 @@ function resolveHeadlineSource(input: KpiProvenanceInput): HeadlineSource {
 }
 
 function resolveDegradedBanner(input: KpiProvenanceInput): string | null {
-  const { diagnostics, manifestAvailable, mapUsesLocalDataset, panelUsesObservedSlice } = input;
+  const { city, diagnostics, manifestAvailable, mapUsesLocalDataset, panelUsesObservedSlice } =
+    input;
 
+  // Observed panel figures or live map layers — no SharePoint/fallback scare banners.
+  if (panelUsesObservedSlice || mapUsesLocalDataset) {
+    return null;
+  }
   if (manifestAvailable === false) {
     return "SharePoint extract missing — map may use bundled fallback; panel figures may be illustrative.";
   }
@@ -124,9 +168,6 @@ function resolveDegradedBanner(input: KpiProvenanceInput): string | null {
   if (diagnosticsUsesBundledFallback(diagnostics)) {
     return "Using bundled JSON fallback — SharePoint xlsx mirror was unavailable or incomplete.";
   }
-  if (mapUsesLocalDataset && !panelUsesObservedSlice) {
-    return "Map uses local dataset; panel headline may still be illustrative.";
-  }
   return null;
 }
 
@@ -139,7 +180,9 @@ export function resolveKpiProvenance(input: KpiProvenanceInput): KpiProvenance {
   const kpiDef = getKpiDefinition(kpiId);
   const dataLabel =
     headlineSource === "mock"
-      ? "Illustrative"
+      ? city === "Trikala" && kpiId === "kpi4.1" && pilot?.id === "tri-p2"
+        ? "MOCK"
+        : "Illustrative"
       : headlineSource === "modelled"
         ? "Modelled"
         : headlineSource === "derived"
@@ -150,12 +193,14 @@ export function resolveKpiProvenance(input: KpiProvenanceInput): KpiProvenance {
 
   return {
     headlineSource,
-    sourceLabel: resolveSourceLabel(city, kpiId, input.diagnostics),
+    sourceLabel: resolveSourceLabel(city, kpiId, input.diagnostics, pilot),
     dataLabel,
     confidence: dataQualitySummary?.confidence,
     missingNotice,
     degradedBanner: resolveDegradedBanner(input),
-    panelMapSplit: Boolean(input.mapUsesLocalDataset && !input.panelUsesObservedSlice),
+    panelMapSplit: Boolean(
+      input.mapUsesLocalDataset && !input.panelUsesObservedSlice
+    ),
     readiness,
   };
 }

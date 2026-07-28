@@ -57,6 +57,24 @@ export function isKnownDirectionalFlow(
   return keys.includes(normalizeFlowKey(flowLabel));
 }
 
+/** Default compass bearing (0 = north) for OTC workbook hub FOV wedges. */
+export function workbookHubBearing(workbookKey: string): number {
+  switch (workbookKey) {
+    case "vandkunsten":
+      return 168;
+    case "gammeltorv":
+      return 45;
+    case "norreport":
+      return 355;
+    case "stormgade":
+      return 120;
+    case "hojbro":
+      return 10;
+    default:
+      return 0;
+  }
+}
+
 export function resolveFlowBearing(
   streetName: string,
   flowLabel: string,

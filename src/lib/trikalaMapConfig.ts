@@ -9,7 +9,7 @@ export const TRIKALA_LOCKED_MAP_ZOOM = TRIKALA_DEFAULT_MAP_ZOOM;
 /** City-level fallback anchor (junction centroid). */
 export const TRIKALA_MAP_ANCHOR = { lat: 39.555, lng: 21.767 } as const;
 
-export type TrikalaPilotId = "tri-p1" | "tri-p2" | "tri-p3";
+export type TrikalaPilotId = "tri-p1" | "tri-p2" | "tri-p3" | "tri-p4";
 
 /** Partner My Maps geodata — one anchor per ELABORATOR pilot. */
 export const TRIKALA_PILOT_ANCHORS: Record<
@@ -31,6 +31,11 @@ export const TRIKALA_PILOT_ANCHORS: Record<
     lng: 21.765602,
     label: "Redesigned bike lanes",
   },
+  "tri-p4": {
+    lat: 39.555,
+    lng: 21.767,
+    label: "SMARTA2 app expansion",
+  },
 };
 
 /** Partner Google My Maps — women workshop participatory route layers (ehbc dark chrome). */
@@ -42,7 +47,12 @@ export function isTrikalaCityName(city: string | null | undefined): boolean {
 }
 
 export function isTrikalaPilotId(pilotId: string | null | undefined): pilotId is TrikalaPilotId {
-  return pilotId === "tri-p1" || pilotId === "tri-p2" || pilotId === "tri-p3";
+  return (
+    pilotId === "tri-p1" ||
+    pilotId === "tri-p2" ||
+    pilotId === "tri-p3" ||
+    pilotId === "tri-p4"
+  );
 }
 
 export function trikalaMapZoom(): number {

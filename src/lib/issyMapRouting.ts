@@ -5,8 +5,8 @@ import { resolveSpatialSystem } from "@/lib/spatialLayerRegistry";
  * Traffic segments are only for road-network KPIs (safety + optional env context).
  */
 
-/** Live traficissy polylines — road-network KPIs only. */
-export const ISSY_SEGMENT_KPIS = ["kpi2.1"] as const;
+/** Live traficissy polylines — not used for KPI 1.2 / 2.1 (hub ripples like Copenhagen). */
+export const ISSY_SEGMENT_KPIS = [] as const;
 
 export type IssySpatialSystem = "flows" | "segments" | "facility-points" | "climate-hex" | "sentiment-field" | "accessibility";
 
@@ -56,12 +56,27 @@ export function issyModeColor(mode: string): string {
   return ISSY_MODE_COLORS.other;
 }
 
-/** Environmental pressure hex cell colour. */
+/** Environmental pressure colour — continuous ramp so small intensity deltas still read. */
 export function climateHexColor(intensity: number): string {
-  if (intensity >= 75) return "#E02020";
-  if (intensity >= 55) return "#F97316";
-  if (intensity >= 35) return "#FBBF24";
-  return "#6EE7B7";
+  const t = Math.max(0, Math.min(100, intensity)) / 100;
+  // green (low pressure) → yellow → orange → red (high)
+  const stops: Array<{ at: number; r: number; g: number; b: number }> = [
+    { at: 0, r: 110, g: 231, b: 183 }, // #6EE7B7
+    { at: 0.35, r: 251, g: 191, b: 36 }, // #FBBF24
+    { at: 0.55, r: 249, g: 115, b: 22 }, // #F97316
+    { at: 0.75, r: 224, g: 32, b: 32 }, // #E02020
+    { at: 1, r: 153, g: 27, b: 27 }, // #991B1B
+  ];
+  let i = 0;
+  while (i < stops.length - 1 && t > stops[i + 1]!.at) i += 1;
+  const a = stops[i]!;
+  const b = stops[Math.min(i + 1, stops.length - 1)]!;
+  const span = Math.max(1e-6, b.at - a.at);
+  const u = (t - a.at) / span;
+  const r = Math.round(a.r + (b.r - a.r) * u);
+  const g = Math.round(a.g + (b.g - a.g) * u);
+  const bl = Math.round(a.b + (b.b - a.b) * u);
+  return `rgb(${r},${g},${bl})`;
 }
 
 /** Satisfaction soft field (KPI 4.1). */

@@ -41,6 +41,8 @@ export interface RenderTrikalaInfrastructureOptions {
   hideParkRideHubMarkers?: boolean;
   /** Observed busy % keyed by tri-loc-* id (bike-lane LoRa sensors). */
   bikeLaneBusyPctByLocationId?: Record<string, number>;
+  /** Baseline hides P+R hubs for KPI 3.1 (0 installed → 3). */
+  scenario?: "baseline" | "intervention" | "comparison";
 }
 
 type InfraPointEntry = {
@@ -87,12 +89,17 @@ function renderParkAndRidePolygons(
   map: L.Map,
   locations: TrikalaLocation[],
   selectedKpi: string,
+  selectedPilotId: string | null | undefined,
   selectedSegmentId: string | null | undefined,
   segmentHandlers: SegmentInteractionHandlers,
   polygonsOut: L.Polygon[],
   markersOut: L.Marker[],
-  hideHubMarkers = false
+  hideHubMarkers = false,
+  hideEntirely = false
 ): void {
+  // Pilot 2 · KPI 4.1: satisfaction is mock — map uses simple dots/labels only (no P+R polygons).
+  if (selectedPilotId === "tri-p2" && selectedKpi === "kpi4.1") return;
+  if (hideEntirely) return;
   const color = TRIKALA_INFRA_COLORS.emerald;
   const baseStyle: L.PathOptions = {
     color,
@@ -165,11 +172,14 @@ function renderSmartCrossingFromRegistry(
   anchor: { lat: number; lng: number },
   locations: TrikalaLocation[],
   selectedKpi: string,
+  selectedPilotId: string | null | undefined,
   selectedSegmentId: string | null | undefined,
   segmentHandlers: SegmentInteractionHandlers,
   polylinesOut: L.Polyline[]
 ): void {
-  if (selectedKpi !== "kpi2.1" && selectedKpi !== "kpi4.2") return;
+  // Military School corridor is Pilot 1 only — do not draw on Pilot 3 bike-lane views.
+  if (selectedPilotId !== "tri-p1") return;
+  if (selectedKpi !== "kpi2.1" && selectedKpi !== "kpi4.1" && selectedKpi !== "kpi4.2") return;
   const site = locations.find((l) => l.kind === "smart_crossing_site");
   const end = site ? { lat: site.lat, lng: site.lng } : anchor;
   const coords = buildSmartCrossingPolyline(anchor, end);
@@ -233,16 +243,25 @@ function renderInfrastructureMarkers(
     "bike_lane_sensor",
   ]);
 
-  const triP1SafetyKpi =
-    selectedPilotId === "tri-p1" && (selectedKpi === "kpi2.1" || selectedKpi === "kpi4.2");
+  const triP1CrossingKpi =
+    selectedPilotId === "tri-p1" &&
+    (selectedKpi === "kpi2.1" || selectedKpi === "kpi4.1" || selectedKpi === "kpi4.2");
+  // Pilot 2 story is P+R bike hubs — municipal car park pins add clutter without KPI signal.
+  // On KPI 3.1 keep the map to the three P+R hubs so the dashboard count (0→3) matches.
+  // On KPI 4.1 mock satisfaction uses dedicated dots — skip other point clutter.
+  const hideMunicipalCarParking = selectedPilotId === "tri-p2";
+  const hideBikeStationsForFacilityCount =
+    selectedPilotId === "tri-p2" && (selectedKpi === "kpi3.1" || selectedKpi === "kpi4.1");
 
   const zoom = map.getZoom();
 
   locations
     .filter((loc) => pointKinds.has(loc.kind) && isVisible(loc, selectedKpi))
-    .filter((loc) => !(triP1SafetyKpi && loc.kind === "traffic_signal"))
+    .filter((loc) => !(triP1CrossingKpi && loc.kind === "traffic_signal"))
+    .filter((loc) => !(hideMunicipalCarParking && loc.kind === "parking_station"))
+    .filter((loc) => !(hideBikeStationsForFacilityCount && loc.kind === "bike_station"))
     .forEach((loc) => {
-      const useMobilityHub = triP1SafetyKpi && loc.kind === "smart_crossing_site";
+      const useMobilityHub = triP1CrossingKpi && loc.kind === "smart_crossing_site";
       const spread = bikeLaneSpread.get(loc.id);
       const lat = useMobilityHub ? anchor.lat : spread ? spread[0] : loc.lat;
       const lng = useMobilityHub ? anchor.lng : spread ? spread[1] : loc.lng;
@@ -250,6 +269,10 @@ function renderInfrastructureMarkers(
       const isSelected = selectedSegmentId === segmentId;
       const observedBusy =
         loc.kind === "bike_lane_sensor" ? bikeLaneBusyPctByLocationId[loc.id] : undefined;
+      const mockSpeedKmh =
+        loc.kind === "bike_lane_sensor" && typeof observedBusy === "number"
+          ? Math.round(18 * (1 - observedBusy / 100) * 10) / 10
+          : null;
       const scale =
         loc.kind === "bike_lane_sensor" && typeof observedBusy === "number"
           ? capacityScale(Math.max(1, Math.round(observedBusy / 10)))
@@ -264,15 +287,17 @@ function renderInfrastructureMarkers(
       const segmentDetail = {
         segmentId,
         segmentName,
-        speed: null as null,
-        congestion: null as null,
+        speed: mockSpeedKmh,
+        congestion: typeof observedBusy === "number" ? observedBusy / 100 : null,
       };
       const popupMetric =
         typeof observedBusy === "number"
-          ? selectedKpi === "kpi4.2"
-            ? `Observed lane availability ${Math.round(100 - observedBusy)}% (LoRa parking status)`
+          ? selectedKpi === "kpi2.1"
+            ? `Occupancy ${Math.round(observedBusy)}% · mock speed ${mockSpeedKmh} km/h`
             : `Observed occupancy stress ${Math.round(observedBusy)}% (LoRa parking status)`
-          : undefined;
+          : selectedKpi === "kpi4.2" && loc.kind === "bike_lane_sensor"
+            ? "Bike-lane sensor location · scores from online bike-safety survey"
+            : undefined;
       const popupHtml = infrastructurePopupHtml(
         loc.name,
         loc.kind,
@@ -281,8 +306,17 @@ function renderInfrastructureMarkers(
       );
 
       if (useBikeLaneHitMarkers && loc.kind === "bike_lane_sensor") {
+        const stressAccent =
+          selectedKpi === "kpi2.1" && typeof observedBusy === "number"
+            ? observedBusy >= 50
+              ? "#f59e0b"
+              : "#22c55e"
+            : undefined;
         const hitMarker = L.marker([lat, lng], {
-          icon: createMapPointDivIcon(iconSpec, segmentName),
+          icon: createMapPointDivIcon(iconSpec, segmentName, {
+            accent: stressAccent,
+            glow: stressAccent,
+          }),
           interactive: true,
           zIndexOffset: isSelected ? 1200 : 950,
           riseOnHover: true,
@@ -402,6 +436,7 @@ export function renderTrikalaInfrastructureLayers(
     polygonsOut = [],
     hideParkRideHubMarkers = false,
     bikeLaneBusyPctByLocationId = {},
+    scenario = "intervention",
   } = options;
 
   if (!locations.length) return;
@@ -432,6 +467,10 @@ export function renderTrikalaInfrastructureLayers(
       )
     : new Map<string, [number, number]>();
 
+  // KPI 3.1: baseline = 0 hubs installed — hide P+R geometry so map matches left panel.
+  const hideParkRideEntirely =
+    selectedPilotId === "tri-p2" && selectedKpi === "kpi3.1" && scenario === "baseline";
+
   renderTrikalaEnvironmentalZones(map, mapLocations, selectedKpi, circlesOut, markersOut);
   renderTrikalaSatisfactionZones(
     map,
@@ -448,17 +487,20 @@ export function renderTrikalaInfrastructureLayers(
     map,
     mapLocations,
     selectedKpi,
+    selectedPilotId,
     selectedSegmentId,
     segmentHandlers,
     polygonsOut,
     markersOut,
-    hideParkRideHubMarkers
+    hideParkRideHubMarkers,
+    hideParkRideEntirely
   );
   renderSmartCrossingFromRegistry(
     map,
     anchor,
     mapLocations,
     selectedKpi,
+    selectedPilotId,
     selectedSegmentId,
     segmentHandlers,
     polylinesOut

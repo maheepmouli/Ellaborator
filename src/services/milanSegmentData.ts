@@ -44,7 +44,7 @@ export interface MilanSegmentDataset {
 interface GeoFeature {
   geometry?: {
     type?: string;
-    coordinates?: [number, number][];
+    coordinates?: [number, number][] | [number, number][][];
   };
   properties?: Record<string, unknown>;
 }
@@ -279,7 +279,7 @@ async function loadMilanSpeedFromJsonFallback(
       renderMode: "segment",
       statusMessage:
         pilotBundle.statusMessage ||
-        `Bundled corridor segments for ${pilotId} (OSM geometry; AMAT shapefiles unavailable on this host).`,
+        `Bundled AMAT network.shp segments for ${pilotId} (SharePoint shapefiles unavailable on this host).`,
     });
   } catch {
     return null;
@@ -299,6 +299,21 @@ function unavailableMilanSpeedDataset(message: string): MilanSegmentDataset {
     renderMode: "segment",
     statusMessage: message,
   };
+}
+
+function extractLineGeometries(feature: GeoFeature): [number, number][][] {
+  const geometry = feature.geometry;
+  if (!geometry?.coordinates) return [];
+  if (geometry.type === "LineString") {
+    const line = reprojectLineToLeaflet(geometry.coordinates as [number, number][]);
+    return line.length >= 2 ? [line] : [];
+  }
+  if (geometry.type === "MultiLineString") {
+    return (geometry.coordinates as [number, number][][])
+      .map((part) => reprojectLineToLeaflet(part))
+      .filter((line) => line.length >= 2);
+  }
+  return [];
 }
 
 export async function parseMilanSegmentShapefile(params: {
@@ -326,9 +341,13 @@ export async function parseMilanSegmentShapefile(params: {
   }
 
   const speedRowsById = new Map<number, Record<string, unknown>>();
+  /** Maggio/Ottobre DBFs use hour-prefixed columns (BS_*, CS2_*, CS11_*, …). */
+  const pickMetricKey = (row: Record<string, unknown>, suffix: string): string | undefined =>
+    Object.keys(row).find((key) => key.toLowerCase().endsWith(suffix.toLowerCase()));
   if (params.metricType === "speed") {
     metricRows.forEach((row) => {
-      const id = Math.round(toNumber(row.BS_Id));
+      const idKey = pickMetricKey(row, "_Id");
+      const id = Math.round(toNumber(idKey ? row[idKey] : row.BS_Id));
       if (id > 0) speedRowsById.set(id, row);
     });
   }
@@ -355,96 +374,141 @@ export async function parseMilanSegmentShapefile(params: {
   const values: number[] = [];
   let invalidGeometries = 0;
   let missingMetricJoins = 0;
+  let reteOrdinal = 0;
 
   features.forEach((feature) => {
-    if (feature.geometry?.type !== "LineString" || !feature.geometry.coordinates) {
+    const lineParts = extractLineGeometries(feature);
+    if (!lineParts.length) {
       invalidGeometries += 1;
       return;
     }
     const props = feature.properties || {};
-    const segmentId = Math.round(toNumber(props.Id));
+    // Speed network uses Id; RETE env uses node pair A/B (no Id field).
+    let segmentId = Math.round(toNumber(props.Id ?? props.ID));
+    if (segmentId <= 0 && (props.A != null || props["A-B"] != null)) {
+      reteOrdinal += 1;
+      segmentId = reteOrdinal;
+    }
     if (segmentId <= 0) return;
 
-    let value = 0;
     const outProps: Record<string, unknown> = {
       sourceLabel: params.sourceLabel,
       timeWindow: params.timeWindow,
       metricType: params.metricType,
       segmentId,
+      streetName: props.StreetName ?? props.NOME_VIA ?? props.NOME_COMUN,
+      speedLimit: toNumber(props.SpeedLimit),
+      reteFrom: props.A != null ? toNumber(props.A) : undefined,
+      reteTo: props.B != null ? toNumber(props.B) : undefined,
+      reteLink: props["A-B"] != null ? String(props["A-B"]) : undefined,
     };
 
     if (params.metricType === "speed") {
       const metric = speedRowsById.get(segmentId);
       if (!metric) {
         missingMetricJoins += 1;
+        lineParts.forEach((leafletCoords, partIndex) => {
+          const baseId = `${params.metricType}-${params.timeWindow}-${segmentId}`;
+          records.push({
+            id: lineParts.length > 1 ? `${baseId}-L${partIndex}` : baseId,
+            coordinates: leafletCoords,
+            value: 0,
+            properties: { ...outProps, hasMetric: false },
+          });
+        });
         return;
       }
-      const avgSpeed = toNumber(metric.BS_AvgSp);
-      const p85Speed = toNumber(metric.BS_P85sp);
-      const hits = toNumber(metric.BS_Hits);
-      value = Math.max(0, p85Speed * 0.7 + avgSpeed * 0.3);
+      const avgKey = pickMetricKey(metric, "_AvgSp");
+      const p85Key = pickMetricKey(metric, "_P85sp");
+      const hitsKey = pickMetricKey(metric, "_Hits");
+      const avgSpeed = toNumber(avgKey ? metric[avgKey] : metric.BS_AvgSp);
+      const p85Speed = toNumber(p85Key ? metric[p85Key] : metric.BS_P85sp);
+      const hits = toNumber(hitsKey ? metric[hitsKey] : metric.BS_Hits);
+      const rawValue = Math.max(0, p85Speed * 0.7 + avgSpeed * 0.3);
       outProps.avgSpeed = avgSpeed;
       outProps.p85Speed = p85Speed;
       outProps.hits = hits;
-      outProps.streetName = props.StreetName;
-      outProps.speedLimit = toNumber(props.SpeedLimit);
+      outProps.hasMetric = true;
+      outProps.rawMetricValue = rawValue;
+      values.push(rawValue);
     } else {
-      // Environmental proxy based on traffic composition by segment.
-      const auto = toNumber(props.V_AUTO);
-      const moto = toNumber(props.V_MOTO);
-      const light = toNumber(props.V_LEGGERI);
-      const medium = toNumber(props.V_MEDI);
-      const heavy = toNumber(props.V_PESANTI);
+      // Environmental proxy based on traffic composition by segment (RETE).
+      const auto = toNumber(props.V_AUTO ?? props.vAuto);
+      const moto = toNumber(props.V_MOTO ?? props.vMoto);
+      const light = toNumber(props.V_LEGGERI ?? props.vLeggeri);
+      const medium = toNumber(props.V_MEDI ?? props.vMedi);
+      const heavy = toNumber(props.V_PESANTI ?? props.vPesanti);
       const weightedTraffic = auto * 1 + moto * 0.8 + light * 1.4 + medium * 2.2 + heavy * 3.2;
-      value = weightedTraffic;
+      // Keep zero-traffic links out of the pressure scale (still leave geometry for context via underlay).
+      if (weightedTraffic <= 0) return;
+      const value = weightedTraffic;
       outProps.vAuto = auto;
       outProps.vMoto = moto;
       outProps.vLeggeri = light;
       outProps.vMedi = medium;
       outProps.vPesanti = heavy;
-      outProps.streetName = props.NOME_VIA;
-      outProps.municipality = props.NOME_COMUN;
+      outProps.hasMetric = true;
+      values.push(value);
     }
 
-    const leafletCoords = reprojectLineToLeaflet(feature.geometry.coordinates);
-
-    const directCameraMatches = camerasBySegment.get(segmentId) || [];
-    if (directCameraMatches.length > 0) {
-      outProps.cameraJoin = "segment_id";
-      outProps.cameraCount = directCameraMatches.length;
-    } else if (cameraLocations.length > 0) {
-      const lineMidpoint = lineMidpointLatLng(leafletCoords);
-      let best = cameraLocations[0];
-      let bestDist = distanceSquared(lineMidpoint, best.coord);
-      for (let i = 1; i < cameraLocations.length; i += 1) {
-        const candidate = cameraLocations[i];
-        const candidateDist = distanceSquared(lineMidpoint, candidate.coord);
-        if (candidateDist < bestDist) {
-          best = candidate;
-          bestDist = candidateDist;
+    const rawValue = values[values.length - 1]!;
+    for (let partIndex = 0; partIndex < lineParts.length; partIndex += 1) {
+      const leafletCoords = lineParts[partIndex]!;
+      const baseId = `${params.metricType}-${params.timeWindow}-${segmentId}`;
+      const directCameraMatches = camerasBySegment.get(segmentId) || [];
+      const cameraProps: Record<string, unknown> = {};
+      if (directCameraMatches.length > 0) {
+        cameraProps.cameraJoin = "segment_id";
+        cameraProps.cameraCount = directCameraMatches.length;
+      } else if (cameraLocations.length > 0) {
+        const lineMidpoint = lineMidpointLatLng(leafletCoords);
+        let best = cameraLocations[0];
+        let bestDist = distanceSquared(lineMidpoint, best.coord);
+        for (let i = 1; i < cameraLocations.length; i += 1) {
+          const candidate = cameraLocations[i];
+          const candidateDist = distanceSquared(lineMidpoint, candidate.coord);
+          if (candidateDist < bestDist) {
+            best = candidate;
+            bestDist = candidateDist;
+          }
         }
+        cameraProps.cameraJoin = "nearest_geometry";
+        cameraProps.cameraCount = 1;
+        cameraProps.cameraDistance = Math.sqrt(bestDist);
+        cameraProps.centroidLat = lineMidpoint[0];
+        cameraProps.centroidLon = lineMidpoint[1];
       }
-      outProps.cameraJoin = "nearest_geometry";
-      outProps.cameraCount = 1;
-      outProps.cameraDistance = Math.sqrt(bestDist);
-      outProps.centroidLat = lineMidpoint[0];
-      outProps.centroidLon = lineMidpoint[1];
-    }
 
-    values.push(value);
-    records.push({
-      id: `${params.metricType}-${params.timeWindow}-${segmentId}`,
-      coordinates: leafletCoords,
-      value,
-      properties: outProps,
-    });
+      records.push({
+        id: lineParts.length > 1 ? `${baseId}-L${partIndex}` : baseId,
+        coordinates: leafletCoords,
+        value: rawValue,
+        properties: { ...outProps, ...cameraProps },
+      });
+    }
   });
 
-  const normalizedValues = normalize(values);
-  const normalizedRecords = records.map((record, index) => ({
-    ...record,
-    value: normalizedValues[index] ?? record.value,
-  }));
+  const segmentRawValues = new Map<number, number>();
+  records.forEach((record) => {
+    if (record.properties?.hasMetric === false) return;
+    const segId = Math.round(Number(record.properties?.segmentId ?? 0));
+    if (segId > 0 && !segmentRawValues.has(segId)) {
+      segmentRawValues.set(segId, Number(record.properties?.rawMetricValue ?? record.value));
+    }
+  });
+  const rawList = [...segmentRawValues.values()];
+  const normalizedList = normalize(rawList.length ? rawList : values);
+  const normalizedBySegmentId = new Map<number, number>();
+  [...segmentRawValues.keys()].forEach((segId, index) => {
+    normalizedBySegmentId.set(segId, normalizedList[index] ?? segmentRawValues.get(segId)!);
+  });
+
+  const normalizedRecords = records.map((record) => {
+    if (record.properties?.hasMetric === false) return record;
+    const segId = Math.round(Number(record.properties?.segmentId ?? 0));
+    const nextValue = normalizedBySegmentId.get(segId) ?? record.value;
+    return { ...record, value: nextValue };
+  });
   return {
     records: normalizedRecords,
     stats: {
@@ -452,8 +516,8 @@ export async function parseMilanSegmentShapefile(params: {
       invalidGeometries,
       missingMetricJoins,
       avgMetricValue:
-        normalizedRecords.length > 0
-          ? normalizedRecords.reduce((sum, record) => sum + record.value, 0) / normalizedRecords.length
+        rawList.length > 0
+          ? rawList.reduce((sum, value) => sum + value, 0) / rawList.length
           : 0,
     },
     dataConfidence: "real",
@@ -519,17 +583,15 @@ export async function loadMilanSpeedSegments(
       speedCache.set(cacheKey, unavailable);
       return unavailable;
     }
-    const filtered = filterMilanSegmentsNearPilot(dataset.records, pilotId);
+    // network.shp is already the intervention corridor — do not circular-clip (sticky #05 / #17).
     const scoped: MilanSegmentDataset = {
       ...withCameraJoinStats({
         ...dataset,
-        records: filtered,
         stats: {
           ...dataset.stats,
-          parsedSegments: filtered.length,
           pilotScoped: true,
         },
-        statusMessage: `${source.label} clipped to ${pilotId} intervention zone (${filtered.length} segments).`,
+        statusMessage: `${source.label} · full network.shp (${dataset.records.length} segments).`,
       }),
     };
     speedCache.set(cacheKey, scoped);
@@ -583,18 +645,28 @@ export async function loadMilanEnvironmentSegments(
   let scoped = dataset;
   if (pilotId) {
     const filtered = filterMilanSegmentsNearPilot(dataset.records, pilotId);
+    // Cap dense RETE extracts so Leaflet stays responsive (keep highest-pressure links).
+    const MAP_RETE_CAP = 2800;
+    const capped =
+      filtered.length > MAP_RETE_CAP
+        ? [...filtered]
+            .sort((a, b) => Number(b.value ?? 0) - Number(a.value ?? 0))
+            .slice(0, MAP_RETE_CAP)
+        : filtered;
     scoped = {
       ...dataset,
-      records: filtered,
+      records: capped,
       stats: {
         ...dataset.stats,
-        parsedSegments: filtered.length,
+        parsedSegments: capped.length,
         pilotScoped: true,
       },
       statusMessage:
         pilotId === "mil-p3"
-          ? `RETE segments clipped to Pilot 1 + Pilot 2 buffers (~${filtered.length} links). Environmental proxy from traffic composition.`
-          : `RETE segments clipped to ${pilotId} buffer (~${filtered.length} links). Environmental proxy from traffic composition; camera joins where available.`,
+          ? `RETE segments clipped to Pilot 1 + Pilot 2 buffers (~${capped.length} of ${filtered.length} links). Environmental proxy from traffic composition.`
+          : `RETE segments clipped to ${pilotId} buffer (~${capped.length}${
+              filtered.length > capped.length ? ` of ${filtered.length}` : ""
+            } links). Environmental proxy from traffic composition.`,
     };
   } else {
     scoped.statusMessage =

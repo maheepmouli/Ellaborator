@@ -132,6 +132,7 @@
         "name": "Vasili Tsitsani str, Military School",
         "linkedKpis": [
           "kpi2.1",
+          "kpi4.1",
           "kpi4.2"
         ],
         "segmentId": "tri-p1-smart-crossing"
@@ -153,7 +154,7 @@
         "linkedKpis": [
           "kpi3.2"
         ],
-        "segmentId": "tri-p1-environmental-sensor"
+        "segmentId": "tri-p4-environmental-sensor"
       },
       "geometry": {
         "type": "Point",
@@ -172,7 +173,7 @@
         "linkedKpis": [
           "kpi3.2"
         ],
-        "segmentId": "tri-p1-environmental-sensor"
+        "segmentId": "tri-p4-environmental-sensor"
       },
       "geometry": {
         "type": "Point",
@@ -190,6 +191,7 @@
         "name": "TRAFFIC LIGHTS",
         "linkedKpis": [
           "kpi2.1",
+          "kpi4.1",
           "kpi4.2"
         ],
         "segmentId": "tri-p1-smart-crossing"
@@ -210,6 +212,7 @@
         "name": "TZAMI",
         "linkedKpis": [
           "kpi2.1",
+          "kpi4.1",
           "kpi4.2"
         ],
         "segmentId": "tri-p1-smart-crossing"
@@ -231,7 +234,7 @@
         "linkedKpis": [
           "kpi3.2"
         ],
-        "segmentId": "tri-p1-environmental-sensor"
+        "segmentId": "tri-p4-environmental-sensor"
       },
       "geometry": {
         "type": "Point",
@@ -250,7 +253,7 @@
         "linkedKpis": [
           "kpi3.2"
         ],
-        "segmentId": "tri-p1-environmental-sensor"
+        "segmentId": "tri-p4-environmental-sensor"
       },
       "geometry": {
         "type": "Point",
@@ -269,7 +272,7 @@
         "linkedKpis": [
           "kpi3.2"
         ],
-        "segmentId": "tri-p1-environmental-sensor"
+        "segmentId": "tri-p4-environmental-sensor"
       },
       "geometry": {
         "type": "Point",
@@ -288,7 +291,7 @@
         "linkedKpis": [
           "kpi3.2"
         ],
-        "segmentId": "tri-p1-environmental-sensor"
+        "segmentId": "tri-p4-environmental-sensor"
       },
       "geometry": {
         "type": "Point",
@@ -307,7 +310,7 @@
         "linkedKpis": [
           "kpi3.2"
         ],
-        "segmentId": "tri-p1-environmental-sensor"
+        "segmentId": "tri-p4-environmental-sensor"
       },
       "geometry": {
         "type": "Point",
@@ -323,10 +326,7 @@
         "id": "tri-loc-underground-municipal-parking",
         "kind": "parking_station",
         "name": "Underground Municipal Parking",
-        "linkedKpis": [
-          "kpi3.1",
-          "kpi1.2"
-        ],
+        "linkedKpis": [],
         "segmentId": "tri-p2-park-ride"
       },
       "geometry": {
@@ -343,10 +343,7 @@
         "id": "tri-loc-municipal-parking",
         "kind": "parking_station",
         "name": "Municipal Parking",
-        "linkedKpis": [
-          "kpi3.1",
-          "kpi1.2"
-        ],
+        "linkedKpis": [],
         "segmentId": "tri-p2-park-ride"
       },
       "geometry": {
@@ -363,10 +360,7 @@
         "id": "tri-loc-underground-parking-lanara",
         "kind": "parking_station",
         "name": "Underground Parking - Lanara",
-        "linkedKpis": [
-          "kpi3.1",
-          "kpi1.2"
-        ],
+        "linkedKpis": [],
         "segmentId": "tri-p2-park-ride"
       },
       "geometry": {
@@ -383,10 +377,7 @@
         "id": "tri-loc-openair-municipal-parking",
         "kind": "parking_station",
         "name": "Openair Municipal Parking",
-        "linkedKpis": [
-          "kpi3.1",
-          "kpi1.2"
-        ],
+        "linkedKpis": [],
         "segmentId": "tri-p2-park-ride"
       },
       "geometry": {
@@ -403,10 +394,7 @@
         "id": "tri-loc-free-municipal-parking",
         "kind": "parking_station",
         "name": "Free Municipal Parking",
-        "linkedKpis": [
-          "kpi3.1",
-          "kpi1.2"
-        ],
+        "linkedKpis": [],
         "segmentId": "tri-p2-park-ride"
       },
       "geometry": {
@@ -423,10 +411,7 @@
         "id": "tri-loc-free-parking",
         "kind": "parking_station",
         "name": "Free Parking",
-        "linkedKpis": [
-          "kpi3.1",
-          "kpi1.2"
-        ],
+        "linkedKpis": [],
         "segmentId": "tri-p2-park-ride"
       },
       "geometry": {
@@ -443,10 +428,7 @@
         "id": "tri-loc-parking-mill-of-matsopoulos",
         "kind": "parking_station",
         "name": "Parking Mill of Matsopoulos",
-        "linkedKpis": [
-          "kpi3.1",
-          "kpi1.2"
-        ],
+        "linkedKpis": [],
         "segmentId": "tri-p2-park-ride"
       },
       "geometry": {

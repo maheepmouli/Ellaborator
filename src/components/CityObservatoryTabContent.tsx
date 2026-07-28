@@ -15,6 +15,7 @@ import type { JunctionStudyView } from "@/lib/issyJunctionAnalytics";
 import type { MapScenario } from "@/context/MapIntelligenceContext";
 import { getKpiDefinition } from "@/config/kpiDefinitions";
 import { ObservatoryGraphicSlot } from "@/components/observatory/ObservatoryGraphicSlot";
+import { resolveObservatoryGraphic } from "@/lib/observatoryGraphicsRegistry";
 import { getCopenhagenPilotRecord } from "@/data/copenhagenPilotRegistry";
 import {
   COPENHAGEN_METHODOLOGY_RULES,
@@ -45,6 +46,7 @@ function GraphicSlot({
   selectedDirectionId,
   onSelectDirectionId,
   selectedSegmentId,
+  graphicOverride,
 }: {
   zone: "overview" | "beforeAfter" | "kpiAnalysis";
   cityName: string;
@@ -56,6 +58,7 @@ function GraphicSlot({
   selectedDirectionId?: string | null;
   onSelectDirectionId?: (id: string) => void;
   selectedSegmentId?: string | null;
+  graphicOverride?: "prePostTrend" | "modeShareBars" | "sentimentGauge" | "accessibilityBars" | "climateComparison" | "facilityInventory";
 }) {
   return (
     <ObservatoryGraphicSlot
@@ -69,6 +72,7 @@ function GraphicSlot({
       selectedDirectionId={selectedDirectionId}
       onSelectDirectionId={onSelectDirectionId}
       selectedSegmentId={selectedSegmentId}
+      graphicOverride={graphicOverride}
     />
   );
 }
@@ -202,8 +206,11 @@ export function CityObservatoryTabContent({
       points.filter(
         (p) =>
           p.properties?.dataOrigin === "local-city-dataset" ||
+          p.properties?.dataOrigin === "mock" ||
           p.properties?.type === "observed" ||
-          p.properties?.type === "derived"
+          p.properties?.type === "derived" ||
+          p.properties?.type === "mock" ||
+          p.properties?.mockLabel === "MOCK"
       ),
     [points]
   );
@@ -229,13 +236,60 @@ export function CityObservatoryTabContent({
   selectedSegmentId,
 };
 
+  // Hub map already leads the panel header — skip duplicate schematic in Overview.
+  const overviewGraphic = resolveObservatoryGraphic(
+    profile?.observatoryType ?? "camera",
+    selectedKpi,
+    "overview",
+    selectedPilotId,
+    selectedSegmentId
+  );
+  const headerGraphic = resolveObservatoryGraphic(
+    profile?.observatoryType ?? "camera",
+    selectedKpi,
+    "header",
+    selectedPilotId,
+    selectedSegmentId
+  );
+  const skipOverviewHubMap =
+    (overviewGraphic?.graphicId === "cameraCorridorSchematic" ||
+      overviewGraphic?.graphicId === "surveyPie") &&
+    (profile?.observatoryType === "camera" || isCopenhagen);
+  // Header already shows mode-share bars (e.g. Milan KPI 1.2) — don't repeat under Overview.
+  // Also skip when Overview is already a different chart (e.g. Milan KPI 2.1 speedProfile).
+  const skipOverviewModeShare =
+    headerGraphic?.graphicId === "modeShareBars" ||
+    headerGraphic?.graphicId === "segmentModeShare" ||
+    headerGraphic?.graphicId === "telraamModeBars" ||
+    headerGraphic?.graphicId === "manualCountBars" ||
+    overviewGraphic?.graphicId === "speedProfile" ||
+    overviewGraphic?.graphicId === "facilityInventory" ||
+    overviewGraphic?.graphicId === "reteBand" ||
+    overviewGraphic?.graphicId === "accessibilityBars" ||
+    overviewGraphic?.graphicId === "climateComparison";
+
   if (tabId === "overview") {
     return (
       <div className="space-y-3">
         {selectedTelraamLocation ? (
           <TelraamSummaryCard locationId={selectedTelraamLocation.id} />
         ) : null}
-        <GraphicSlot zone="overview" {...graphicProps} />
+        {/* Mode-share comparison only when Overview is not already a dedicated KPI chart. */}
+        {!skipOverviewModeShare ? (
+          <GraphicSlot zone="overview" graphicOverride="modeShareBars" {...graphicProps} />
+        ) : overviewGraphic ? (
+          <GraphicSlot zone="overview" {...graphicProps} />
+        ) : null}
+        {!skipOverviewHubMap &&
+        overviewGraphic?.graphicId !== "modeShareBars" &&
+        overviewGraphic?.graphicId !== "prePostTrend" &&
+        overviewGraphic?.graphicId !== "speedProfile" &&
+        overviewGraphic?.graphicId !== "facilityInventory" &&
+        overviewGraphic?.graphicId !== "reteBand" &&
+        overviewGraphic?.graphicId !== "accessibilityBars" &&
+        !(skipOverviewModeShare && overviewGraphic?.graphicId === headerGraphic?.graphicId) ? (
+          <GraphicSlot zone="overview" {...graphicProps} />
+        ) : null}
         <GlassCard>
           <p className="text-[11px] font-semibold text-white/90">Pilot overview</p>
           <p className="mt-1 text-[11px] text-white/75 leading-relaxed">
@@ -324,9 +378,20 @@ export function CityObservatoryTabContent({
   }
 
   if (tabId === "beforeAfter") {
+    const beforeAfterGraphic = resolveObservatoryGraphic(
+      profile?.observatoryType ?? "camera",
+      selectedKpi,
+      "beforeAfter",
+      selectedPilotId,
+      selectedSegmentId
+    );
+    const skipBeforeAfterHubMap =
+      beforeAfterGraphic?.graphicId === "cameraCorridorSchematic" &&
+      (profile?.observatoryType === "camera" || isCopenhagen);
+
     return (
       <div className="space-y-3">
-        <GraphicSlot zone="beforeAfter" {...graphicProps} />
+        {!skipBeforeAfterHubMap ? <GraphicSlot zone="beforeAfter" {...graphicProps} /> : null}
         <GlassCard>
           <p className="text-[11px] font-semibold text-white/90">Temporal scope</p>
           <p className="mt-1 text-[11px] text-white/75">{view.monitoringPeriod}</p>

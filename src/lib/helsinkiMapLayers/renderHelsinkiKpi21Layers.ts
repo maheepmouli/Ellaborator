@@ -6,9 +6,9 @@ import {
 } from "@/services/staticGeoData";
 import {
   fetchHelsinkiJson,
-  HELSINKI_MOBILYSIS_VIIKKI_GATES_JSON,
   HELSINKI_VIIKKI_ANCHOR,
-  type HelsinkiMobilysisGates,
+  HELSINKI_VIIKKI_UX_SURVEY_JSON,
+  type HelsinkiUxSurvey,
 } from "@/lib/helsinkiDataPaths";
 import { renderHubRipplePulseOverlay } from "@/lib/copenhagenMapLayers/copenhagenTrafficPulse";
 import { bindCopenhagenMapTooltip } from "@/lib/copenhagenMapLayers/copenhagenMapTooltips";
@@ -31,6 +31,8 @@ const HELSINKI_SAFETY_RING_SCALE = 2.4;
 const HELSINKI_SAFETY_SECONDARY_RING_SCALE = 1.7;
 const HELSINKI_PULSE_MIN_ZOOM = 10;
 const HELSINKI_SAFETY_HUB_LIMIT = 8;
+
+const FVH3_UX_SEGMENT_ID = "hel-viikki-ux-survey";
 
 export interface RenderHelsinkiKpi21LayersOptions {
   map: L.Map;
@@ -60,24 +62,9 @@ function helsinkiSafetyHubIcon(selected: boolean): L.DivIcon {
   });
 }
 
-function mobilysisPopupHtml(mobilysis: HelsinkiMobilysisGates | null): string {
-  if (!mobilysis) return "";
-  const vru = mobilysis.gateObservations
-    .filter((gate) => gate.gate.includes("vru") || gate.mode === "vru")
-    .reduce((sum, gate) => sum + gate.totalCount, 0);
-  const pedestrian = mobilysis.gateObservations
-    .filter((gate) => gate.mode === "pedestrian")
-    .reduce((sum, gate) => sum + gate.totalCount, 0);
-  const bike = mobilysis.gateObservations
-    .filter((gate) => gate.mode === "bike" || gate.mode === "bicycle")
-    .reduce((sum, gate) => sum + gate.totalCount, 0);
-  const vehicle = mobilysis.gateObservations
-    .filter((gate) => gate.mode === "vehicle")
-    .reduce((sum, gate) => sum + gate.totalCount, 0);
-  return `
-    <p style="font-size:10px;color:#96C2EF;margin:6px 0 2px 0;font-weight:700;">Mobilysis gates (2024-10-03 AM)</p>
-    <p style="font-size:10px;color:#96C2EF;margin:1px 0;">Vehicle ${vehicle} · Ped ${pedestrian} · Bike ${bike} · VRU ${vru}</p>
-  `;
+function nearViikkiViewport(map: L.Map): boolean {
+  const viikki = L.latLng(HELSINKI_VIIKKI_ANCHOR.lat, HELSINKI_VIIKKI_ANCHOR.lng);
+  return map.distance(map.getCenter(), viikki) < 2500;
 }
 
 function drawSafetyRippleHub(options: {
@@ -88,7 +75,6 @@ function drawSafetyRippleHub(options: {
   totalDangerous: number;
   totalConflicts: number;
   scenario: MapScenario;
-  mobilysisHtml?: string;
   activeMapSegmentId?: string | null;
   segmentInteractionEnabled: boolean;
   segmentHandlers: SegmentInteractionHandlers;
@@ -103,7 +89,6 @@ function drawSafetyRippleHub(options: {
     totalDangerous,
     totalConflicts,
     scenario,
-    mobilysisHtml = "",
     activeMapSegmentId,
     segmentInteractionEnabled,
     segmentHandlers,
@@ -119,7 +104,6 @@ function drawSafetyRippleHub(options: {
     kind: "pressure",
     singlePeriodShift: 0.18,
   });
-  // Higher cluster pressure → red (inbound) pulse tone.
   const highPressure = pressureScore >= 65 || (isPrimary && scenario === "baseline");
 
   renderHubRipplePulseOverlay(map, hub.lat, hub.lon, highPressure, markersOut, circlesOut, {
@@ -152,7 +136,6 @@ function drawSafetyRippleHub(options: {
       <p style="font-size:10px;color:#96C2EF;margin:2px 0;">Pressure score ${pressureScore.toFixed(0)}</p>
       <p style="font-size:10px;color:#96C2EF;margin:2px 0;">Dangerous locations (city): ${totalDangerous.toLocaleString()}</p>
       <p style="font-size:10px;color:#96C2EF;margin:2px 0;">Near-miss / conflicts (city): ${totalConflicts.toLocaleString()}</p>
-      ${isPrimary ? mobilysisHtml : ""}
     </div>
   `);
 
@@ -163,9 +146,111 @@ function drawSafetyRippleHub(options: {
 }
 
 /**
- * KPI 2.1 road safety — Milan-style multi-hub ripples from hazard density.
- * FVH1: ~8 densest dangerous-location neighbourhoods.
- * FVH3: Viikki safety hub (+ Mobilysis in primary popup) with city hazard clusters as context.
+ * FVH3 KPI 2.1 — Viikki site UX survey only (Helsinki_FVH3_Survey… pptx p.8).
+ * Not the citywide FVH1 dangerous-location / conflict GPKGs.
+ */
+function renderFvh3ViikkiUxSafetyHub(options: {
+  map: L.Map;
+  ux: HelsinkiUxSurvey | null;
+  scenario: MapScenario;
+  activeMapSegmentId?: string | null;
+  segmentInteractionEnabled: boolean;
+  segmentHandlers: SegmentInteractionHandlers;
+  circlesOut: L.CircleMarker[];
+  markersOut: L.Marker[];
+}): void {
+  const {
+    map,
+    ux,
+    scenario,
+    activeMapSegmentId,
+    segmentInteractionEnabled,
+    segmentHandlers,
+    circlesOut,
+    markersOut,
+  } = options;
+
+  const unsafeBefore = ux?.feltCrossingUnsafeBeforePct ?? null;
+  const safetyImpact =
+    ux?.satisfactionByQuestion.find((q) =>
+      /safety|impact/i.test(q.question)
+    )?.satisfiedPct ?? null;
+  const baseline = unsafeBefore ?? 48;
+  // Lower “felt unsafe” / higher safety satisfaction is the intervention direction.
+  const intervention =
+    safetyImpact != null
+      ? Math.max(0, 100 - safetyImpact)
+      : Math.max(0, baseline * 0.82);
+  const display = mapScenarioDisplayValue(scenario, baseline, intervention, {
+    kind: "pressure",
+    singlePeriodShift: 0.12,
+  });
+  const selected = Boolean(
+    activeMapSegmentId &&
+      (activeMapSegmentId === FVH3_UX_SEGMENT_ID || activeMapSegmentId.includes("viikki-ux"))
+  );
+  const color = display >= 55 ? "#f87171" : display >= 35 ? "#f97316" : "#2ecc71";
+
+  const marker = L.circleMarker([HELSINKI_VIIKKI_ANCHOR.lat, HELSINKI_VIIKKI_ANCHOR.lng], {
+    radius: selected ? 13 : 11,
+    fillColor: color,
+    fillOpacity: 0.9,
+    color: "#ffffff",
+    weight: selected ? 3 : 2.2,
+    opacity: 0.98,
+  }).addTo(map);
+
+  bindCopenhagenMapTooltip(marker, "Viikki UX safety survey");
+  marker.bindPopup(`
+    <div style="font-family:'DM Sans',sans-serif;padding:8px;min-width:240px;">
+      <p style="font-size:10px;color:#8578C3;margin:0 0 4px 0;text-transform:uppercase;">FVH3 · KPI 2.1 · site survey</p>
+      <p style="font-size:14px;font-weight:700;color:#2F1B6D;margin:0 0 6px 0;">Viikki light-rail crossing</p>
+      <p style="font-size:18px;font-weight:700;color:#2F1B6D;margin:0 0 4px 0;">${
+        unsafeBefore != null ? `${unsafeBefore}%` : "—"
+      } felt unsafe before</p>
+      <p style="font-size:10px;color:#96C2EF;margin:2px 0;">${
+        safetyImpact != null ? `${safetyImpact}% satisfied with safety impact` : "Safety-impact question pending"
+      }</p>
+      <p style="font-size:10px;color:#96C2EF;margin:2px 0;">${ux?.totalResponses ?? 50} responses · collected on-site (May–Aug 2025)</p>
+      <p style="font-size:9px;color:#64748b;margin:6px 0 0 0;">Intersection-only UX survey — not the citywide FVH1 hazard GPKG.</p>
+    </div>
+  `);
+
+  if (segmentInteractionEnabled) {
+    wireCircleMarkerSegment(
+      marker,
+      {
+        segmentId: FVH3_UX_SEGMENT_ID,
+        segmentName: "Viikki UX safety survey",
+        speed: null,
+        congestion: null,
+        properties: {
+          datasetKind: "ux-survey",
+          lat: HELSINKI_VIIKKI_ANCHOR.lat,
+          lon: HELSINKI_VIIKKI_ANCHOR.lng,
+        },
+      },
+      segmentHandlers,
+      { baseRadius: selected ? 13 : 11 }
+    );
+  }
+
+  circlesOut.push(marker);
+
+  if (!nearViikkiViewport(map)) {
+    fitHelsinkiKpiView(
+      map,
+      [{ lat: HELSINKI_VIIKKI_ANCHOR.lat, lon: HELSINKI_VIIKKI_ANCHOR.lng }],
+      "viikki"
+    );
+  }
+  scheduleLeafletLayerRepaint(map, markersOut);
+}
+
+/**
+ * KPI 2.1 road safety.
+ * FVH1: sampled dangerous-location + conflict clouds under ~8 pressure hubs.
+ * FVH3: single Viikki intersection UX safety survey (pptx p.8) — not area-spread GPKGs.
  */
 export function renderHelsinkiKpi21Layers(
   options: RenderHelsinkiKpi21LayersOptions
@@ -183,94 +268,27 @@ export function renderHelsinkiKpi21Layers(
 
   const pilotId = selectedPilotId ?? "hel-p1";
 
+  if (pilotId === "hel-p3") {
+    return fetchHelsinkiJson<HelsinkiUxSurvey>(HELSINKI_VIIKKI_UX_SURVEY_JSON).then((ux) => {
+      renderFvh3ViikkiUxSafetyHub({
+        map,
+        ux,
+        scenario,
+        activeMapSegmentId,
+        segmentInteractionEnabled,
+        segmentHandlers,
+        circlesOut,
+        markersOut,
+      });
+    });
+  }
+
   return Promise.all([
     loadHelsinkiDangerousLocationsGeoJson(),
     loadHelsinkiConflictsGeoJson(),
-    fetchHelsinkiJson<HelsinkiMobilysisGates>(HELSINKI_MOBILYSIS_VIIKKI_GATES_JSON),
-  ]).then(([dangerousGeoJson, conflictsGeoJson, mobilysis]) => {
+  ]).then(([dangerousGeoJson, conflictsGeoJson]) => {
     const totalDangerous = dangerousGeoJson.features.length;
     const totalConflicts = conflictsGeoJson.features.length;
-    const mobilysisHtml = mobilysisPopupHtml(mobilysis);
-
-    if (pilotId === "hel-p3") {
-      const viikkiHub: HelsinkiHazardHub = {
-        id: "hel-viikki-anchor",
-        lat: HELSINKI_VIIKKI_ANCHOR.lat,
-        lon: HELSINKI_VIIKKI_ANCHOR.lng,
-        count: Math.max(
-          1,
-          mobilysis?.gateObservations.reduce((sum, gate) => sum + gate.totalCount, 0) ?? 1
-        ),
-        label: "Viikki intersection safety hub",
-      };
-
-      const nearViikki = { lat: HELSINKI_VIIKKI_ANCHOR.lat, lng: HELSINKI_VIIKKI_ANCHOR.lng, radiusDeg: 0.03 };
-
-      renderHelsinkiSurveyPointUnderlay({
-        map,
-        features: dangerousGeoJson.features,
-        kind: "hazard",
-        maxPoints: 80,
-        circlesOut,
-        near: nearViikki,
-        segmentInteractionEnabled,
-        segmentHandlers,
-        activeMapSegmentId,
-      });
-      renderHelsinkiSurveyPointUnderlay({
-        map,
-        features: conflictsGeoJson.features,
-        kind: "conflict",
-        maxPoints: 60,
-        circlesOut,
-        near: nearViikki,
-        segmentInteractionEnabled,
-        segmentHandlers,
-        activeMapSegmentId,
-      });
-
-      // Local hazard density hubs around Viikki (not citywide)
-      const contextHubs = clusterHelsinkiPointHubs(
-        dangerousGeoJson.features.filter((feature) => {
-          const coords = feature.geometry?.coordinates;
-          if (!Array.isArray(coords) || coords.length < 2) return false;
-          return (
-            Math.hypot(Number(coords[1]) - viikkiHub.lat, Number(coords[0]) - viikkiHub.lon) <= 0.035
-          );
-        }),
-        {
-          cellDeg: 0.008,
-          limit: 5,
-          idPrefix: "hel-safety-ctx",
-          labelPrefix: "Viikki-area hazard cluster",
-        }
-      ).filter((hub) => Math.hypot(hub.lat - viikkiHub.lat, hub.lon - viikkiHub.lon) > 0.004);
-
-      const hubs = [viikkiHub, ...contextHubs].slice(0, HELSINKI_SAFETY_HUB_LIMIT);
-      hubs.forEach((hub, index) => {
-        drawSafetyRippleHub({
-          map,
-          hub,
-          isPrimary: index === 0,
-          pilotTag: "FVH3 · KPI 2.1",
-          totalDangerous,
-          totalConflicts,
-          scenario,
-          mobilysisHtml: index === 0 ? mobilysisHtml : "",
-          activeMapSegmentId,
-          segmentInteractionEnabled,
-          segmentHandlers,
-          circlesOut,
-          markersOut,
-        });
-      });
-
-      if (hubs.length > 0) {
-        fitHelsinkiKpiView(map, hubs, "safety-viikki");
-      }
-      scheduleLeafletLayerRepaint(map, markersOut);
-      return;
-    }
 
     // FVH1 (and default): survey clouds + multi-hub ripples from dangerous-location density
     renderHelsinkiSurveyPointUnderlay({
@@ -301,7 +319,6 @@ export function renderHelsinkiKpi21Layers(
       labelPrefix: "Road-safety pressure cluster",
     });
 
-    // Merge conflict density into labels when a conflict cell overlaps (same grid).
     const conflictHubs = clusterHelsinkiPointHubs(conflictsGeoJson.features, {
       cellDeg: 0.01,
       limit: 24,
@@ -347,7 +364,6 @@ export function renderHelsinkiKpi21Layers(
         totalDangerous,
         totalConflicts,
         scenario,
-        mobilysisHtml: "",
         activeMapSegmentId,
         segmentInteractionEnabled,
         segmentHandlers,
@@ -357,7 +373,11 @@ export function renderHelsinkiKpi21Layers(
     });
 
     if (finalHubs.length > 0) {
-      fitHelsinkiKpiView(map, finalHubs, "safety-city");
+      const cityCenter = L.latLng(60.171, 24.941);
+      const nearCity = map.distance(map.getCenter(), cityCenter) < 12000;
+      if (!nearCity || map.getZoom() < 10) {
+        fitHelsinkiKpiView(map, finalHubs, "safety-city");
+      }
     }
     scheduleLeafletLayerRepaint(map, markersOut);
   });

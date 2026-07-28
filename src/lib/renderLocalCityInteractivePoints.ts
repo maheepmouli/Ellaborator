@@ -10,7 +10,32 @@ import {
   mapScenarioDisplayValue,
   type MapScenario,
 } from "@/lib/mapScenarioValue";
-import type { SegmentInteractionHandlers } from "@/lib/wireMapSegmentInteraction";
+import {
+  wireCircleMarkerSegment,
+  type SegmentInteractionHandlers,
+} from "@/lib/wireMapSegmentInteraction";
+import { getQuantile, getSegmentHighlight } from "@/lib/segmentHighlight";
+
+/** Milan KPI 4.2 DSS barrier categories — must match mapLayerLegend swatches. */
+export function milanAccessibilityCategoryColor(
+  category: unknown,
+  score?: number
+): string | null {
+  const t = String(category ?? "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+  if (t.includes("equal") || t.includes("pari")) return "#22c55e";
+  if (t.includes("slight") || t.includes("legger")) return "#fbbf24";
+  if (t.includes("heavy") || t.includes("grav")) return "#f87171";
+  // Score fallback when category label is missing / illustrative.
+  if (typeof score === "number" && Number.isFinite(score)) {
+    if (score >= 75) return "#22c55e";
+    if (score >= 55) return "#fbbf24";
+    return "#f87171";
+  }
+  return null;
+}
 
 /** Stable click id shared with Milan observatory segment list. */
 function resolveInteractivePointSegmentId(
@@ -42,6 +67,8 @@ export interface RenderLocalCityInteractivePointsOptions {
   circlesOut: L.CircleMarker[];
   /** Disable coordinate fan-out (e.g. Telraam sensors already unique). */
   spreadOverlaps?: boolean;
+  /** Prefer plain filled circles (pressure colour readable) over neon taxonomy badges. */
+  markerStyle?: "neon" | "filled";
   getValueColor: (value: number, inverted?: boolean) => string;
 }
 
@@ -120,6 +147,7 @@ export function renderLocalCityInteractivePoints(
     markersOut,
     circlesOut,
     spreadOverlaps = true,
+    markerStyle = "neon",
     getValueColor,
   } = options;
 
@@ -210,20 +238,72 @@ export function renderLocalCityInteractivePoints(
       scenario
     );
     const hitRadius = Math.max(16, Math.min(26, 14 + normalizedValue * 10));
+    const detail = {
+      segmentId: segId,
+      segmentName: segName,
+      // Accessibility is barrier category — never invent traficissy speed/congestion.
+      speed: null as number | null,
+      congestion: selectedKpi === "kpi4.2" ? null : displayValue / 100,
+      properties: props,
+    };
+    const handlers =
+      interactionOn || segmentInteractionEnabled ? segmentHandlers : undefined;
+
+    if (markerStyle === "filled") {
+      const climateColor =
+        selectedKpi === "kpi3.2"
+          ? getSegmentHighlight(
+              displayValue,
+              getQuantile(allValues, 0.15),
+              getQuantile(allValues, 0.85),
+              "climate"
+            ).color
+          : null;
+      const a11yColor =
+        selectedKpi === "kpi4.2"
+          ? milanAccessibilityCategoryColor(
+              props.category ?? props.facilityCategory ?? props.likertLabel,
+              displayValue
+            )
+          : null;
+      const fillColor = climateColor ?? a11yColor ?? valueColor ?? "#38bdf8";
+      const radius = Math.max(6, Math.min(11, 6 + normalizedValue * 4));
+      const circle = L.circleMarker([lat, lon], {
+        radius,
+        color: "#0b1220",
+        weight: 1.25,
+        fillColor,
+        fillOpacity: 0.9,
+        opacity: 0.95,
+        interactive: Boolean(handlers),
+      }).addTo(map);
+      if (popupContent) circle.bindPopup(popupContent);
+      if (segName) circle.bindTooltip(segName, { sticky: true, direction: "top", opacity: 0.9 });
+      if (handlers) {
+        wireCircleMarkerSegment(circle, detail, handlers, {
+          selectedSegmentId,
+          baseRadius: radius,
+          baseStyle: {
+            color: "#0b1220",
+            weight: 1.25,
+            fillColor,
+            fillOpacity: 0.9,
+            opacity: 0.95,
+          },
+        });
+      }
+      circlesOut.push(circle);
+      rendered += 1;
+      continue;
+    }
 
     const { visual, hit } = addNeonPointMarker(
       map,
       lat,
       lon,
       iconSpec,
-      {
-        segmentId: segId,
-        segmentName: segName,
-        speed: null,
-        congestion: displayValue / 100,
-        properties: props,
-      },
-      interactionOn || segmentInteractionEnabled ? segmentHandlers : undefined,
+      detail,
+      handlers,
       {
         title: segName,
         hitRadius,

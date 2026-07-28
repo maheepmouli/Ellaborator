@@ -1,4 +1,4 @@
-import { OBS_C } from "@/components/observatory/observatoryStyles";
+import { OBS_C, obsGlassCardClass, obsGlassCardStyle } from "@/components/observatory/observatoryStyles";
 import type { ObservatoryGraphicPayload } from "@/lib/observatoryGraphicTypes";
 
 interface StreetSegmentSchematicProps {
@@ -6,34 +6,172 @@ interface StreetSegmentSchematicProps {
   expanded?: boolean;
 }
 
-export function StreetSegmentSchematic({ payload, expanded }: StreetSegmentSchematicProps) {
-  const w = expanded ? 280 : 200;
-  const h = expanded ? 80 : 60;
-  const gradient = payload.segmentGradient ?? 0.5;
-  const gradColor = `hsl(${120 - gradient * 80}, 70%, 55%)`;
+function clamp(n: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, n));
+}
+
+function formatKmh(n: number): string {
+  return `${n.toFixed(1)} km/h`;
+}
+
+/** Milan KPI 2.1 — observed speed vs limit with before/after delta. */
+function MilanSpeedDiagram({ payload, expanded }: StreetSegmentSchematicProps) {
+  const profile = payload.speedDiagram;
+  const avg = Number(profile?.avgKmh ?? payload.kpiValue ?? 0);
+  const p85 = Number(profile?.p85Kmh ?? 0);
+  const limit = Number(profile?.limitKmh ?? 0);
+  const baseline = Number(profile?.baselineKmh ?? payload.trend?.[0]?.v ?? avg * 1.08);
+  const intervention = Number(profile?.interventionKmh ?? payload.trend?.[1]?.v ?? avg);
+  const street =
+    profile?.streetName ||
+    payload.streetEW ||
+    payload.pilotTitle ||
+    "Monitored street segment";
+
+  const scaleMax = Math.max(limit > 0 ? limit : 50, avg, p85, baseline, intervention, 1) * 1.08;
+  const avgPct = clamp((avg / scaleMax) * 100, 0, 100);
+  const p85Pct = p85 > 0 ? clamp((p85 / scaleMax) * 100, 0, 100) : null;
+  const limitPct = limit > 0 ? clamp((limit / scaleMax) * 100, 0, 100) : null;
+  const delta = intervention - baseline;
+  const deltaColor = delta <= 0 ? OBS_C.lime : OBS_C.amber;
+  const fillColor =
+    limit > 0 && avg > limit * 0.95
+      ? "#F97316"
+      : limit > 0 && avg > limit * 0.75
+        ? "#94A3D4"
+        : "#22C55E";
+
+  return (
+    <div
+      className={`${obsGlassCardClass(!expanded)} w-full max-w-[320px]`}
+      style={obsGlassCardStyle()}
+    >
+      <p className="text-[10px] uppercase tracking-wide text-white/45 mb-1">AMAT segment speed</p>
+      <p className="text-[13px] font-semibold text-white/90 truncate mb-3" title={street}>
+        {street}
+      </p>
+
+      <div className="relative mb-4 pt-5 pb-1">
+        <div className="h-3 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.08)" }}>
+          <div
+            className="h-full rounded-full transition-all"
+            style={{
+              width: `${avgPct}%`,
+              background: `linear-gradient(90deg, ${fillColor}aa, ${fillColor})`,
+            }}
+          />
+        </div>
+
+        {/* Avg marker */}
+        <div
+          className="absolute top-0 -translate-x-1/2 flex flex-col items-center"
+          style={{ left: `${avgPct}%` }}
+        >
+          <span className="text-[9px] font-semibold whitespace-nowrap" style={{ color: OBS_C.cyan }}>
+            Avg {avg.toFixed(0)}
+          </span>
+          <span
+            className="mt-0.5 h-2 w-2 rounded-full border border-white/80"
+            style={{ background: OBS_C.cyan }}
+          />
+        </div>
+
+        {/* P85 marker */}
+        {p85Pct != null ? (
+          <div
+            className="absolute bottom-0 -translate-x-1/2 flex flex-col items-center"
+            style={{ left: `${p85Pct}%` }}
+          >
+            <span
+              className="mb-0.5 h-1.5 w-1.5 rounded-full"
+              style={{ background: OBS_C.amber }}
+            />
+            <span className="text-[8px] text-white/50 whitespace-nowrap">P85 {p85.toFixed(0)}</span>
+          </div>
+        ) : null}
+
+        {/* Speed limit tick */}
+        {limitPct != null ? (
+          <div
+            className="absolute inset-y-5 w-px"
+            style={{ left: `${limitPct}%`, background: "rgba(255,255,255,0.55)" }}
+            title={`Speed limit ${limit} km/h`}
+          >
+            <span className="absolute -top-4 left-1/2 -translate-x-1/2 text-[8px] text-white/55 whitespace-nowrap">
+              Limit {limit}
+            </span>
+          </div>
+        ) : null}
+      </div>
+
+      <div className="grid grid-cols-3 gap-2 mb-2">
+        <div>
+          <p className="text-[8px] uppercase text-white/40">Before</p>
+          <p className="text-[12px] font-semibold text-white/80">{formatKmh(baseline)}</p>
+        </div>
+        <div>
+          <p className="text-[8px] uppercase text-white/40">After</p>
+          <p className="text-[12px] font-semibold" style={{ color: OBS_C.cyan }}>
+            {formatKmh(intervention)}
+          </p>
+        </div>
+        <div>
+          <p className="text-[8px] uppercase text-white/40">Delta</p>
+          <p className="text-[12px] font-semibold" style={{ color: deltaColor }}>
+            {delta >= 0 ? "+" : ""}
+            {delta.toFixed(1)} km/h
+          </p>
+        </div>
+      </div>
+
+      <p className="text-[9px] text-white/40 leading-relaxed">
+        Observed Maggio avg speed on the selected network.shp link
+        {limit > 0 ? ` · limit ${limit} km/h` : ""}. Green = well below limit; orange = near/over limit.
+      </p>
+    </div>
+  );
+}
+
+/** Generic corridor placeholder for non-speed KPIs. */
+function GenericCorridorSchematic({ payload, expanded }: StreetSegmentSchematicProps) {
+  const w = expanded ? 280 : 240;
+  const h = expanded ? 100 : 72;
+  const fill = clamp(payload.segmentGradient ?? 0.45, 0.08, 1);
+  const street = payload.streetEW || payload.pilotTitle || "Monitored street segment";
 
   return (
     <svg viewBox={`0 0 ${w} ${h}`} width={w} height={h} aria-label="Street segment schematic">
       <rect width={w} height={h} fill="#06050f" rx="10" />
-      <rect x={16} y={h / 2 - 14} width={w - 32} height={28} fill="#1a1830" rx="4" />
-      <rect
-        x={16}
-        y={h / 2 - 14}
-        width={(w - 32) * gradient}
-        height={28}
-        fill={gradColor}
-        opacity={0.55}
-        rx="4"
-      />
-      <line x1={16} y1={h / 2} x2={w - 16} y2={h / 2} stroke="#ffffff30" strokeWidth="1" strokeDasharray="4 4" />
-      <circle cx={w * 0.25} cy={h / 2 - 22} r={3} fill={OBS_C.cyan} />
-      <circle cx={w * 0.75} cy={h / 2 - 22} r={3} fill={OBS_C.lime} />
-      <text x={w / 2} y={14} textAnchor="middle" fill="#9FE6FF" fontSize="7" fontFamily="sans-serif">
-        {payload.streetEW || payload.pilotTitle || "Monitored street segment"}
+      <text x={w / 2} y={16} textAnchor="middle" fill="#9FE6FF" fontSize="9" fontFamily="sans-serif">
+        {street.length > 34 ? `${street.slice(0, 32)}…` : street}
       </text>
-      <text x={w / 2} y={h - 6} textAnchor="middle" fill="#ffffff45" fontSize="6" fontFamily="sans-serif">
-        Speed / KPI gradient along segment
+      <rect x={18} y={h / 2 - 10} width={w - 36} height={20} fill="#1a1830" rx="6" />
+      <rect
+        x={18}
+        y={h / 2 - 10}
+        width={(w - 36) * fill}
+        height={20}
+        fill={OBS_C.cyan}
+        opacity={0.45}
+        rx="6"
+      />
+      <circle cx={18 + (w - 36) * fill} cy={h / 2} r={4} fill={OBS_C.cyan} />
+      <text x={w / 2} y={h - 8} textAnchor="middle" fill="#ffffff50" fontSize="7" fontFamily="sans-serif">
+        Corridor intensity along monitored segment
       </text>
     </svg>
   );
+}
+
+export function StreetSegmentSchematic({ payload, expanded }: StreetSegmentSchematicProps) {
+  // Milan AMAT speed only — never treat Trikala occupancy % as km/h.
+  const isMilanSpeed =
+    payload.kpiId === "kpi2.1" &&
+    Boolean(payload.amatSegmentSpeed || payload.speedDiagram);
+
+  if (isMilanSpeed) {
+    return <MilanSpeedDiagram payload={payload} expanded={expanded} />;
+  }
+
+  return <GenericCorridorSchematic payload={payload} expanded={expanded} />;
 }

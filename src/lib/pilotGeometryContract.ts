@@ -184,6 +184,13 @@ export const PILOT_GEOMETRY_REGISTRY: Record<string, PilotGeometryRecord> = {
     renderEligibility: "dashboard_only",
     focus: pilotFocus("Trikala", "tri-p3", trikalaMapZoom()),
   },
+  "tri-p4": {
+    pilotId: "tri-p4",
+    regime: "point",
+    geometryTruth: { status: "inferred", source: "registry", spatialReliability: 0.55 },
+    renderEligibility: "dashboard_only",
+    focus: pilotFocus("Trikala", "tri-p4", trikalaMapZoom()),
+  },
 };
 
 export function getPilotGeometryRecord(

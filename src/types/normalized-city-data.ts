@@ -53,13 +53,27 @@ export interface NormalizedCityRecord {
   facilityCategory?: string;
   preCo2GPerHour?: number;
   postCo2GPerHour?: number;
+  /** KPI 3.2 — per-direction CO₂ arms for the selected sensor (panel segment map). */
+  emissionDirections?: Array<{
+    id: string;
+    flow: string;
+    preCo2GPerHour: number;
+    postCo2GPerHour: number;
+    baselinePct: number;
+    interventionPct: number;
+  }>;
   /** LoRa device hex id (Trikala bike-lane sensors). */
   deviceId?: string;
   busyPct?: number;
   availabilityPct?: number;
   observationCount?: number;
+  /** Trikala P3 — mock free-flow bike speed (km/h) derived from LoRa occupancy. */
+  mockSpeedKmh?: number;
+  mockSpeedBaselineKmh?: number;
   /** Helsinki FVH1 — top dangerous-location type counts for observatory charts. */
   hazardCategories?: Array<{ label: string; count: number }>;
+  /** Helsinki FVH2 — parking-category counts per observation cluster. */
+  parkingCategories?: Array<{ label: string; count: number }>;
   /** Helsinki FVH1 — near-miss / conflict incident mix. */
   conflictCategories?: Array<{ label: string; count: number }>;
   /** Helsinki FVH1 — travel mode mix among conflict reports. */
@@ -68,6 +82,10 @@ export interface NormalizedCityRecord {
   climateAttitudeRows?: Array<{ label: string; count: number }>;
   /** Helsinki FVH3 UX — satisfaction % by survey question. */
   uxSatisfactionRows?: Array<{ label: string; count: number }>;
+  /** Helsinki FVH3 UX — share who felt the crossing unsafe before the warning system. */
+  feltCrossingUnsafeBeforePct?: number | null;
+  /** Helsinki FVH3 UX — share who noticed signs / sound / lights. */
+  noticedWarningSystemPct?: { signs?: number | null; sound?: number | null; lights?: number | null };
   /** Helsinki Telraam — monthly sustainable-share trend for observatory charts. */
   monthlyTrend?: Array<{ t: string; v: number }>;
 }

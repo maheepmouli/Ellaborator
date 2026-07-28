@@ -14,33 +14,38 @@ export const CPH_RADAR_CORRIDOR_ITEMS: MapLegendItem[] = [
 ];
 
 export const CPH_CAMERA_REGISTRY_ITEMS: MapLegendItem[] = [
-  { label: "OpenTrafficCam site", color: "#00ffff" },
+  { label: "OTC camera hub", color: "#c4b5fd" },
   { label: "Telraam counter", color: "#38bdf8" },
   { label: "Platomo flow camera", color: "#f59e0b" },
-  { label: "Workbook aggregation site", color: "#c4b5fd" },
-  { label: "Camera FOV cone (visual)", color: "#63ccff" },
+  { label: "Camera field of view", color: "#96C2EF" },
 ];
 
+/** Continuous intensity ramp — matches `emissionsIntensityToColor` stops (0–100 index). */
 export const CPH_EMISSIONS_ITEMS: MapLegendItem[] = [
-  { label: "Modelled emissions node (C)", color: "#f59e0b" },
-  { label: "Lower intensity", color: "#6EE7B7" },
-  { label: "Medium", color: "#FBBF24" },
-  { label: "Higher intensity", color: "#F97316" },
-  { label: "Street context", color: "#64748b" },
+  { label: "0", color: "#22C55E" },
+  { label: "20", color: "#10B981" },
+  { label: "40", color: "#FBBF24" },
+  { label: "60", color: "#F97316" },
+  { label: "100", color: "#E02020" },
 ];
 
+/** I100275 Udført bay types — matches map `resolveParkingCategoryColor`. */
 export const CPH_FACILITY_ITEMS: MapLegendItem[] = [
-  { label: "Cycle parking bays", color: "#00ffff" },
-  { label: "Cargo bike parking", color: "#2ecc71" },
-  { label: "Car bay removed", color: "#f43f5e" },
-  { label: "Parking polygon", color: "#60a5fa" },
+  { label: "Almindelig", color: "#ff4d4d" },
+  { label: "Erhverv", color: "#ffb300" },
+  { label: "Besøgsplads", color: "#fbbf24" },
+  { label: "Handicapplads", color: "#00d2ff" },
+  { label: "Taxi", color: "#a78bfa" },
+  { label: "El-bil / Delebil", color: "#38bdf8" },
 ];
 
 export const CPH_ACCESSIBILITY_ITEMS: MapLegendItem[] = [
-  { label: "Accessibility hub (A)", color: "#22c55e" },
-  { label: "Lower access score", color: "#D3E3FF" },
-  { label: "Higher access score", color: "#10B981" },
-  { label: "Parking conversion proxy", color: "#96C2EF" },
+  { label: "Almindelig", color: "#ff4d4d" },
+  { label: "Erhverv", color: "#ffb300" },
+  { label: "Besøgsplads", color: "#fbbf24" },
+  { label: "Handicapplads", color: "#00d2ff" },
+  { label: "Taxi", color: "#a78bfa" },
+  { label: "El-bil / Delebil", color: "#38bdf8" },
 ];
 
 export const CPH_SURVEY_ITEMS: MapLegendItem[] = [
@@ -51,6 +56,6 @@ export const CPH_SURVEY_ITEMS: MapLegendItem[] = [
 
 export const CPH_SAFETY_SUPPLEMENT_ITEMS: MapLegendItem[] = [
   { label: "iRAP site (M)", color: "#ffb300" },
-  { label: "Near encounter node", color: "#f43f5e" },
+  // Near-encounter nodes only when partner-observed (OTC proxy points omitted — not real conflicts).
   { label: "Tube speed corridor", color: "#00ffff" },
 ];

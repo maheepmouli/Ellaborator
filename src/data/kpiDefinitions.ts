@@ -114,6 +114,8 @@ export interface KPIValue {
   change: number; // percentage change
   status: 'before' | 'after' | 'ongoing';
   breakdown?: Record<string, number>;
+  /** Optional baseline breakdown for before/after charts (e.g. KPI 2.1 mode share). */
+  breakdownBaseline?: Record<string, number>;
   timeSeries?: { year: number; value: number }[];
   distribution?: number[];
 }
@@ -125,6 +127,17 @@ export const CITY_DATA: CityKPIData[] = [
     lon: 9.19,
     population: "1.4M",
     kpiData: {
+      "kpi1.1": {
+        mainValue: 1,
+        unit: "plans",
+        change: 1,
+        status: "after",
+        breakdown: {
+          "Formal expansion plans": 1,
+          "DSS dissemination activities": 1,
+          "Replication readiness": 1,
+        },
+      },
       "kpi1.2": {
         mainValue: 42,
         unit: "%",
@@ -239,15 +252,14 @@ export const CITY_DATA: CityKPIData[] = [
         },
       },
       "kpi3.1": {
-        mainValue: 156,
-        unit: "units",
-        change: 48,
+        mainValue: 3,
+        unit: "P+R hubs",
+        change: 3,
         status: "after",
         breakdown: {
-          "EV Charging": 32,
-          "Bike Parking": 78,
-          "Intermodal Hubs": 4,
-          "Pedestrian Zones": 42,
+          SMY: 1,
+          DEH: 1,
+          GiSeMi: 1,
         },
       },
       "kpi3.2": {

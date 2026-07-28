@@ -25,6 +25,7 @@ export type ObservatoryChartId =
   | "safetyDensity"
   | "envProxy"
   | "surveyLikert"
+  | "surveyPie"
   | "accessLikert"
   | "segmentModeShare"
   | "speedProfile"
@@ -77,6 +78,8 @@ export interface CameraDirectionRow {
   delta: number;
   source: string;
   trend: TrendPoint[];
+  /** Optional compass bearing (0 = north) for schematic arm placement. */
+  bearingDeg?: number;
 }
 
 export interface LikertRow {
@@ -96,13 +99,40 @@ export interface ObservatoryGraphicPayload extends ObservatoryGraphicMeta {
   cameraDirections?: CameraDirectionRow[];
   activeDirectionId?: string | null;
   likert?: LikertRow[];
+  /** KPI 4.1 — Likert 1–7 share pies (before/after) */
+  surveyDistribution?: {
+    before: Array<{ label: string; value: number; score?: number }>;
+    after: Array<{ label: string; value: number; score?: number }>;
+  };
   statCards?: Array<{ label: string; value: string; note?: string; color?: string }>;
   markers?: Array<{ id: string; x: number; y: number; label?: string; tone?: string; count?: number }>;
   segmentGradient?: number;
+  /** Milan KPI 2.1 — render AMAT Maggio speed cards instead of generic speed proxy / congestion */
+  amatSegmentSpeed?: boolean;
+  /** Milan KPI 2.1 header diagram — observed speeds vs limit */
+  speedDiagram?: {
+    avgKmh: number;
+    p85Kmh?: number;
+    limitKmh?: number;
+    baselineKmh?: number;
+    interventionKmh?: number;
+    streetName?: string;
+  };
   streetNS?: string;
   streetEW?: string;
   highlightArmId?: string;
   pilotTitle?: string;
+  /** Compass bearing (0 = north) for camera FOV wedge in corridor schematic */
+  cameraBearingDeg?: number;
+  /** KPI 3.2 — directional emissions arms for sensor segment map in panel */
+  emissionDirections?: Array<{
+    id: string;
+    flow: string;
+    preCo2GPerHour: number;
+    postCo2GPerHour: number;
+    baselinePct: number;
+    interventionPct: number;
+  }>;
 }
 
 export type ObservatoryGraphicMatrix = Record<

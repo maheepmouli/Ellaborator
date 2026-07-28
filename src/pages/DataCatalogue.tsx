@@ -736,8 +736,24 @@ const DataCatalogue = () => {
               <p className="text-[14px] text-white/45 max-w-xl">
                 Transparent metadata for city datasets — sources, geometry quality, KPI linkage,
                 parser status, SharePoint June 2026 integration, and per-pilot intervention geometry.
+                {" "}
+                <a href="/wp7-compliance" className="text-sky-300/90 hover:underline">
+                  WP7 Compliance
+                </a>
               </p>
             </div>
+            <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 bg-white/[0.05] border-white/15 text-white/70 hover:bg-white/10 hover:text-white"
+              onClick={() => {
+                window.location.href = "/wp7-compliance";
+              }}
+            >
+              <FileText className="h-3.5 w-3.5" />
+              WP7 Compliance
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -772,6 +788,7 @@ const DataCatalogue = () => {
               <Download className="h-3.5 w-3.5" />
               Export metadata
             </Button>
+            </div>
           </div>
 
           {/* ── Summary cards ── */}

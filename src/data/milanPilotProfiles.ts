@@ -8,10 +8,10 @@ export const MILAN_PILOT_PROFILES: Record<MilanPilotId, CityPilotProfile> = {
     city: "Milan",
     title: "Universal Design in Olympic Routes",
     interventionSummary:
-      "Universal-design adaptation along Olympic routes with partial segment-level evidence.",
+      "Enhance road and public space design using Universal Design principles in Downtown Olympic Routes, with a focus on accessibility and safety for vulnerable groups, especially people with visual impairments.",
     objectives: [
-      "Improve universal accessibility and safety along Olympic routes.",
-      "Track segment-level safety and mobility effects where data exists.",
+      "Apply Universal Design along Olympic routes.",
+      "Improve accessibility and safety for people with visual impairments.",
     ],
     expectedImpacts: [
       "Lower pressure on priority intervention segments.",
@@ -28,10 +28,10 @@ export const MILAN_PILOT_PROFILES: Record<MilanPilotId, CityPilotProfile> = {
     city: "Milan",
     title: "Tactical Intervention at Stadium",
     interventionSummary:
-      "Tactical intervention around the stadium with partial segment observability.",
+      "Temporary intervention around the stadium area to enhance accessibility, pedestrian and cyclist safety, and sustainable mobility — demonstrating redevelopment potential.",
     objectives: [
-      "Improve mobility conditions around the stadium intervention footprint.",
-      "Reduce speed-related exposure on intervention segments.",
+      "Improve accessibility and safety for pedestrians and cyclists.",
+      "Promote sustainable mobility through tactical street design.",
     ],
     expectedImpacts: [
       "Reduced speed pressure along intervention streets.",
@@ -46,22 +46,24 @@ export const MILAN_PILOT_PROFILES: Record<MilanPilotId, CityPilotProfile> = {
   "mil-p3": {
     id: "mil-p3",
     city: "Milan",
-    title: "Combined Olympic Routes & Stadium Corridor",
+    title: "Architectural Barriers Assessment",
     interventionSummary:
-      "Pilot 3 unions the observed datasets from Pilot 1 (Olympic routes) and Pilot 2 (stadium corridor) without synthetic CDM3 mock layers.",
+      "Advanced system for assessing architectural barriers in public spaces, with a focus on improving accessibility for people with disabilities.",
     objectives: [
-      "Compare mode share, safety, and accessibility across both Milan intervention areas in one map view.",
-      "Keep segment-level evidence from AMAT speed/count shapefiles and DSS accessibility workbooks.",
+      "Assess architectural barriers across public space.",
+      "Support accessibility planning for people with disabilities.",
+      "Track expansion readiness and user satisfaction for the DSS intervention.",
     ],
     expectedImpacts: [
-      "Broader corridor coverage for KPI 1.2, 2.1, 3.2, and 4.2 observatory panels.",
-      "Single pilot scope for cross-corridor synthesis while preserving per-pilot provenance on each point.",
+      "KPI 1.1 — plans to expand interventions beyond the living lab.",
+      "KPI 4.1 — user satisfaction for interventions.",
+      "KPI 4.2 — increase in accessibility and security (DSS barrier routing).",
     ],
     geometryType: "line",
     dataAvailability:
-      "Merged mil-p1 + mil-p2 AMAT speed, counts, RETE environmental proxy, and accessibility DSS rows.",
+      "Milan Intervention Evaluation Plan · CDM3: expansion readiness (1.1), satisfaction survey (4.1), accessibility DSS (4.2).",
     methodologyNotes:
-      "Load and clip segments from both pilot buffers; local points filter on source pilotId (mil-p1 or mil-p2).",
+      "CDM3 Decision Support System scope only — KPIs 1.2 / 2.1 / 3.1 / 3.2 are CDM1–CDM2 per the evaluation plan matrix.",
     observatoryType: "street-segment",
   },
 };

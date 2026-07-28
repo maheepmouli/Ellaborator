@@ -14,6 +14,7 @@ import { getCopenhagenPilotZoneAnchor } from "@/data/copenhagenCameraSites";
 import {
   buildFovWedgePolygon,
   hubForWorkbook,
+  workbookHubBearing,
 } from "./copenhagenFlowGeometry";
 import {
   resolveCopenhagenIntensityColor,
@@ -25,14 +26,18 @@ import { resolveMapPointIconSpec } from "@/lib/mapPointIconTaxonomy";
 import {
   buildParkingPopupHtml,
   parkingSegmentDetailFromProps,
-  renderCopenhagenParkingPolygons,
   renderCopenhagenStreetUnderlay,
   resolveParkingCategoryColor,
 } from "./copenhagenParkingLayerStyles";
 import { renderCopenhagenRadarFlowLayout } from "./copenhagenRadarFlowLayout";
 import { bindCopenhagenMapTooltip } from "./copenhagenMapTooltips";
 import { renderCopenhagenTrafficPulseOverlay } from "./copenhagenTrafficPulse";
-import { emissionsIntensityToColor } from "@/lib/copenhagenEmissionsModel";
+import {
+  emissionsIntensityToColor,
+  co2GPerHourToKpiIntensity,
+  co2ReductionPct,
+  maxCo2GPerHourFromFlows,
+} from "@/lib/copenhagenEmissionsModel";
 import { scheduleLeafletLayerRepaint } from "@/lib/leafletMapSync";
 
 export interface CopenhagenObservedPoint {
@@ -113,6 +118,8 @@ function addCopenhagenMapDot(options: {
   const fill = options.fillColor;
   const html = `<div class="cph-map-dot${options.selected ? " is-selected" : ""}" style="width:${size}px;height:${size}px;border-radius:50%;background:${fill};border:2px solid ${stroke};box-shadow:0 1px 7px rgba(0,0,0,.5);"></div>`;
   const marker = L.marker([options.lat, options.lon], {
+    // Avoid Leaflet zoom-pane transforms fighting manual setPosition nudges (marker trails).
+    zoomAnimation: false,
     icon: L.divIcon({
       className: "cph-map-dot-wrap",
       html,
@@ -195,6 +202,11 @@ function renderRegistryMarkers(
     return [];
   }
 
+  // Facilities / accessibility / satisfaction: inventory or survey pins only — no OTC camera hubs.
+  if (selectedKpi === "kpi3.1" || selectedKpi === "kpi4.2" || selectedKpi === "kpi4.1") {
+    return [];
+  }
+
   const iconOnlyKpi = selectedKpi === "kpi3.2" || selectedKpi === "kpi4.1";
   const aggregateHubKpi = selectedKpi === "kpi1.2" || selectedKpi === "kpi2.1";
   const locations = getLocationsForPilot(pilotId).filter((loc) => {
@@ -204,9 +216,6 @@ function renderRegistryMarkers(
       return loc.kind === "otc_workbook_site" || loc.kind === "intelligent_camera";
     }
     if (loc.kind === "flow_camera") return selectedKpi === "kpi1.2";
-    if (loc.kind === "intelligent_camera" && loc.otcWorkbookKey === "vandkunsten") {
-      return loc.id === "wb-vandkunsten";
-    }
     return (
       loc.kind === "telraam_counter" ||
       loc.kind === "intelligent_camera" ||
@@ -221,8 +230,17 @@ function renderRegistryMarkers(
   );
 
   locations.forEach((loc) => {
-    // Aggregated hub mode: one clickable workbook site only — skip extra dots inside the ripple.
+    // Aggregated hub mode: workbook sites only — intelligent cameras stay for FOV, not as dots.
     if (aggregateHubKpi && loc.kind !== "otc_workbook_site") {
+      return;
+    }
+    // Pulse overlay owns the hub marker when OTC flows exist (avoids purple + blue/red doubles).
+    if (
+      aggregateHubKpi &&
+      loc.kind === "otc_workbook_site" &&
+      loc.otcWorkbookKey &&
+      (flowsByWorkbook.get(loc.otcWorkbookKey)?.length ?? 0) > 0
+    ) {
       return;
     }
     const [markerLat, markerLon] = markerLayout.get(loc.id) ?? [loc.lat, loc.lon];
@@ -248,7 +266,7 @@ function renderRegistryMarkers(
         markersOut,
         segmentHandlers: handlers,
         detail: { segmentId, segmentName: loc.name, speed: null, congestion: null },
-        tooltip: loc.name,
+        tooltip: `${loc.name} · Platomo flow camera`,
         selected: isSelected,
       });
       return;
@@ -276,7 +294,7 @@ function renderRegistryMarkers(
         markersOut,
         segmentHandlers: handlers,
         detail: { segmentId, segmentName: loc.name, speed: null, congestion: null },
-        tooltip: loc.name,
+        tooltip: `${loc.name} · ${loc.kind === "telraam_counter" ? "Telraam counter" : "OpenTrafficCam camera"}`,
         selected: isSelected,
       });
       return;
@@ -293,7 +311,7 @@ function renderRegistryMarkers(
         markersOut,
         segmentHandlers: handlers,
         detail: { segmentId, segmentName: loc.name, speed: null, congestion: null },
-        tooltip: loc.name,
+        tooltip: `${loc.name} · OpenTrafficCam workbook hub`,
         selected: isSelected,
       });
       return;
@@ -323,27 +341,16 @@ function renderCameraFovCones(
     const siteSelected =
       selectedSegmentId === copenhagenSiteSegmentId(workbookKey) ||
       cams.some((c) => selectedSegmentId === copenhagenLocationSegmentId(c.id));
-    const bearing =
-      workbookKey === "vandkunsten"
-        ? 168
-        : workbookKey === "gammeltorv"
-          ? 45
-          : workbookKey === "norreport"
-            ? 355
-            : workbookKey === "stormgade"
-              ? 120
-              : workbookKey === "hojbro"
-                ? 10
-                : 0;
+    const bearing = workbookHubBearing(workbookKey);
     const ring = buildFovWedgePolygon(hub.lat, hub.lon, bearing, {
       radiusM: cams.length > 1 ? 58 : 72,
       sweepDeg: cams.length > 1 ? 68 : 54,
     });
     const cone = L.polygon(ring, {
-      color: siteSelected ? "#00ffff" : "#63ccff",
+      color: siteSelected ? "#00ffff" : "#96C2EF",
       weight: siteSelected ? 1.8 : 1,
       opacity: siteSelected ? 0.85 : 0.45,
-      fillColor: siteSelected ? "#00ffff" : "#63ccff",
+      fillColor: siteSelected ? "#00ffff" : "#96C2EF",
       fillOpacity: siteSelected ? 0.22 : 0.12,
       interactive: false,
     }).addTo(map);
@@ -379,6 +386,7 @@ export function renderCopenhagenPilotInfluenceField(
 const KPI_ICON_DATASET_KINDS: Record<string, string[]> = {
   "kpi3.2": ["emissions"],
   "kpi4.1": ["survey"],
+  "kpi4.2": ["accessibility"],
   "kpi2.1": ["irap", "near_encounter", "tube"],
 };
 
@@ -404,15 +412,34 @@ function buildEmissionsPopup(point: CopenhagenObservedPoint): string {
 
 function buildSurveyPopup(point: CopenhagenObservedPoint): string {
   const props = point.properties ?? {};
+  const isMock = props.dataOrigin === "mock" || props.type === "mock" || props.mockLabel === "MOCK";
   const label = String(props.likertLabel ?? props.category ?? "Survey response");
   const baseline = Number(props.baselineValue ?? 0);
   const intervention = Number(props.interventionValue ?? point.value ?? 0);
+  const locationNote = String(props.locationNote ?? props.spatialNote ?? props.mockDisclaimer ?? "");
+  const sampleAfter = Number(props.sampleAfter ?? 0);
+  const dist = (props.surveyDistributionAfter as Array<{ score: number; pct: number }> | undefined) ?? [];
+  const distHtml = dist.length
+    ? `<p style="font-size: 9px; color: #B0EDBA; margin: 6px 0 2px 0;">After mix: ${dist
+        .map((d) => `${d.score}=${Number(d.pct).toFixed(0)}%`)
+        .join(" · ")}</p>`
+    : "";
+  const badge = isMock
+    ? `<p style="font-size: 10px; font-weight: 700; letter-spacing: 0.06em; color: #FBBF24; margin: 0 0 4px 0;">MOCK</p>`
+    : `<p style="font-size: 11px; color: #8578C3; margin: 0 0 2px 0; text-transform: uppercase;">Acceptability survey</p>`;
   return `
-    <div style="font-family: 'DM Sans', sans-serif; padding: 8px; min-width: 200px;">
-      <p style="font-size: 11px; color: #8578C3; margin: 0 0 2px 0; text-transform: uppercase;">Citizen survey</p>
+    <div style="font-family: 'DM Sans', sans-serif; padding: 8px; min-width: 220px;">
+      ${badge}
       <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">${label}</p>
-      <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Before: ${baseline.toFixed(1)}%</p>
-      <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">After: ${intervention.toFixed(1)}%</p>
+      <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Before: ${baseline.toFixed(1)}${isMock ? "" : "%"} · After: ${intervention.toFixed(1)}${isMock ? "" : "%"}</p>
+      ${sampleAfter ? `<p style="font-size: 9px; color: #96C2EF; margin: 2px 0;">n≈${sampleAfter} (after)</p>` : ""}
+      ${distHtml}
+      <p style="font-size: 9px; color: #FBBF24; margin-top: 6px; line-height: 1.35;">${
+        locationNote ||
+        (isMock
+          ? "MOCK pin on a KPI 1.2 mode-share corridor site."
+          : "Location inferred — survey not tied to a specific street point.")
+      }</p>
       <p style="font-size: 9px; color: #96C2EF; margin-top: 4px;">${String(props.source ?? "Partner survey")}</p>
     </div>
   `;
@@ -426,16 +453,22 @@ function renderCopenhagenParkingPointMarkers(options: {
   segmentHandlers: SegmentInteractionHandlers;
 }): void {
   const { map, observedPoints, selectedKpi, markersOut, segmentHandlers } = options;
-  const parkingPoints = observedPoints.filter((p) => p.properties?.datasetKind === "parking");
+  const parkingPoints = observedPoints.filter((p) => {
+    const kind = String(p.properties?.datasetKind ?? "");
+    if (selectedKpi === "kpi4.2") return kind === "accessibility" || kind === "parking";
+    return kind === "parking";
+  });
   if (!parkingPoints.length) return;
 
+  // Real WGS84 bay midpoints are already street-spread — only nudge true overlaps.
   const parkingLayout = spreadOverlappingPositions(
     parkingPoints.map((point) => ({
       id: String(point.properties?.segmentId ?? point.id),
       lat: point.lat,
       lon: point.lon,
     })),
-    map.getZoom()
+    map.getZoom(),
+    { zoomStable: true }
   );
 
   parkingPoints.forEach((point) => {
@@ -444,30 +477,36 @@ function renderCopenhagenParkingPointMarkers(options: {
     const bays = Number(point.value ?? 0);
     const category = String(point.properties?.facilityCategory ?? "Parking");
     const accent = resolveParkingCategoryColor(category);
-    const { segmentId, segmentName } = parkingSegmentDetailFromProps(
+    const fromProps = parkingSegmentDetailFromProps(
       {
         streetName: point.properties?.streetName,
         facilityCategory: category,
         bays,
+        Vejnavn: point.properties?.streetName,
+        Parkering: category,
+        Antal_plad: bays,
       },
       selectedKpi
     );
-    const iconSpec = resolveMapPointIconSpec({
-      facilityCategory: category,
-      category,
-      datasetKind: point.properties?.datasetKind,
-    });
+    const segmentId = String(point.properties?.segmentId ?? fromProps.segmentId);
+    const segmentName = fromProps.segmentName;
+    const baseline = Number(point.properties?.baselineValue ?? bays);
+    const intervention = Number(point.properties?.interventionValue ?? bays);
+    const tooltip =
+      selectedKpi === "kpi4.2"
+        ? `${String(point.properties?.streetName ?? "Copenhagen")} · ${category} · before ${baseline.toFixed(0)} → after ${intervention.toFixed(0)} bays`
+        : `${category} · ${String(point.properties?.streetName ?? "Copenhagen")}`;
     addCopenhagenMapDot({
       map,
       lat: markerLat,
       lon: markerLon,
       fillColor: accent,
-      strokeColor: iconSpec.accent,
+      strokeColor: "#ffffff",
       radius: selectedKpi === "kpi4.2" ? 7 : 8,
       markersOut,
       segmentHandlers,
       detail: { segmentId, segmentName, speed: null, congestion: null },
-      tooltip: `${iconSpec.label} · ${String(point.properties?.streetName ?? "Copenhagen")}`,
+      tooltip,
     }).bindPopup(
       buildParkingPopupHtml({
         Vejnavn: point.properties?.streetName,
@@ -476,6 +515,101 @@ function renderCopenhagenParkingPointMarkers(options: {
       }),
       { className: "cph-parking-popup", maxWidth: 300, closeButton: false }
     );
+  });
+}
+
+/** Sticky #27: collapse directional emissions rows into one marker per OTC sensor. */
+function aggregateEmissionsPointsForMap(
+  points: CopenhagenObservedPoint[]
+): CopenhagenObservedPoint[] {
+  type DirRow = {
+    id: string;
+    flow: string;
+    preCo2GPerHour: number;
+    postCo2GPerHour: number;
+    baselinePct: number;
+    interventionPct: number;
+  };
+  type Acc = {
+    point: CopenhagenObservedPoint;
+    pre: number;
+    post: number;
+    siteKey: string;
+    directions: DirRow[];
+  };
+  const bySite = new Map<string, Acc>();
+
+  for (const point of points) {
+    const props = point.properties ?? {};
+    const street = String(props.streetName ?? "");
+    const segmentId = String(props.segmentId ?? point.id);
+    const workbookFromSeg = (() => {
+      if (!segmentId.startsWith("emissions-")) return null;
+      const rest = segmentId.slice("emissions-".length).replace(/-/g, " ");
+      return inferOtcWorkbookKey(rest);
+    })();
+    const key =
+      inferOtcWorkbookKey(street) ??
+      workbookFromSeg ??
+      `${point.lat.toFixed(4)}|${point.lon.toFixed(4)}`;
+
+    const pre = Number(props.preCo2GPerHour ?? 0);
+    const post = Number(props.postCo2GPerHour ?? 0);
+    const incomingDirs = (Array.isArray(props.emissionDirections)
+      ? props.emissionDirections
+      : []) as DirRow[];
+    const existing = bySite.get(key);
+    if (existing) {
+      existing.pre += pre;
+      existing.post += post;
+      const seen = new Set(existing.directions.map((d) => d.id));
+      for (const d of incomingDirs) {
+        if (!seen.has(d.id)) existing.directions.push(d);
+      }
+      continue;
+    }
+    bySite.set(key, {
+      siteKey: key,
+      pre,
+      post,
+      directions: [...incomingDirs],
+      point: {
+        ...point,
+        id: `emissions-agg-${key}`,
+        properties: {
+          ...props,
+          segmentId: `emissions-${key}`,
+          streetName: street.split("·")[0]?.trim() || street,
+          mode: "sensor-total",
+        },
+      },
+    });
+  }
+
+  const sites = [...bySite.values()];
+  const refMax = maxCo2GPerHourFromFlows(
+    sites.map((s) => ({ preCo2GPerHour: s.pre, postCo2GPerHour: s.post }))
+  );
+
+  return sites.map(({ point, pre, post, siteKey, directions }) => {
+    const baselineIntensity = co2GPerHourToKpiIntensity(pre, refMax);
+    const interventionIntensity = co2GPerHourToKpiIntensity(post, refMax);
+    const reductionPct = co2ReductionPct(pre, post);
+    return {
+      ...point,
+      value: interventionIntensity,
+      properties: {
+        ...point.properties,
+        segmentId: `emissions-${siteKey}`,
+        baselineValue: baselineIntensity,
+        interventionValue: interventionIntensity,
+        comparisonValue: reductionPct,
+        preCo2GPerHour: pre,
+        postCo2GPerHour: post,
+        mode: "sensor-total",
+        emissionDirections: directions,
+      },
+    };
   });
 }
 
@@ -502,21 +636,33 @@ function renderCopenhagenIconPoints(options: {
     markersOut,
   } = options;
 
-  const points = observedPoints.filter((p) =>
+  let points = observedPoints.filter((p) =>
     datasetKinds.includes(String(p.properties?.datasetKind ?? ""))
   );
   if (!points.length) return;
 
   const emissionsSites = selectedKpi === "kpi3.2" && datasetKinds.includes("emissions");
-  const layout = spreadOverlappingPositions(
-    points.map((point) => ({
-      id: String(point.properties?.segmentId ?? point.id),
-      lat: point.lat,
-      lon: point.lon,
-    })),
-    map.getZoom(),
-    { zoomStable: emissionsSites || selectedKpi === "kpi4.1" || selectedKpi === "kpi2.1" }
-  );
+  if (emissionsSites) {
+    points = aggregateEmissionsPointsForMap(points);
+  }
+
+  // Emissions: one hub pin — never fan-out overlapping direction rows.
+  const layout = emissionsSites
+    ? new Map(
+        points.map((point) => {
+          const id = String(point.properties?.segmentId ?? point.id);
+          return [id, [point.lat, point.lon] as [number, number]];
+        })
+      )
+    : spreadOverlappingPositions(
+        points.map((point) => ({
+          id: String(point.properties?.segmentId ?? point.id),
+          lat: point.lat,
+          lon: point.lon,
+        })),
+        map.getZoom(),
+        { zoomStable: selectedKpi === "kpi4.1" || selectedKpi === "kpi4.2" || selectedKpi === "kpi2.1" }
+      );
 
   points.forEach((point) => {
     const pointId = String(point.properties?.segmentId ?? point.id);
@@ -541,9 +687,16 @@ function renderCopenhagenIconPoints(options: {
     const accent = emissionsSites
       ? emissionsIntensityToColor(displayValue)
       : datasetKind === "survey"
-        ? iconSpec.accent
+        ? "#7f5af0"
+        : datasetKind === "accessibility" &&
+            (props.mockLabel === "MOCK" || props.dataOrigin === "mock")
+          ? "#22d3ee"
         : getValueColor(displayValue, selectedKpi === "kpi2.1");
-    const strokeColor = emissionsSites ? "#ffffff" : iconSpec.accent;
+    const strokeColor =
+      emissionsSites || datasetKind === "survey" || datasetKind === "accessibility"
+        ? "#ffffff"
+        : iconSpec.accent;
+    const selected = selectedSegmentId === segmentId;
 
     const dot = addCopenhagenMapDot({
       map,
@@ -555,8 +708,11 @@ function renderCopenhagenIconPoints(options: {
       markersOut,
       segmentHandlers,
       detail: { segmentId, segmentName, speed: null, congestion: null },
-      tooltip: datasetKind === "survey" ? String(props.likertLabel ?? segmentName) : segmentName,
-      selected: selectedSegmentId === segmentId,
+      tooltip:
+        datasetKind === "survey" || datasetKind === "accessibility"
+          ? `${props.mockLabel === "MOCK" || props.dataOrigin === "mock" ? "[MOCK] " : ""}${String(props.likertLabel ?? segmentName)}`
+          : segmentName,
+      selected,
     });
 
     if (datasetKind === "emissions") {
@@ -565,10 +721,10 @@ function renderCopenhagenIconPoints(options: {
         maxWidth: 280,
         closeButton: false,
       });
-    } else if (datasetKind === "survey") {
+    } else if (datasetKind === "survey" || datasetKind === "accessibility") {
       dot.bindPopup(buildSurveyPopup(point), {
         className: "cph-survey-popup",
-        maxWidth: 260,
+        maxWidth: 280,
         closeButton: false,
       });
     }
@@ -617,7 +773,7 @@ export function renderCopenhagenMapLayers(options: RenderCopenhagenMapLayersOpti
     circlesInfluenceOut,
     showPilotField,
     wireCircleMarker,
-    parkingGeoJson,
+    parkingGeoJson: _parkingGeoJson,
     streetsGeoJson,
   } = options;
 
@@ -625,12 +781,9 @@ export function renderCopenhagenMapLayers(options: RenderCopenhagenMapLayersOpti
     renderCopenhagenPilotInfluenceField(map, pilotId, circlesInfluenceOut);
   }
 
+  // Street underlay — mode share / safety only (not facilities or accessibility).
   if (
-    (selectedKpi === "kpi1.2" ||
-      selectedKpi === "kpi2.1" ||
-      selectedKpi === "kpi3.1" ||
-      selectedKpi === "kpi4.2" ||
-      selectedKpi === "kpi3.2") &&
+    (selectedKpi === "kpi1.2" || selectedKpi === "kpi2.1") &&
     streetsGeoJson?.features?.length
   ) {
     renderCopenhagenStreetUnderlay(map, streetsGeoJson, polylinesOut);
@@ -658,8 +811,8 @@ export function renderCopenhagenMapLayers(options: RenderCopenhagenMapLayersOpti
     selectedKpi
   );
 
-  // Camera FOV wedges at hubs for mode share + road safety (partner: keep angles, drop flow lines).
-  if (!["kpi3.2", "kpi4.1"].includes(selectedKpi)) {
+  // Camera FOV — mode share / road safety only (not facilities, climate, survey, a11y).
+  if (selectedKpi === "kpi1.2" || selectedKpi === "kpi2.1") {
     renderCameraFovCones(map, registryLocations, polygonsOut, selectedSegmentId);
   }
 
@@ -733,7 +886,7 @@ export function renderCopenhagenMapLayers(options: RenderCopenhagenMapLayersOpti
           });
         },
       });
-      // Pulse + aggregated hub point for mode share and road safety.
+      // Single hub marker: traffic-pulse center (workbook purple dots skipped when flows exist).
       renderCopenhagenTrafficPulseOverlay(
         map,
         hub.lat,
@@ -748,6 +901,7 @@ export function renderCopenhagenMapLayers(options: RenderCopenhagenMapLayersOpti
           segmentHandlers,
           wireCircleMarker,
           selectedSegmentId,
+          showAnchorDot: true,
         }
       );
       return;
@@ -769,19 +923,8 @@ export function renderCopenhagenMapLayers(options: RenderCopenhagenMapLayersOpti
     });
   }
 
-  if ((selectedKpi === "kpi3.1" || selectedKpi === "kpi4.2") && parkingGeoJson?.features?.length) {
-    renderCopenhagenParkingPolygons(
-      map,
-      parkingGeoJson,
-      polylinesOut,
-      selectedKpi,
-      segmentHandlers,
-      selectedSegmentId,
-      map.getZoom()
-    );
-  }
-
-  if (selectedKpi === "kpi3.1" || selectedKpi === "kpi4.2") {
+  // Parking bay inventory as WGS84 midpoints — facilities only (4.2 uses MOCK mode-share pins).
+  if (selectedKpi === "kpi3.1") {
     renderCopenhagenParkingPointMarkers({
       map,
       observedPoints,
@@ -789,45 +932,6 @@ export function renderCopenhagenMapLayers(options: RenderCopenhagenMapLayersOpti
       markersOut,
       segmentHandlers,
     });
-  }
-
-  if (selectedKpi === "kpi4.2") {
-    const accessibilityPoints = observedPoints.filter(
-      (p) => p.properties?.datasetKind === "accessibility"
-    );
-    const accessibilityLayout = spreadOverlappingPositions(
-      accessibilityPoints.map((point) => ({
-        id: String(point.properties?.segmentId ?? point.id),
-        lat: point.lat,
-        lon: point.lon,
-      })),
-      map.getZoom()
-    );
-    accessibilityPoints.forEach((point) => {
-        const pointId = String(point.properties?.segmentId ?? point.id);
-        const [markerLat, markerLon] = accessibilityLayout.get(pointId) ?? [point.lat, point.lon];
-        const delta = Number(point.properties?.comparisonValue ?? 0);
-        const category = String(point.properties?.facilityCategory ?? point.properties?.category ?? "Accessibility");
-        const segmentId = String(point.properties?.segmentId ?? point.id);
-        const segmentName = String(point.properties?.streetName ?? category);
-        const iconSpec = resolveMapPointIconSpec({
-          facilityCategory: category,
-          category,
-          datasetKind: point.properties?.datasetKind,
-        });
-        addCopenhagenMapDot({
-          map,
-          lat: markerLat,
-          lon: markerLon,
-          fillColor: iconSpec.accent,
-          strokeColor: "#ffffff",
-          radius: 8,
-          markersOut,
-          segmentHandlers,
-          detail: { segmentId, segmentName, speed: null, congestion: null },
-          tooltip: `${segmentName} · before ${Number(point.properties?.baselineValue ?? 0)} → after ${Number(point.properties?.interventionValue ?? point.value ?? 0)} bays`,
-        });
-      });
   }
 
   circlesOut.forEach((layer) => layer.bringToFront());

@@ -21,6 +21,8 @@ const SEGMENT_THEME: Record<string, TrikalaThemeId> = {
   "tri-p1-smart-crossing": "safety",
   "tri-p1-environmental-sensor": "safety",
   "tri-p1-environmental-fleet": "safety",
+  "tri-p4-environmental-sensor": "safety",
+  "tri-p4-environmental-fleet": "safety",
 };
 
 /** Distinct accent for clustered sub-segment markers (caregiver vs village, etc.). */
@@ -38,6 +40,8 @@ const SUB_SEGMENT_ACCENT: Record<string, string> = {
   "tri-p1-smart-crossing": "#ffb300",
   "tri-p1-environmental-sensor": "#f59e0b",
   "tri-p1-environmental-fleet": "#96c2ef",
+  "tri-p4-environmental-sensor": "#f59e0b",
+  "tri-p4-environmental-fleet": "#96c2ef",
 };
 
 const SUB_SEGMENT_LABEL: Record<string, string> = {
@@ -53,6 +57,8 @@ const SUB_SEGMENT_LABEL: Record<string, string> = {
   "tri-p1-smart-crossing": "Smart crossing",
   "tri-p1-environmental-sensor": "Outdoor sensor",
   "tri-p1-environmental-fleet": "Sensor fleet",
+  "tri-p4-environmental-sensor": "Outdoor sensor",
+  "tri-p4-environmental-fleet": "Sensor fleet",
 };
 
 export function resolveTrikalaSegmentTheme(

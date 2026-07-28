@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { ChevronLeft, ChevronRight, TrendingDown, TrendingUp } from "lucide-react";
 import { PanelResizeHandle } from "@/components/PanelResizeHandle";
 import { useResizablePanelWidth } from "@/hooks/use-resizable-panel-width";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -42,6 +42,10 @@ import { useCopenhagenEmissions } from "@/hooks/use-copenhagen-emissions";
 import { useLocalCityData } from "@/hooks/use-local-city-data";
 import { buildIssyModeShareKpiSlices } from "@/lib/issyFlowAggregates";
 import { buildTrikalaModeShareSliceForSelection } from "@/lib/trikalaModeShare";
+import {
+  aggregateHelsinkiObservedKpi,
+  resolveHelsinkiKpiDisplayUnit,
+} from "@/lib/helsinkiKpiDisplay";
 import { loadTrikalaLocationsBundle } from "@/data/trikalaLocationRegistry";
 import {
   getTrikalaSegmentInsights,
@@ -49,7 +53,6 @@ import {
 } from "@/services/trikalaSurveyParser";
 import { useQuery } from "@tanstack/react-query";
 import { isCopenhagenCameraKpi } from "@/data/copenhagenCameraSites";
-import { filterCopenhagenObservatoryPoints } from "@/lib/copenhagenObservatoryView";
 import {
   aggregateCopenhagenObservedKpi,
   resolveCopenhagenKpiDisplayUnit,
@@ -59,15 +62,11 @@ import { getKpi32TimeSeriesIntensity } from "@/lib/kpi32YearIntensity";
 import { LayerTrustStrip, type LayerTrustSummary } from "@/components/LayerTrustStrip";
 import { DataProvenanceBadge } from "@/components/DataProvenanceBadge";
 import { PilotDataSummary } from "@/components/PilotDataSummary";
-import {
-  formatConfidenceLine,
-} from "@/lib/kpiMissingDataMessage";
-import { resolveKpiProvenance, provenanceConfidenceLine } from "@/lib/kpiProvenance";
+import { resolveKpiProvenance } from "@/lib/kpiProvenance";
 import { getLocalCityDiagnostics } from "@/services/localCityData";
 import { useMilanEnvironmentSegments, useMilanSpeedSegments } from "@/hooks/use-milan-segment-data";
 import {
   aggregateMilanObservedKpi,
-  filterMilanObservatoryPoints,
 } from "@/lib/milanObservatoryView";
 import {
   aggregateMilanJunctionMockKpi,
@@ -81,6 +80,14 @@ import {
   pickJunctionsForModeSharePresentation,
 } from "@/lib/milanMapLayers";
 import { getIssySentimentMock, issySentimentKpiHeadline } from "@/data/issySentimentMock";
+import {
+  getCopenhagenSentimentMock,
+  copenhagenSentimentKpiHeadline,
+} from "@/data/copenhagenSentimentMock";
+import {
+  getCopenhagenAccessibilityMock,
+  copenhagenAccessibilityKpiHeadline,
+} from "@/data/copenhagenAccessibilityMock";
 import { getIssyAccessibilityMock, issyAccessibilityKpiHeadline } from "@/data/issyAccessibilityMock";
 import { getCityPilotProfile } from "@/data/cityPilotProfiles";
 import { getPrimaryJunctionConfig, hasJunctionConfig } from "@/data/junctionConfigs";
@@ -219,7 +226,7 @@ const InsightPanel = ({
   const isIssyCity = selectedCity.toLowerCase().includes("issy");
   const isCopenhagenCity = selectedCity === "Copenhagen";
   const isTrikalaCity = selectedCity.toLowerCase().includes("trikala");
-  const segmentFocusId = hoveredSegmentId ?? mapSelection?.segmentId ?? null;
+  const isHelsinkiCity = selectedCity === "Helsinki";
   const { data: trikalaSegmentInsights = [] } = useQuery({
     queryKey: ["trikala-segment-insights-insight-panel"],
     queryFn: getTrikalaSegmentInsights,
@@ -233,8 +240,8 @@ const InsightPanel = ({
     staleTime: 600_000,
   });
   const { data: trikalaWomenMobilityModeShare = [] } = useQuery({
-    queryKey: ["trikala-women-mobility-mode-share", segmentFocusId],
-    queryFn: () => getTrikalaWomenMobilityModeShareRows(segmentFocusId),
+    queryKey: ["trikala-women-mobility-mode-share", "intervention-wide"],
+    queryFn: () => getTrikalaWomenMobilityModeShareRows(null),
     enabled:
       isTrikalaCity && selectedKpi === "kpi1.2" && selectedPilotId !== "tri-p2",
     staleTime: 120_000,
@@ -244,7 +251,7 @@ const InsightPanel = ({
     if (selectedPilotId === "tri-p2") {
       return buildTrikalaModeShareSliceForSelection({
         pilotId: selectedPilotId,
-        segmentId: segmentFocusId,
+        segmentId: null,
         insights: trikalaSegmentInsights,
         locations: trikalaLocationsBundle?.locations,
       });
@@ -252,7 +259,7 @@ const InsightPanel = ({
     if (!trikalaSegmentInsights.length && !trikalaWomenMobilityModeShare.length) return null;
     return buildTrikalaModeShareSliceForSelection({
       pilotId: selectedPilotId,
-      segmentId: segmentFocusId,
+      segmentId: null,
       insights: trikalaSegmentInsights,
       womenMobilityModeShare: trikalaWomenMobilityModeShare,
     });
@@ -261,13 +268,99 @@ const InsightPanel = ({
     selectedKpi,
     selectedPilotId,
     trikalaSegmentInsights,
-    segmentFocusId,
     trikalaLocationsBundle?.locations,
     trikalaWomenMobilityModeShare,
   ]);
   const usingTrikalaObservedModeShare = !!trikalaObservedModeShare;
   const usingTrikalaIllustrativeModeShare =
     isTrikalaCity && selectedPilotId === "tri-p2" && selectedKpi === "kpi1.2" && !!trikalaObservedModeShare;
+  const trikalaCityCenter = useMemo(() => {
+    const city = CITY_DATA.find((c) => c.city === "Trikala");
+    return city ? { lat: city.lat, lon: city.lon } : null;
+  }, []);
+  const { data: trikalaBikeLanePoints = [] } = useLocalCityData(
+    isTrikalaCity && selectedPilotId === "tri-p3" && selectedKpi === "kpi2.1" ? "Trikala" : "",
+    "kpi2.1",
+    isTrikalaCity && selectedPilotId === "tri-p3" && selectedKpi === "kpi2.1" ? trikalaCityCenter : null,
+    "tri-p3",
+    "intervention"
+  );
+  const { data: trikalaBikeLaneSurveyPoints = [] } = useLocalCityData(
+    isTrikalaCity && selectedPilotId === "tri-p3" && selectedKpi === "kpi4.2" ? "Trikala" : "",
+    "kpi4.2",
+    isTrikalaCity && selectedPilotId === "tri-p3" && selectedKpi === "kpi4.2" ? trikalaCityCenter : null,
+    "tri-p3",
+    "intervention"
+  );
+  const trikalaBikeLaneSafetyKpi = useMemo(() => {
+    if (!isTrikalaCity || selectedPilotId !== "tri-p3" || selectedKpi !== "kpi2.1") return null;
+    const fleet = trikalaBikeLanePoints.find(
+      (p) => p.properties?.datasetKind === "bike-lane-sensor-fleet"
+    );
+    const sensors = trikalaBikeLanePoints.filter(
+      (p) => p.properties?.datasetKind === "bike-lane-sensor"
+    );
+    const pool = fleet ? [fleet] : sensors;
+    if (!pool.length) return null;
+    const baseline =
+      pool.reduce(
+        (s, p) =>
+          s +
+          Number(
+            p.properties?.mockSpeedBaselineKmh ??
+              (typeof p.properties?.baselineValue === "number"
+                ? 18 * (1 - Number(p.properties.baselineValue) / 100)
+                : 0)
+          ),
+        0
+      ) / pool.length;
+    const intervention =
+      pool.reduce(
+        (s, p) =>
+          s +
+          Number(
+            p.properties?.mockSpeedKmh ??
+              (typeof p.properties?.interventionValue === "number"
+                ? 18 * (1 - Number(p.properties.interventionValue) / 100)
+                : p.value)
+          ),
+        0
+      ) / pool.length;
+    const baselineMain = Math.round(baseline * 10) / 10;
+    const interventionMain = Math.round(intervention * 10) / 10;
+    return {
+      baselineMain,
+      interventionMain,
+      change: Math.round((interventionMain - baselineMain) * 10) / 10,
+      unit: "km/h",
+      note: "Mock speed from bike-lane LoRa occupancy (FREE/BUSY) — no radar speed feed",
+    };
+  }, [isTrikalaCity, selectedPilotId, selectedKpi, trikalaBikeLanePoints]);
+  const usingTrikalaBikeLaneSafety = !!trikalaBikeLaneSafetyKpi;
+  const trikalaBikeLaneSurveyKpi = useMemo(() => {
+    if (!isTrikalaCity || selectedPilotId !== "tri-p3" || selectedKpi !== "kpi4.2") return null;
+    const survey = trikalaBikeLaneSurveyPoints.filter(
+      (p) =>
+        p.properties?.datasetKind === "survey" ||
+        Boolean(p.properties?.likertLabel) ||
+        String(p.properties?.segmentId ?? "").includes("tri-p3-bike-lane")
+    );
+    if (!survey.length) return null;
+    const a11y =
+      survey.find((p) => /accessibility/i.test(String(p.properties?.likertLabel ?? ""))) ??
+      survey[0];
+    const baselineMain = Math.round(Number(a11y.properties?.baselineValue ?? a11y.value) * 10) / 10;
+    const interventionMain =
+      Math.round(Number(a11y.properties?.interventionValue ?? a11y.value) * 10) / 10;
+    return {
+      baselineMain,
+      interventionMain,
+      change: Math.round((interventionMain - baselineMain) * 10) / 10,
+      unit: "%",
+      note: "Online bike-safety survey (SharePoint) — city accessibility Likert, not LoRa availability",
+    };
+  }, [isTrikalaCity, selectedPilotId, selectedKpi, trikalaBikeLaneSurveyPoints]);
+  const usingTrikalaBikeLaneSurvey = !!trikalaBikeLaneSurveyKpi;
   const issyFlowsQueryEnabled = isIssyCity && selectedKpi === "kpi1.2";
   const { data: issyFlowFeatures } = useIssyFlowData(issyFlowDayCategory, issyFlowsQueryEnabled);
   const { wintics: issyWinticsQuery, classeur: issyClasseurQuery } = useIssyWorkbooks(isIssyCity);
@@ -280,7 +373,7 @@ const InsightPanel = ({
   const { snapshot: cphEmissions } = useCopenhagenEmissions();
   const cphEncounterSummary =
     isCopenhagenCity && selectedKpi === "kpi2.1" && selectedPilotId === "cph-p3"
-      ? cphEncounters?.records
+      ? cphEncounters?.records?.filter((r) => r.sourceKind === "partner") ?? null
       : null;
   const cphEmissionsModel =
     isCopenhagenCity && selectedKpi === "kpi3.2" ? cphEmissions : null;
@@ -313,17 +406,17 @@ const InsightPanel = ({
       unit: headline.unit,
     };
   }, [issySentimentMock, scenario]);
-  const issyAccessibilityMock = useMemo(() => {
-    if (!isIssyCity || selectedKpi !== "kpi4.2" || !selectedPilotId) return null;
-    return getIssyAccessibilityMock(selectedPilotId);
-  }, [isIssyCity, selectedKpi, selectedPilotId]);
-  const issyAccessibilityFromMock = useMemo(() => {
-    if (!issyAccessibilityMock) return null;
-    const headline = issyAccessibilityKpiHeadline(issyAccessibilityMock);
+  const copenhagenSentimentMock = useMemo(() => {
+    if (!isCopenhagenCity || selectedKpi !== "kpi4.1" || !selectedPilotId) return null;
+    return getCopenhagenSentimentMock(selectedPilotId);
+  }, [isCopenhagenCity, selectedKpi, selectedPilotId]);
+  const copenhagenSentimentFromMock = useMemo(() => {
+    if (!copenhagenSentimentMock) return null;
+    const headline = copenhagenSentimentKpiHeadline(copenhagenSentimentMock, scenario);
     return {
       baseline: {
-        mainValue: Math.max(1, headline.mainValue - headline.change),
-        breakdown: headline.breakdown,
+        mainValue: headline.baselineMain,
+        breakdown: headline.baselineBreakdown,
         change: 0,
       },
       intervention: {
@@ -333,7 +426,49 @@ const InsightPanel = ({
       },
       unit: headline.unit,
     };
-  }, [issyAccessibilityMock]);
+  }, [copenhagenSentimentMock, scenario]);
+  const copenhagenAccessibilityMock = useMemo(() => {
+    if (!isCopenhagenCity || selectedKpi !== "kpi4.2" || !selectedPilotId) return null;
+    return getCopenhagenAccessibilityMock(selectedPilotId);
+  }, [isCopenhagenCity, selectedKpi, selectedPilotId]);
+  const copenhagenAccessibilityFromMock = useMemo(() => {
+    if (!copenhagenAccessibilityMock) return null;
+    const headline = copenhagenAccessibilityKpiHeadline(copenhagenAccessibilityMock, scenario);
+    return {
+      baseline: {
+        mainValue: headline.baselineMain,
+        breakdown: headline.baselineBreakdown,
+        change: 0,
+      },
+      intervention: {
+        mainValue: headline.mainValue,
+        breakdown: headline.breakdown,
+        change: headline.change,
+      },
+      unit: headline.unit,
+    };
+  }, [copenhagenAccessibilityMock, scenario]);
+  const issyAccessibilityMock = useMemo(() => {
+    if (!isIssyCity || selectedKpi !== "kpi4.2" || !selectedPilotId) return null;
+    return getIssyAccessibilityMock(selectedPilotId);
+  }, [isIssyCity, selectedKpi, selectedPilotId]);
+  const issyAccessibilityFromMock = useMemo(() => {
+    if (!issyAccessibilityMock) return null;
+    const headline = issyAccessibilityKpiHeadline(issyAccessibilityMock, scenario);
+    return {
+      baseline: {
+        mainValue: issyAccessibilityMock.baselineFeatureCount,
+        breakdown: headline.baselineBreakdown,
+        change: 0,
+      },
+      intervention: {
+        mainValue: issyAccessibilityMock.totalFeatures,
+        breakdown: headline.breakdown,
+        change: headline.change,
+      },
+      unit: headline.unit,
+    };
+  }, [issyAccessibilityMock, scenario]);
   const isMilanCity = selectedCity === "Milan";
   const milanPilotId =
     selectedPilotId === "mil-p1" || selectedPilotId === "mil-p2" || selectedPilotId === "mil-p3"
@@ -374,7 +509,11 @@ const InsightPanel = ({
       return null;
     }
     if (selectedKpi === "kpi3.2" && !milanHasObservedClimateData(milanEnvDataset)) {
-      return buildMilanJunctionClimateMockPoints(junctions, milanPilotId);
+      return buildMilanJunctionClimateMockPoints(
+        junctions,
+        milanPilotId,
+        milanSpeedDataset.records
+      );
     }
     if (
       selectedKpi === "kpi4.2" &&
@@ -394,30 +533,19 @@ const InsightPanel = ({
 
   const milanIllustrativeModeShareKpi = useMemo(() => {
     if (selectedKpi !== "kpi1.2" || !milanJunctionMockPoints?.length) return null;
-    const scoped = segmentFocusId
-      ? filterMilanObservatoryPoints(milanJunctionMockPoints, segmentFocusId)
-      : milanJunctionMockPoints;
-    const pointsForAgg = scoped.length ? scoped : milanJunctionMockPoints;
-    return aggregateMilanObservedKpi(pointsForAgg, "kpi1.2", selectedModeTypes);
-  }, [milanJunctionMockPoints, segmentFocusId, selectedModeTypes, selectedKpi]);
+    // Left panel is always intervention-wide; corridor detail lives in the observatory.
+    return aggregateMilanObservedKpi(milanJunctionMockPoints, "kpi1.2", selectedModeTypes);
+  }, [milanJunctionMockPoints, selectedModeTypes, selectedKpi]);
 
   const milanIllustrativeClimateKpi = useMemo(() => {
     if (selectedKpi !== "kpi3.2" || !milanJunctionMockPoints?.length) return null;
-    const scoped = segmentFocusId
-      ? filterMilanObservatoryPoints(milanJunctionMockPoints, segmentFocusId)
-      : milanJunctionMockPoints;
-    const pointsForAgg = scoped.length ? scoped : milanJunctionMockPoints;
-    return aggregateMilanJunctionMockKpi(pointsForAgg, scenario);
-  }, [milanJunctionMockPoints, segmentFocusId, selectedKpi, scenario]);
+    return aggregateMilanJunctionMockKpi(milanJunctionMockPoints, scenario);
+  }, [milanJunctionMockPoints, selectedKpi, scenario]);
 
   const milanIllustrativeAccessibilityKpi = useMemo(() => {
     if (selectedKpi !== "kpi4.2" || !milanJunctionMockPoints?.length) return null;
-    const scoped = segmentFocusId
-      ? filterMilanObservatoryPoints(milanJunctionMockPoints, segmentFocusId)
-      : milanJunctionMockPoints;
-    const pointsForAgg = scoped.length ? scoped : milanJunctionMockPoints;
-    return aggregateMilanJunctionMockKpi(pointsForAgg, scenario);
-  }, [milanJunctionMockPoints, segmentFocusId, selectedKpi, scenario]);
+    return aggregateMilanJunctionMockKpi(milanJunctionMockPoints, scenario);
+  }, [milanJunctionMockPoints, selectedKpi, scenario]);
 
   const milanObservedPointKpi = useMemo(() => {
     if (!shouldUseMilanLocalPoints || !milanLocalPoints?.length) return null;
@@ -425,18 +553,8 @@ const InsightPanel = ({
       (p) => p.properties?.dataOrigin === "local-city-dataset"
     );
     if (!observed.length) return null;
-    const scoped = segmentFocusId
-      ? filterMilanObservatoryPoints(observed, segmentFocusId)
-      : observed;
-    const pointsForAgg = scoped.length ? scoped : observed;
-    return aggregateMilanObservedKpi(pointsForAgg, selectedKpi, selectedModeTypes);
-  }, [
-    shouldUseMilanLocalPoints,
-    milanLocalPoints,
-    selectedKpi,
-    segmentFocusId,
-    selectedModeTypes,
-  ]);
+    return aggregateMilanObservedKpi(observed, selectedKpi, selectedModeTypes);
+  }, [shouldUseMilanLocalPoints, milanLocalPoints, selectedKpi, selectedModeTypes]);
   const milanModeShareKpi = milanIllustrativeModeShareKpi ?? milanObservedPointKpi;
   const usingMilanIllustrativeModeShare =
     isMilanCity && selectedKpi === "kpi1.2" && !!milanIllustrativeModeShareKpi;
@@ -449,11 +567,12 @@ const InsightPanel = ({
   const milanSegmentHeadline = useMemo(() => {
     if (!isMilanCity) return null;
     if (selectedKpi === "kpi2.1" && milanSpeedDataset?.records?.length) {
-      const record =
-        (segmentFocusId
-          ? milanSpeedDataset.records.find((r) => r.id === segmentFocusId)
-          : undefined) ?? milanSpeedDataset.records[0];
-      const avg = Number(record.properties?.avgSpeed ?? record.value);
+      const speeds = milanSpeedDataset.records.map((r) =>
+        Number(r.properties?.avgSpeed ?? r.value)
+      );
+      const avg =
+        speeds.reduce((sum, v) => sum + (Number.isFinite(v) ? v : 0), 0) /
+        Math.max(speeds.length, 1);
       return {
         baselineMain: avg * 1.08,
         interventionMain: avg,
@@ -461,17 +580,20 @@ const InsightPanel = ({
       };
     }
     if (selectedKpi === "kpi3.2" && milanEnvDataset?.records?.length) {
-      const record =
-        (segmentFocusId
-          ? milanEnvDataset.records.find((r) => r.id === segmentFocusId)
-          : undefined) ?? undefined;
-      const avg = record
-        ? Number(record.value)
-        : milanEnvDataset.stats.avgMetricValue;
+      // RETE avg is a traffic-composition pressure index — not a % reduction.
+      // Headline keeps the CITY_DATA unit ("% reduction") via before→after scenario delta.
+      const avg = milanEnvDataset.stats.avgMetricValue;
+      const baselinePressure = avg * 1.17;
+      const interventionPressure = avg;
+      const reductionPct =
+        baselinePressure > 0
+          ? ((baselinePressure - interventionPressure) / baselinePressure) * 100
+          : 0;
+      const rounded = Math.round(reductionPct * 100) / 100;
       return {
-        baselineMain: avg * 1.17,
-        interventionMain: avg,
-        change: avg - avg * 1.17,
+        baselineMain: 0,
+        interventionMain: rounded,
+        change: -rounded,
       };
     }
     if (selectedKpi === "kpi3.2" && milanIllustrativeClimateKpi) {
@@ -488,7 +610,6 @@ const InsightPanel = ({
     milanEnvDataset,
     milanIllustrativeClimateKpi,
     milanIllustrativeAccessibilityKpi,
-    segmentFocusId,
   ]);
   const copenhagenCenter = cityData ? { lat: cityData.lat, lon: cityData.lon } : null;
   const shouldUseCopenhagenObserved =
@@ -507,13 +628,29 @@ const InsightPanel = ({
     );
     if (!observed.length) return null;
 
-    const scopedPoints = segmentFocusId
-      ? filterCopenhagenObservatoryPoints(observed, segmentFocusId)
-      : observed;
-    const pointsForAgg = scopedPoints.length ? scopedPoints : observed;
+    // Left panel KPI chart is always intervention-wide; corridor detail lives in the observatory.
+    return aggregateCopenhagenObservedKpi(observed, selectedKpi, selectedModeTypes);
+  }, [shouldUseCopenhagenObserved, copenhagenLocalPoints, selectedModeTypes, selectedKpi]);
 
-    return aggregateCopenhagenObservedKpi(pointsForAgg, selectedKpi, selectedModeTypes);
-  }, [shouldUseCopenhagenObserved, copenhagenLocalPoints, selectedModeTypes, selectedKpi, segmentFocusId]);
+  const helsinkiCenter = cityData ? { lat: cityData.lat, lon: cityData.lon } : null;
+  const { data: helsinkiLocalPoints } = useLocalCityData(
+    "Helsinki",
+    selectedKpi,
+    isHelsinkiCity ? helsinkiCenter : null,
+    selectedPilotId || null,
+    scenario
+  );
+  const helsinkiObservedKpi = useMemo(() => {
+    if (!isHelsinkiCity || !helsinkiLocalPoints?.length) return null;
+    const observed = helsinkiLocalPoints.filter(
+      (p) =>
+        p.properties?.dataOrigin === "local-city-dataset" ||
+        p.properties?.parserStatus === "ready"
+    );
+    if (!observed.length) return null;
+    return aggregateHelsinkiObservedKpi(observed, selectedKpi, selectedModeTypes);
+  }, [isHelsinkiCity, helsinkiLocalPoints, selectedKpi, selectedModeTypes]);
+  const usingHelsinkiObservedKpi = !!helsinkiObservedKpi?.hasSelectedRecords;
 
   const milanJunctionIllustrativeNote = useMemo(() => {
     if (!isMilanCity || !milanSpeedDataset?.records?.length) return null;
@@ -586,6 +723,7 @@ const InsightPanel = ({
       milanSegmentDiagnostics ?? getLocalCityDiagnostics(selectedCity, selectedKpi, selectedPilotId);
     const mapUsesLocalDataset = Boolean(
       copenhagenLocalPoints?.some((p) => p.properties?.dataOrigin === "local-city-dataset") ||
+        helsinkiLocalPoints?.some((p) => p.properties?.dataOrigin === "local-city-dataset") ||
         milanLocalPoints?.some((p) => p.properties?.dataOrigin === "local-city-dataset") ||
         (milanSpeedDataset?.records?.length ?? 0) > 0 ||
         (milanEnvDataset?.records?.length ?? 0) > 0 ||
@@ -595,7 +733,10 @@ const InsightPanel = ({
     const panelUsesObservedSlice = Boolean(
       usingIssyObservedModeShare ||
         (usingTrikalaObservedModeShare && !usingTrikalaIllustrativeModeShare) ||
+        usingTrikalaBikeLaneSafety ||
+        usingTrikalaBikeLaneSurvey ||
         copenhagenObservedModeShare ||
+        usingHelsinkiObservedKpi ||
         (milanModeShareKpi && !usingMilanIllustrativeModeShare) ||
         (milanSegmentHeadline && !usingMilanIllustrativeClimate && !usingMilanIllustrativeAccessibility) ||
         usingMilanIllustrativeClimate ||
@@ -619,12 +760,16 @@ const InsightPanel = ({
     selectedPilot,
     selectedPilotId,
     copenhagenLocalPoints,
+    helsinkiLocalPoints,
     dataQualitySummary,
     manifestAvailable,
     usingIssyObservedModeShare,
     usingTrikalaObservedModeShare,
     usingTrikalaIllustrativeModeShare,
+    usingTrikalaBikeLaneSafety,
+    usingTrikalaBikeLaneSurvey,
     copenhagenObservedModeShare,
+    usingHelsinkiObservedKpi,
     milanModeShareKpi,
     milanSegmentHeadline,
     milanLocalPoints,
@@ -639,29 +784,42 @@ const InsightPanel = ({
   const displayUnit = useMemo(() => {
     if (!kpiValue) return "";
     if (issySentimentFromMock?.unit) return issySentimentFromMock.unit;
+    if (copenhagenSentimentFromMock?.unit) return copenhagenSentimentFromMock.unit;
+    if (copenhagenAccessibilityFromMock?.unit) return copenhagenAccessibilityFromMock.unit;
     if (issyAccessibilityFromMock?.unit) return issyAccessibilityFromMock.unit;
     if (isMilanCity && selectedKpi === "kpi2.1" && milanSegmentHeadline) return "km/h";
+    // RETE headline is converted to % reduction; illustrative junction mock stays an index.
     if (isMilanCity && selectedKpi === "kpi3.2" && usingMilanIllustrativeClimate) return " env. idx";
+    if (isMilanCity && selectedKpi === "kpi3.2" && milanSegmentHeadline) return "% reduction";
     if (isMilanCity && selectedKpi === "kpi4.2" && usingMilanIllustrativeAccessibility) return "%";
+    if (usingTrikalaBikeLaneSafety) return "km/h";
+    if (usingTrikalaBikeLaneSurvey) return "%";
     return isTrikalaCity && trikalaObservedModeShare
       ? "%"
       : isCopenhagenCity && copenhagenObservedModeShare
       ? resolveCopenhagenKpiDisplayUnit(selectedKpi)
+      : isHelsinkiCity && helsinkiObservedKpi
+        ? helsinkiObservedKpi.unit || resolveHelsinkiKpiDisplayUnit(selectedKpi)
       : kpiValue.unit;
   }, [
     isTrikalaCity,
     trikalaObservedModeShare,
+    usingTrikalaBikeLaneSafety,
+    usingTrikalaBikeLaneSurvey,
     isCopenhagenCity,
     copenhagenObservedModeShare,
+    isHelsinkiCity,
+    helsinkiObservedKpi,
     selectedKpi,
     kpiValue,
     issySentimentFromMock,
+    copenhagenSentimentFromMock,
+    copenhagenAccessibilityFromMock,
     issyAccessibilityFromMock,
     isMilanCity,
     milanSegmentHeadline,
     usingMilanIllustrativeClimate,
     usingMilanIllustrativeAccessibility,
-    selectedKpi,
   ]);
 
   const chartExplorerKeys = useMemo(() => {
@@ -729,19 +887,11 @@ const InsightPanel = ({
     return getKpi32TimeSeriesIntensity(cityData?.kpiData["kpi3.2"], emissionsIntensityYear);
   }, [cityData?.kpiData, emissionsIntensityYear, selectedKpi]);
 
-  const handleModeTypeToggle = (modeType: string) => {
-    const newSelected = selectedModeTypes.includes(modeType)
-      ? selectedModeTypes.filter((m) => m !== modeType)
-      : [...selectedModeTypes, modeType];
-    onModeTypesChange?.(newSelected);
-  };
-
-
   const isModeShare = selectedKpi === "kpi1.2";
-  const modeTypes = isModeShare && kpiValue?.breakdown
-    ? Object.keys(kpiValue.breakdown)
-    : [];
-
+  const observatoryCtaLabel =
+    selectedPilotProfile?.observatoryType === "camera"
+      ? "Camera Observatory"
+      : "Segment Observatory";
 
   const reportHref = useMemo(() => {
     const q = new URLSearchParams({
@@ -783,10 +933,12 @@ const InsightPanel = ({
 
   const missingDataNotice = useMemo(() => provenance.missingNotice, [provenance]);
 
-  const confidenceLine = useMemo(
-    () => provenanceConfidenceLine(provenance, formatConfidenceLine),
-    [provenance]
-  );
+  const confidenceLine = useMemo(() => {
+    const parts: string[] = [];
+    if (provenance.sourceLabel) parts.push(provenance.sourceLabel);
+    if (provenance.confidence) parts.push(`${provenance.confidence} confidence`);
+    return parts.join(" · ");
+  }, [provenance]);
 
   const stakeholderSummary = useMemo(() => {
     if (!kpiDef || !kpiValue || !selectedPilot) return null;
@@ -795,12 +947,22 @@ const InsightPanel = ({
       ? issyModeShareFromCsv.baseline.mainValue
       : issySentimentFromMock
         ? issySentimentFromMock.baseline.mainValue
+        : copenhagenSentimentFromMock
+          ? copenhagenSentimentFromMock.baseline.mainValue
+        : copenhagenAccessibilityFromMock
+          ? copenhagenAccessibilityFromMock.baseline.mainValue
         : issyAccessibilityFromMock
           ? issyAccessibilityFromMock.baseline.mainValue
+          : trikalaBikeLaneSafetyKpi
+            ? trikalaBikeLaneSafetyKpi.baselineMain
+          : trikalaBikeLaneSurveyKpi
+            ? trikalaBikeLaneSurveyKpi.baselineMain
           : trikalaObservedModeShare
           ? trikalaObservedModeShare.baselineMain
           : copenhagenObservedModeShare
             ? copenhagenObservedModeShare.baselineMain
+            : helsinkiObservedKpi
+              ? helsinkiObservedKpi.baselineMain
             : milanModeShareKpi
               ? milanModeShareKpi.baselineMain
               : milanSegmentHeadline
@@ -810,12 +972,22 @@ const InsightPanel = ({
       ? issyModeShareFromCsv.intervention.mainValue
       : issySentimentFromMock
         ? issySentimentFromMock.intervention.mainValue
+        : copenhagenSentimentFromMock
+          ? copenhagenSentimentFromMock.intervention.mainValue
+        : copenhagenAccessibilityFromMock
+          ? copenhagenAccessibilityFromMock.intervention.mainValue
         : issyAccessibilityFromMock
           ? issyAccessibilityFromMock.intervention.mainValue
+          : trikalaBikeLaneSafetyKpi
+            ? trikalaBikeLaneSafetyKpi.interventionMain
+          : trikalaBikeLaneSurveyKpi
+            ? trikalaBikeLaneSurveyKpi.interventionMain
           : trikalaObservedModeShare
             ? trikalaObservedModeShare.interventionMain
             : copenhagenObservedModeShare
               ? copenhagenObservedModeShare.interventionMain
+              : helsinkiObservedKpi
+                ? helsinkiObservedKpi.interventionMain
               : milanModeShareKpi
                 ? milanModeShareKpi.interventionMain
                 : milanSegmentHeadline
@@ -824,14 +996,21 @@ const InsightPanel = ({
     const headlineChange =
       issyModeShareFromCsv?.intervention.change ??
       issySentimentFromMock?.intervention.change ??
+      copenhagenSentimentFromMock?.intervention.change ??
+      copenhagenAccessibilityFromMock?.intervention.change ??
       issyAccessibilityFromMock?.intervention.change ??
+      trikalaBikeLaneSafetyKpi?.change ??
+      trikalaBikeLaneSurveyKpi?.change ??
       trikalaObservedModeShare?.change ??
       copenhagenObservedModeShare?.change ??
+      helsinkiObservedKpi?.change ??
       milanModeShareKpi?.change ??
       milanSegmentHeadline?.change ??
       kpiValue.change;
     const helsinkiBA =
-      selectedCity === "Helsinki" && (selectedKpi === "kpi1.2" || selectedKpi === "kpi2.1");
+      selectedCity === "Helsinki" &&
+      (selectedKpi === "kpi1.2" || selectedKpi === "kpi2.1") &&
+      usingHelsinkiObservedKpi;
     const disc = resolveImpactDisclaimer({
       kpiId: selectedKpi,
       isMockFramework: !!fwEarly?.isMock,
@@ -887,11 +1066,16 @@ const InsightPanel = ({
     kpiValue,
     issyModeShareFromCsv,
     issySentimentFromMock,
+    copenhagenSentimentFromMock,
+    copenhagenAccessibilityFromMock,
     issyAccessibilityFromMock,
     copenhagenObservedModeShare,
+    helsinkiObservedKpi,
     milanModeShareKpi,
     milanSegmentHeadline,
     trikalaObservedModeShare,
+    trikalaBikeLaneSafetyKpi,
+    trikalaBikeLaneSurveyKpi,
     displayUnit,
   ]);
 
@@ -901,6 +1085,10 @@ const InsightPanel = ({
     ? issyModeShareFromCsv.baseline
     : issySentimentFromMock
       ? issySentimentFromMock.baseline
+      : copenhagenSentimentFromMock
+        ? copenhagenSentimentFromMock.baseline
+      : copenhagenAccessibilityFromMock
+        ? copenhagenAccessibilityFromMock.baseline
       : issyAccessibilityFromMock
         ? issyAccessibilityFromMock.baseline
         : trikalaObservedModeShare
@@ -913,6 +1101,12 @@ const InsightPanel = ({
           ? {
               mainValue: copenhagenObservedModeShare.baselineMain,
               breakdown: copenhagenObservedModeShare.breakdownBaseline,
+              change: 0,
+            }
+          : helsinkiObservedKpi
+          ? {
+              mainValue: helsinkiObservedKpi.baselineMain,
+              breakdown: helsinkiObservedKpi.breakdownBaseline,
               change: 0,
             }
           : milanModeShareKpi
@@ -931,6 +1125,10 @@ const InsightPanel = ({
     ? issyModeShareFromCsv.intervention
     : issySentimentFromMock
       ? issySentimentFromMock.intervention
+      : copenhagenSentimentFromMock
+        ? copenhagenSentimentFromMock.intervention
+      : copenhagenAccessibilityFromMock
+        ? copenhagenAccessibilityFromMock.intervention
       : issyAccessibilityFromMock
         ? issyAccessibilityFromMock.intervention
         : trikalaObservedModeShare
@@ -944,6 +1142,12 @@ const InsightPanel = ({
               mainValue: copenhagenObservedModeShare.interventionMain,
               breakdown: copenhagenObservedModeShare.breakdownIntervention,
               change: copenhagenObservedModeShare.change,
+            }
+          : helsinkiObservedKpi
+          ? {
+              mainValue: helsinkiObservedKpi.interventionMain,
+              breakdown: helsinkiObservedKpi.breakdownIntervention,
+              change: helsinkiObservedKpi.change,
             }
           : milanModeShareKpi
             ? {
@@ -961,12 +1165,22 @@ const InsightPanel = ({
     ? issyModeShareFromCsv.baseline.mainValue
     : issySentimentFromMock
       ? issySentimentFromMock.baseline.mainValue
+      : copenhagenSentimentFromMock
+        ? copenhagenSentimentFromMock.baseline.mainValue
+      : copenhagenAccessibilityFromMock
+        ? copenhagenAccessibilityFromMock.baseline.mainValue
       : issyAccessibilityFromMock
         ? issyAccessibilityFromMock.baseline.mainValue
+        : trikalaBikeLaneSafetyKpi
+          ? trikalaBikeLaneSafetyKpi.baselineMain
+        : trikalaBikeLaneSurveyKpi
+          ? trikalaBikeLaneSurveyKpi.baselineMain
         : trikalaObservedModeShare
           ? trikalaObservedModeShare.baselineMain
           : copenhagenObservedModeShare
           ? copenhagenObservedModeShare.baselineMain
+          : helsinkiObservedKpi
+          ? helsinkiObservedKpi.baselineMain
           : milanModeShareKpi
             ? milanModeShareKpi.baselineMain
             : milanSegmentHeadline
@@ -976,12 +1190,22 @@ const InsightPanel = ({
     ? issyModeShareFromCsv.intervention.mainValue
     : issySentimentFromMock
       ? issySentimentFromMock.intervention.mainValue
+      : copenhagenSentimentFromMock
+        ? copenhagenSentimentFromMock.intervention.mainValue
+      : copenhagenAccessibilityFromMock
+        ? copenhagenAccessibilityFromMock.intervention.mainValue
       : issyAccessibilityFromMock
         ? issyAccessibilityFromMock.intervention.mainValue
+        : trikalaBikeLaneSafetyKpi
+          ? trikalaBikeLaneSafetyKpi.interventionMain
+        : trikalaBikeLaneSurveyKpi
+          ? trikalaBikeLaneSurveyKpi.interventionMain
         : trikalaObservedModeShare
           ? trikalaObservedModeShare.interventionMain
           : copenhagenObservedModeShare
           ? copenhagenObservedModeShare.interventionMain
+          : helsinkiObservedKpi
+          ? helsinkiObservedKpi.interventionMain
           : milanModeShareKpi
             ? milanModeShareKpi.interventionMain
             : milanSegmentHeadline
@@ -990,20 +1214,32 @@ const InsightPanel = ({
   const headlineChange =
     issyModeShareFromCsv?.intervention.change ??
     issySentimentFromMock?.intervention.change ??
+    copenhagenSentimentFromMock?.intervention.change ??
+    copenhagenAccessibilityFromMock?.intervention.change ??
     issyAccessibilityFromMock?.intervention.change ??
+    trikalaBikeLaneSafetyKpi?.change ??
+    trikalaBikeLaneSurveyKpi?.change ??
     trikalaObservedModeShare?.change ??
     copenhagenObservedModeShare?.change ??
+    helsinkiObservedKpi?.change ??
     milanModeShareKpi?.change ??
     milanSegmentHeadline?.change ??
     kpiValue.change;
   const currentMainValue = scenario === "baseline" ? baselineMainValue : interventionMainValue;
-  const currentBreakdown =
-    scenario === "baseline" ? baselineKvSlice.breakdown : interventionKvSlice.breakdown;
+  const baselineBreakdown =
+    "breakdown" in baselineKvSlice ? baselineKvSlice.breakdown : undefined;
+  const interventionBreakdown =
+    "breakdown" in interventionKvSlice ? interventionKvSlice.breakdown : undefined;
+  const currentBreakdown = scenario === "baseline" ? baselineBreakdown : interventionBreakdown;
 
   const currentKpiValue: KPIValue = {
     ...kpiValue,
     mainValue: currentMainValue,
-    breakdown: currentBreakdown,
+    breakdown:
+      selectedKpi === "kpi2.1" && isCopenhagenCity
+        ? interventionBreakdown
+        : currentBreakdown,
+    breakdownBaseline: baselineBreakdown,
   };
 
   const isPositiveChange = headlineChange > 0;
@@ -1012,7 +1248,7 @@ const InsightPanel = ({
   const showTrendPill = scenario === "intervention" || scenario === "comparison";
 
   const summaryHasBreakdown =
-    !!baselineKvSlice.breakdown && Object.keys(baselineKvSlice.breakdown).length > 0;
+    !!baselineBreakdown && Object.keys(baselineBreakdown).length > 0;
 
   return (
     <div
@@ -1097,9 +1333,6 @@ const InsightPanel = ({
           </div>
 
           <Select value={selectedKpi} onValueChange={onKpiChange}>
-            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-primary-foreground/75">
-              Section C · KPI explorer
-            </p>
             <SelectTrigger className="w-full h-auto px-3 py-2.5 border border-primary-foreground/35 bg-primary-foreground/15 rounded-full text-intel-label font-bold text-primary-foreground hover:bg-primary-foreground/25 intel-transition">
               <span>
                 {kpiDef.ref} - {(kpiFramework?.displayName || kpiDef.shortName).toUpperCase()}
@@ -1114,42 +1347,30 @@ const InsightPanel = ({
             </SelectContent>
           </Select>
 
-          <div className="mt-3 rounded-xl border border-primary-foreground/30 bg-primary-foreground/12 px-3 py-3 space-y-3">
-            <div className="space-y-1">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-primary-foreground/70">
-                Section A · Intervention Overview
-              </p>
-              <p className="text-intel-label font-bold text-primary-foreground">
-                {`${kpiDef.ref} — ${kpiFramework?.displayName || kpiDef.shortName}`}
-              </p>
-              <p className="text-intel-body text-primary-foreground/95 leading-relaxed">
-                {kpiDefinition?.interpretation || kpiFramework?.summary || kpiDef.question}
-              </p>
-            </div>
-            <div className="space-y-1.5 rounded-lg border border-white/20 bg-white/8 px-2.5 py-2 text-[10px] text-white/90 leading-relaxed">
-              <p className="font-semibold text-white">Section B · Intervention context</p>
-              <p>
-                <span className="font-semibold text-white">Summary:</span>{" "}
-                {selectedPilotProfile?.interventionSummary || selectedPilot?.description || "Intervention summary pending."}
-              </p>
-              <p>
-                <span className="font-semibold text-white">Objectives:</span>{" "}
-                {selectedPilotProfile?.objectives?.join(" · ") || selectedPilot?.goal || "Objectives pending."}
-              </p>
-              <p>
-                <span className="font-semibold text-white">Expected impacts:</span>{" "}
-                {selectedPilotProfile?.expectedImpacts?.join(" · ") || "Impact expectations pending partner validation."}
-              </p>
-            </div>
-            {selectedPilot && (
-              <p className="text-intel-body font-semibold text-primary-foreground/95 leading-snug">
-                {selectedPilot.name}: {selectedPilot.title}
+          <div className="mt-3 rounded-xl border border-primary-foreground/30 bg-primary-foreground/12 px-3 py-3 space-y-2">
+            <p className="text-intel-label font-bold text-primary-foreground">
+              {`${kpiDef.ref} — ${kpiFramework?.displayName || kpiDef.shortName}`}
+            </p>
+            <p className="text-intel-body text-primary-foreground/95 leading-relaxed">
+              {kpiDefinition?.interpretation || kpiFramework?.summary || kpiDef.question}
+            </p>
+            {selectedPilotProfile?.interventionSummary && (
+              <p className="text-[11px] text-primary-foreground/88 leading-relaxed">
+                {selectedPilotProfile.interventionSummary}
               </p>
             )}
-            <p className="text-[10px] text-primary-foreground/80 leading-snug">
-              <span className="font-semibold text-white">Section E · Data availability:</span>{" "}
-              {selectedPilotProfile?.dataAvailability || "Pilot data availability follows KPI readiness and trust indicators below."}
-            </p>
+            {selectedPilotProfile?.expectedImpacts?.length ? (
+              <div className="rounded-lg border border-white/20 bg-white/8 px-2.5 py-2">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-primary-foreground/75 mb-1.5">
+                  Expected impact
+                </p>
+                <ul className="list-disc pl-3.5 space-y-1 text-[11px] text-primary-foreground/90 leading-snug">
+                  {selectedPilotProfile.expectedImpacts.map((impact) => (
+                    <li key={impact}>{impact}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
           </div>
 
           {stakeholderSummary && (
@@ -1250,14 +1471,17 @@ const InsightPanel = ({
           )}
 
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            {dataQualitySummary?.provenanceType && (
-              <DataProvenanceBadge type={dataQualitySummary.provenanceType} />
-            )}
-            {provenance.headlineSource === "mock" && (
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-400/30 text-amber-100">
-                Illustrative
-              </span>
-            )}
+            <DataProvenanceBadge
+              type={
+                provenance.headlineSource === "observed"
+                  ? "observed"
+                  : provenance.headlineSource === "modelled"
+                    ? "modelled"
+                    : provenance.headlineSource === "derived"
+                      ? "derived"
+                      : "mock"
+              }
+            />
             <span className="text-intel-meta font-semibold text-white/88">{confidenceLine}</span>
           </div>
           {provenance.degradedBanner && (
@@ -1272,22 +1496,27 @@ const InsightPanel = ({
           )}
           {provenance.panelMapSplit && (
             <div className="mt-2 rounded-lg border border-sky-400/25 bg-sky-500/10 px-3 py-2 text-[10px] text-sky-100/90 leading-relaxed">
-              Panel uses illustrative KPI figures · Map shows local observed dataset for this selection.
+              Panel figures and map evidence may diverge for this selection.{" "}
+              <Link to="/wp7-compliance" className="underline text-sky-200 hover:text-white">
+                WP7 Compliance
+              </Link>
             </div>
           )}
         </div>
 
-        {/* Plot — always visible, directly under metrics (reference layout) */}
+        {/* Plot — intervention-wide KPI chart (corridor detail is in the observatory) */}
         <div className="mx-4 mt-3 mb-2 insight-chart-panel rounded-xl p-3 min-h-[200px] backdrop-blur-md">
           <div className="flex items-center justify-between gap-2 mb-1">
-            <span className="text-intel-label font-bold text-primary-foreground">Segment focus</span>
+            <span className="text-intel-label font-bold text-primary-foreground">
+              Intervention overview
+            </span>
             {showObservatory && (
               <button
                 type="button"
                 onClick={onOpenObservatory}
                 className="text-intel-meta font-bold text-cyan-200 hover:underline shrink-0 text-right"
               >
-                Segment Observatory
+                {observatoryCtaLabel}
                 {primaryJunction ? (
                   <span className="block text-[10px] font-medium text-white/70">
                     {primaryJunction.shortName} ›
@@ -1296,18 +1525,6 @@ const InsightPanel = ({
               </button>
             )}
           </div>
-          {segmentFocusId && (
-            <p className="text-[10px] font-medium text-white/70 mb-1 truncate">
-              {mapSelection?.segmentId ?? segmentFocusId}
-            </p>
-          )}
-          <p className="text-intel-meta font-medium text-white/82 mb-3 leading-snug">
-            {showObservatory
-              ? "Before/after analytics · sensor schematic · modal shift story"
-              : isIssyCity && isModeShare
-                ? "Monitored intervention corridor: observed traficissy segment context. Mode share KPI uses OD CSV in city view."
-                : "Chart and map stay linked to the selected monitored intervention corridor."}
-          </p>
           <KPIChart
             kpiId={selectedKpi}
             data={currentKpiValue}
@@ -1323,24 +1540,13 @@ const InsightPanel = ({
           </p>
         )}
 
-        {mapContext && (
-          <div className="mx-4 mb-3 rounded-lg border border-violet/45 bg-violet/25 p-3 text-intel-meta">
-            <p className="font-semibold text-primary-foreground mb-1">Map focus</p>
-            <p className="text-white/90">{mapContext.segmentName}</p>
-            <p className="text-white/80">
-              Speed: {mapContext.speed !== null ? `${mapContext.speed.toFixed(1)} km/h` : "n/a"} · Congestion:{" "}
-              {mapContext.congestion !== null ? mapContext.congestion.toFixed(2) : "n/a"}
-            </p>
-          </div>
-        )}
-
         <Accordion type="multiple" defaultValue={[]} className="px-4 pb-3">
           <AccordionItem value="trust-filters" className="border-white/15 border-t">
             <AccordionTrigger className="text-intel-label font-bold text-white/92 py-3 hover:no-underline">
-              Section D · Data trust / provenance
+              Data trust / provenance
             </AccordionTrigger>
             <AccordionContent className="space-y-3 pb-4">
-              {selectedPilot && (
+              {selectedPilot && selectedKpi !== "kpi1.2" && (
                 <PilotDataSummary
                   pilot={selectedPilot}
                   city={selectedCity}
@@ -1351,13 +1557,15 @@ const InsightPanel = ({
                 />
               )}
         <div className="rounded-lg border border-white/15 bg-white/[0.06] px-3 py-2">
-          <p className="text-intel-meta font-bold text-white/85 mb-1.5">Data availability summary</p>
+          <p className="text-intel-meta font-bold text-white/85 mb-1.5">Data availability</p>
           <p className="text-[10px] text-white/80 leading-snug">
             Ready: {cityReadinessSummary.ready} · Partial: {cityReadinessSummary.partial} · Missing: {cityReadinessSummary.missing}
           </p>
-          <p className="text-[10px] text-white/68 mt-1 leading-snug">
-            {selectedPilotProfile?.methodologyNotes || "Use intervention geometry first; missing datasets are surfaced explicitly by KPI."}
-          </p>
+          {selectedKpi === "kpi1.2" && selectedPilotProfile?.dataAvailability && (
+            <p className="text-[10px] text-white/68 mt-1 leading-snug">
+              {selectedPilotProfile.dataAvailability}
+            </p>
+          )}
         </div>
         {dataQualitySummary && (
           <div className="rounded-lg border border-white/15 bg-white/[0.06] px-3 py-2">
@@ -1420,15 +1628,12 @@ const InsightPanel = ({
           </div>
         )}
         {isCopenhagenCity && selectedKpi === "kpi2.1" && cphEncounterSummary?.length ? (
-          <div className="rounded-lg border border-amber-400/25 bg-amber-500/10 px-3 py-2">
+          <div className="rounded-lg border border-rose-400/25 bg-rose-500/10 px-3 py-2">
             <p className="text-intel-meta font-bold text-white/85 mb-1.5">
-              Near encounters ({cphEncounterSummary[0]?.sourceKind === "partner" ? "partner" : "OTC proxy"})
+              Near encounters (partner)
             </p>
             <p className="text-[10px] text-white/88 leading-snug">
-              {cphEncounterSummary.length} site(s) · encounter-pressure index from mixed-mode 15-min bins
-            </p>
-            <p className="text-intel-meta font-medium text-white/68 mt-1.5 leading-snug">
-              Derived proxy until UCPH delivers structured near-encounter export — not observed conflict counts.
+              {cphEncounterSummary.length} site(s) · partner-observed conflict / near-miss counts
             </p>
           </div>
         ) : null}
@@ -1495,48 +1700,24 @@ const InsightPanel = ({
             drop).
           </div>
         )}
-        {isModeShare && (
-          <div className="rounded-lg border border-white/15 bg-white/[0.06] px-3 py-2">
-            <p className="text-intel-meta font-bold text-white/85 mb-2">Travel modes (map filter)</p>
-            <div className="space-y-1.5">
-              {["Pedestrian", "Cycle", "Public Transport", "Private Car", "PTW"].map((modeType) => {
-                const isSelected = selectedModeTypes.includes(modeType);
-                const value = currentBreakdown?.[modeType] || 0;
-                const displayValue =
-                  usingIssyObservedModeShare ||
-                  usingTrikalaObservedModeShare ||
-                  usingMilanObservedModeShare ||
-                  usingMilanIllustrativeModeShare
-                    ? `${value.toFixed(1)}%`
-                    : String(Math.round(value));
-                return (
-                  <div
-                    key={modeType}
-                    className="insight-filter-row flex items-center gap-2 p-2 rounded-lg hover:bg-white/[0.08] transition-colors cursor-pointer"
-                    onClick={() => handleModeTypeToggle(modeType)}
-                  >
-                    <Checkbox
-                      checked={isSelected}
-                      onCheckedChange={() => handleModeTypeToggle(modeType)}
-                      className="data-[state=checked]:bg-violet data-[state=checked]:border-violet"
-                    />
-                    <div className="flex-1 flex items-center justify-between gap-2">
-                      <span className="text-xs font-semibold">{modeType}</span>
-                      <span className="text-xs font-bold text-cyan-200 tabular-nums">{displayValue}</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+        {usingTrikalaBikeLaneSafety && (
+          <div
+            className="rounded-lg border px-3 py-2 text-[10px] text-amber-100/90 leading-relaxed"
+            style={{ borderColor: "rgba(245,158,11,0.35)", background: "rgba(245,158,11,0.08)" }}
+          >
+            {trikalaBikeLaneSafetyKpi?.note ??
+              "Mock speed from bike-lane LoRa occupancy — no radar speed feed. Baseline uses a constructed pre-redesign offset so before/after differ."}
           </div>
         )}
-            <button
-              type="button"
-              onClick={onOpenDataSummary}
-              className="text-intel-meta font-bold text-cyan-200 hover:underline"
-            >
-              Open data summary
-            </button>
+        {usingTrikalaBikeLaneSurvey && (
+          <div
+            className="rounded-lg border px-3 py-2 text-[10px] text-emerald-100/90 leading-relaxed"
+            style={{ borderColor: "rgba(34,197,94,0.35)", background: "rgba(34,197,94,0.08)" }}
+          >
+            {trikalaBikeLaneSurveyKpi?.note ??
+              "Online bike-safety survey (SharePoint) — map pins are bike-lane sensors; scores are survey Likert."}
+          </div>
+        )}
             </AccordionContent>
           </AccordionItem>
         </Accordion>

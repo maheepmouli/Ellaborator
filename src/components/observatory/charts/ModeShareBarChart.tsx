@@ -30,17 +30,41 @@ export function ModeShareBarChart({ payload, compact, onSelectMode }: ModeShareB
   const fmtPct = (value: number) => `${Number(value).toFixed(1)}%`;
   const [activeMode, setActiveMode] = useState<string | null>(null);
   const [hoverMode, setHoverMode] = useState<string | null>(null);
+  const isEscooterParking = rows.some((row) =>
+    /pavement|cycleway|racks|outside parking|on street/i.test(row.mode)
+  );
 
   const title =
     payload.kpiId === "kpi2.1"
-      ? "Hazard mix — type share of survey"
+      ? /crossing|cyclist|perceived|safety/i.test(rows.map((r) => r.mode).join(" "))
+        ? "Perceived safety — before vs after"
+        : "Safety reports by category"
       : payload.kpiId === "kpi3.2"
         ? "Safety-climate attitude — citywide survey"
         : payload.kpiId === "kpi4.1"
-          ? "Viikki UX satisfaction — by question"
-          : payload.kpiId === "kpi1.1"
-            ? "Expansion readiness — monitoring vs plan"
-            : "Mode share — before vs after";
+          ? /crossing|condition|maintenance|accessibility|connectivity|impression/i.test(
+              rows.map((r) => r.mode).join(" ")
+            ) || payload.dataClass === "mock"
+            ? "Satisfaction — before vs after"
+            : "Viikki UX satisfaction — by question"
+          : payload.kpiId === "kpi4.2"
+            ? /crossing|condition|connectivity|accessibility|impression/i.test(
+                rows.map((r) => r.mode).join(" ")
+              )
+              ? "Accessibility — before vs after"
+              : payload.dataClass === "mock"
+                ? "Accessibility — before vs after"
+                : "Accessibility — before vs after"
+            : payload.kpiId === "kpi1.1"
+              ? "Expansion readiness — monitoring vs plan"
+              : payload.kpiId === "kpi3.1"
+                ? "Facilities — before vs after"
+                : payload.kpiId === "kpi1.2" &&
+                    /park.?and.?ride|P\+R|bike uptake/i.test(payload.sourceLabel ?? "")
+                  ? "Bike uptake from P+R — before vs after"
+                  : isEscooterParking
+                    ? "Parking observations by category"
+                    : "Mode share — before vs after";
 
   return (
     <div
@@ -52,12 +76,12 @@ export function ModeShareBarChart({ payload, compact, onSelectMode }: ModeShareB
         {!compact && (
           <div className="flex items-center gap-3 text-[9px] uppercase tracking-wide text-white/40">
             <span className="inline-flex items-center gap-1">
-              <span className="inline-block h-1.5 w-3 rounded-full bg-white/25" />
-              Before
+              <span className="inline-block h-1.5 w-3 rounded-full" style={{ background: OBS_C.cyan, opacity: 0.55 }} />
+              Baseline
             </span>
             <span className="inline-flex items-center gap-1">
               <span className="inline-block h-1.5 w-3 rounded-full" style={{ background: OBS_C.cyan }} />
-              After
+              Intervention
             </span>
           </div>
         )}
@@ -121,7 +145,8 @@ export function ModeShareBarChart({ payload, compact, onSelectMode }: ModeShareB
                     <motion.div
                       className="h-full rounded-full"
                       style={{
-                        background: isHover || isActive ? "rgba(255,255,255,0.42)" : "rgba(255,255,255,0.28)",
+                        background: color,
+                        opacity: Math.max(0.35, Math.min(1, 0.35 + (row.before / maxVal) * 0.65)),
                       }}
                       initial={false}
                       animate={{ width: `${beforeW}%` }}
@@ -134,7 +159,10 @@ export function ModeShareBarChart({ payload, compact, onSelectMode }: ModeShareB
                   >
                     <motion.div
                       className="h-full rounded-full"
-                      style={{ background: color, opacity: isHover || isActive ? 1 : 0.88 }}
+                      style={{
+                        background: color,
+                        opacity: Math.max(0.35, Math.min(1, 0.35 + (row.after / maxVal) * 0.65)),
+                      }}
                       initial={false}
                       animate={{ width: `${afterW}%` }}
                       transition={{ duration: 0.35, ease: "easeOut" }}

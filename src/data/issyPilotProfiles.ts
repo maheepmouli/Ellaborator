@@ -18,9 +18,9 @@ export const ISSY_PILOT_PROFILES: Record<IssyPilotId, IssyPilotProfile> = {
     id: "issy-p1",
     analyticalIdentity: "Luminous bicycle markings",
     defaultKpi: "kpi2.1",
-    primaryRenderer: "issy-junction-arms",
+    primaryRenderer: "issy-zone-flows",
     heroCopy:
-      "Wintics camera corridor at Pont d'Issy (ISSY1) — zone-to-zone OD CSV powers KPI 1.2 in city view; traficissy segment context frames the monitored intervention corridor.",
+      "In December 2024, a light-emitting pavement marking system was installed in Issy-les-Moulineaux to enhance safety on shared-mobility lanes. LED panels in the pavement activate when cyclists approach and the traffic light is green.",
     legendSubtitle: "Pilot 1 — luminous markings (flagship)",
     schoolRadiusM: 450,
   },
@@ -28,19 +28,19 @@ export const ISSY_PILOT_PROFILES: Record<IssyPilotId, IssyPilotProfile> = {
     id: "issy-p2",
     analyticalIdentity: "Mobility observatory",
     defaultKpi: "kpi1.2",
-    primaryRenderer: "issy-junction-arms",
+    primaryRenderer: "issy-zone-flows",
     heroCopy:
-      "Mobility observatory platform — city-wide monitoring canvas with traficissy segment traffic context; KPI 1.2 aggregates at city scope when OD feeds are linked.",
+      "The Mobility Observatory gives Issy-les-Moulineaux a living picture of how people move — cars, logistics, cycling, and modal split — so the city can act faster on safety, carbon, and inclusiveness.",
     legendSubtitle: "Pilot 2 — mobility observatory",
   },
   "issy-p3": {
     id: "issy-p3",
     analyticalIdentity: "GecoAir & climate context",
     defaultKpi: "kpi3.2",
-    primaryRenderer: "issy-climate-hex",
+    primaryRenderer: "issy-climate-city",
     heroCopy:
-      "GecoAir citizen engagement and derived environmental pressure around the junction — not measured CO₂ unless emissions data is linked.",
-    legendSubtitle: "Pilot 3 — GecoAir app",
+      "This intervention tests the GecoAir app so residents can see and reduce their air-pollution footprint, feeding awareness and climate indicators back into the city’s mobility observatory.",
+    legendSubtitle: "Pilot 3 — GecoAir app (city climate)",
   },
 };
 

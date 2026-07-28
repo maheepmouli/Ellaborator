@@ -62,7 +62,39 @@ export async function loadTrikalaLocationsBundle(): Promise<TrikalaLocationsBund
   try {
     const res = await fetch(BUNDLE_URL);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    bundleCache = (await res.json()) as TrikalaLocationsBundle;
+    const raw = (await res.json()) as TrikalaLocationsBundle;
+    // Smart Citizen / air-quality nodes belong with Pilot 4 (city digital + env), not P1 crossing.
+    // Smart-crossing site must also drive KPI 4.1 satisfaction (survey at the Military School hub).
+    bundleCache = {
+      ...raw,
+      locations: (raw.locations ?? []).map((loc) => {
+        if (loc.kind === "air_quality_sensor") {
+          return {
+            ...loc,
+            pilotId: "tri-p4" as TrikalaPilotId,
+            segmentId: loc.segmentId?.includes("environmental")
+              ? loc.segmentId.replace("tri-p1-", "tri-p4-")
+              : "tri-p4-environmental-sensor",
+          };
+        }
+        if (loc.kind === "smart_crossing_site" || loc.kind === "traffic_signal") {
+          const linked = new Set(loc.linkedKpis ?? []);
+          linked.add("kpi2.1");
+          linked.add("kpi4.1");
+          linked.add("kpi4.2");
+          return { ...loc, linkedKpis: [...linked] };
+        }
+        // Municipal car parks omit from KPI maps — intervention story is P+R / bike hubs only.
+        if (loc.kind === "parking_station") {
+          return {
+            ...loc,
+            linkedKpis: [],
+            mapVisible: false,
+          };
+        }
+        return loc;
+      }),
+    };
     return bundleCache;
   } catch {
     bundleCache = { generatedAt: "", locationCount: 0, locations: [], sensorJoins: [] };

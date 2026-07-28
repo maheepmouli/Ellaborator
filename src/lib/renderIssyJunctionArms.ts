@@ -17,6 +17,10 @@ import { createJunctionSampleDotIcon } from "@/lib/junctionSampleMarkers";
 import { junctionArmSeed } from "@/lib/junctionScenarioValues";
 import { issyModeColor } from "@/lib/issyMapRouting";
 import {
+  renderHubRipplePulseOverlay,
+  type HubPulseInteraction,
+} from "@/lib/copenhagenMapLayers/copenhagenTrafficPulse";
+import {
   BASELINE_GHOST_COLOR,
   COMPARISON_FAVOURABLE_COLOR,
   COMPARISON_OTHER_COLOR,
@@ -36,7 +40,6 @@ import {
   wireMarkerSegment,
   type SegmentInteractionHandlers,
 } from "@/lib/wireMapSegmentInteraction";
-import { renderHubRipplePulseOverlay } from "@/lib/copenhagenMapLayers/copenhagenTrafficPulse";
 
 export type JunctionObservatoryClick = (detail: {
   segmentId: string;
@@ -464,7 +467,11 @@ export function bindJunctionObservatoryLayer(
 export function renderIssyJunctionHubPulse(
   map: L.Map,
   roadSegments: MapSegment[],
-  refs: IssyJunctionLayerRefs
+  refs: IssyJunctionLayerRefs,
+  options?: {
+    showAnchorDot?: boolean;
+    interaction?: HubPulseInteraction;
+  }
 ): void {
   let northSouth = 0;
   let eastWest = 0;
@@ -483,7 +490,10 @@ export function renderIssyJunctionHubPulse(
     northSouth >= eastWest,
     refs.markers,
     refs.circles as L.CircleMarker[],
-    { showAnchorDot: false }
+    {
+      showAnchorDot: options?.showAnchorDot ?? false,
+      interaction: options?.interaction,
+    }
   );
 }
 

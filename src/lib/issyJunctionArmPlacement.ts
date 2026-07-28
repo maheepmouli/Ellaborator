@@ -2,28 +2,35 @@ import type { IssyJunctionArmId } from "@/lib/issyPilot2Junction";
 import { ISSY_JUNCTION_ARMS, ISSY_P2_JUNCTION, haversineMeters } from "@/lib/issyPilot2Junction";
 import { pointAtDistanceAlongPolyline } from "@/lib/junctionArmRendering";
 
-/** traficissy junction snapshot — [lat, lon] per monitored arm. */
+/**
+ * Short carriageway stubs at Pont d'Issy — snapped to street centreline near the hub
+ * (not the long traficissy corridor polyline, which drifts onto sidewalk / riverbank).
+ * Coordinates are [lat, lon], outward from the junction along each monitored arm.
+ */
 const ISSY_JUNCTION_ARM_LINES: Partial<Record<IssyJunctionArmId, [number, number][]>> = {
+  // Pont d'Issy bridge / Bd Frères Voisins — westbound carriageway
   west: [
-    [48.83088842748948, 2.2579166440879517],
-    [48.827775288541716, 2.2675352792310832],
-    [48.82792860808336, 2.273910594361177],
-    [48.8270548511908, 2.279053756053031],
-    [48.82499642818823, 2.2815704707744544],
+    [48.829725, 2.261046],
+    [48.82952, 2.26035],
+    [48.82928, 2.25955],
+    [48.82895, 2.25855],
+    [48.82855, 2.25745],
   ],
+  // Rue Rouget de Lisle — eastbound carriageway
   east: [
-    [48.82499642818823, 2.2815704707744544],
-    [48.8270548511908, 2.279053756053031],
-    [48.82792860808336, 2.273910594361177],
-    [48.827775288541716, 2.2675352792310832],
-    [48.83088842748948, 2.2579166440879517],
+    [48.829725, 2.261046],
+    [48.82995, 2.26185],
+    [48.83022, 2.26275],
+    [48.83055, 2.26385],
+    [48.83095, 2.26505],
   ],
+  // Quai du Président Roosevelt — southbound carriageway (stay on Quai, not riverbank)
   south: [
-    [48.835112421761416, 2.265975771003008],
-    [48.83067586238169, 2.2615018496402284],
-    [48.8272983906922, 2.260347427142153],
-    [48.82412626999886, 2.256515622138977],
-    [48.821896928458614, 2.250940383815969],
+    [48.829725, 2.261046],
+    [48.82935, 2.26112],
+    [48.82885, 2.26108],
+    [48.82825, 2.26085],
+    [48.82755, 2.26045],
   ],
 };
 

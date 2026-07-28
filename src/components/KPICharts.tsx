@@ -108,10 +108,14 @@ export const ModeShareChart = ({
 }: Pick<KPIChartProps, "data" | "chartSelectionKeys" | "onChartDrill"> &
   Omit<KPIChartProps, "kpiId" | "cityName">) => {
   const breakdown = data.breakdown || {};
-  const allModes = ["Pedestrian", "Cycle", "Public Transport", "Private Car", "PTW"];
-  const chartData = allModes.map((mode) => ({
+  const standardModes = ["Pedestrian", "Cycle", "Public Transport", "Private Car", "PTW"];
+  const dynamicModes = Object.keys(breakdown).filter((key) => Number(breakdown[key]) > 0);
+  const modesToShow = standardModes.some((mode) => Number(breakdown[mode]) > 0)
+    ? standardModes
+    : dynamicModes;
+  const chartData = modesToShow.map((mode) => ({
     mode,
-    value: breakdown[mode] || 0,
+    value: Number(breakdown[mode] || 0),
     fill: modeColors[mode] || "#96C2EF",
   }));
   const hasData = chartData.some((row) => row.value > 0);
@@ -165,6 +169,140 @@ export const ModeShareChart = ({
   );
 };
 
+export const SafetyModeSpeedChart = ({
+  data,
+  chartSelectionKeys,
+  onChartDrill,
+}: Pick<KPIChartProps, "data" | "chartSelectionKeys" | "onChartDrill"> &
+  Omit<KPIChartProps, "kpiId" | "cityName">) => {
+  const after = data.breakdown || {};
+  const before = data.breakdownBaseline || {};
+  const modeKeys = ["Pedestrian", "Cycle", "Public Transport", "Private Car", "PTW"].filter(
+    (k) => (before[k] ?? 0) > 0 || (after[k] ?? 0) > 0
+  );
+  const speedBefore = Number(before["Avg speed (km/h)"] ?? 0);
+  const speedAfter = Number(after["Avg speed (km/h)"] ?? 0);
+  const hasModes = modeKeys.length > 0;
+  const hasSpeed = speedBefore > 0 || speedAfter > 0;
+  const hasKeys = !!(chartSelectionKeys && chartSelectionKeys.length > 0);
+
+  if (!hasModes && !hasSpeed) {
+    return (
+      <ChartEmptyState message="No mode-share / speed before–after linked for this pilot — select a camera corridor or switch KPI." />
+    );
+  }
+
+  const modeRows = modeKeys.map((mode) => {
+    const b = Number(before[mode] ?? 0);
+    const a = Number(after[mode] ?? 0);
+    return {
+      mode,
+      before: b,
+      after: a,
+      delta: a - b,
+      fill: modeColors[mode] || "#96C2EF",
+    };
+  });
+  const maxShare = Math.max(1, ...modeRows.flatMap((r) => [r.before, r.after]));
+
+  return (
+    <div className="space-y-3 px-0.5">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[10px] font-semibold text-[#E9E2FF]/85">Mode share — before vs after</p>
+        <div className="flex items-center gap-3 text-[9px] uppercase tracking-wide text-[#E9E2FF]/45">
+          <span className="inline-flex items-center gap-1">
+            <span className="inline-block h-1.5 w-3 rounded-full bg-[#96C2EF]/55" />
+            Baseline
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <span className="inline-block h-1.5 w-3 rounded-full bg-[#96C2EF]" />
+            Intervention
+          </span>
+        </div>
+      </div>
+      <div className="grid grid-cols-[1fr_1fr] gap-2 mb-0.5">
+        <p className="text-[9px] uppercase tracking-wide text-[#E9E2FF]/35">Baseline</p>
+        <p className="text-[9px] uppercase tracking-wide text-[#E9E2FF]/35">Intervention</p>
+      </div>
+      <div className="space-y-2">
+        {modeRows.map((row) => {
+          const selected = !!(hasKeys && chartSelectionKeys?.includes(row.mode));
+          const dim = !!(hasKeys && !selected);
+          return (
+            <button
+              key={row.mode}
+              type="button"
+              className="w-full text-left"
+              style={{ opacity: dim ? 0.4 : 1 }}
+              onClick={() => onChartDrill?.({ source: "kpi2.1", key: row.mode })}
+            >
+              <div className="flex items-center justify-between gap-2 mb-0.5">
+                <span
+                  className="text-[11px] font-semibold"
+                  style={{ color: selected ? TICK_STRONG : TICK }}
+                >
+                  {row.mode}
+                </span>
+                <span className="text-[10px] tabular-nums text-[#E9E2FF]/70">
+                  {row.before.toFixed(1)}% → {row.after.toFixed(1)}%{" "}
+                  <span style={{ color: row.delta >= 0 ? "#B0EDBA" : "#f87171", fontWeight: 700 }}>
+                    {row.delta >= 0 ? "+" : ""}
+                    {row.delta.toFixed(1)} pp
+                  </span>
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+                  <div
+                    className="h-full rounded-full"
+                    style={{
+                      width: `${(row.before / maxShare) * 100}%`,
+                      background: row.fill,
+                      opacity: Math.max(0.35, Math.min(1, 0.35 + (row.before / maxShare) * 0.65)),
+                    }}
+                  />
+                </div>
+                <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+                  <div
+                    className="h-full rounded-full"
+                    style={{
+                      width: `${(row.after / maxShare) * 100}%`,
+                      background: row.fill,
+                      opacity: Math.max(0.35, Math.min(1, 0.35 + (row.after / maxShare) * 0.65)),
+                    }}
+                  />
+                </div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+      {hasSpeed && (
+        <div className="rounded-lg border border-white/15 bg-white/[0.04] px-2.5 py-2">
+          <div className="flex items-center justify-between gap-2 mb-1">
+            <p className="text-[10px] font-semibold text-[#E9E2FF]/85">Avg speed — before vs after</p>
+            <span className="text-[9px] text-amber-200/80">Derived from motor mix</span>
+          </div>
+          <div className="flex items-end justify-between gap-3">
+            <div className="flex-1">
+              <p className="text-[9px] uppercase text-[#E9E2FF]/40 mb-1">Baseline</p>
+              <p className="text-lg font-bold tabular-nums text-white/90">{speedBefore.toFixed(1)} km/h</p>
+            </div>
+            <div className="flex-1 text-right">
+              <p className="text-[9px] uppercase text-[#E9E2FF]/40 mb-1">Intervention</p>
+              <p className="text-lg font-bold tabular-nums text-[#96C2EF]">{speedAfter.toFixed(1)} km/h</p>
+            </div>
+          </div>
+          <p className="text-[10px] mt-1.5 tabular-nums" style={{ color: speedAfter - speedBefore >= 0 ? "#B0EDBA" : "#f87171" }}>
+            {speedAfter - speedBefore >= 0 ? "+" : ""}
+            {(speedAfter - speedBefore).toFixed(1)} km/h
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const SafetyRadarChart = ({
   data,
   chartSelectionKeys,
@@ -189,8 +327,67 @@ export const SafetyRadarChart = ({
     );
   }
 
+  // Radar needs ≥3 axes and star-rating-ish scale. Observed Helsinki pressure /
+  // hazard-mix shares are better as horizontal bars (1-axis radar looks blank).
+  const useBarFallback = chartData.length < 3 || maxValue > 5;
+  if (useBarFallback) {
+    const barData = chartData.map((d, i) => ({
+      category: d.subject,
+      fullLabel: d.fullSubject,
+      value: d.value,
+      fill: ["#657DF5", "#8578C3", "#96C2EF", "#B0EDBA"][i % 4],
+    }));
+    const handleBarPlotClick = (state: unknown) => {
+      if (!onChartDrill) return;
+      const payload = payloadFromChartClick<{ fullLabel?: string }>(state);
+      if (payload?.fullLabel) onChartDrill({ source: "kpi2.1", key: payload.fullLabel });
+    };
+    return (
+      <ResponsiveContainer width="100%" height={200}>
+        <BarChart
+          data={barData}
+          layout="vertical"
+          margin={{ top: 4, right: 16, bottom: 4, left: 8 }}
+          style={{ cursor: onChartDrill ? "pointer" : undefined }}
+          onClick={onChartDrill ? handleBarPlotClick : undefined}
+        >
+          <XAxis type="number" hide />
+          <YAxis
+            type="category"
+            dataKey="category"
+            width={100}
+            tick={{ fill: TICK, fontSize: 10, fontWeight: 600 }}
+            stroke="transparent"
+          />
+          <Tooltip
+            formatter={(v: number) => [v, maxValue > 5 ? "Reports" : "Rating"]}
+            labelFormatter={(l, p) => (p?.[0]?.payload?.fullLabel as string) || String(l)}
+            contentStyle={TOOLTIP_STYLE}
+            labelStyle={TOOLTIP_LABEL_STYLE}
+            itemStyle={TOOLTIP_ITEM_STYLE}
+          />
+          <Bar dataKey="value" radius={[0, 4, 4, 0]} label={{ position: "right", fill: TICK_STRONG, fontSize: 10 }}>
+            {barData.map((e, i) => {
+              const selected = !!(hasKeys && chartSelectionKeys?.includes(e.fullLabel));
+              const dim = !!(hasKeys && !selected);
+              return (
+                <Cell
+                  key={`s-${i}`}
+                  fill={e.fill}
+                  opacity={dim ? 0.35 : 1}
+                  stroke={selected ? "#fff" : "transparent"}
+                  strokeWidth={selected ? 2 : 0}
+                />
+              );
+            })}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    );
+  }
+
   return (
-    <ResponsiveContainer width="100%" height={200} className="insight-radar-chart">
+      <ResponsiveContainer width="100%" height={200} className="insight-radar-chart">
       <RadarChart
         cx="50%"
         cy="52%"
@@ -258,12 +455,21 @@ export const InfrastructureBarChart = ({
 }: Pick<KPIChartProps, "data" | "chartSelectionKeys" | "onChartDrill"> &
   Omit<KPIChartProps, "kpiId" | "cityName">) => {
   const breakdown = data.breakdown || {};
-  const chartData = Object.entries(breakdown).map(([name, value], i) => ({
-    name: name.length > 16 ? `${name.slice(0, 14)}…` : name,
-    fullName: name,
-    value: Number(value),
-    fill: ["#657DF5", "#8578C3", "#96C2EF", "#B0EDBA"][i % 4],
-  }));
+  const chartData = Object.entries(breakdown)
+    .map(([name, value]) => ({
+      name: name.length > 18 ? `${name.slice(0, 16)}…` : name,
+      fullName: name,
+      value: Number(value),
+    }))
+    .filter((row) => Number.isFinite(row.value) && row.value > 0)
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 10)
+    .map((row, i) => ({
+      ...row,
+      fill: ["#ff4d4d", "#ffb300", "#fbbf24", "#00d2ff", "#a78bfa", "#38bdf8", "#34d399", "#f472b6", "#657DF5", "#94a3b8"][
+        i % 10
+      ],
+    }));
   const hasKeys = !!(chartSelectionKeys && chartSelectionKeys.length > 0);
   if (!chartData.length) {
     return <ChartEmptyState message="No infrastructure observations for the current pilot and segment." />;
@@ -279,16 +485,46 @@ export const InfrastructureBarChart = ({
     drillFromBar(payload);
   };
 
+  const useHorizontal = chartData.length > 5;
+
   return (
-    <ResponsiveContainer width="100%" height={200}>
+    <ResponsiveContainer width="100%" height={useHorizontal ? Math.max(200, chartData.length * 28) : 200}>
       <BarChart
         data={chartData}
-        margin={{ top: 10, right: 8, left: 0, bottom: 36 }}
+        layout={useHorizontal ? "vertical" : "horizontal"}
+        margin={
+          useHorizontal
+            ? { top: 8, right: 12, left: 8, bottom: 8 }
+            : { top: 10, right: 8, left: 0, bottom: 36 }
+        }
         style={{ cursor: onChartDrill ? "pointer" : undefined }}
         onClick={onChartDrill ? handleBarPlotClick : undefined}
       >
-        <XAxis dataKey="name" tick={{ fill: TICK, fontSize: 9, fontWeight: 600 }} stroke={GRID} angle={-25} textAnchor="end" height={50} interval={0} />
-        <YAxis tick={{ fill: TICK, fontSize: 10 }} stroke={GRID} />
+        {useHorizontal ? (
+          <>
+            <XAxis type="number" tick={{ fill: TICK, fontSize: 10 }} stroke={GRID} />
+            <YAxis
+              type="category"
+              dataKey="name"
+              width={92}
+              tick={{ fill: TICK, fontSize: 10, fontWeight: 600 }}
+              stroke={GRID}
+            />
+          </>
+        ) : (
+          <>
+            <XAxis
+              dataKey="name"
+              tick={{ fill: TICK, fontSize: 9, fontWeight: 600 }}
+              stroke={GRID}
+              angle={-25}
+              textAnchor="end"
+              height={50}
+              interval={0}
+            />
+            <YAxis tick={{ fill: TICK, fontSize: 10 }} stroke={GRID} />
+          </>
+        )}
         <Tooltip
           formatter={(v: number) => [Number(v).toLocaleString(), "Count"]}
           labelFormatter={(l, p) => (p?.[0]?.payload?.fullName as string) || String(l)}
@@ -298,7 +534,7 @@ export const InfrastructureBarChart = ({
         />
         <Bar
           dataKey="value"
-          radius={[4, 4, 0, 0]}
+          radius={useHorizontal ? [0, 4, 4, 0] : [4, 4, 0, 0]}
           onClick={
             onChartDrill
               ? (entry) => drillFromBar(entry as { fullName?: string })
@@ -413,6 +649,50 @@ export const EmissionsLineChart = ({
 };
 
 export const SatisfactionGaugeChart = ({ data }: { data: KPIValue }) => {
+  const breakdown = data.breakdown || {};
+  const likertSlices = Object.entries(breakdown)
+    .map(([name, value]) => {
+      const score = Number(/^(\d+)/.exec(name)?.[1] ?? NaN);
+      return {
+        name,
+        value: Number(value) || 0,
+        score: Number.isFinite(score) ? score : undefined,
+      };
+    })
+    .filter((s) => s.value > 0 && s.score && s.score >= 1 && s.score <= 7)
+    .sort((a, b) => (a.score ?? 0) - (b.score ?? 0));
+
+  if (likertSlices.length >= 3) {
+    const colors = ["#ef4444", "#f97316", "#fbbf24", "#a3a3a3", "#84cc16", "#22c55e", "#15803d"];
+    return (
+      <ResponsiveContainer width="100%" height={200}>
+        <PieChart margin={{ top: 4, right: 4, bottom: 4, left: 4 }}>
+          <Pie
+            data={likertSlices}
+            dataKey="value"
+            nameKey="name"
+            cx="50%"
+            cy="50%"
+            innerRadius={42}
+            outerRadius={68}
+            paddingAngle={1}
+            stroke="rgba(0,0,0,0.35)"
+          >
+            {likertSlices.map((e, i) => (
+              <Cell key={`ls-${i}`} fill={colors[(e.score ?? 1) - 1]} />
+            ))}
+          </Pie>
+          <Tooltip
+            formatter={(v: number, name: string) => [`${Number(v).toFixed(1)}%`, String(name)]}
+            contentStyle={TOOLTIP_STYLE}
+            labelStyle={TOOLTIP_LABEL_STYLE}
+            itemStyle={TOOLTIP_ITEM_STYLE}
+          />
+        </PieChart>
+      </ResponsiveContainer>
+    );
+  }
+
   const pct = Math.max(0, Math.min(100, Number(data.mainValue)));
   const rest = Math.max(0, 100 - pct);
   const pieData = [
@@ -462,12 +742,15 @@ export const AccessibilityBarChart = ({
     if (payload?.fullLabel) onChartDrill({ source: "kpi4.2", key: payload.fullLabel });
   };
 
+  const chartKey = chartData.map((d) => `${d.fullLabel}:${d.value}`).join("|");
+
   return (
     <ResponsiveContainer width="100%" height={180}>
       <BarChart
+        key={chartKey}
         data={chartData}
         layout="vertical"
-        margin={{ top: 4, right: 16, bottom: 4, left: 8 }}
+        margin={{ top: 4, right: 28, bottom: 4, left: 8 }}
         style={{ cursor: onChartDrill ? "pointer" : undefined }}
         onClick={onChartDrill ? handleBarPlotClick : undefined}
       >
@@ -480,7 +763,7 @@ export const AccessibilityBarChart = ({
           labelStyle={TOOLTIP_LABEL_STYLE}
           itemStyle={TOOLTIP_ITEM_STYLE}
         />
-        <Bar dataKey="value" radius={[0, 4, 4, 0]} label={{ position: "right", fill: TICK_STRONG, fontSize: 10 }}>
+        <Bar dataKey="value" radius={[0, 4, 4, 0]} isAnimationActive={false}>
           {chartData.map((e, i) => {
             const selected = !!(hasKeys && chartSelectionKeys?.includes(e.fullLabel));
             const dim = !!(hasKeys && !selected);
@@ -488,6 +771,7 @@ export const AccessibilityBarChart = ({
               <Cell key={`a-${i}`} fill={e.fill} opacity={dim ? 0.35 : 1} stroke={selected ? "#fff" : "transparent"} strokeWidth={selected ? 2 : 0} />
             );
           })}
+          <LabelList dataKey="value" position="right" fill={TICK_STRONG} fontSize={10} />
         </Bar>
       </BarChart>
     </ResponsiveContainer>
@@ -496,18 +780,33 @@ export const AccessibilityBarChart = ({
 
 const KPIChart = ({ kpiId, data, cityName, chartSelectionKeys, onChartDrill }: KPIChartProps) => {
   switch (kpiId) {
+    case "kpi1.1":
+      // Expansion readiness uses category totals, not mode-share keys.
+      return <AccessibilityBarChart data={data} chartSelectionKeys={chartSelectionKeys} onChartDrill={onChartDrill} />;
     case "kpi1.2":
       return <ModeShareChart data={data} cityName={cityName} chartSelectionKeys={chartSelectionKeys} onChartDrill={onChartDrill} />;
     case "kpi2.1":
-      return <SafetyRadarChart data={data} cityName={cityName} chartSelectionKeys={chartSelectionKeys} onChartDrill={onChartDrill} />;
+      return cityName === "Copenhagen" ? (
+        <SafetyModeSpeedChart data={data} chartSelectionKeys={chartSelectionKeys} onChartDrill={onChartDrill} />
+      ) : (
+        <SafetyRadarChart data={data} cityName={cityName} chartSelectionKeys={chartSelectionKeys} onChartDrill={onChartDrill} />
+      );
     case "kpi3.1":
       return <InfrastructureBarChart data={data} cityName={cityName} chartSelectionKeys={chartSelectionKeys} onChartDrill={onChartDrill} />;
     case "kpi3.2":
-      return <EmissionsLineChart data={data} cityName={cityName} chartSelectionKeys={chartSelectionKeys} onChartDrill={onChartDrill} />;
+      return cityName === "Helsinki" ? (
+        <ModeShareChart data={data} cityName={cityName} chartSelectionKeys={chartSelectionKeys} onChartDrill={onChartDrill} />
+      ) : (
+        <EmissionsLineChart data={data} cityName={cityName} chartSelectionKeys={chartSelectionKeys} onChartDrill={onChartDrill} />
+      );
     case "kpi4.1":
       return <SatisfactionGaugeChart data={data} />;
     case "kpi4.2":
-      return <AccessibilityBarChart data={data} cityName={cityName} chartSelectionKeys={chartSelectionKeys} onChartDrill={onChartDrill} />;
+      return cityName === "Helsinki" ? (
+        <InfrastructureBarChart data={data} cityName={cityName} chartSelectionKeys={chartSelectionKeys} onChartDrill={onChartDrill} />
+      ) : (
+        <AccessibilityBarChart data={data} chartSelectionKeys={chartSelectionKeys} onChartDrill={onChartDrill} />
+      );
     default:
       return <ModeShareChart data={data} cityName={cityName} chartSelectionKeys={chartSelectionKeys} onChartDrill={onChartDrill} />;
   }

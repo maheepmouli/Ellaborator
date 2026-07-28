@@ -8,28 +8,28 @@ export const TRI_P2_PARK_RIDE_HUB_IDS = [
   "tri-loc-gisemi",
 ] as const;
 
-/** Illustrative intermodal mix per P+R hub — pending partner occupancy survey. */
+/** Illustrative bike-uptake mix per P+R hub — pending partner occupancy survey (Evaluation Plan KPI 1.2). */
 const PARK_RIDE_MODE_SHARE: Record<string, ModeShareRow[]> = {
   "tri-loc-smy": [
-    { mode: "Pedestrian", before: 26.5, after: 28.2 },
-    { mode: "Cycle", before: 34.0, after: 35.5 },
-    { mode: "Car", before: 28.5, after: 26.0 },
-    { mode: "Public Transport", before: 8.5, after: 8.8 },
+    { mode: "Pedestrian", before: 26.5, after: 29.0 },
+    { mode: "Cycle", before: 34.0, after: 39.5 },
+    { mode: "Car", before: 28.5, after: 22.0 },
+    { mode: "Public Transport", before: 8.5, after: 8.0 },
     { mode: "PTW", before: 2.5, after: 1.5 },
   ],
   "tri-loc-deh": [
-    { mode: "Pedestrian", before: 24.0, after: 25.0 },
-    { mode: "Cycle", before: 31.5, after: 32.0 },
-    { mode: "Car", before: 32.0, after: 30.5 },
-    { mode: "Public Transport", before: 10.5, after: 11.5 },
-    { mode: "PTW", before: 2.0, after: 1.0 },
+    { mode: "Pedestrian", before: 24.0, after: 26.5 },
+    { mode: "Cycle", before: 31.5, after: 37.0 },
+    { mode: "Car", before: 32.0, after: 25.0 },
+    { mode: "Public Transport", before: 10.5, after: 10.0 },
+    { mode: "PTW", before: 2.0, after: 1.5 },
   ],
   "tri-loc-gisemi": [
-    { mode: "Pedestrian", before: 22.0, after: 23.5 },
-    { mode: "Cycle", before: 28.5, after: 29.0 },
-    { mode: "Car", before: 36.5, after: 34.0 },
-    { mode: "Public Transport", before: 11.0, after: 12.5 },
-    { mode: "PTW", before: 2.0, after: 1.0 },
+    { mode: "Pedestrian", before: 22.0, after: 25.0 },
+    { mode: "Cycle", before: 28.5, after: 34.5 },
+    { mode: "Car", before: 36.5, after: 28.0 },
+    { mode: "Public Transport", before: 11.0, after: 11.0 },
+    { mode: "PTW", before: 2.0, after: 1.5 },
   ],
 };
 

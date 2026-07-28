@@ -45,6 +45,10 @@ export function getKpiMissingDataNotice(
     return "No bicycle-parking inventory linked for this pilot — map shows intervention context only.";
   }
 
+  if (city === "Trikala" && kpiId === "kpi4.1" && pilot?.id === "tri-p2") {
+    return "No Park & Ride user-satisfaction survey linked — left-panel figure is mock placeholder only.";
+  }
+
   if (KPI_SPECIFIC[kpiId] && pilot?.datasetType === "derived") {
     return KPI_SPECIFIC[kpiId];
   }

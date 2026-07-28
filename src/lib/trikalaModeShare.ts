@@ -64,8 +64,41 @@ export function computeWomenMobilityModeShareRows(
   }).filter((r) => r.before > 0);
 }
 
-/** Paired smart-crossing / bike-lane survey active-mode proxy for mode-share bars. */
+/** Paired smart-crossing / bike-lane Likert dimensions for before/after bars. */
+export function modeShareFromTrikalaSmartCrossingSurvey(points: LocalCityPoint[]): ModeShareRow[] {
+  const buckets = new Map<string, { before: number; after: number; n: number }>();
+  for (const p of points) {
+    const segmentId = String(p.properties?.segmentId ?? "");
+    const label = String(p.properties?.likertLabel ?? "").trim();
+    if (!label) continue;
+    if (
+      !segmentId.includes("smart-crossing") &&
+      !segmentId.includes("bike-lane") &&
+      p.properties?.datasetKind !== "survey"
+    ) {
+      continue;
+    }
+    const before = Number(p.properties?.baselineValue ?? 0);
+    const after = Number(p.properties?.interventionValue ?? p.value ?? 0);
+    if (before <= 0 && after <= 0) continue;
+    const existing = buckets.get(label) ?? { before: 0, after: 0, n: 0 };
+    existing.before += before;
+    existing.after += after;
+    existing.n += 1;
+    buckets.set(label, existing);
+  }
+  return [...buckets.entries()].map(([mode, agg]) => ({
+    mode,
+    before: Math.round((agg.n ? agg.before / agg.n : 0) * 10) / 10,
+    after: Math.round((agg.n ? agg.after / agg.n : 0) * 10) / 10,
+  }));
+}
+
+/** Women-mobility active-mode proxy for mode-share bars (legacy KPI 1.2 path). */
 export function modeShareFromTrikalaSurveyRecords(points: LocalCityPoint[]): ModeShareRow[] {
+  const fromSmartCrossing = modeShareFromTrikalaSmartCrossingSurvey(points);
+  if (fromSmartCrossing.length) return fromSmartCrossing;
+
   const activeRecord = points.find((p) =>
     String(p.properties?.segmentId ?? "").includes("women-mobility")
   );
@@ -113,18 +146,22 @@ export function modeShareFromTrikalaInsights(
   const source = pickTrikalaInsightSource(insights);
   if (!source?.activeModeSharePct) return [];
 
-  const active = source.activeModeSharePct;
-  const car = source.carModeSharePct ?? Math.max(0, 100 - active);
+  const active = Math.max(0, Math.min(100, source.activeModeSharePct));
+  const residual =
+    source.carModeSharePct != null
+      ? Math.max(0, Math.min(100 - active, source.carModeSharePct))
+      : Math.max(0, 100 - active);
+  // Partition residual across motorised modes so bars cannot sum above 100%.
   return [
     { mode: "Pedestrian", before: active * 0.42, after: active * 0.44 },
     { mode: "Cycle", before: active * 0.58, after: active * 0.56 },
-    { mode: "Car", before: car, after: Math.max(0, car - 2) },
-    { mode: "Public Transport", before: 12, after: 14 },
-    { mode: "PTW", before: 3, after: 3 },
+    { mode: "Car", before: residual * 0.85, after: residual * 0.8 },
+    { mode: "Public Transport", before: residual * 0.12, after: residual * 0.14 },
+    { mode: "PTW", before: residual * 0.03, after: residual * 0.06 },
   ].map((r) => ({
     mode: r.mode,
-    before: Math.round(r.before * 10) / 10,
-    after: Math.round(r.after * 10) / 10,
+    before: Math.round(Math.max(0, Math.min(100, r.before)) * 10) / 10,
+    after: Math.round(Math.max(0, Math.min(100, r.after)) * 10) / 10,
   }));
 }
 
@@ -146,11 +183,19 @@ function rowsToTrikalaModeShareSlice(rows: ModeShareRow[]): TrikalaModeShareObse
     breakdownIntervention[r.mode] = r.after;
   });
 
-  const baselineMain = Math.round(
-    (breakdownBaseline.Pedestrian ?? 0) + (breakdownBaseline.Cycle ?? 0)
+  const baselineMain = Math.max(
+    0,
+    Math.min(
+      100,
+      Math.round((breakdownBaseline.Pedestrian ?? 0) + (breakdownBaseline.Cycle ?? 0))
+    )
   );
-  const interventionMain = Math.round(
-    (breakdownIntervention.Pedestrian ?? 0) + (breakdownIntervention.Cycle ?? 0)
+  const interventionMain = Math.max(
+    0,
+    Math.min(
+      100,
+      Math.round((breakdownIntervention.Pedestrian ?? 0) + (breakdownIntervention.Cycle ?? 0))
+    )
   );
 
   return {

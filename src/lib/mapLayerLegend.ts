@@ -5,8 +5,9 @@
 
 import { resolveSpatialSystem } from "@/lib/spatialLayerRegistry";
 import { CLIMATE_ZONE_ITEMS, ISSY_FLOW_MODE_ITEMS, SAFETY_SEGMENT_RAMP, SEGMENT_PRESSURE_ITEMS } from "@/lib/issyMapLegendItems";
+import { buildMilanSpeedLegendItems } from "@/lib/milanMapLayers";
+import type { MilanSegmentRecord } from "@/services/milanSegmentData";
 import {
-  CPH_ACCESSIBILITY_ITEMS,
   CPH_CAMERA_REGISTRY_ITEMS,
   CPH_EMISSIONS_ITEMS,
   CPH_FACILITY_ITEMS,
@@ -26,7 +27,8 @@ export interface MapLegendSpec {
   /** How to render each colour swatch in the UI */
   marker: MapLegendMarker;
   items: MapLegendItem[];
-  hint: string;
+  /** Optional footer note under the swatches — omit when it only restates the markers */
+  hint?: string;
 }
 
 export { SEGMENT_PRESSURE_ITEMS, SAFETY_SEGMENT_RAMP, CLIMATE_ZONE_ITEMS, ISSY_FLOW_MODE_ITEMS };
@@ -87,7 +89,12 @@ export function resolveMapLegend(
   city: string,
   kpiId: string,
   scenario: "baseline" | "intervention" | "comparison",
-  options?: { issyJunctionStudy?: boolean; milanIllustrativeLayer?: boolean }
+  options?: {
+    issyJunctionStudy?: boolean;
+    milanIllustrativeLayer?: boolean;
+    pilotId?: string | null;
+    milanSpeedRecords?: MilanSegmentRecord[];
+  }
 ): MapLegendSpec {
   const isIssy = city.toLowerCase().includes("issy");
   const isMilan = city.toLowerCase().includes("milan");
@@ -120,26 +127,54 @@ export function resolveMapLegend(
     }
     switch (spatial) {
       case "flows":
+      case "points":
+        if (kpiId === "kpi3.2") {
+          return {
+            marker: "point",
+            items: CLIMATE_ZONE_ITEMS,
+            hint: "One city-wide climate intensity for Issy (year time series). Halo colour = pressure — not a hex grid.",
+          };
+        }
+        if (kpiId === "kpi1.2" || kpiId === "kpi2.1") {
+          if (kpiId === "kpi1.2" && options?.pilotId === "issy-p2") {
+            return {
+              marker: "point",
+              items: [
+                { label: "≥50% sustainable", color: "#22c55e" },
+                { label: "40–50%", color: "#84cc16" },
+                { label: "30–40%", color: "#f59e0b" },
+                { label: "<30%", color: "#ef4444" },
+              ],
+              hint: "Pilot 2 city scale — sustainable mobility % at ISSY1 OD zone centroids (observed CSV). Dot size ≈ zone activity.",
+            };
+          }
+          return {
+            marker: "point",
+            items: [
+              { label: "Aggregated hub (ripple)", color: "#ef4444" },
+              { label: "Camera FOV", color: "#96C2EF" },
+              { label: "Camera / junction hub", color: "#00ffff" },
+            ],
+            hint:
+              kpiId === "kpi1.2"
+                ? "Mode share uses ripple hubs only (same as Copenhagen) — no street segments on the map."
+                : "Road safety uses the same hub aggregation as Copenhagen (no flow spokes). Corridor detail stays in the observatory.",
+          };
+        }
+        if (spatial === "flows") {
+          return {
+            marker: "line",
+            items: ISSY_FLOW_MODE_ITEMS,
+            hint: "City view — observed zone-to-zone OD arcs (CSV). Not per-street measurement.",
+          };
+        }
+        break;
+      case "segments":
         return {
           marker: "line",
-          items: ISSY_FLOW_MODE_ITEMS,
-          hint: "City view — observed zone-to-zone OD arcs (CSV). Not per-street measurement.",
+          items: SAFETY_SEGMENT_RAMP,
+          hint: "Junction study — observed segment data + derived safety pressure on the monitored intervention corridor.",
         };
-      case "segments":
-        return kpiId === "kpi1.2" || kpiId === "kpi2.1"
-          ? {
-              marker: "line",
-              items: ISSY_JUNCTION_ARM_LEGEND_ITEMS,
-              hint:
-                kpiId === "kpi1.2"
-                  ? "Junction study — dual-pass glowing corridors and directional flow arms from the camera hub; OD mode share uses bundled CSV in city view only."
-                  : "",
-            }
-          : {
-              marker: "line",
-              items: SAFETY_SEGMENT_RAMP,
-              hint: "Junction study — observed segment data + derived safety pressure on the monitored intervention corridor.",
-            };
       case "facility-points":
         return {
           marker: "point",
@@ -152,8 +187,8 @@ export function resolveMapLegend(
           items: CLIMATE_ZONE_ITEMS,
           hint:
             scenario === "intervention"
-              ? "Junction study — environmental hex field (intervention intensity)."
-              : "Junction study — environmental hex field around the intersection.",
+              ? "City-wide climate intensity (intervention) — one reading for Issy."
+              : "City-wide climate intensity — one reading for Issy (year time series).",
         };
       case "sentiment-field":
         return {
@@ -179,12 +214,10 @@ export function resolveMapLegend(
     return {
       marker: "point",
       items: [
-        { label: "Aggregated hub (ripple)", color: "#38bdf8" },
-        { label: "Camera FOV", color: "#96C2EF" },
-        { label: "Hub threshold rings", color: "#ef4444" },
+        { label: "Camera hub (pulse rings)", color: "#38bdf8" },
+        { label: "Hub intensity rings", color: "#ef4444" },
         ...CPH_CAMERA_REGISTRY_ITEMS,
       ],
-      hint: "Flows aggregated at camera hubs (ripple + FOV). Per-direction named links are in the observatory panel — not drawn as map spokes.",
     };
   }
 
@@ -203,9 +236,9 @@ export function resolveMapLegend(
 
   if (isCopenhagen && kpiId === "kpi3.2") {
     return {
-      marker: "point",
+      marker: "ramp",
       items: CPH_EMISSIONS_ITEMS,
-      hint: "Modelled COPERT-lite emissions nodes (C badge) at OTC flow locations — intensity ramp shows relative pressure; not measured ambient CO₂.",
+      hint: "One point per OTC sensor (directions summed). Colour = modelled pressure index 0–100 — not measured ambient CO₂.",
     };
   }
 
@@ -213,23 +246,28 @@ export function resolveMapLegend(
     return {
       marker: "point",
       items: CPH_FACILITY_ITEMS,
-      hint: "Parking bay inventory polygons and category logo markers for zero-emission facility deployment.",
     };
   }
 
   if (isCopenhagen && kpiId === "kpi4.1") {
     return {
       marker: "point",
-      items: CPH_SURVEY_ITEMS,
-      hint: "Citizen survey logo markers (W) at pilot-area anchors — hover to open acceptability and safety perception in the observatory.",
+      items: [
+        { label: "MOCK satisfaction (mode-share site)", color: "#7f5af0" },
+        { label: "Pilot area (inferred)", color: "rgba(255,255,255,0.35)" },
+      ],
+      hint: "MOCK — satisfaction pins reuse KPI 1.2 OTC / mode-share corridor sites. Not live survey geodata.",
     };
   }
 
   if (isCopenhagen && kpiId === "kpi4.2") {
     return {
-      marker: "polygonRamp",
-      items: CPH_ACCESSIBILITY_ITEMS,
-      hint: "Parking conversion polygons plus category markers (cycle, cargo, car removed) — infrastructure accessibility proxy, not an EN 17210 audit.",
+      marker: "point",
+      items: [
+        { label: "MOCK accessibility (mode-share site)", color: "#22d3ee" },
+        { label: "Pilot area (inferred)", color: "rgba(255,255,255,0.35)" },
+      ],
+      hint: "MOCK — accessibility/security pins reuse KPI 1.2 OTC / mode-share corridor sites. Survey-style placeholder, not EN 17210.",
     };
   }
 
@@ -245,28 +283,60 @@ export function resolveMapLegend(
   }
 
   if (isHelsinki && kpiId === "kpi1.2") {
+    // Do not default missing pilotId to hel-p1 — that mislabels FVH3 as hazard hubs.
+    const pilot = options?.pilotId;
+    if (pilot === "hel-p2") {
+      return {
+        marker: "point",
+        items: [
+          { label: "Primary parking cluster", color: "#38bdf8" },
+          { label: "Parking observation clusters", color: "#0ea5e9" },
+        ],
+        hint: "FVH2: 509 Kallio field observations grouped into ~8 parking clusters. No mode-share sensor — counts are from the observation study.",
+      };
+    }
+    if (pilot === "hel-p3") {
+      return {
+        marker: "point",
+        items: [
+          { label: "Telraam (mode-share counts)", color: "#ef4444" },
+          { label: "Camera / Mobilysis (FOV)", color: "#f97316" },
+          { label: "HSL tram corridor (line 15)", color: "#8578C3" },
+        ],
+        hint: "FVH3 Viikki: Telraam (red) for sustainable mode share, Mobilysis camera (orange FOV) for gate counts. Tram is context only.",
+      };
+    }
     return {
       marker: "point",
       items: [
         { label: "Sampled dangerous-location reports", color: "#ef4444" },
-        { label: "Primary mode-share hub", color: "#38bdf8" },
+        { label: "Primary hazard cluster", color: "#38bdf8" },
         { label: "Hazard density cluster hubs", color: "#ef4444" },
-        { label: "HSL tram corridor (line 15)", color: "#8578C3" },
       ],
-      hint: "FVH1: ~220 sampled survey points + 8 density hubs. FVH3: Telraam hub + HSL tram corridor. Full survey counts stay in the observatory.",
+      hint: "FVH1: ~220 sampled survey points + 8 density hubs. No pilot-scoped mode-share sensor in this data drop.",
     };
   }
 
   if (isHelsinki && kpiId === "kpi2.1") {
+    const isViikkiPilot = options?.pilotId === "hel-p3";
+    if (isViikkiPilot) {
+      return {
+        marker: "point",
+        items: [
+          { label: "Viikki UX safety survey (site)", color: "#f97316" },
+          { label: "HSL tram / Innotrafik context", color: "#8578C3" },
+        ],
+        hint: "FVH3: 50-response on-site UX survey at the Viikki light-rail crossing only (not citywide FVH1 hazard GPKGs). Zoom freely to street level.",
+      };
+    }
     return {
       marker: "point",
       items: [
         { label: "Sampled dangerous locations", color: "#ef4444" },
         { label: "Sampled near-miss / conflicts", color: "#f97316" },
-        { label: "Safety-pressure hub", color: "#2ecc71" },
-        { label: "HSL tram / Innotrafik (FVH3)", color: "#8578C3" },
+        { label: "Safety cluster hub", color: "#2ecc71" },
       ],
-      hint: "FVH1 paints sampled hazard + conflict clouds under 8 pressure hubs (2,663 + 3,202 records). Zoom freely to street level.",
+      hint: "FVH1 paints sampled hazard + conflict clouds under city safety clusters (2,663 + 3,202 records). Zoom freely to street level.",
     };
   }
 
@@ -279,7 +349,10 @@ export function resolveMapLegend(
         { label: "Raised", color: "#F97316" },
         { label: "Higher pressure", color: "#E02020" },
       ],
-      hint: "Colour-rated points only (no ripples). Hazard-sample density + attitude / Telraam motor-intensity rates. Not ambient CO₂.",
+      hint:
+        options?.pilotId === "hel-p3"
+          ? "Colour-rated points only (no ripples). Viikki warning-system context may include Telraam motor-intensity proxy. Not ambient CO₂."
+          : "Colour-rated illustrative pressure points only. These are proxy samples, not direct emissions measurements or live mobility sensors.",
     };
   }
 
@@ -287,30 +360,44 @@ export function resolveMapLegend(
     return {
       marker: "point",
       items: [
-        { label: "Sampled parking observations", color: "#38bdf8" },
-        { label: "Obstruction / hazard flagged", color: "#ef4444" },
+        { label: "On street / cycleway", color: "#38bdf8" },
+        { label: "On pavement", color: "#f97316" },
+        { label: "Bike not in racks", color: "#2ecc71" },
+        { label: "Outside parking zone", color: "#ef4444" },
       ],
-      hint: "Sampled e-scooter parking observations (~50 of 509). Category totals live in the observatory.",
+      hint:
+        scenario === "baseline"
+          ? "Baseline sample of Kallio parking observations (thinner set). After shows a denser sample of the same single-period study — not live sensors."
+          : "Kallio e-scooter parking observations by category. Dots are field observations, not live parking sensors (20 planned sensors were not delivered).",
     };
   }
 
   if (isHelsinki && (kpiId === "kpi4.1" || kpiId === "kpi4.2")) {
+    if (options?.pilotId === "hel-p2" && kpiId === "kpi4.2") {
+      return {
+        marker: "point",
+        items: [
+          { label: "On street / cycleway", color: "#38bdf8" },
+          { label: "On pavement", color: "#f97316" },
+          { label: "Bike not in racks", color: "#2ecc71" },
+          { label: "Outside parking zone", color: "#ef4444" },
+        ],
+        hint: "Kallio e-scooter field observations from the five GPKG layers (pavement, street, cycleway, outside zone, bikes). Not live sensors — Viikki UX belongs to FVH3.",
+      };
+    }
     return {
       marker: "point",
       items:
         kpiId === "kpi4.1"
-          ? [
-              { label: "Viikki UX survey hub", color: "#96c2ef" },
-              { label: "Pilot influence field", color: "#94a3b8" },
-            ]
+          ? [{ label: "Viikki UX survey hub (site)", color: "#96c2ef" }]
           : [
               { label: "Viikki UX survey hub", color: "#96c2ef" },
-              { label: "Obstruction-flagged sample (FVH2)", color: "#f97316" },
+              { label: "Accessibility challenge share", color: "#38bdf8" },
             ],
       hint:
         kpiId === "kpi4.1"
-          ? "Single Viikki UX satisfaction hub vs the ≥75% KPI 4.1 target."
-          : "Viikki UX accessibility note; FVH2 adds obstruction-flagged e-scooter points (no site boundary).",
+          ? "Single on-site UX satisfaction hub at the Viikki crossing (n=50) vs the ≥75% KPI 4.1 target — not area-spread points."
+          : "Viikki UX accessibility self-report (visual / hearing / mobility challenge).",
     };
   }
 
@@ -384,10 +471,16 @@ export function resolveMapLegend(
 
   // Milan road-network segments (speed / environment)
   if (isMilan && kpiId === "kpi2.1") {
+    const items =
+      options?.milanSpeedRecords?.length
+        ? buildMilanSpeedLegendItems(options.milanSpeedRecords)
+        : SEGMENT_PRESSURE_ITEMS;
     return {
       marker: "line",
-      items: SEGMENT_PRESSURE_ITEMS,
-      hint: "Road segments: colour shows relative speed / risk band (higher = more pressure).",
+      items,
+      hint: options?.milanSpeedRecords?.length
+        ? "AMAT network.shp corridor (Maggio 2025): colour = observed speed band; grey = network geometry without a Maggio reading."
+        : "Road segments: colour shows relative speed / risk band (higher = more pressure).",
     };
   }
   if (isMilan && kpiId === "kpi3.2") {
@@ -395,17 +488,21 @@ export function resolveMapLegend(
       return {
         marker: "point",
         items: [
-          { label: "Climate proxy (C)", color: "#f59e0b" },
-          { label: "Higher pressure", color: "#ef4444" },
-          { label: "Lower pressure", color: "#22c55e" },
+          { label: "Lower pressure", color: "#22C55E" },
+          { label: "Mid pressure", color: "#FBBF24" },
+          { label: "Higher pressure", color: "#F97316" },
         ],
-        hint: "Illustrative zero-emission / climate proxy at 6–8 mode-share junction hubs — RETE segments unavailable for this pilot. Dim lines = KPI 2.1 safety network.",
+        hint: "Illustrative climate pressure (filled circles) along AMAT network.shp — RETE env segments unavailable. Dim grey lines = intervention corridor.",
       };
     }
     return {
       marker: "line",
-      items: SEGMENT_PRESSURE_ITEMS,
-      hint: "Network segments: bands are relative within the loaded RETE window.",
+      items: [
+        { label: "Lower pressure", color: "#22C55E" },
+        { label: "Mid", color: "#FBBF24" },
+        { label: "Higher pressure", color: "#F97316" },
+      ],
+      hint: "RETE network segments: colour = relative environmental pressure within the loaded window.",
     };
   }
   if (isMilan && kpiId === "kpi4.2") {
@@ -413,10 +510,11 @@ export function resolveMapLegend(
       return {
         marker: "point",
         items: [
-          { label: "Accessibility (A)", color: "#22c55e" },
-          { label: "Equal access score", color: "#63ccff" },
+          { label: "Equal access", color: "#22c55e" },
+          { label: "Slightly penalised", color: "#fbbf24" },
+          { label: "Heavily penalised", color: "#f87171" },
         ],
-        hint: "Illustrative accessibility proxy at 6–8 mode-share junction hubs — DSS routing points unavailable for this pilot. Dim lines = KPI 2.1 safety network.",
+        hint: "Illustrative accessibility proxy (filled dots) along intervention corridor — DSS workbook rows unavailable for this pilot.",
       };
     }
     return {
@@ -426,7 +524,7 @@ export function resolveMapLegend(
         { label: "Slightly penalised", color: "#fbbf24" },
         { label: "Heavily penalised", color: "#f87171" },
       ],
-      hint: "AMAT DSS civic-address routing points (150 m). Color by barrier category; value = % equal-access routes. Pilot 1 includes before/after.",
+      hint: "AMAT DSS civic-address points — filled dots coloured by barrier category (equal / slight / heavy). Pilot 1 includes before/after where posted.",
     };
   }
   if (isMilan && kpiId === "kpi3.1") {
@@ -437,18 +535,25 @@ export function resolveMapLegend(
         { label: "EV charging", color: "#38bdf8" },
         { label: "Mobility hub / pedestrian", color: "#a78bfa" },
       ],
-      hint: "Illustrative zero-emission facility inventory (KPI 3.1) — taxonomy badges per deployment type; dim lines = speed network underlay.",
+      hint: "Illustrative zero-emission facility inventory (KPI 3.1) — taxonomy badges placed along AMAT network.shp; dim grey lines = intervention corridor underlay.",
     };
   }
-  if (isMilan && kpiId === "kpi1.2") {
+  if (isMilan && kpiId === "kpi1.1") {
     return {
       marker: "point",
       items: [
-        { label: "Aggregated hub (ripple)", color: "#38bdf8" },
-        { label: "Camera FOV", color: "#96C2EF" },
-        { label: "Hub pulse", color: "#a78bfa" },
+        { label: "CDM3 expansion hub", color: "#38bdf8" },
+        { label: "Pilot influence field", color: "#94a3b8" },
       ],
-      hint: "One ripple hub per AMAT camera site (all matched + inferred). Click the center point for the observatory — directional flows stay in the panel.",
+      hint: "Pilot 3 expansion readiness from the Milan Intervention Evaluation Plan (KPI 1.1 ≥1 plan).",
+    };
+  }
+
+  if (isMilan && kpiId === "kpi1.2") {
+    return {
+      marker: "point",
+      items: [{ label: "AMAT count site", color: "#38bdf8" }],
+      hint: "AMAT road-user count sites (not cameras). Click a hub for sensor-level mode share in the observatory.",
     };
   }
 
@@ -462,17 +567,39 @@ export function resolveMapLegend(
           { label: "Zero-emission zone", color: "#ffe082" },
           { label: "Fleet coverage (anchor)", color: "#96c2ef" },
         ],
-        hint: "Amber halos = environmental monitoring zones; lightning-badge icons = Smart Citizen nodes from partner My Maps.",
+        hint: "Amber halos = environmental monitoring zones; lightning-badge icons = Smart Citizen nodes (Pilot 4 · partner My Maps).",
       };
     }
     if (kpiId === "kpi4.1") {
+      const pilotId = options?.pilotId;
+      if (pilotId === "tri-p2") {
+        return {
+          marker: "point",
+          items: [{ label: "Park and ride station", color: "#22c55e" }],
+          hint: "Mock satisfaction — coloured dots mark SMY · DEH · GiSeMi. No P+R user survey is linked yet.",
+        };
+      }
       return {
         marker: "polygonRamp",
         items: SATISFACTION_FIELD_ITEMS,
-        hint: "Green satisfaction halos at partner map sites; P icons = Park & Ride hub polygons (SMY, DEH, GiSeMi on Pilot 2).",
+        hint:
+          pilotId === "tri-p1"
+            ? "Green satisfaction halo at the Military School smart crossing; survey Likert (condition, maintenance, accessibility) in the observatory."
+            : "Green satisfaction halos at partner map sites; P icons = Park & Ride hub polygons (SMY, DEH, GiSeMi on Pilot 2).",
       };
     }
     if (kpiId === "kpi3.1") {
+      const pilotId = options?.pilotId;
+      if (pilotId === "tri-p2") {
+        return {
+          marker: "point",
+          items: [
+            { label: "Park & Ride hub (installed)", color: "#00ffff" },
+            { label: "P+R site polygon", color: "#2ecc71" },
+          ],
+          hint: "KPI 3.1 counts the three installed P+R hubs (SMY · DEH · GiSeMi) — baseline 0 (map empty) → intervention 3. Municipal car parks omitted.",
+        };
+      }
       return {
         marker: "point",
         items: [
@@ -484,6 +611,28 @@ export function resolveMapLegend(
       };
     }
     if (kpiId === "kpi1.2") {
+      const pilotId = options?.pilotId;
+      if (pilotId === "tri-p2") {
+        return {
+          marker: "point",
+          items: [
+            { label: "Park & Ride hub (bike uptake)", color: "#00ffff" },
+            { label: "Bike / docking station", color: "#2ecc71" },
+            { label: "P+R site polygon", color: "#2ecc71" },
+          ],
+          hint: "KPI 1.2 · bike uptake from park-and-ride facilities (Intervention Evaluation Plan). SMY · DEH · GiSeMi hubs only — municipal car parks omitted; partner occupancy survey pending.",
+        };
+      }
+      if (pilotId === "tri-p4") {
+        return {
+          marker: "point",
+          items: [
+            { label: "SMARTA / survey aggregate", color: "#2ecc71" },
+            { label: "Women mobility segment", color: "#00ffff" },
+          ],
+          hint: "Pilot 4 · SMARTA2 app expansion — mode-share from survey aggregates at the pilot anchor (no CV FOV radar on this pilot).",
+        };
+      }
       return {
         marker: "point",
         items: [
@@ -491,21 +640,58 @@ export function resolveMapLegend(
           { label: "Camera FOV", color: "#96C2EF" },
           { label: "Survey / P+R hub", color: "#2ecc71" },
         ],
-        hint: "Flows aggregated at mobility hubs (ripple + FOV). No map spokes — directional detail stays in the observatory. Pilot 1: survey hub; Pilot 2: P+R hubs (SMY · DEH · GiSeMi).",
+        hint: "Flows aggregated at mobility hubs (ripple + FOV). No map spokes — directional detail stays in the observatory.",
       };
     }
     if (kpiId === "kpi2.1" || kpiId === "kpi4.2") {
+      const pilotId = options?.pilotId;
+      if (pilotId === "tri-p3") {
+        return {
+          marker: "point",
+          items:
+            kpiId === "kpi2.1"
+              ? [
+                  { label: "Bike-lane sensor", color: "#00ffff" },
+                  { label: "Higher occupancy stress", color: "#f59e0b" },
+                  { label: "Lower occupancy stress", color: "#22c55e" },
+                ]
+              : [
+                  { label: "Bike-lane sensor (geography)", color: "#00ffff" },
+                  { label: "Survey Likert (observatory)", color: "#22c55e" },
+                ],
+          hint:
+            kpiId === "kpi2.1"
+              ? "Pilot 3 LoRa bike-lane sensors — icon tint = occupancy stress; mock speed derived from FREE/BUSY. Toggle Baseline vs Intervention to see constructed pre-redesign offset."
+              : "Pilot 3 KPI 4.2 — map pins are bike-lane sensor locations; scores come from the online bike-safety survey (baseline + post SharePoint xlsx), not LoRa availability.",
+        };
+      }
+      if (pilotId === "tri-p1") {
+        return {
+          marker: "point",
+          items:
+            kpiId === "kpi4.2"
+              ? [{ label: "Smart crossing (accessibility)", color: "#22c55e" }]
+              : [
+                  { label: "Smart crossing / safety", color: "#7f5af0" },
+                  { label: "Crossing vector", color: "#00ffff" },
+                ],
+          hint:
+            kpiId === "kpi4.2"
+              ? "Accessibility badge at the Military School smart crossing — survey Likert in the observatory."
+              : "Safety / crossing icon at Military School; dashed cyan line = smart crossing vector. Survey dimensions in the observatory.",
+        };
+      }
       return {
         marker: "point",
         items: [
-          { label: "Crossing / safety (W)", color: "#ffb300" },
+          { label: "Crossing / safety (W)", color: "#7f5af0" },
           { label: "Bike-lane sensor (M)", color: "#00ffff" },
           { label: "Accessibility (A)", color: "#22c55e" },
-          { label: "Traffic signal", color: "#63ccff" },
+          { label: "Traffic signal", color: "#00ffff" },
         ],
         hint:
           kpiId === "kpi4.2"
-            ? "Accessibility (A) badges on bike-lane sensors for KPI 4.2; safety (M/W) icons for KPI 2.1 — Pilot 3 uses distinct icons per KPI."
+            ? "Accessibility (A) badges on bike-lane sensors for KPI 4.2; safety icons for KPI 2.1 — Pilot 3 uses distinct icons per KPI."
             : "Safety icons on crossing corridor; dashed cyan line = Military School smart crossing vector.",
       };
     }

@@ -140,7 +140,8 @@ export function renderHubRipplePulseOverlay(
     markersOut.push(pulseMarker);
   }
 
-  if (!showCenter && !canWire) return;
+  // When showAnchorDot is false, rings-only — caller already drew the clickable hub.
+  if (!showCenter) return;
 
   const detail = canWire && interaction
     ? {

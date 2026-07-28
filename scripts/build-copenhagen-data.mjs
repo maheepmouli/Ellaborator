@@ -863,24 +863,61 @@ function buildSurveysJson() {
     XLSX.readFile(safetyPath).Sheets.Sheet3,
     { header: 1, defval: null }
   );
+
+  const likertBins = (rows, min = 1, max = 7) => {
+    const counts = new Map();
+    for (let s = min; s <= max; s++) counts.set(s, 0);
+    let n = 0;
+    for (const row of rows) {
+      const v = parseNum(row?.[0]);
+      if (v >= min && v <= max) {
+        const score = Math.round(v);
+        counts.set(score, (counts.get(score) || 0) + 1);
+        n += 1;
+      }
+    }
+    const labels = {
+      1: "1 — Strongly disagree",
+      4: "4 — Neutral",
+      7: "7 — Strongly agree",
+    };
+    return [...counts.entries()].map(([score, count]) => ({
+      score,
+      label: labels[score] || String(score),
+      count,
+      pct: n ? Math.round((1000 * count) / n) / 10 : 0,
+    }));
+  };
+
   const beforeAvg = likertMean(beforeRows, 1, 7);
   const afterAvg = likertMean(afterRows, 1, 7);
+  const distributionBefore = likertBins(beforeRows, 1, 7);
+  const distributionAfter = likertBins(afterRows, 1, 7);
+  const sampleBefore = distributionBefore.reduce((s, b) => s + b.count, 0);
+  const sampleAfter = distributionAfter.reduce((s, b) => s + b.count, 0);
   const safetyVals = safetyRows
     .map((r) => parseNum(r?.[0]))
     .filter((v) => v >= 1 && v <= 5);
   const safetyAvg = safetyVals.length ? safetyVals.reduce((a, b) => a + b, 0) / safetyVals.length : 0;
   return {
     acceptability: {
-      pilotId: "cph-p1",
+      pilotId: "cph-p2",
       beforeMean: beforeAvg,
       afterMean: afterAvg,
       beforePct: likertToPercent(beforeAvg, 7),
       afterPct: likertToPercent(afterAvg, 7),
-      sampleBefore: beforeRows.length - 2,
-      sampleAfter: afterRows.length - 2,
+      sampleBefore,
+      sampleAfter,
+      source: "Acceptability_Intervention1_BEFORE/AFTER.xlsx",
+      method:
+        "Public acceptability Likert 1–7 (Intervention 1 / Medieval City). Chart style aligned with Trikala smart-crossing baseline pie charts (ELABORATOR Baseline data_smart crossing).",
+      locationNote:
+        "Survey was not geolocated to a single street point — pin sits at the Medieval City / Vandkunsten pilot-area centroid (inferred).",
       likert: [
         { label: "Overall acceptability", before: likertToPercent(beforeAvg, 7), after: likertToPercent(afterAvg, 7) },
       ],
+      distributionBefore,
+      distributionAfter,
     },
     safetyPerception: {
       pilotId: "cph-p3",
@@ -984,6 +1021,7 @@ async function buildManualJson() {
     for (const file of files) {
       const siteName = file.replace(/_\d{8}\.xlsx$/i, "").replace(/_/g, " ");
       const parsed = parseManualWorkbook(path.join(manualDir, file), siteName);
+      // Sticky #32: Pilot 1 primary; runtime also links Pilot 3 — never Pilot 2.
       counts.push({ ...parsed, file, pilotId: "cph-p1" });
     }
   } catch {

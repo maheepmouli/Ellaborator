@@ -16,14 +16,44 @@ export function SafetyPressureChart({ payload, compact }: SafetyPressureChartPro
   const maxCat = Math.max(1, ...categories.map((c) => c.value));
   const [activeLabel, setActiveLabel] = useState<string | null>(null);
   const isHelsinkiHazard = payload.kpiId === "kpi2.1" && categories.length > 0;
+  const isMilanAmatSpeed =
+    payload.kpiId === "kpi2.1" && payload.amatSegmentSpeed && (payload.statCards?.length ?? 0) > 0;
+  const isMilanSegmentDetail =
+    isMilanAmatSpeed && payload.statCards?.some((card) => card.label === "Avg speed");
 
   return (
     <div className={obsGlassCardClass(compact)} style={obsGlassCardStyle()}>
       <p className="text-[11px] font-semibold text-white/70 mb-3">
-        {isHelsinkiHazard ? "Hazard-type pressure (interactive)" : "Safety / flow pressure"}
+        {isHelsinkiHazard
+          ? "Hazard-type pressure (interactive)"
+          : isMilanAmatSpeed
+            ? isMilanSegmentDetail
+              ? "AMAT segment speeds"
+              : "AMAT speed network"
+            : payload.kpiId === "kpi4.2"
+              ? "DSS accessibility"
+              : "Safety / flow pressure"}
       </p>
 
-      {categories.length > 0 ? (
+      {isMilanAmatSpeed && payload.statCards ? (
+        <>
+          <div className={`grid grid-cols-2 gap-2 ${compact ? "mb-2" : "mb-3"}`}>
+            {payload.statCards.slice(0, 4).map((card) => (
+              <div key={card.label} className="rounded-lg border p-2" style={{ borderColor: OBS_C.border }}>
+                <p className="text-[9px] uppercase tracking-wide text-white/45 truncate">{card.label}</p>
+                <p className="text-lg font-bold" style={{ color: card.color ?? OBS_C.cyan }}>
+                  {card.value}
+                </p>
+                {card.note ? <p className="text-[9px] text-white/40 mt-0.5">{card.note}</p> : null}
+              </div>
+            ))}
+          </div>
+          <p className="text-[9px] text-white/45 leading-relaxed">
+            Observed speeds from AMAT Maggio 2025 metric DBF joined to network.shp by segment ID (BS_Id).
+            Values are partner measurements — not a derived congestion or speed proxy.
+          </p>
+        </>
+      ) : categories.length > 0 ? (
         <div className={`space-y-2 ${compact ? "mb-2" : "mb-3"}`}>
           {categories.slice(0, compact ? 5 : 8).map((row) => {
             const isActive = activeLabel === row.label;
@@ -64,6 +94,23 @@ export function SafetyPressureChart({ payload, compact }: SafetyPressureChartPro
             </p>
           ) : null}
         </div>
+      ) : payload.kpiId === "kpi4.2" && payload.statCards?.length ? (
+        <div className={`grid grid-cols-2 gap-2 ${compact ? "mb-2" : "mb-3"}`}>
+          {payload.statCards.slice(0, 4).map((card) => (
+            <div key={card.label} className="rounded-lg border p-2" style={{ borderColor: OBS_C.border }}>
+              <p className="text-[9px] uppercase tracking-wide text-white/45 truncate">{card.label}</p>
+              <p className="text-lg font-bold" style={{ color: card.color ?? OBS_C.cyan }}>
+                {card.value}
+              </p>
+              {card.note ? <p className="text-[9px] text-white/40 mt-0.5">{card.note}</p> : null}
+            </div>
+          ))}
+        </div>
+      ) : payload.kpiId === "kpi4.2" ? (
+        <p className="text-[10px] text-white/50 leading-relaxed py-2">
+          Accessibility is barrier-category based (equal / slight / heavy). Speed and congestion are not
+          used for this KPI.
+        </p>
       ) : (
         <>
           <div className="grid grid-cols-2 gap-2">

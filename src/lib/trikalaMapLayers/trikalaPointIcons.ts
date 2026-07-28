@@ -12,16 +12,26 @@ export function resolveTrikalaInfraIconSpec(
   switch (kind) {
     case "air_quality_sensor":
       return resolveMapPointIconSpec({ kind: "air_quality_sensor", category: "environmental sensor" });
-    case "bike_lane_sensor":
-      return selectedKpi === "kpi4.2"
-        ? resolveMapPointIconSpec({ facilityCategory: "accessibility" })
-        : resolveMapPointIconSpec({ category: "bike lane sensor" });
+    case "bike_lane_sensor": {
+      // Always bike-lane sensor — never Accessibility (A) badges on LoRa nodes.
+      const base = resolveMapPointIconSpec({ category: "bike lane sensor", kind: "bike_lane_sensor" });
+      return {
+        ...base,
+        label: "Bike-lane sensor",
+        symbol: "M",
+        accent: "#00ffff",
+        glow: "#22d3ee",
+      };
+    }
     case "bike_station":
       return resolveMapPointIconSpec({ facilityCategory: "cycle parking" });
     case "parking_station":
       return resolveMapPointIconSpec({ facilityCategory: "parking" });
     case "park_and_ride":
-      return resolveMapPointIconSpec({ kind: "park_and_ride" });
+      // P+R framed as bike / micromobility hubs (not municipal car parks).
+      return selectedKpi === "kpi1.2" || selectedKpi === "kpi3.1"
+        ? resolveMapPointIconSpec({ facilityCategory: "cycle parking" })
+        : resolveMapPointIconSpec({ kind: "park_and_ride" });
     case "smart_crossing_site":
       return selectedKpi === "kpi4.2"
         ? resolveMapPointIconSpec({ facilityCategory: "accessibility" })

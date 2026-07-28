@@ -85,8 +85,8 @@
   },
   {
     "siteName": "Vandkunsten/Radhuusstraede",
-    "lat": 55.677575,
-    "lon": 12.579961,
+    "lat": 55.676056,
+    "lon": 12.574152,
     "flow": "Radhuusstraede North --> Radhuusstraede South",
     "pre": {
       "bike": 11305,
@@ -127,8 +127,8 @@
   },
   {
     "siteName": "Vandkunsten/Radhuusstraede",
-    "lat": 55.677575,
-    "lon": 12.579961,
+    "lat": 55.676056,
+    "lon": 12.574152,
     "flow": "Radhuusstraede South --> Radhuusstraede North",
     "pre": {
       "bike": 8996,

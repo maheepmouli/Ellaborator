@@ -1,8 +1,10 @@
 import type { LocalCityPoint } from "@/services/localCityData";
-import type { MilanSegmentDataset } from "@/services/milanSegmentData";
+import type { MilanSegmentDataset, MilanSegmentRecord } from "@/services/milanSegmentData";
+import { sampleInterventionNetworkSites } from "@/data/milanZeroEmissionMock";
 import { filterMilanLocalPoints } from "@/lib/interventionZone";
 import type { MilanJunctionAnchor } from "./milanJunctionAnchors";
 import { pickJunctionsForModeSharePresentation } from "./milanJunctionModeShareMock";
+import { getQuantile, getSegmentHighlight } from "@/lib/segmentHighlight";
 
 function seededUnit(seed: string): number {
   let hash = 0;
@@ -64,25 +66,47 @@ export function milanJunctionAnchorsForPilot(
 }
 
 /**
- * Illustrative climate / environmental pressure at mode-share junction hubs.
+ * Illustrative climate / environmental pressure along the intervention network.
  * Used only when RETE environment segments are unavailable for the pilot.
+ * Prefer network.shp samples so markers sit in the corridor (not a clustered hub pile).
  */
 export function buildMilanJunctionClimateMockPoints(
   junctions: MilanJunctionAnchor[],
-  pilotId: string
+  pilotId: string,
+  networkSegments?: MilanSegmentRecord[] | null
 ): LocalCityPoint[] {
-  return junctions.map((junction, junctionIndex) => {
-    const seed = `${pilotId}-${junction.id}-climate`;
-    const baselineValue = 28 + seededUnit(`${seed}-base`) * 52 + junctionIndex * 2.5;
+  const targetCount = Math.max(junctions.length, 8);
+  const networkSites = networkSegments?.length
+    ? sampleInterventionNetworkSites(networkSegments, targetCount)
+    : [];
+  // Sticky #19: always emit climate proxies when we have corridor geometry or junction anchors.
+  const sites =
+    networkSites.length > 0
+      ? networkSites
+      : junctions.length > 0
+        ? junctions.map((junction) => ({
+            lat: junction.lat,
+            lon: junction.lon,
+            streetName: junction.label,
+            segmentId: junction.id,
+          }))
+        : [];
+
+  if (!sites.length) return [];
+
+  return sites.map((site, siteIndex) => {
+    const seed = `${pilotId}-${site.segmentId}-climate`;
+    const baselineValue = 28 + seededUnit(`${seed}-base`) * 52 + siteIndex * 2.5;
     const interventionValue = baselineValue * (0.86 + seededUnit(`${seed}-post`) * 0.1);
     const comparisonValue = interventionValue - baselineValue;
     const preCo2GPerHour = Math.round(baselineValue * 42);
     const postCo2GPerHour = Math.round(interventionValue * 42);
+    const junctionId = junctions[siteIndex % Math.max(junctions.length, 1)]?.id ?? `mil-climate-${siteIndex + 1}`;
 
     return {
-      id: `milan-mock-kpi3.2-${junction.id}`,
-      lat: junction.lat,
-      lon: junction.lon,
+      id: `milan-mock-kpi3.2-${site.segmentId}-${siteIndex}`,
+      lat: site.lat,
+      lon: site.lon,
       value: interventionValue,
       properties: {
         dataOrigin: "mock",
@@ -90,26 +114,38 @@ export function buildMilanJunctionClimateMockPoints(
         type: "mock",
         parserStatus: "illustrative",
         interventionId: pilotId,
-        junctionId: junction.id,
-        junctionLabel: junction.label,
-        siteKey: junction.id,
-        segmentId: junction.id,
-        streetName: junction.label,
+        junctionId,
+        junctionLabel: site.streetName,
+        siteKey: site.segmentId,
+        segmentId: site.segmentId,
+        networkSegmentId: site.segmentId,
+        streetName: site.streetName,
         baselineValue,
         interventionValue,
         comparisonValue,
         preCo2GPerHour,
         postCo2GPerHour,
-        source: "Illustrative junction climate proxy (KPI 2.1 network anchors)",
-        method: "Derived environmental pressure mock at mode-share junctions",
+        source: "Illustrative climate proxy along intervention network",
+        method: "Derived environmental pressure mock on network.shp samples",
         spatialNote:
-          "Illustrative climate proxy for stakeholder demo — RETE segments unavailable for this pilot",
+          "Illustrative climate proxy for stakeholder demo — RETE segments unavailable; placed along AMAT network.shp",
         temporalCoverage: "illustrative",
         spatialQuality: "inferred",
-        locationMethod: "safety_network_junction",
+        locationMethod: "intervention_network_sample",
       },
     };
   });
+}
+
+/** Colour bands for Milan KPI 3.2 illustrative climate points (matches map + legend). */
+export function milanClimatePressureColor(
+  value: number,
+  peers: number[]
+): { color: string; band: string } {
+  const low = getQuantile(peers, 0.15);
+  const high = getQuantile(peers, 0.85);
+  const highlight = getSegmentHighlight(value, low, high, "climate");
+  return { color: highlight.color, band: highlight.band };
 }
 
 /**
@@ -128,6 +164,12 @@ export function buildMilanJunctionAccessibilityMockPoints(
       baselineValue + 3 + seededUnit(`${seed}-post`) * 14
     );
     const comparisonValue = interventionValue - baselineValue;
+    const category =
+      interventionValue >= 75
+        ? "Equal access"
+        : interventionValue >= 55
+          ? "Slightly penalised"
+          : "Heavily penalised";
 
     return {
       id: `milan-mock-kpi4.2-${junction.id}`,
@@ -145,7 +187,9 @@ export function buildMilanJunctionAccessibilityMockPoints(
         siteKey: junction.id,
         segmentId: junction.id,
         streetName: junction.label,
-        facilityCategory: "Universal access (illustrative)",
+        facilityCategory: category,
+        category,
+        likertLabel: category,
         baselineValue,
         interventionValue,
         comparisonValue,

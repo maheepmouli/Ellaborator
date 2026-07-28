@@ -13,6 +13,14 @@ export type LayerTrustSummary = {
   spatialSystemHint?: string;
 };
 
+const PROVENANCE_TOOLTIPS: Record<string, string> = {
+  observed: "Measured directly from sensors or partner field counts.",
+  derived: "Calculated from observed inputs using a documented method.",
+  modelled: "Estimated via a model (e.g. emissions factors) — not directly measured.",
+  mock: "Illustrative placeholder until partner data is linked.",
+  partial: "Some required inputs are missing or incomplete for this KPI.",
+};
+
 type LayerTrustStripProps = {
   summary: LayerTrustSummary;
   compact?: boolean;
@@ -29,13 +37,19 @@ function inferProvenanceType(dataType: string): DataType {
 
 export function LayerTrustStrip({ summary, compact = false }: LayerTrustStripProps) {
   const provenance = summary.provenanceType ?? inferProvenanceType(summary.dataType);
+  const provenanceTip = PROVENANCE_TOOLTIPS[String(provenance).toLowerCase()] ?? "";
   return (
     <div
       className={`rounded-lg border border-white/15 bg-white/5 ${compact ? "p-2 space-y-1" : "p-3 space-y-2"}`}
     >
       <div className="flex flex-wrap items-center gap-1.5">
-        <DataProvenanceBadge type={provenance} />
-        <span className="text-intel-meta px-1.5 py-0.5 rounded bg-white/10 text-white/90">
+        <span title={provenanceTip}>
+          <DataProvenanceBadge type={provenance} />
+        </span>
+        <span
+          className="text-intel-meta px-1.5 py-0.5 rounded bg-white/10 text-white/90"
+          title="Confidence reflects data completeness and methodology alignment."
+        >
           Confidence {summary.confidence}
         </span>
         {summary.geometryLinkage && (
@@ -44,6 +58,9 @@ export function LayerTrustStrip({ summary, compact = false }: LayerTrustStripPro
           </span>
         )}
       </div>
+      <p className="text-intel-meta text-white/90">
+        <span className="text-white/65">Source:</span> {summary.dataType}
+      </p>
       <p className="text-intel-meta text-white/90">
         <span className="text-white/65">Records:</span> {summary.recordsLabel}
       </p>

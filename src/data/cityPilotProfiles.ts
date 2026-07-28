@@ -50,13 +50,18 @@ import {
   ZARAGOZA_PILOT_PROFILES,
   type ZaragozaPilotId,
 } from "@/data/zaragozaPilotProfiles";
+import {
+  ISSY_CITY_PILOT_PROFILES,
+} from "@/data/issyCityPilotProfiles";
+import type { IssyPilotId } from "@/data/issyPilotProfiles";
 
 type CityPilotProfileMap =
   & Record<CopenhagenPilotId, CityPilotProfile>
   & Record<HelsinkiPilotId, CityPilotProfile>
   & Record<MilanPilotId, CityPilotProfile>
   & Record<ZaragozaPilotId, CityPilotProfile>
-  & Record<TrikalaPilotId, CityPilotProfile>;
+  & Record<TrikalaPilotId, CityPilotProfile>
+  & Record<IssyPilotId, CityPilotProfile>;
 
 export const CITY_PILOT_PROFILES: CityPilotProfileMap = {
   ...COPENHAGEN_PILOT_PROFILES,
@@ -64,6 +69,7 @@ export const CITY_PILOT_PROFILES: CityPilotProfileMap = {
   ...MILAN_PILOT_PROFILES,
   ...ZARAGOZA_PILOT_PROFILES,
   ...TRIKALA_PILOT_PROFILES,
+  ...ISSY_CITY_PILOT_PROFILES,
 };
 
 export function getCityPilotProfile(

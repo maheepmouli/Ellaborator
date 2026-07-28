@@ -8,10 +8,10 @@ export const HELSINKI_PILOT_PROFILES: Record<HelsinkiPilotId, CityPilotProfile> 
     city: "Helsinki",
     title: "Accident & Near-Miss Data Collection (FVH1)",
     interventionSummary:
-      "Safety Sense dangerous-locations and near-miss evidence collection for intervention-level safety monitoring.",
+      "Testing new solutions for collecting, visualising and analysing accident-related information.",
     objectives: [
       "Collect dangerous-location and near-miss evidence at intervention scope.",
-      "Track safety pressure and active-mobility context with linked observations.",
+      "Track road-user safety pressure from the linked citizen-survey observations.",
     ],
     expectedImpacts: [
       "Higher visibility of high-risk intervention zones.",
@@ -19,9 +19,9 @@ export const HELSINKI_PILOT_PROFILES: Record<HelsinkiPilotId, CityPilotProfile> 
     ],
     geometryType: "point",
     dataAvailability:
-      "2,663 dangerous-location and 3,202 near-miss/conflict citizen submissions ingested from the SharePoint GPKG; See.Sense connected-bike and ViaNova AI risk-scoring feeds are not present in the current data drop.",
+      "2,663 dangerous-location and 3,202 near-miss/conflict citizen submissions are ingested from the SharePoint GPKG. No pilot-scoped mode-share sensor feed is present in the current data drop for FVH1; See.Sense connected-bike and ViaNova AI risk-scoring feeds are also absent.",
     methodologyNotes:
-      "KPI 1.2 draws Milan-style multi-hub ripples: the densest ~8 dangerous-location neighbourhood clusters, with Telraam Koetilantie mode share on the primary hub. Full survey counts stay in the observatory. See.Sense / ViaNova feeds are not in the current data drop.",
+      "Road-user safety evidence is drawn from the dangerous-location and near-miss/conflict survey layers. The map shows the densest ~8 dangerous-location neighbourhood clusters, while full survey counts remain in the observatory. Telraam Koetilantie belongs to FVH3 and is not reused for FVH1.",
     observatoryType: "intervention",
     interventionMarkers: [
       {
@@ -41,7 +41,7 @@ export const HELSINKI_PILOT_PROFILES: Record<HelsinkiPilotId, CityPilotProfile> 
     city: "Helsinki",
     title: "E-Scooter Parking Optimisation (FVH2)",
     interventionSummary:
-      "Geofencing and parking-zone optimization pilot for e-scooter curbside order and accessibility.",
+      "Relocation of parking locations for shared mobility services to designated parking areas and geofencing.",
     objectives: [
       "Reduce unsafe parking and improve sidewalk accessibility.",
       "Track parking behavior shifts at monitored intervention locations.",
@@ -54,7 +54,7 @@ export const HELSINKI_PILOT_PROFILES: Record<HelsinkiPilotId, CityPilotProfile> 
     dataAvailability:
       "509 field observations (5 parking categories) from the Kallio summer-streets observation study; the 20 planned e-scooter parking sensors described in the Evaluation Plan were not delivered in this data drop (observation study only).",
     methodologyNotes:
-      "Category-level counts (pavement / street / cycleway / outside-zone / bikes) and obstruction/hazard flags are aggregated from the eScooter Observations GPKG layers; site markers use the Kallio intervention polygon rather than per-device coordinates.",
+      "Category-level counts (pavement / street / cycleway / outside-zone / bikes) and obstruction/hazard flags are aggregated from the eScooter Observations GPKG layers. KPI 3.1 map dots are field observations (not live sensors); After shows a denser sample of the same single-period study. The 20 planned parking sensors were not delivered.",
     observatoryType: "intervention",
     interventionMarkers: [
       {
@@ -74,7 +74,7 @@ export const HELSINKI_PILOT_PROFILES: Record<HelsinkiPilotId, CityPilotProfile> 
     city: "Helsinki",
     title: "Intersection Safety at Viikki (FVH3)",
     interventionSummary:
-      "Raide-Jokeri crossing safety pilot at Viikki combining lidar, Telraam, and Innotrafik warning-system monitoring.",
+      "Enhances safety at intersections, particularly those involving the Raide-Jokeri Light Rail line, by testing real-time warning systems for pedestrians and cyclists, and collecting data on interactions.",
     objectives: [
       "Assess multimodal safety at the Viikki intervention crossing.",
       "Compare baseline and post safety context with linked sensor systems.",
@@ -98,7 +98,7 @@ export const HELSINKI_PILOT_PROFILES: Record<HelsinkiPilotId, CityPilotProfile> 
         interventionType: "Intersection safety monitoring",
         dataAvailability: "Telraam + UX survey + Mobilysis + HSL sample",
         baselineStatus: "Available",
-        postStatus: "Warning system pilot active; expansion plan pending",
+        postStatus: "Warning system pilot active",
       },
     ],
   },

@@ -10,7 +10,7 @@
  *   Header  →  TabBar  →  [ Overview | Before/After | Corridor | Insights | Data ]
  */
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -50,7 +50,7 @@ import {
   pickDefaultSegment,
   type JunctionStudyView,
 } from "@/lib/issyJunctionAnalytics";
-import { ISSY_CLIMATE_HEX_PREFIX } from "@/lib/issyClimateHexObservatory";
+import { ISSY_CLIMATE_CITY_ID, ISSY_CLIMATE_HEX_PREFIX } from "@/lib/issyClimateHexObservatory";
 import type { TrafficSegment } from "@/types/traffic";
 import {
   defaultObservatoryTab,
@@ -59,7 +59,6 @@ import {
   type ObservatoryTabId,
 } from "@/lib/observatoryRegistry";
 import type { MapScenario } from "@/context/MapIntelligenceContext";
-import { exportObservatoryReport } from "@/lib/exportObservatory";
 import { getKpiDefinition } from "@/config/kpiDefinitions";
 import {
   ISSY_JUNCTION_ARM_VISUAL_DISCLAIMER,
@@ -68,17 +67,13 @@ import {
   getIssyPilotInterventionCopy,
   segmentHasDirectKpiDataset,
   dataSourceTrustLabel,
-  kpiPrimaryIssySource,
 } from "@/lib/issyDataTransparency";
 import { CityObservatoryTabContent } from "@/components/CityObservatoryTabContent";
 import {
-  confidenceFromDataClass,
   dataClassLabel,
   observatoryCorridorLabel,
-  observatoryShellTitle,
 } from "@/lib/observatoryCityContent";
 import { isIssyCity } from "@/lib/issyMapRouting";
-import { getCityPilotProfile } from "@/data/cityPilotProfiles";
 import { ObservatoryGraphicSlot } from "@/components/observatory/ObservatoryGraphicSlot";
 import type { ObservatoryGraphicZone } from "@/lib/observatoryGraphicTypes";
 import { intelAccentValue, intelPanelHeader, intelSectionLabel } from "@/styles/intelPanels";
@@ -228,9 +223,12 @@ function OverviewTab({
 }) {
   const { baseline, intervention } = view;
 
-  const deltaCount     = intervention.dailyCycleCount - baseline.dailyCycleCount;
-  const deltaCong      = Math.round((intervention.peakCongestion - baseline.peakCongestion) * 100);
-  const deltaCo2       = Math.round(((intervention.co2ProxyKgDay - baseline.co2ProxyKgDay) / baseline.co2ProxyKgDay) * 100);
+  const deltaCount = intervention.dailyCycleCount - baseline.dailyCycleCount;
+  const deltaCo2 = Math.round(
+    ((intervention.co2ProxyKgDay - baseline.co2ProxyKgDay) /
+      Math.max(baseline.co2ProxyKgDay, 1e-9)) *
+      100
+  );
 
   const stats = [
     {
@@ -245,9 +243,13 @@ function OverviewTab({
     },
     {
       label: "Peak congestion index",
-      before: (baseline.peakCongestion * 100).toFixed(0),
-      after: (intervention.peakCongestion * 100).toFixed(0),
-      delta: deltaCong,
+      before: (Math.min(1, Math.max(0, baseline.peakCongestion)) * 100).toFixed(0),
+      after: (Math.min(1, Math.max(0, intervention.peakCongestion)) * 100).toFixed(0),
+      delta: Math.round(
+        (Math.min(1, Math.max(0, intervention.peakCongestion)) -
+          Math.min(1, Math.max(0, baseline.peakCongestion))) *
+          100
+      ),
       unit: "",
       suffix: "%",
       color: C.amber,
@@ -255,8 +257,8 @@ function OverviewTab({
     },
     {
       label: "CO₂ proxy",
-      before: `${baseline.co2ProxyKgDay}`,
-      after: `${intervention.co2ProxyKgDay}`,
+      before: `${Number(baseline.co2ProxyKgDay).toFixed(1)}`,
+      after: `${Number(intervention.co2ProxyKgDay).toFixed(1)}`,
       delta: deltaCo2,
       unit: "%",
       suffix: " kg/day",
@@ -431,17 +433,17 @@ function MobilityKpi12ArmTab({ view }: { view: JunctionStudyView }) {
   return (
     <div className="space-y-4">
       <TransparencyNotice>
-        <p className="font-semibold text-white/80 mb-1">Observed OD flow data (city / pilot level)</p>
+        <p className="font-semibold text-white/80 mb-1">Observed OD flow data (pilot level)</p>
         <p>{ISSY_OD_CSV_DISCLAIMER}</p>
         <p className="mt-2">{ISSY_JUNCTION_KPI12_ARM_NOTE}</p>
       </TransparencyNotice>
 
       <GlassCard className="px-4 py-3">
         <p className="text-[11px] font-semibold text-white/60 mb-2">
-          Observed segment data — monitored intervention corridor
+          Monitored site — Pont d'Issy camera hub
         </p>
         <p className="text-[10px] text-white/40 mb-3">
-          Segment ID {view.segmentApiId} · traficissy API · {dataSourceTrustLabel("traficissy-segment")}
+          Site {view.segmentApiId} · OD CSV mode mix · {dataSourceTrustLabel("od-csv")}
         </p>
         <div className="grid grid-cols-2 gap-2 text-[11px]">
           <div>
@@ -469,12 +471,19 @@ function BeforeAfterTab({
   view,
   selectedKpi,
   graphicSlot,
+  pilotId,
 }: {
   view: JunctionStudyView;
   selectedKpi: string;
   graphicSlot?: React.ReactNode;
+  pilotId?: string | null;
 }) {
+  const isMilan = pilotId?.startsWith("mil-");
   if (selectedKpi === "kpi1.2") {
+    // Issy arm tab shows traficissy speed/congestion — not applicable to Milan AMAT count sites.
+    if (isMilan) {
+      return <div className="space-y-4">{graphicSlot}</div>;
+    }
     return (
       <div className="space-y-4">
         {graphicSlot}
@@ -833,8 +842,8 @@ function InsightsTab({
     <div className="space-y-4">
       {isMobility && observed && (
         <TransparencyNotice>
-          {ISSY_OD_CSV_DISCLAIMER} Use the map at city zoom for zone-to-zone flow arcs; this monitored corridor panel
-          only summarises observed traficissy segment speed and congestion.
+          {ISSY_OD_CSV_DISCLAIMER} Mode-share figures in this panel are pilot-level OD CSV; the map uses a camera hub
+          (no street segments), consistent with other cities.
         </TransparencyNotice>
       )}
       {isMobility && !observed && (
@@ -934,27 +943,34 @@ function InsightsTab({
 function ClimateFieldTab({ view }: { view: JunctionStudyView }) {
   const { baseline, intervention } = view;
   const isHexCell = view.segmentApiId.startsWith(ISSY_CLIMATE_HEX_PREFIX);
-  const baselinePressure = Math.round(baseline.peakCongestion * 100);
-  const interventionPressure = Math.round(intervention.peakCongestion * 100);
+  const isCityClimate = view.segmentApiId === ISSY_CLIMATE_CITY_ID;
+  const baselinePressure = Math.round(Math.min(1, Math.max(0, baseline.peakCongestion)) * 100);
+  const interventionPressure = Math.round(
+    Math.min(1, Math.max(0, intervention.peakCongestion)) * 100
+  );
   const reductionPct = Math.max(
     0,
-    Math.round(((baseline.co2ProxyKgDay - intervention.co2ProxyKgDay) / baseline.co2ProxyKgDay) * 100)
+    Math.round(
+      ((baseline.co2ProxyKgDay - intervention.co2ProxyKgDay) /
+        Math.max(baseline.co2ProxyKgDay, 1e-9)) *
+        100
+    )
   );
 
   const stats = [
     {
       label: "Environmental pressure index",
       value: `${view.kpiValue}`,
-      suffix: "%",
+      suffix: view.dataClass === "derived" || view.dataClass === "mock" ? "" : "%",
       color: C.lime,
       note: `Band: ${view.kpiBand}`,
     },
     {
-      label: "CO₂ proxy (observed corridor)",
-      value: `${intervention.co2ProxyKgDay}`,
+      label: isCityClimate ? "CO₂ proxy (city)" : "CO₂ proxy (observed corridor)",
+      value: `${Number(intervention.co2ProxyKgDay).toFixed(1)}`,
       suffix: " kg/day",
       color: C.cyan,
-      note: `Baseline proxy ${baseline.co2ProxyKgDay} kg/day`,
+      note: `Baseline proxy ${Number(baseline.co2ProxyKgDay).toFixed(1)} kg/day`,
     },
     {
       label: "Congestion-linked pressure",
@@ -968,7 +984,9 @@ function ClimateFieldTab({ view }: { view: JunctionStudyView }) {
       value: `${reductionPct}`,
       suffix: "%",
       color: C.violet,
-      note: "Derived from traffic intensity + hex field",
+      note: isCityClimate
+        ? "Derived from city-wide intensity"
+        : "Derived from traffic intensity + hex field",
     },
   ];
 
@@ -980,9 +998,11 @@ function ClimateFieldTab({ view }: { view: JunctionStudyView }) {
       </TransparencyNotice>
       <GlassCard className="px-4 py-3">
         <p className="text-[11px] text-white/55 leading-relaxed">
-          {isHexCell
-            ? `Values for ${view.name} — hover or click each climate hex on the map to compare cells. Derived environmental pressure only, not measured CO₂.`
-            : "Climate view for this monitored corridor — derived environmental pressure aligned with the map hex field. Hover a hex cell on the map for per-circle values."}
+          {isCityClimate
+            ? "One city-wide climate reading for Issy — the chart year drives this intensity. Not a spatial hex field. Derived environmental pressure only, not measured CO₂."
+            : isHexCell
+              ? `Values for ${view.name} — hover or click each climate hex on the map to compare cells. Derived environmental pressure only, not measured CO₂.`
+              : "Climate view for this monitored corridor — derived environmental pressure. Click the city climate marker on the map."}
         </p>
       </GlassCard>
       <div className="grid grid-cols-2 gap-2.5">
@@ -999,12 +1019,14 @@ function ClimateFieldTab({ view }: { view: JunctionStudyView }) {
       </div>
       <GlassCard className="px-4 py-3">
         <p className="text-[11px] font-semibold text-white/60 mb-2">
-          {isHexCell ? "Hex cell" : "Influence field"}
+          {isCityClimate ? "City reading" : isHexCell ? "Hex cell" : "Influence field"}
         </p>
         <p className="text-[11px] text-white/55 leading-relaxed">
-          {isHexCell
-            ? `Cell ${view.armLabel} at ~${view.distanceMetres ?? 0} m from junction centre. Colour encodes pressure index ${view.kpiValue}%.`
-            : `Map buffer ~${280} m around ${view.shortName} — hover a hex cell for its pressure, CO₂ proxy, and congestion-linked values.`}
+          {isCityClimate
+            ? `Issy-wide pressure index ${view.kpiValue}%. Colour on the map matches this single city value (year-linked).`
+            : isHexCell
+              ? `Cell ${view.armLabel} at ~${view.distanceMetres ?? 0} m from junction centre. Colour encodes pressure index ${view.kpiValue}%.`
+              : `City climate halo around ${view.shortName} — one intensity for the whole municipality.`}
         </p>
       </GlassCard>
     </div>
@@ -1014,25 +1036,29 @@ function ClimateFieldTab({ view }: { view: JunctionStudyView }) {
 function ClimateDeltaTab({ view }: { view: JunctionStudyView }) {
   const { baseline, intervention } = view;
   const co2Delta = Math.round(
-    ((intervention.co2ProxyKgDay - baseline.co2ProxyKgDay) / baseline.co2ProxyKgDay) * 100
+    ((intervention.co2ProxyKgDay - baseline.co2ProxyKgDay) / Math.max(baseline.co2ProxyKgDay, 1e-9)) *
+      100
   );
-  const pressureDelta = Math.round((intervention.peakCongestion - baseline.peakCongestion) * 100);
   const speedDelta = intervention.avgSpeedKmh - baseline.avgSpeedKmh;
 
   const rows = [
     {
       label: "CO₂ proxy",
-      before: `${baseline.co2ProxyKgDay} kg/day`,
-      after: `${intervention.co2ProxyKgDay} kg/day`,
+      before: `${Number(baseline.co2ProxyKgDay).toFixed(1)} kg/day`,
+      after: `${Number(intervention.co2ProxyKgDay).toFixed(1)} kg/day`,
       delta: co2Delta,
       unit: "%",
       color: C.lime,
     },
     {
       label: "Peak congestion pressure",
-      before: `${(baseline.peakCongestion * 100).toFixed(0)}%`,
-      after: `${(intervention.peakCongestion * 100).toFixed(0)}%`,
-      delta: pressureDelta,
+      before: `${(Math.min(1, Math.max(0, baseline.peakCongestion)) * 100).toFixed(0)}%`,
+      after: `${(Math.min(1, Math.max(0, intervention.peakCongestion)) * 100).toFixed(0)}%`,
+      delta: Math.round(
+        (Math.min(1, Math.max(0, intervention.peakCongestion)) -
+          Math.min(1, Math.max(0, baseline.peakCongestion))) *
+          100
+      ),
       unit: " pts",
       color: C.amber,
     },
@@ -1133,6 +1159,7 @@ function ObservatoryTabContent({
       selectedDirectionId={selectedDirectionId}
       onSelectDirectionId={onSelectDirectionId}
       selectedSegmentId={selectedSegmentId}
+      graphicOverride={zone === "overview" ? "modeShareBars" : undefined}
     />
   );
 
@@ -1213,6 +1240,7 @@ function ObservatoryTabContent({
         <BeforeAfterTab
           view={view}
           selectedKpi={selectedKpi}
+          pilotId={pilotId}
           graphicSlot={graphicSlot(tabId === "beforeAfter" ? "beforeAfter" : "overview")}
         />
       );
@@ -1224,6 +1252,7 @@ function ObservatoryTabContent({
       <BeforeAfterTab
         view={view}
         selectedKpi={selectedKpi}
+        pilotId={pilotId}
         graphicSlot={graphicSlot("beforeAfter")}
       />
     );
@@ -1238,6 +1267,7 @@ function ObservatoryTabContent({
         <BeforeAfterTab
           view={view}
           selectedKpi={selectedKpi}
+          pilotId={pilotId}
           graphicSlot={graphicSlot("beforeAfter")}
         />
       );
@@ -1250,6 +1280,7 @@ function ObservatoryTabContent({
       <BeforeAfterTab
         view={view}
         selectedKpi={selectedKpi}
+        pilotId={pilotId}
         graphicSlot={graphicSlot("beforeAfter")}
       />
     );
@@ -1564,8 +1595,6 @@ export default function SegmentIntelligencePanel({
   const dataClass =
     view?.dataClass ??
     (view?.dataSource === "mock" ? "mock" : view?.dataSource === "observed" ? "observed" : "derived");
-  const confidence = confidenceFromDataClass(dataClass, view?.dataConfidence ?? 0.6);
-  const shellTitle = observatoryShellTitle(resolvedCity, pilotId);
   const corridorLabel = observatoryCorridorLabel(resolvedCity, pilotId);
   const isTrikalaSegmentFocus =
     pilotId?.startsWith("tri-") &&
@@ -1578,50 +1607,31 @@ export default function SegmentIntelligencePanel({
       selectedKpi === "kpi3.2" ||
       selectedKpi === "kpi3.1" ||
       selectedKpi === "kpi1.2");
-  const useSegmentFocusHeader = isTrikalaSegmentFocus || isMilanPointFocus;
+  const isIssyZoneFocus =
+    pilotId === "issy-p2" &&
+    selectedKpi === "kpi1.2" &&
+    !!selectedSegmentId?.startsWith("issy-zone-");
+  const isHelsinkiEscooterPointFocus =
+    resolvedCity === "Helsinki" &&
+    !!selectedSegmentId?.startsWith("hel-escooter-obs");
+  const useSegmentFocusHeader =
+    isTrikalaSegmentFocus || isMilanPointFocus || isIssyZoneFocus || isHelsinkiEscooterPointFocus;
   const headerTitle = useSegmentFocusHeader ? view?.name ?? corridorLabel : corridorLabel;
-  const headerSubtitle = useSegmentFocusHeader ? corridorLabel : view?.name ?? "";
-  const perfImprovement = useMemo(() => {
-    if (!view?.intervention || !view?.baseline) return 18;
-    const profile = getCityPilotProfile(pilotId);
-    if (view.dataClass === "observed" && selectedKpi === "kpi1.2") {
-      const preActive =
-        (view.baseline.modeShare.Cycle ?? 0) + (view.baseline.modeShare.Pedestrian ?? 0);
-      const postActive =
-        (view.intervention.modeShare.Cycle ?? 0) + (view.intervention.modeShare.Pedestrian ?? 0);
-      return Math.round(postActive - preActive);
-    }
-    if (selectedKpi === "kpi3.2" && resolvedCity.toLowerCase().includes("helsinki")) {
-      // Soft attitude-relief outlook used on the climate map when only a single survey period exists.
-      return 18;
-    }
-    if (profile?.observatoryType === "camera" && view.dataClass === "observed") {
-      const preMotor =
-        (view.baseline.modeShare.Car ?? 0) +
-        (view.baseline.modeShare.PTW ?? 0) +
-        (view.baseline.modeShare["Public Transport"] ?? 0);
-      const postMotor =
-        (view.intervention.modeShare.Car ?? 0) +
-        (view.intervention.modeShare.PTW ?? 0) +
-        (view.intervention.modeShare["Public Transport"] ?? 0);
-      return Math.round(preMotor - postMotor);
-    }
-    return Math.round(
-      ((1 - view.intervention.peakCongestion) / Math.max(0.01, 1 - view.baseline.peakCongestion) - 1) *
-        100
-    );
-  }, [view, selectedKpi, pilotId, resolvedCity]);
+  const headerSubtitle = useSegmentFocusHeader
+    ? isIssyZoneFocus
+      ? "City OD zone · sustainable mobility"
+      : isHelsinkiEscooterPointFocus
+        ? view?.coordinates
+          ? `${view.coordinates[0].toFixed(5)}, ${view.coordinates[1].toFixed(5)}`
+          : "Field observation"
+        : corridorLabel
+    : view?.name ?? "";
 
   useEffect(() => {
     if (isOpen) {
       setActiveRegistryTab(defaultObservatoryTab(selectedKpi));
     }
   }, [isOpen, selectedSegmentId, selectedKpi]);
-
-  const handleExport = useCallback(() => {
-    if (!view) return;
-    exportObservatoryReport(view, observatoryConfig, pilotLabel);
-  }, [view, observatoryConfig, pilotLabel]);
 
   return (
     <AnimatePresence>
@@ -1714,9 +1724,6 @@ export default function SegmentIntelligencePanel({
                 </div>
               </div>
 
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-primary-foreground/75">
-                {shellTitle}
-              </p>
               <h2 className="text-[17px] font-bold text-primary-foreground leading-tight mt-1">
                 {headerTitle}
               </h2>
@@ -1725,113 +1732,6 @@ export default function SegmentIntelligencePanel({
                   {headerSubtitle}
                 </p>
               ) : null}
-              <p className="text-[11px] mt-0.5 text-white/45">
-                {observatoryConfig.subtitle}
-              </p>
-              {pilotGeometrySpec?.labelStyle === "aggregate" && (
-                <p className="text-[10px] mt-1.5 text-amber-200/90 font-medium uppercase tracking-wide">
-                  Aggregate view
-                </p>
-              )}
-              {pilotGeometrySpec?.uncertaintyLevel === "high" && (
-                <p className="text-[11px] mt-2 text-amber-200/90 leading-snug border border-amber-400/25 rounded-lg px-2 py-1.5 bg-amber-500/10">
-                  Spatial uncertainty — geometry is contextual, not street-precise.
-                </p>
-              )}
-              {pilotGeometrySpec?.reductionCaption && (
-                <p className="text-[11px] mt-2 text-cyan-100/90 leading-snug border border-cyan-400/25 rounded-lg px-2 py-1.5 bg-cyan-500/10">
-                  {pilotGeometrySpec.reductionCaption}
-                </p>
-              )}
-              {observatoryConfig.emptyState && (
-                <p className="text-[11px] mt-2 text-amber-200/90 leading-snug border border-amber-400/25 rounded-lg px-2 py-1.5 bg-amber-500/10">
-                  {observatoryConfig.emptyState}
-                </p>
-              )}
-
-              <div className="flex flex-wrap gap-1 mt-2.5">
-                <span
-                  className="px-2 py-1 rounded-md text-[10px] font-medium border"
-                  style={{
-                    borderColor: "rgba(99,204,255,0.45)",
-                    background: "rgba(99,204,255,0.12)",
-                    color: "#9FE6FF",
-                  }}
-                >
-                  Active monitored corridor · {selectedSegmentId ?? view.segmentApiId}
-                </span>
-                <span
-                  className="px-2 py-1 rounded-md text-[10px] font-medium border"
-                  style={{
-                    borderColor: "rgba(255,255,255,0.16)",
-                    background: "rgba(255,255,255,0.04)",
-                    color: "rgba(255,255,255,0.52)",
-                  }}
-                >
-                  Other streets shown as contextual geometry only
-                </span>
-              </div>
-
-              <div className="flex flex-wrap gap-1.5 mt-2">
-                <Chip label="KPI" value={`${view.kpiValue} · ${view.kpiBand}`} color="rgba(255,255,255,0.9)" />
-                <Chip
-                  label="Confidence"
-                  value={`${confidence.label} (${confidence.pct}%)`}
-                  color={C.cyan}
-                />
-                <Chip
-                  icon={MapPin}
-                  label="Coords"
-                  value={`${view.coordinates[0].toFixed(4)}°N, ${view.coordinates[1].toFixed(4)}°E`}
-                />
-                {selectedKpi === "kpi3.2" ? (
-                  <>
-                    <Chip
-                      label="CO₂ proxy"
-                      value={`${view.intervention.co2ProxyKgDay} kg/day`}
-                      color={C.lime}
-                    />
-                    <Chip
-                      label="Pressure"
-                      value={`${(view.intervention.peakCongestion * 100).toFixed(0)}%`}
-                      color={C.amber}
-                    />
-                  </>
-                ) : selectedKpi === "kpi3.1" ? (
-                  <Chip label="Facilities" value="Zero-emission / cycle assets" color={C.cyan} />
-                ) : (
-                  <>
-                    <Chip icon={Gauge} label="Speed" value={`${view.intervention.avgSpeedKmh.toFixed(1)} km/h`} />
-                    <Chip
-                      icon={Activity}
-                      label="Congestion"
-                      value={`${(view.intervention.peakCongestion * 100).toFixed(0)}%`}
-                    />
-                  </>
-                )}
-              </div>
-
-              <div
-                className="mt-3 pb-4 border-b"
-                style={{ borderColor: C.border }}
-              >
-                <div className="flex justify-between text-[10px] text-white/35 mb-1">
-                  <span>Intervention performance vs baseline</span>
-                  <span style={{ color: perfImprovement >= 0 ? C.lime : C.rose }}>
-                    {perfImprovement >= 0 ? "+" : ""}
-                    {perfImprovement}% {perfImprovement >= 0 ? "improvement" : "pressure"}
-                  </span>
-                </div>
-                <div className="h-1 rounded-full overflow-hidden" style={{ background: C.border }}>
-                  <motion.div
-                    className="h-full rounded-full"
-                    style={{ background: `linear-gradient(90deg, ${C.violet}, ${C.cyan}, ${C.lime})` }}
-                    initial={{ width: "50%" }}
-                    animate={{ width: `${Math.min(92, Math.max(28, 50 + perfImprovement))}%` }}
-                    transition={{ duration: 1, ease: "easeOut", delay: 0.4 }}
-                  />
-                </div>
-              </div>
 
               {/* Controls */}
               <div className="absolute top-4 right-4 flex items-center gap-1.5">
@@ -1862,10 +1762,12 @@ export default function SegmentIntelligencePanel({
               </div>
             </div>
 
-            {/* ── Observatory graphic header strip ───────────────────────── */}
+            {/* ── Default observatory map (hub schematic above tabs) ──────── */}
+            {!(resolvedCity === "Copenhagen" && selectedKpi === "kpi3.1") &&
+            !(resolvedCity === "Milan" && selectedKpi === "kpi4.2") ? (
             <div
-              className="flex-shrink-0 px-5 py-2.5"
-              style={{ borderBottom: `1px solid ${C.border}`, background: "rgba(255,255,255,0.015)" }}
+              className="flex-shrink-0 px-5 py-4"
+              style={{ borderBottom: `1px solid ${C.border}`, background: "rgba(255,255,255,0.025)" }}
             >
               <ObservatoryGraphicSlot
                 zone="header"
@@ -1881,8 +1783,9 @@ export default function SegmentIntelligencePanel({
                 selectedSegmentId={selectedSegmentId}
               />
             </div>
+            ) : null}
 
-            {/* ── Tab bar ─────────────────────────────────────────────────────── */}
+            {/* ── Tab bar ─────────────────────────────────────────────────── */}
             <div
               className="flex-shrink-0 flex items-center gap-0 px-2 pt-2 pb-0"
               style={{ borderBottom: `1px solid ${C.border}` }}
@@ -1893,10 +1796,10 @@ export default function SegmentIntelligencePanel({
                   <button
                     key={tab.id}
                     onClick={() => setActiveRegistryTab(tab.id)}
-                    className="relative flex items-center gap-1.5 px-3 py-2.5 text-[11px] font-medium rounded-t-lg transition-colors whitespace-nowrap"
+                    className="relative flex items-center gap-1.5 px-3 py-3 text-[12px] font-semibold rounded-t-lg transition-colors whitespace-nowrap"
                     style={{
-                      color:      active ? "white" : "rgba(255,255,255,0.40)",
-                      background: active ? "rgba(255,255,255,0.06)" : "transparent",
+                      color:      active ? "white" : "rgba(255,255,255,0.50)",
+                      background: active ? "rgba(255,255,255,0.08)" : "transparent",
                     }}
                   >
                     {REGISTRY_TAB_ICONS[tab.id] ?? <Activity className="h-3.5 w-3.5" />}
@@ -1942,48 +1845,7 @@ export default function SegmentIntelligencePanel({
               </AnimatePresence>
             </div>
 
-            {/* ── Footer ─────────────────────────────────────────────────────── */}
-            <div
-              className="flex-shrink-0 flex items-center justify-between px-5 py-3"
-              style={{ borderTop: `1px solid ${C.border}`, background: "rgba(255,255,255,0.02)" }}
-            >
-              <div className="flex flex-col gap-1 text-[10px] text-white/50 max-w-[70%]">
-                <div className="flex items-center gap-2">
-                  <GitBranch className="h-3 w-3 shrink-0" />
-                  <span>
-                    ELABORATOR · {pilotLabel ?? "Issy"} ·{" "}
-                    {isIssyCity(resolvedCity)
-                      ? dataSourceTrustLabel(kpiPrimaryIssySource(selectedKpi))
-                      : view.sourceLabel || observatoryKpiDef?.dataLabel || "Linked dataset"}
-                  </span>
-                </div>
-                <span className="pl-5 font-semibold text-white/65">
-                  Provenance: {view.sourceLabel || observatoryKpiDef?.dataLabel || "Derived"} ·{" "}
-                  {dataClassLabel(dataClass)}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={handleExport}
-                  className="flex items-center gap-1.5 text-[10px] text-white/40 hover:text-white/70 transition-colors px-2.5 py-1.5 rounded-lg hover:bg-white/5"
-                >
-                  <FileText className="h-3 w-3" />
-                  Export
-                </button>
-                {selectedKpi !== "kpi3.2" && selectedKpi !== "kpi3.1" && (
-                  <button
-                    type="button"
-                    onClick={() => setActiveRegistryTab("kpiAnalysis")}
-                    className="flex items-center gap-1.5 text-[10px] font-medium px-2.5 py-1.5 rounded-lg transition-colors"
-                    style={{ background: "rgba(101,125,245,0.15)", color: C.violet }}
-                  >
-                    KPI analysis
-                    <ChevronRight className="h-3 w-3" />
-                  </button>
-                )}
-              </div>
-            </div>
+            {/* Footer provenance / Export / KPI analysis — hidden; corridor detail lives in Overview + Before/After */}
           </motion.div>
         </>
       )}

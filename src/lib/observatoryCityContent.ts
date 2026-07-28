@@ -41,6 +41,7 @@ export function observatoryCorridorLabel(city: string, pilotId?: string | null):
   if (profile?.observatoryType === "camera") return "Monitored camera corridor";
   if (profile?.observatoryType === "street-segment") return "Monitored street segment";
   if (profile?.observatoryType === "area") return "Monitored intervention area";
+  if (pilotId === "issy-p2") return "City mobility observatory";
   if (city === "Issy-les-Moulineaux") return "Monitored intervention corridor";
   return "Monitored intervention zone";
 }
@@ -273,17 +274,52 @@ export function buildSegmentScopedObservatoryView(
   );
 
   const props = segment.properties ?? {};
-  const avgSpeed =
-    segment.speed ??
-    (typeof props.avgSpeed === "number" ? props.avgSpeed : null) ??
-    (segment.congestion != null ? null : base.intervention?.avgSpeedKmh);
-  const congestion =
-    segment.congestion ??
-    (typeof props.indice_de_congestion === "number"
-      ? props.indice_de_congestion
-      : typeof segment.properties?.value === "number"
-        ? (segment.properties.value as number) / 100
-        : base.intervention?.peakCongestion);
+  const isMilanAccessibility = city === "Milan" && selectedKpi === "kpi4.2";
+  const isHelsinkiEscooterPoint =
+    city === "Helsinki" &&
+    (segment.segmentId.startsWith("hel-escooter-obs") ||
+      props.datasetKind === "escooter-parking");
+  const isTrikalaSurveyKpi =
+    city === "Trikala" &&
+    (selectedKpi === "kpi2.1" || selectedKpi === "kpi4.1" || selectedKpi === "kpi4.2") &&
+    (scopedPoints.some(
+      (p) =>
+        p.properties?.datasetKind === "survey" ||
+        p.properties?.datasetKind === "bike-lane-sensor" ||
+        p.properties?.datasetKind === "bike-lane-sensor-fleet" ||
+        Boolean(p.properties?.likertLabel) ||
+        String(p.properties?.segmentId ?? "").includes("smart-crossing") ||
+        String(p.properties?.segmentId ?? "").includes("bike-lane") ||
+        String(p.properties?.segmentId ?? "").startsWith("tri-loc-")
+    ) ||
+      /smart-crossing|military school|bike.?lane|tri-loc-/i.test(segment.segmentId) ||
+      /smart-crossing|military school|bike.?lane/i.test(segment.segmentName));
+  const isTrikalaBikeLaneMockSpeed =
+    city === "Trikala" &&
+    selectedKpi === "kpi2.1" &&
+    scopedPoints.some(
+      (p) =>
+        p.properties?.datasetKind === "bike-lane-sensor" ||
+        p.properties?.datasetKind === "bike-lane-sensor-fleet" ||
+        typeof p.properties?.mockSpeedKmh === "number"
+    );
+  const suppressSpeedProxy =
+    isMilanAccessibility ||
+    isHelsinkiEscooterPoint ||
+    (isTrikalaSurveyKpi && !isTrikalaBikeLaneMockSpeed);
+  const avgSpeed = suppressSpeedProxy
+    ? null
+    : segment.speed ??
+      (typeof props.avgSpeed === "number" ? props.avgSpeed : null) ??
+      (segment.congestion != null ? null : base.intervention?.avgSpeedKmh);
+  const congestion = suppressSpeedProxy
+    ? null
+    : segment.congestion ??
+      (typeof props.indice_de_congestion === "number"
+        ? props.indice_de_congestion
+        : typeof segment.properties?.value === "number"
+          ? (segment.properties.value as number) / 100
+          : base.intervention?.peakCongestion);
 
   const metric = segmentMetricKindForKpi(selectedKpi);
   const kpiValue =
@@ -294,37 +330,60 @@ export function buildSegmentScopedObservatoryView(
         : base.kpiValue;
   const highlight = getSegmentHighlight(kpiValue, kpiValue * 0.9, kpiValue * 1.1, metric);
 
+  const categoryLabel =
+    typeof props.categoryLabel === "string"
+      ? props.categoryLabel
+      : typeof props.category === "string"
+        ? String(props.category).replace(/_/g, " ")
+        : null;
+  const displayName =
+    isHelsinkiEscooterPoint && categoryLabel ? categoryLabel : segment.segmentName;
+
   const lat =
-    typeof props.centroidLat === "number"
-      ? props.centroidLat
-      : scopedPoints[0]?.lat ?? base.coordinates[0];
+    typeof props.lat === "number"
+      ? props.lat
+      : typeof props.centroidLat === "number"
+        ? props.centroidLat
+        : scopedPoints[0]?.lat ?? base.coordinates[0];
   const lon =
-    typeof props.centroidLon === "number"
-      ? props.centroidLon
-      : scopedPoints[0]?.lon ?? base.coordinates[1];
+    typeof props.lon === "number"
+      ? props.lon
+      : typeof props.centroidLon === "number"
+        ? props.centroidLon
+        : scopedPoints[0]?.lon ?? base.coordinates[1];
 
   return {
     ...base,
-    name: segment.segmentName,
-    shortName: segment.segmentName.slice(0, 24),
+    name: displayName,
+    shortName: displayName.slice(0, 24),
     kpiValue: Math.round(kpiValue * 10) / 10,
     kpiBand: highlight.band,
     armColor: highlight.color,
     bandColor: highlight.color,
     coordinates: [lat, lon],
     segmentApiId: segment.segmentId,
-    monitoringPeriod: `Segment · ${segment.segmentName}`,
+    monitoringPeriod: isHelsinkiEscooterPoint
+      ? `${lat.toFixed(5)}, ${lon.toFixed(5)}`
+      : `Segment · ${displayName}`,
     intervention: {
       ...base.intervention,
-      avgSpeedKmh: avgSpeed ?? base.intervention.avgSpeedKmh,
-      peakCongestion: congestion ?? base.intervention.peakCongestion,
+      avgSpeedKmh: suppressSpeedProxy ? 0 : avgSpeed ?? base.intervention.avgSpeedKmh,
+      peakCongestion: suppressSpeedProxy
+        ? 0
+        : congestion ?? base.intervention.peakCongestion,
     },
     baseline: {
       ...base.baseline,
-      avgSpeedKmh:
-        avgSpeed != null ? Math.max(0, avgSpeed * 1.08) : base.baseline.avgSpeedKmh,
-      peakCongestion:
-        congestion != null ? Math.min(1, congestion * 1.12) : base.baseline.peakCongestion,
+      avgSpeedKmh: suppressSpeedProxy
+        ? 0
+        : avgSpeed != null
+          ? Math.max(0, avgSpeed * 1.08)
+          : base.baseline.avgSpeedKmh,
+      peakCongestion: suppressSpeedProxy
+        ? 0
+        : congestion != null
+          ? Math.min(1, congestion * 1.12)
+          : base.baseline.peakCongestion,
     },
   };
 }

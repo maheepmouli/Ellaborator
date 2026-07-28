@@ -1,56 +1,75 @@
 #!/usr/bin/env node
 /**
- * Build bundled Milan speed-segment fallback for production when SharePoint shapefiles
- * are not hosted at /sharepoint-data/Milan/.
- * Geometry from OSM Overpass; speed metrics are representative (maxspeed tag or corridor defaults).
+ * Build bundled Milan KPI 2.1 speed segments from AMAT network.shp + Maggio/Ottobre DBF.
+ * Used when SharePoint shapefiles are not hosted on the deploy (gitignored).
+ *
+ * Sticky #05 / #17: full intervention road network with observed speeds — not OSM stubs.
  */
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import * as shapefile from "shapefile";
+import proj4 from "proj4";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const OUTPUT_FILE = path.join(ROOT, "public", "data", "milan", "speed-segments.json");
-const OVERPASS_URL = "https://overpass-api.de/api/interpreter";
+const MILAN_ROOT = path.join(ROOT, "public", "sharepoint-data", "Milan");
+
+proj4.defs(
+  "EPSG:3003",
+  "+proj=tmerc +lat_0=0 +lon_0=9 +k=0.9996 +x_0=1500000 +y_0=0 +ellps=intl +towgs84=-104.1,-49.1,-9.9,0.416,0.41,0.35,-5.71 +units=m +no_defs"
+);
 
 const PILOTS = [
   {
     pilotId: "mil-p1",
-    lat: 45.476,
-    lon: 9.195,
-    radiusM: 550,
-    streets: ["Via Novara", "Via Vespri Siciliani", "Via Grosotto", "Via Cilea"],
     label: "Pilot 1 speed",
+    dirs: [
+      path.join(
+        MILAN_ROOT,
+        "Eval data Ex ante",
+        "4. Speed measurements",
+        "Pilot 1_Olimpic itineraries_AMAT",
+        "jobs_7882016_results_Itinerari_Olimpici_Maggio2025.shapefile"
+      ),
+      path.join(
+        MILAN_ROOT,
+        "4. Speed measurements",
+        "Pilot 1_Olimpic itineraries_AMAT",
+        "jobs_7882016_results_Itinerari_Olimpici_Maggio2025.shapefile"
+      ),
+    ],
+    metricDbf: "Maggio 2025_0_8_00-9_00_0.dbf",
   },
   {
     pilotId: "mil-p2",
-    lat: 45.458,
-    lon: 9.175,
-    radiusM: 550,
-    streets: ["Via Torino", "Via Santa Croce", "Corso Porta Ticinese", "Via Laghetto"],
     label: "Pilot 2 speed",
+    dirs: [
+      path.join(
+        MILAN_ROOT,
+        "Eval data Ex ante",
+        "4. Speed measurements",
+        "Pilot 2_west axis_AMAT",
+        "jobs_7735361_results_Asse_Ovest.shapefile"
+      ),
+      path.join(
+        MILAN_ROOT,
+        "4. Speed measurements",
+        "Pilot 2_west axis_AMAT",
+        "jobs_7735361_results_Asse_Ovest.shapefile"
+      ),
+    ],
+    metricDbf: "Ottobre_2024_0_8_00-9_00_0.dbf",
   },
 ];
 
-function escRegExp(v) {
-  return v.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-function haversineMeters(aLat, aLon, bLat, bLon) {
-  const R = 6371000;
-  const toRad = (v) => (v * Math.PI) / 180;
-  const dLat = toRad(bLat - aLat);
-  const dLon = toRad(bLon - aLon);
-  const lat1 = toRad(aLat);
-  const lat2 = toRad(bLat);
-  const h =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
-  return 2 * R * Math.asin(Math.sqrt(h));
-}
-
-function midpointLatLng(coords) {
-  const mid = coords[Math.floor(coords.length / 2)];
-  return mid;
+function toNumber(value) {
+  if (typeof value === "number") return value;
+  if (typeof value === "string") {
+    const parsed = Number.parseFloat(value.replace(",", "."));
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+  return 0;
 }
 
 function normalize(values) {
@@ -61,134 +80,210 @@ function normalize(values) {
   return values.map((v) => ((v - min) / (max - min)) * 100);
 }
 
-function parseMaxSpeed(tags) {
-  const raw = tags?.maxspeed;
-  if (!raw) return null;
-  const num = Number.parseInt(String(raw).replace(/[^\d]/g, ""), 10);
-  return Number.isFinite(num) && num > 0 ? num : null;
+function isProjectedCoord(x, y) {
+  return Math.abs(x) > 180 || Math.abs(y) > 90;
 }
 
-function representativeSpeed(tags, seed) {
-  const fromTag = parseMaxSpeed(tags);
-  if (fromTag) return fromTag * (0.85 + (seed % 7) * 0.02);
-  const highway = String(tags?.highway || "");
-  if (highway === "motorway" || highway === "trunk") return 62 + (seed % 5);
-  if (highway === "primary") return 48 + (seed % 6);
-  if (highway === "secondary") return 38 + (seed % 5);
-  if (highway === "tertiary") return 32 + (seed % 4);
-  if (highway === "residential" || highway === "living_street") return 24 + (seed % 4);
-  return 30 + (seed % 8);
-}
-
-async function fetchWaysForPilot(pilot) {
-  const streetFilter = pilot.streets.map(escRegExp).join("|");
-  const query = `[out:json][timeout:60];
-(
-  way["highway"~"^(primary|secondary|tertiary|residential|living_street|unclassified)$"]["name"~"${streetFilter}"](around:${pilot.radiusM},${pilot.lat},${pilot.lon});
-  way["highway"~"^(primary|secondary|tertiary|residential|living_street|unclassified)$"](around:${Math.round(pilot.radiusM * 0.65)},${pilot.lat},${pilot.lon});
-);
-out geom tags;`;
-
-  const url = `${OVERPASS_URL}?data=${encodeURIComponent(query)}`;
-  const res = await fetch(url, {
-    headers: {
-      accept: "application/json",
-      "user-agent": "ELLABORATOR-milan-speed-fallback/1.0",
-    },
-  });
-  if (!res.ok) throw new Error(`Overpass failed for ${pilot.pilotId}: ${res.status}`);
-  const data = await res.json();
-  return (data.elements || []).filter((e) => e.type === "way" && Array.isArray(e.geometry) && e.geometry.length >= 2);
-}
-
-function wayToRecord(way, pilot, index) {
-  const coords = way.geometry.map((p) => [p.lat, p.lon]);
-  const segmentId = 10000 + index;
-  const avgSpeed = representativeSpeed(way.tags, segmentId);
-  const p85Speed = avgSpeed * 1.12;
-  const rawValue = p85Speed * 0.7 + avgSpeed * 0.3;
-  return {
-    id: `speed-08:00-09:00-${segmentId}`,
-    coordinates: coords,
-    rawValue,
-    properties: {
-      sourceLabel: pilot.label,
-      timeWindow: "08:00-09:00",
-      metricType: "speed",
-      segmentId,
-      avgSpeed: Math.round(avgSpeed * 10) / 10,
-      p85Speed: Math.round(p85Speed * 10) / 10,
-      hits: 40 + (index % 25),
-      streetName: String(way.tags?.name || "Unnamed link"),
-      speedLimit: parseMaxSpeed(way.tags) || Math.round(avgSpeed * 1.15),
-      cameraJoin: "nearest_geometry",
-      cameraCount: index % 3 === 0 ? 1 : 0,
-    },
-  };
-}
-
-function filterNearPilot(records, pilot) {
-  const r2 = 0.022 * 0.022;
-  return records.filter((record) => {
-    const mid = midpointLatLng(record.coordinates);
-    const dLat = mid[0] - pilot.lat;
-    const dLon = mid[1] - pilot.lon;
-    return dLat * dLat + dLon * dLon <= r2;
+function reprojectLineToLeaflet(coords) {
+  return coords.map(([x, y]) => {
+    if (isProjectedCoord(x, y)) {
+      const [lng, lat] = proj4("EPSG:3003", "WGS84", [x, y]);
+      return [round6(lat), round6(lng)];
+    }
+    return [round6(y), round6(x)];
   });
 }
 
-function buildDataset(records, pilot) {
-  const normalized = normalize(records.map((r) => r.rawValue));
-  const finalRecords = records.map((record, i) => {
+function round6(n) {
+  return Math.round(n * 1e6) / 1e6;
+}
+
+/** Keep endpoints + every Nth vertex to shrink the JSON without losing corridor shape. */
+function simplifyLine(coords, stride = 2) {
+  if (coords.length <= 3) return coords;
+  const out = [coords[0]];
+  for (let i = stride; i < coords.length - 1; i += stride) {
+    out.push(coords[i]);
+  }
+  out.push(coords[coords.length - 1]);
+  return out;
+}
+
+function metricFieldMap(row) {
+  const keys = Object.keys(row);
+  const idKey = keys.find((k) => /_Id$/i.test(k));
+  const avgKey = keys.find((k) => /_AvgSp$/i.test(k));
+  const p85Key = keys.find((k) => /_P85sp$/i.test(k));
+  const hitsKey = keys.find((k) => /_Hits$/i.test(k));
+  return { idKey, avgKey, p85Key, hitsKey };
+}
+
+async function resolvePilotDir(pilot) {
+  for (const dir of pilot.dirs) {
+    try {
+      await fs.access(path.join(dir, "network.shp"));
+      await fs.access(path.join(dir, "network.dbf"));
+      await fs.access(path.join(dir, pilot.metricDbf));
+      return dir;
+    } catch {
+      // try next
+    }
+  }
+  return null;
+}
+
+async function readMetricRows(dbfPath) {
+  const source = await shapefile.openDbf(dbfPath);
+  const rows = [];
+  let fields = null;
+  while (true) {
+    const result = await source.read();
+    if (result.done) break;
+    const row = result.value || {};
+    if (!fields) fields = metricFieldMap(row);
+    rows.push(row);
+  }
+  return { rows, fields };
+}
+
+async function buildPilotDataset(pilot) {
+  const dir = await resolvePilotDir(pilot);
+  if (!dir) {
+    throw new Error(`Missing network.shp / metric DBF for ${pilot.pilotId}`);
+  }
+
+  const { rows: metricRows, fields } = await readMetricRows(path.join(dir, pilot.metricDbf));
+  if (!fields?.idKey || !fields.avgKey || !fields.p85Key) {
+    throw new Error(`Unexpected metric columns in ${pilot.metricDbf}`);
+  }
+
+  const speedById = new Map();
+  metricRows.forEach((row) => {
+    const id = Math.round(toNumber(row[fields.idKey]));
+    if (id > 0) speedById.set(id, row);
+  });
+
+  const source = await shapefile.open(path.join(dir, "network.shp"), path.join(dir, "network.dbf"));
+  const draft = [];
+  let invalidGeometries = 0;
+  let missingMetricJoins = 0;
+
+  while (true) {
+    const result = await source.read();
+    if (result.done) break;
+    const feature = result.value;
+    const geom = feature?.geometry;
+    if (!geom?.coordinates || geom.type !== "LineString") {
+      invalidGeometries += 1;
+      continue;
+    }
+    const props = feature.properties || {};
+    const segmentId = Math.round(toNumber(props.Id));
+    if (segmentId <= 0) continue;
+
+    const leafletCoords = simplifyLine(reprojectLineToLeaflet(geom.coordinates));
+    if (leafletCoords.length < 2) {
+      invalidGeometries += 1;
+      continue;
+    }
+
+    const metric = speedById.get(segmentId);
+    if (!metric) {
+      missingMetricJoins += 1;
+      draft.push({
+        id: `speed-08:00-09:00-${segmentId}`,
+        coordinates: leafletCoords,
+        value: 0,
+        rawValue: null,
+        properties: {
+          sourceLabel: pilot.label,
+          timeWindow: "08:00-09:00",
+          metricType: "speed",
+          segmentId,
+          streetName: props.StreetName ?? props.NOME_VIA ?? null,
+          speedLimit: toNumber(props.SpeedLimit),
+          hasMetric: false,
+        },
+      });
+      continue;
+    }
+
+    const avgSpeed = toNumber(metric[fields.avgKey]);
+    const p85Speed = toNumber(metric[fields.p85Key]);
+    const hits = toNumber(metric[fields.hitsKey]);
+    const rawValue = Math.max(0, p85Speed * 0.7 + avgSpeed * 0.3);
+    draft.push({
+      id: `speed-08:00-09:00-${segmentId}`,
+      coordinates: leafletCoords,
+      value: rawValue,
+      rawValue,
+      properties: {
+        sourceLabel: pilot.label,
+        timeWindow: "08:00-09:00",
+        metricType: "speed",
+        segmentId,
+        streetName: props.StreetName ?? props.NOME_VIA ?? null,
+        speedLimit: toNumber(props.SpeedLimit),
+        avgSpeed,
+        p85Speed,
+        hits,
+        hasMetric: true,
+        rawMetricValue: rawValue,
+      },
+    });
+  }
+
+  const measured = draft.filter((r) => r.rawValue != null);
+  const normalized = normalize(measured.map((r) => r.rawValue));
+  let measuredIndex = 0;
+  const records = draft.map((record) => {
     const { rawValue: _raw, ...rest } = record;
-    return { ...rest, value: normalized[i] ?? 50 };
+    if (record.properties.hasMetric === false) return rest;
+    const value = normalized[measuredIndex] ?? 50;
+    measuredIndex += 1;
+    return { ...rest, value };
   });
-  const joined = finalRecords.filter((r) => (r.properties?.cameraCount || 0) > 0).length;
+
+  const avgMetricValue =
+    measured.length > 0
+      ? measured.reduce((sum, r) => sum + r.rawValue, 0) / measured.length
+      : 0;
+
   return {
-    records: finalRecords,
+    records,
     stats: {
-      parsedSegments: finalRecords.length,
-      invalidGeometries: 0,
-      missingMetricJoins: 0,
-      avgMetricValue:
-        finalRecords.length > 0
-          ? finalRecords.reduce((sum, r) => sum + r.value, 0) / finalRecords.length
-          : 0,
-      cameraJoinRatePct:
-        finalRecords.length > 0 ? Math.round((joined / finalRecords.length) * 100) : 0,
+      parsedSegments: records.length,
+      invalidGeometries,
+      missingMetricJoins,
+      avgMetricValue,
+      cameraJoinRatePct: 0,
       pilotScoped: true,
     },
-    dataConfidence: "proxy",
+    dataConfidence: "real",
     renderMode: "segment",
-    statusMessage: `${pilot.label} — bundled OSM corridor segments (representative AMAT-style speeds; use SharePoint shapefiles when hosted).`,
+    statusMessage: `${pilot.label} — AMAT network.shp + ${pilot.metricDbf} (${measured.length} measured / ${records.length} links).`,
   };
 }
 
 async function main() {
   const output = {
     generatedAt: new Date().toISOString(),
-    source: "OSM Overpass + representative speed metrics",
+    source: "AMAT network.shp + Maggio/Ottobre 08:00–09:00 speed DBF (SharePoint mirror)",
     pilots: {},
   };
 
   for (const pilot of PILOTS) {
-    const ways = await fetchWaysForPilot(pilot);
-    const namedFirst = ways.sort((a, b) => {
-      const aNamed = pilot.streets.some((s) => String(a.tags?.name || "").includes(s)) ? 0 : 1;
-      const bNamed = pilot.streets.some((s) => String(b.tags?.name || "").includes(s)) ? 0 : 1;
-      return aNamed - bNamed;
-    });
-    const records = filterNearPilot(
-      namedFirst.slice(0, 80).map((way, i) => wayToRecord(way, pilot, i)),
-      pilot
+    const dataset = await buildPilotDataset(pilot);
+    output.pilots[pilot.pilotId] = dataset;
+    console.log(
+      `${pilot.pilotId}: ${dataset.stats.parsedSegments} segments (${dataset.stats.missingMetricJoins} without Maggio join)`
     );
-    output.pilots[pilot.pilotId] = buildDataset(records, pilot);
-    console.log(`${pilot.pilotId}: ${records.length} segments`);
   }
 
   await fs.mkdir(path.dirname(OUTPUT_FILE), { recursive: true });
-  await fs.writeFile(OUTPUT_FILE, `${JSON.stringify(output, null, 2)}\n`, "utf8");
-  console.log(`Wrote ${OUTPUT_FILE}`);
+  await fs.writeFile(OUTPUT_FILE, `${JSON.stringify(output)}\n`, "utf8");
+  const sizeMb = ((await fs.stat(OUTPUT_FILE)).size / (1024 * 1024)).toFixed(2);
+  console.log(`Wrote ${OUTPUT_FILE} (${sizeMb} MB)`);
 }
 
 main().catch((err) => {

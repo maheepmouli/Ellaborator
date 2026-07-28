@@ -97,21 +97,27 @@ export function renderTrikalaSatisfactionZones(
   if (selectedKpi !== "kpi4.1") return;
 
   if (selectedPilotId === "tri-p2") {
+    // Mock satisfaction — keep map simple: coloured dots + Park and ride labels (no KPI halo tags).
     locations
       .filter((l) => l.kind === "park_and_ride" && isVisible(l, selectedKpi))
       .forEach((loc) => {
-        const zone = L.circle([loc.lat, loc.lng], {
-          radius: 105,
-          color: ZONE.satisfaction.stroke,
-          weight: 2.5,
-          opacity: 0.76,
-          fillColor: ZONE.satisfaction.fill,
-          fillOpacity: 0.2,
+        const pin = L.marker([loc.lat, loc.lng], {
+          icon: L.divIcon({
+            className: "tri-pr-hub-pin-host",
+            html: `<div class="tri-pr-hub-pin">
+              <span class="tri-pr-hub-dot" aria-hidden="true"></span>
+              <span class="tri-pr-hub-text">
+                <span class="tri-pr-hub-label-title">Park and ride</span>
+                <span class="tri-pr-hub-label-name">${loc.name}</span>
+              </span>
+            </div>`,
+            iconSize: [0, 0],
+            iconAnchor: [0, 0],
+          }),
           interactive: false,
-          className: "tri-satisfaction-zone",
+          zIndexOffset: 700,
         }).addTo(map);
-        circlesOut.push(zone);
-        addZoneTag(map, loc.lat, loc.lng, loc.name, "User satisfaction", "satisfaction", markersOut);
+        markersOut.push(pin);
       });
     return;
   }
@@ -148,7 +154,7 @@ export function renderTrikalaSatisfactionZones(
   );
 }
 
-/** Accessibility labels at smart-crossing / bike corridor (KPI 4.2) — markers only, no zone halos. */
+/** Accessibility / corridor labels (KPI 4.2) — markers only, no zone halos. */
 export function renderTrikalaAccessibilityZones(
   map: L.Map,
   locations: TrikalaLocation[],
@@ -173,14 +179,27 @@ export function renderTrikalaAccessibilityZones(
     if (seen.has(tagKey)) return;
     seen.add(tagKey);
 
-    const tagLabel =
-      loc.kind === "smart_crossing_site" ? "Smart crossing" : tagKey;
+    // Bike-lane sensors are LoRa nodes — not accessibility zones. Smart crossing keeps A label.
+    if (loc.kind === "bike_lane_sensor") {
+      addZoneTag(
+        map,
+        loc.lat,
+        loc.lng,
+        tagKey,
+        "Bike-lane sensor",
+        "accessibility",
+        markersOut,
+        0.00032
+      );
+      return;
+    }
+
     addZoneTag(
       map,
       loc.lat,
       loc.lng,
-      tagLabel,
-      "Accessibility zone",
+      "Smart crossing",
+      "Accessibility",
       "accessibility",
       markersOut,
       0.00032

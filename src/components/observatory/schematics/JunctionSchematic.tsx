@@ -21,7 +21,13 @@ function SensorDot({ cx, cy }: { cx: number; cy: number }) {
 function missToneColor(tone?: string): string {
   if (tone === "hazard") return "#f59e0b";
   if (tone === "sensor") return OBS_C.cyan;
+  if (tone === "telraam" || tone === "telraam-selected") return "#ef4444";
+  if (tone === "camera" || tone === "camera-selected") return "#f97316";
   return "#f87171"; // near-miss / conflict
+}
+
+function isSelectedSensorTone(tone?: string): boolean {
+  return tone === "telraam-selected" || tone === "camera-selected";
 }
 
 interface JunctionSchematicProps {
@@ -38,12 +44,19 @@ export function JunctionSchematic({ payload, expanded }: JunctionSchematicProps)
   const streetEW = payload.streetEW;
   const missPoints = (payload.markers ?? []).filter((m) => m.x != null && m.y != null);
   const showMissOverlay = missPoints.length > 0;
-  const title = showMissOverlay
-    ? payload.pilotTitle || "Near-miss & hazard junction diagram"
-    : "Monitored intervention corridor highlighted";
-  const footer = showMissOverlay
-    ? "Red = near-miss · Amber = hazard type · Cyan = sensor"
-    : "Visualized movement direction";
+  const dualSensor =
+    missPoints.some((m) => String((m as { tone?: string }).tone ?? "").includes("telraam")) &&
+    missPoints.some((m) => String((m as { tone?: string }).tone ?? "").includes("camera"));
+  const title = dualSensor
+    ? payload.pilotTitle || "Viikki dual-sensor junction"
+    : showMissOverlay
+      ? payload.pilotTitle || "Near-miss & hazard junction diagram"
+      : "Monitored intervention corridor highlighted";
+  const footer = dualSensor
+    ? "Red = Telraam · Orange = Camera / Mobilysis · ring = selected"
+    : showMissOverlay
+      ? "Red = near-miss · Amber = hazard type · Cyan = sensor"
+      : "Visualized movement direction";
 
   return (
     <svg
@@ -172,7 +185,9 @@ export function JunctionSchematic({ payload, expanded }: JunctionSchematicProps)
       {missPoints.map((m) => {
         const px = (m.x / 100) * size;
         const py = (m.y / 100) * size;
-        const color = missToneColor((m as { tone?: string }).tone);
+        const tone = (m as { tone?: string }).tone;
+        const color = missToneColor(tone);
+        const selected = isSelectedSensorTone(tone);
         const count = Number((m as { count?: number }).count ?? 0);
         const r = Math.max(4, Math.min(9, 3.5 + Math.log10(count + 1) * 2.2));
         return (
@@ -180,13 +195,24 @@ export function JunctionSchematic({ payload, expanded }: JunctionSchematicProps)
             <motion.circle
               cx={px}
               cy={py}
-              r={r + 6}
+              r={r + (selected ? 10 : 6)}
               fill={color}
-              opacity={0.12}
-              animate={{ opacity: [0.08, 0.2, 0.08], scale: [0.9, 1.15, 0.9] }}
+              opacity={selected ? 0.22 : 0.12}
+              animate={{ opacity: [0.08, selected ? 0.28 : 0.2, 0.08], scale: [0.9, 1.15, 0.9] }}
               transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
               style={{ transformOrigin: `${px}px ${py}px` }}
             />
+            {selected ? (
+              <circle
+                cx={px}
+                cy={py}
+                r={r + 4}
+                fill="none"
+                stroke={color}
+                strokeWidth={1.5}
+                opacity={0.95}
+              />
+            ) : null}
             <circle cx={px} cy={py} r={r} fill={color} opacity={0.92} />
             <circle cx={px} cy={py} r={Math.max(1.5, r * 0.35)} fill="white" opacity={0.85} />
             {m.label ? (
@@ -194,7 +220,7 @@ export function JunctionSchematic({ payload, expanded }: JunctionSchematicProps)
                 x={px}
                 y={py + r + 9}
                 textAnchor="middle"
-                fill="#ffffff88"
+                fill={selected ? "#ffffffcc" : "#ffffff88"}
                 fontSize="5.5"
                 fontFamily="sans-serif"
               >

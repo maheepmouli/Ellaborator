@@ -98,22 +98,28 @@ export function mergeJunctionConfig(
   const dataSource = resolveMergedDataSource(realView, config);
   return {
     ...realView,
-    shortName: config.shortName,
+    shortName: realView.odLinks?.length ? realView.shortName : config.shortName,
     name: realView.name || config.name,
     pilot: config.pilot,
-    interventionType: config.interventionType,
-    monitoringPeriod: config.monitoringPeriod,
+    interventionType: realView.odLinks?.length
+      ? realView.interventionType
+      : config.interventionType,
+    monitoringPeriod: realView.odLinks?.length
+      ? realView.monitoringPeriod
+      : config.monitoringPeriod,
     sensors: Math.max(realView.sensors, config.sensors),
     approachesCovered: realView.approachesCovered,
-    totalApproaches: config.totalApproaches,
-    timeline: config.timeline.map((e) => ({
-      date: e.date,
-      event: e.event,
-      status: e.status === "active" ? ("done" as const) : e.status,
-    })),
+    totalApproaches: realView.odLinks?.length ? realView.totalApproaches : config.totalApproaches,
+    timeline: realView.odLinks?.length
+      ? realView.timeline
+      : config.timeline.map((e) => ({
+          date: e.date,
+          event: e.event,
+          status: e.status === "active" ? ("done" as const) : e.status,
+        })),
     dataSource,
     dataClass: dataSource === "mock" ? "mock" : realView.dataClass,
-    streetNS: config.streetNS,
-    streetEW: config.streetEW,
+    streetNS: realView.odLinks?.length ? realView.streetNS : config.streetNS,
+    streetEW: realView.odLinks?.length ? realView.streetEW : config.streetEW,
   };
 }

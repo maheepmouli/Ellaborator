@@ -440,12 +440,13 @@ export const DATASET_REGISTRY: DatasetMetadata[] = [
     updateStatus: "static",
     responsiblePartner: "Copenhagen Municipality / Maria Risom",
     notes:
-      "manual_counts_geo.csv (exact coordinates) merged with committed /data/copenhagen_count_sites.geojson; 2025 workbook aggregates at /data/copenhagen/manual-counts.json.",
+      "manual_counts_geo.csv (exact coordinates) merged with committed /data/copenhagen_count_sites.geojson; 2025 workbook aggregates at /data/copenhagen/manual-counts.json. Scoped to Pilot 1 + Pilot 3 only — excluded from Pilot 2 (bike parking).",
   },
   {
     id: "cph-count-sites-geojson",
     city: "Copenhagen",
-    pilotIds: ["cph-p1", "cph-p2", "cph-p3"],
+    // OTC sites can appear on all pilots; manual survey points are Pilot 1 + 3 only (sticky #32).
+    pilotIds: ["cph-p1", "cph-p3"],
     title: "Count site registry (OTC + manual)",
     source: "/data/copenhagen_count_sites.geojson (from SharePoint manual_counts_geo.csv + OTC sites)",
     fileFormat: "geojson",
@@ -461,7 +462,8 @@ export const DATASET_REGISTRY: DatasetMetadata[] = [
     realDataStatus: "active",
     updateStatus: "static",
     responsiblePartner: "Copenhagen Municipality",
-    notes: "54 count-site points from prepare_geodata.py; OTC vs manual source in feature properties.",
+    notes:
+      "54 count-site points from prepare_geodata.py; OTC vs manual source in feature properties. Manual sites excluded from Pilot 2 scope.",
   },
   {
     id: "cph-flow-cameras",
@@ -487,7 +489,8 @@ export const DATASET_REGISTRY: DatasetMetadata[] = [
   {
     id: "cph-bike-parking-inventory",
     city: "Copenhagen",
-    pilotIds: ["cph-p2"],
+    // Shared facilities layer across pilots (board: if shown, include on all 3 pilots).
+    pilotIds: ["cph-p1", "cph-p2", "cph-p3"],
     title: "Bicycle parking deployment inventory",
     source:
       "SharePoint: Copenhagen/Technical drawing - Medieval City/I100275 parking overview.xlsx + parking shapefile",
@@ -510,7 +513,7 @@ export const DATASET_REGISTRY: DatasetMetadata[] = [
   {
     id: "cph-accessibility-inventory",
     city: "Copenhagen",
-    pilotIds: ["cph-p2"],
+    pilotIds: ["cph-p1", "cph-p2", "cph-p3"],
     title: "Accessibility infrastructure proxy (parking conversion)",
     source:
       "SharePoint: Copenhagen/Technical drawing - Medieval City/I100275_P-pladser_Oversigt.xlsx",
@@ -612,7 +615,8 @@ export const DATASET_REGISTRY: DatasetMetadata[] = [
     realDataStatus: "active",
     updateStatus: "static",
     responsiblePartner: "Copenhagen Municipality",
-    notes: "Bundled at /data/copenhagen/surveys.json.",
+    notes:
+      "Acceptability Likert 1–7 distributions in /data/copenhagen/surveys.json (Intervention 1 BEFORE/AFTER). Map pin is pilot-area inferred — survey was not geolocated to a street point. Pie chart UX follows Trikala smart-crossing baseline style (ELABORATOR Baseline data_smart crossing.pptx).",
   },
   {
     id: "cph-near-encounters",
@@ -672,15 +676,15 @@ export const DATASET_REGISTRY: DatasetMetadata[] = [
     geometryQuality: "exact",
     spatialLinkageMethod: "direct-coordinates",
     temporalCoverage: "2024-06 to 2025-09 (445 days)",
-    beforeAfterStatus: "unclear",
-    linkedKpis: ["kpi1.2", "kpi2.1", "kpi4.2"],
+    beforeAfterStatus: "both",
+    linkedKpis: ["kpi1.2", "kpi2.1"],
     interventionScale: "street",
     parserStatus: "ready",
     realDataStatus: "active",
     updateStatus: "static",
     responsiblePartner: "Helsinki",
     notes:
-      "Sensor 9000007091 daily mode-share/speed aggregates, fixed to the Viikintie-Koetilantie crossing anchor (60.224599, 25.017236) rather than an inferred ring layout.",
+      "Sensor 9000007091 daily mode-share/speed aggregates, fixed to the Viikintie-Koetilantie crossing anchor (60.224599, 25.017236). WP7: supports 1.2/2.1 only — not a formal expansion plan (1.1).",
   },
   {
     id: "hel-intervention-locations",
@@ -703,7 +707,7 @@ export const DATASET_REGISTRY: DatasetMetadata[] = [
     updateStatus: "static",
     responsiblePartner: "Helsinki",
     notes:
-      "HelsinkiArea (FVH1), KallioSite (FVH2), ViikkiIntersection (FVH3) from GPKG, reprojected EPSG:3067 → WGS84 per layer.",
+      "HelsinkiArea (FVH1), KallioSite (FVH2), ViikkiIntersection (FVH3) footprints. WP7: geometry context only — not a formal expansion-plan artifact for KPI 1.1.",
   },
   {
     id: "hel-dangerous-locations",
@@ -764,14 +768,14 @@ export const DATASET_REGISTRY: DatasetMetadata[] = [
     spatialLinkageMethod: "none",
     temporalCoverage: "2024–2025",
     beforeAfterStatus: "before-only",
-    linkedKpis: ["kpi3.2"],
+    linkedKpis: [],
     interventionScale: "city",
     parserStatus: "ready",
     realDataStatus: "active",
     updateStatus: "static",
     responsiblePartner: "Helsinki",
     notes:
-      "Citywide (not corridor-specific) traffic-safety perception aggregate; underpins the KPI 3.2 policy-alignment narrative alongside the dangerous-location/conflict counts.",
+      "Citywide traffic-safety perception aggregates. WP7: attitude context only — does not satisfy KPI 3.2 heat (B) or circular materials (C); not scored as Ready climate evidence.",
   },
   {
     id: "hel-escooter",
@@ -794,7 +798,7 @@ export const DATASET_REGISTRY: DatasetMetadata[] = [
     updateStatus: "static",
     responsiblePartner: "Helsinki",
     notes:
-      "509 field observations across 5 parking categories (pavement/street/cycleway/outside-zone/bikes) with obstruction/hazard flags; the 20 planned parking sensors were not delivered.",
+      "509 field observations across 5 parking categories with obstruction/hazard flags. WP7 3.1: installed micromobility parking inventory; 20 planned parking sensors were not delivered.",
   },
   {
     id: "hel-viikki-ux-survey",
@@ -817,7 +821,7 @@ export const DATASET_REGISTRY: DatasetMetadata[] = [
     updateStatus: "static",
     responsiblePartner: "Helsinki",
     notes:
-      "50 completed responses; 61.5% overall satisfaction across the four warning-system questions vs the ≥75% KPI 4.1 target (target not met yet). 6% report an accessibility challenge (KPI 4.2).",
+      "50 completed responses; 61.5% overall satisfaction across four warning-system questions vs ≥75% KPI 4.1 target (target not met — metadata complete). 6% report an accessibility challenge (KPI 4.2 Partial without full feature inventory).",
   },
   {
     id: "hel-mobilysis-viikki-gates",
@@ -840,7 +844,7 @@ export const DATASET_REGISTRY: DatasetMetadata[] = [
     updateStatus: "static",
     responsiblePartner: "Helsinki",
     notes:
-      "26 gate-count workbooks (vehicle/pedestrian/bike/VRU) aggregated across AM1-AM3 survey windows; full vehicle/pedestrian trajectory CSVs and gate photos are intentionally not shipped to the browser bundle.",
+      "26 gate-count workbooks (vehicle/pedestrian/bike/VRU) aggregated across AM1-AM3 survey windows. WP7: mode-share/safety evidence — not expansion-plan (1.1).",
   },
   {
     id: "hel-hsl-tram15-sample",
@@ -1287,7 +1291,7 @@ export const DATASET_REGISTRY: DatasetMetadata[] = [
   {
     id: "tri-smarta-app-post",
     city: "Trikala",
-    pilotIds: ["tri-p1"],
+    pilotIds: ["tri-p4"],
     title: "SMARTA App Survey (post)",
     source: "SharePoint: Trikala/post/Survey of SMARTA app_row data.xlsx",
     fileFormat: "xlsx",
@@ -1297,13 +1301,13 @@ export const DATASET_REGISTRY: DatasetMetadata[] = [
     spatialLinkageMethod: "inferred",
     temporalCoverage: "2025",
     beforeAfterStatus: "after-only",
-    linkedKpis: ["kpi4.1"],
+    linkedKpis: ["kpi1.2", "kpi4.1"],
     interventionScale: "city",
     parserStatus: "ready",
     realDataStatus: "active",
     updateStatus: "static",
     responsiblePartner: "Trikala",
-    notes: "Post-intervention SMARTA app usability and mobility-needs satisfaction.",
+    notes: "Post-intervention SMARTA / SMARTA2 app usability and mobility-needs satisfaction.",
   },
   {
     id: "tri-women-mobility-survey",
@@ -1318,13 +1322,13 @@ export const DATASET_REGISTRY: DatasetMetadata[] = [
     spatialLinkageMethod: "inferred",
     temporalCoverage: "2024–2025",
     beforeAfterStatus: "before-only",
-    linkedKpis: ["kpi1.2", "kpi2.1"],
+    linkedKpis: ["kpi2.1", "kpi4.1"],
     interventionScale: "city",
     parserStatus: "ready",
     realDataStatus: "active",
     updateStatus: "static",
     responsiblePartner: "Trikala",
-    notes: "Safety, harassment, route avoidance, and segment insights from 117 women respondents.",
+    notes: "Safety, harassment, route avoidance, and segment insights from 117 women respondents (not a mode-share KPI source for Pilot 1).",
   },
   {
     id: "tri-smart-mobility-indicators",
@@ -1350,7 +1354,7 @@ export const DATASET_REGISTRY: DatasetMetadata[] = [
   {
     id: "tri-environmental-sensors",
     city: "Trikala",
-    pilotIds: ["tri-p1"],
+    pilotIds: ["tri-p4"],
     title: "Smart Citizen Kit environmental metrics",
     source: "Trikala Lighthouse zip — smart_citizen_kit_environmental_metrics.xlsx",
     fileFormat: "xlsx",
@@ -1366,7 +1370,8 @@ export const DATASET_REGISTRY: DatasetMetadata[] = [
     realDataStatus: "active",
     updateStatus: "static",
     responsiblePartner: "Trikala",
-    notes: "19-sensor fleet registry; coordinates column empty — positions inferred near pilot anchor.",
+    notes:
+      "19-sensor fleet registry (citywide). Scoped to Pilot 4 (SMARTA2 / city digital + environmental monitoring); not Pilot 1 smart-crossing.",
   },
   {
     id: "tri-media-gallery",

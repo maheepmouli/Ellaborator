@@ -25,6 +25,7 @@ export type SpatialRendererId =
   | "issy-junction-arms"
   | "issy-zone-flows"
   | "issy-climate-hex"
+  | "issy-climate-city"
   | "issy-facility-points"
   | "issy-sentiment-field"
   | "issy-accessibility"
@@ -98,13 +99,14 @@ export function resolveSpatialSystem(
   if (isIssyCity(city)) {
     switch (kpiId) {
       case "kpi1.2":
-        return junctionStudy ? "segments" : "flows";
       case "kpi2.1":
-        return "segments";
+        // Same as Copenhagen: hub/point aggregation — no street-segment spokes.
+        return "points";
       case "kpi3.1":
         return "facility-points";
       case "kpi3.2":
-        return "climate-hex";
+        // City-wide intensity — one reading, not a hex grid.
+        return "points";
       case "kpi4.1":
         return "sentiment-field";
       case "kpi4.2":
@@ -154,7 +156,7 @@ function resolveRendererForRegimeAndKpi(
     return baseVisualization;
   }
   if (regime === "camera_directional") return baseVisualization;
-  if (regime === "corridor" && kpiId === "kpi1.2") return "issy-junction-arms";
+  if (regime === "corridor" && kpiId === "kpi1.2") return "issy-zone-flows";
   return baseVisualization;
 }
 
@@ -204,10 +206,11 @@ export function resolveSpatialRenderPlan(
 
   if (isIssyCity(city) && junctionStudy) {
     const rendererByKpi: Record<string, SpatialRendererId> = {
-      "kpi1.2": "issy-junction-arms",
-      "kpi2.1": "issy-junction-arms",
+      // Mode share + safety: camera hub only (Copenhagen-style) — not junction street arms.
+      "kpi1.2": "issy-zone-flows",
+      "kpi2.1": "issy-zone-flows",
       "kpi3.1": "issy-facility-points",
-      "kpi3.2": "issy-climate-hex",
+      "kpi3.2": "issy-climate-city",
       "kpi4.1": "issy-sentiment-field",
       "kpi4.2": "issy-accessibility",
     };
@@ -216,26 +219,30 @@ export function resolveSpatialRenderPlan(
       spatialSystem: spatial,
       geometryKind: geometryForSystem(spatial),
       rendererId,
-      legendHint: `Junction study — ${spatial.replace(/-/g, " ")} layer.`,
+      legendHint:
+        kpiId === "kpi1.2" || kpiId === "kpi2.1"
+          ? "Hub aggregation (same as Copenhagen) — no street-segment spokes on the map."
+          : kpiId === "kpi3.2"
+            ? "One city-wide climate intensity (year time series) — not a hex field."
+          : `Junction study — ${spatial.replace(/-/g, " ")} layer.`,
     };
   }
 
-  if (isIssyCity(city) && kpiId === "kpi1.2" && spatial === "flows") {
+  if (isIssyCity(city) && (kpiId === "kpi1.2" || kpiId === "kpi2.1")) {
     return {
-      spatialSystem: "flows",
-      geometryKind: "arc",
+      spatialSystem: "points",
+      geometryKind: "point",
       rendererId: "issy-zone-flows",
-      legendHint: "Zone-to-zone OD flows from observed CSV extracts.",
+      legendHint: "Hub aggregation (same as Copenhagen) — no street-segment spokes.",
     };
   }
 
   if (isIssyCity(city)) {
     const issyCityRenderers: Partial<Record<string, SpatialRendererId>> = {
-      "kpi3.2": "issy-climate-hex",
+      "kpi3.2": "issy-climate-city",
       "kpi3.1": "issy-facility-points",
       "kpi4.1": "issy-sentiment-field",
       "kpi4.2": "issy-accessibility",
-      "kpi2.1": "issy-traffic-segments",
     };
     if (issyCityRenderers[kpiId]) {
       return {
@@ -272,15 +279,6 @@ export function resolveSpatialRenderPlan(
         legendHint: "Mode-share intensity at pilot anchors.",
       };
     }
-  }
-
-  if (spatial === "segments" && kpiId === "kpi2.1" && isIssyCity(city)) {
-    return {
-      spatialSystem: "segments",
-      geometryKind: "polyline",
-      rendererId: "issy-traffic-segments",
-      legendHint: "Live traficissy segment geometry.",
-    };
   }
 
   if (kpiId === "kpi2.1") {

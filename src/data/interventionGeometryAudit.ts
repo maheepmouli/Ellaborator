@@ -290,6 +290,19 @@ const PILOT_GEOMETRY_ROW_METADATA: PilotGeometryRow[] = [
     confidenceRationale: "Observed sensor nodes; paired baseline/post survey workbooks integrated.",
     currentImplementationGap: "Post-intervention operational counts pending end of June.",
   },
+  {
+    city: "Trikala",
+    pilotId: "tri-p4",
+    pilotLabel: "P4",
+    intervention: "SMARTA2 app expansion",
+    geometryType: "City-wide digital service + environmental nodes",
+    geometryAvailable: "App / survey evidence + partner My Maps Smart Citizen Kit nodes",
+    recommendedDashboard: "SMARTA2 mode-share + citywide air-quality sensor fleet (KPI 3.2)",
+    dashboardFirstMode: "point-first",
+    confidence: "medium",
+    confidenceRationale: "App survey plus observed Smart Citizen Kit registry (citywide).",
+    currentImplementationGap: "Expanded mode and engagement features pending partner metrics.",
+  },
 ];
 
 export const PILOT_GEOMETRY_ROWS: PilotGeometryRow[] = PILOT_GEOMETRY_ROW_METADATA.map((row) => {

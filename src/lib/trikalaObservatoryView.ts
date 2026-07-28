@@ -119,8 +119,20 @@ export function filterTrikalaObservatoryPoints(
     const byGroup = points.filter(
       (p) => String(p.properties?.segmentId ?? "") === location.segmentId
     );
-    if (byGroup.length === 1) return byGroup;
+    if (byGroup.length) return byGroup;
   }
+
+  // Smart-crossing site hover should keep all paired Likert survey metrics.
+  if (
+    location?.kind === "smart_crossing_site" ||
+    /smart-crossing|military school/i.test(selectionId)
+  ) {
+    const surveyPts = points.filter((p) =>
+      String(p.properties?.segmentId ?? "").includes("smart-crossing")
+    );
+    if (surveyPts.length) return surveyPts;
+  }
+
   return [];
 }
 
@@ -128,42 +140,85 @@ function enrichBikeLaneSensorHoverView(
   view: JunctionStudyView,
   location: TrikalaLocation,
   scoped: LocalCityPoint[],
-  selectedKpi: string
+  selectedKpi: string,
+  scenario: MapScenario = "intervention"
 ): JunctionStudyView {
   const pt = scoped[0];
+  const scenarioBusy =
+    scenario === "baseline" && typeof pt?.properties?.baselineValue === "number"
+      ? Number(pt.properties.baselineValue)
+      : typeof pt?.value === "number"
+        ? Number(pt.value)
+        : null;
   const busyPct =
-    typeof pt?.properties?.busyPct === "number"
-      ? Math.round(pt.properties.busyPct)
-      : selectedKpi === "kpi2.1" && typeof pt?.value === "number"
-        ? Math.round(pt.value)
+    selectedKpi === "kpi2.1" && scenarioBusy != null
+      ? Math.round(scenarioBusy)
+      : typeof pt?.properties?.busyPct === "number"
+        ? Math.round(Number(pt.properties.busyPct))
         : null;
   const availabilityPct =
-    typeof pt?.properties?.availabilityPct === "number"
-      ? Math.round(pt.properties.availabilityPct)
-      : selectedKpi === "kpi4.2" && typeof pt?.value === "number"
-        ? Math.round(pt.value)
+    selectedKpi === "kpi4.2" && scenarioBusy != null
+      ? Math.round(scenarioBusy)
+      : typeof pt?.properties?.availabilityPct === "number"
+        ? Math.round(Number(pt.properties.availabilityPct))
         : null;
+  const mockSpeed =
+    scenario === "baseline" && typeof pt?.properties?.mockSpeedBaselineKmh === "number"
+      ? Number(pt.properties.mockSpeedBaselineKmh)
+      : typeof pt?.properties?.mockSpeedKmh === "number"
+        ? Number(pt.properties.mockSpeedKmh)
+        : busyPct != null
+          ? Math.round(18 * (1 - busyPct / 100) * 10) / 10
+          : null;
   const obsCount = pt?.properties?.observationCount;
   const deviceId = pt?.properties?.deviceId;
   const metricLine =
     selectedKpi === "kpi4.2" && availabilityPct != null
       ? `Lane availability ${availabilityPct}%`
-      : busyPct != null
-        ? `Occupancy stress ${busyPct}%`
-        : view.interventionType;
+      : selectedKpi === "kpi2.1" && mockSpeed != null
+        ? `Mock speed ${mockSpeed} km/h · occupancy ${busyPct ?? "—"}%`
+        : busyPct != null
+          ? `Occupancy stress ${busyPct}%`
+          : view.interventionType;
+
+  const congestion = busyPct != null ? busyPct / 100 : view.intervention.peakCongestion;
 
   return {
     ...view,
     name: location.name,
     shortName: location.name,
     coordinates: [location.lat, location.lng],
-    kpiValue: pt?.value ?? view.kpiValue,
+    kpiValue:
+      selectedKpi === "kpi2.1" && mockSpeed != null
+        ? mockSpeed
+        : pt?.value ?? view.kpiValue,
+    dataClass: selectedKpi === "kpi2.1" ? "derived" : "observed",
+    dataSource: selectedKpi === "kpi2.1" ? "derived" : "observed",
     interventionType: `${metricLine}${deviceId ? ` · device ${deviceId}` : ""}`,
     monitoringPeriod: obsCount
-      ? `${Number(obsCount).toLocaleString()} LoRa parking-status readings · observed time-series`
+      ? `${Number(obsCount).toLocaleString()} LoRa FREE/BUSY readings · mock speed from occupancy`
       : "Bike-lane LoRa sensor time-series",
     segmentApiId: location.id,
-    sourceLabel: "Bike-lane sensor workbook (SharePoint)",
+    sourceLabel:
+      selectedKpi === "kpi2.1"
+        ? "Mock speed from bike-lane LoRa occupancy (FREE/BUSY)"
+        : "Bike-lane sensor workbook (SharePoint)",
+    intervention: {
+      ...view.intervention,
+      avgSpeedKmh: mockSpeed ?? view.intervention.avgSpeedKmh,
+      peakCongestion: congestion,
+    },
+    baseline: {
+      ...view.baseline,
+      avgSpeedKmh:
+        typeof pt?.properties?.mockSpeedBaselineKmh === "number"
+          ? Number(pt.properties.mockSpeedBaselineKmh)
+          : view.baseline.avgSpeedKmh,
+      peakCongestion:
+        typeof pt?.properties?.baselineValue === "number" && selectedKpi === "kpi2.1"
+          ? Number(pt.properties.baselineValue) / 100
+          : view.baseline.peakCongestion,
+    },
   };
 }
 
@@ -209,17 +264,42 @@ function enrichPilot2InfraView(
     : "kpi3.1";
   const modeShareNote =
     selectedKpi === "kpi1.2"
-      ? " · hover mode-share bars scoped to this site"
+      ? " · bike uptake % change scoped to this P+R hub"
       : "";
   return {
     ...view,
     name: location.name,
     shortName: location.name,
     coordinates: [location.lat, location.lng],
-    interventionType: `${kindLabel} · intermodal access point`,
-    monitoringPeriod: `Linked KPIs: ${linked}${modeShareNote} · post-intervention occupancy counts pending`,
+    interventionType:
+      location.kind === "park_and_ride"
+        ? "Park & Ride · bike / micromobility uptake hub"
+        : location.kind === "bike_station"
+          ? "Bike docking · shared fleet access"
+          : `${kindLabel} · intermodal access point`,
+    monitoringPeriod: `Linked KPIs: ${linked}${modeShareNote} · partner occupancy survey pending`,
     segmentApiId: location.id,
-    sourceLabel: location.folderPath.join(" › ") || "Partner My Maps registry",
+    sourceLabel:
+      selectedKpi === "kpi1.2"
+        ? "Bike uptake from park-and-ride facilities · illustrative"
+        : selectedKpi === "kpi3.1"
+          ? "Installed P+R hubs · Partner My Maps"
+          : selectedKpi === "kpi4.1"
+            ? "MOCK satisfaction — no P+R user survey linked"
+            : location.folderPath.join(" › ") || "Partner My Maps registry",
+    ...(selectedKpi === "kpi3.1"
+      ? {
+          kpiValue: location.kind === "park_and_ride" ? 1 : view.kpiValue,
+          dataClass: "observed" as const,
+          dataSource: "observed" as const,
+        }
+      : selectedKpi === "kpi4.1"
+        ? {
+            dataClass: "mock" as const,
+            dataSource: "mock" as const,
+            dataConfidence: 0.35,
+          }
+        : {}),
   };
 }
 
@@ -287,23 +367,112 @@ export function buildTrikalaObservatoryView(
     segment
   );
 
+  const surveyScoped = (scoped.length ? scoped : points).filter(
+    (p) =>
+      p.properties?.datasetKind === "survey" ||
+      Boolean(p.properties?.likertLabel) ||
+      String(p.properties?.segmentId ?? "").includes("smart-crossing") ||
+      String(p.properties?.segmentId ?? "").includes("tri-p3-bike-lane")
+  );
+  if (
+    surveyScoped.length &&
+    (selectedKpi === "kpi2.1" || selectedKpi === "kpi4.1" || selectedKpi === "kpi4.2") &&
+    (pilotId === "tri-p1" ||
+      location?.kind === "smart_crossing_site" ||
+      String(selectionId).includes("smart-crossing") ||
+      (pilotId === "tri-p3" &&
+        selectedKpi === "kpi4.2" &&
+        (location?.kind === "bike_lane_sensor" ||
+          String(selectionId).includes("tri-p3-bike-lane") ||
+          String(selectionId).startsWith("tri-loc-"))))
+  ) {
+    const avgSurvey =
+      surveyScoped.reduce((s, p) => s + Number(p.value ?? 0), 0) / surveyScoped.length;
+    const a11yPt = surveyScoped.find((p) =>
+      /accessibility/i.test(String(p.properties?.likertLabel ?? ""))
+    );
+    return {
+      ...view,
+      name: location?.name ?? String(segmentName),
+      shortName: (location?.name ?? String(segmentName)).slice(0, 28),
+      kpiValue: Math.round(Number(a11yPt?.value ?? avgSurvey) * 10) / 10,
+      dataClass: "observed",
+      dataSource: "observed",
+      dataConfidence: Math.max(view.dataConfidence, 0.82),
+      sourceLabel: String(
+        surveyScoped[0]?.properties?.source ??
+          (pilotId === "tri-p3"
+            ? "Bike lane safety survey · SharePoint"
+            : "Smart crossing on-line survey · SharePoint")
+      ),
+      monitoringPeriod: `Survey baseline + post · ${surveyScoped.length} Likert dimension${
+        surveyScoped.length === 1 ? "" : "s"
+      }`,
+      interventionType:
+        pilotId === "tri-p3" && selectedKpi === "kpi4.2"
+          ? "Bike-lane corridor · online accessibility & condition survey"
+          : selectedKpi === "kpi2.1"
+            ? "Smart crossing · perceived safety survey"
+            : selectedKpi === "kpi4.1"
+              ? "Smart crossing · accessibility impression survey"
+              : "Smart crossing · condition & connectivity survey",
+      coordinates: location ? [location.lat, location.lng] : view.coordinates,
+      segmentApiId: location?.id ?? view.segmentApiId,
+    };
+  }
+
   if (location?.kind === "air_quality_sensor" && scoped.length) {
     return enrichAirQualityHoverView(view, location, scoped, sensorJoin);
   }
 
-  if (location?.kind === "bike_lane_sensor" && scoped.length) {
-    return enrichBikeLaneSensorHoverView(view, location, scoped, selectedKpi);
+  if (location?.kind === "bike_lane_sensor" && scoped.length && selectedKpi !== "kpi4.2") {
+    return enrichBikeLaneSensorHoverView(view, location, scoped, selectedKpi, scenario);
   }
 
   if (pilotId === "tri-p2" && location && !scoped.length) {
     return enrichPilot2InfraView(view, location, selectedKpi);
   }
 
+  if (pilotId === "tri-p2" && selectedKpi === "kpi3.1") {
+    const hubs = (options?.locations ?? []).filter((l) => l.kind === "park_and_ride");
+    const hubCount = hubs.length || 3;
+    const installed = scenario === "baseline" ? 0 : hubCount;
+    return {
+      ...view,
+      name: hubs.length ? hubs.map((h) => h.name).join(" · ") : "SMY · DEH · GiSeMi",
+      shortName: "Park & Ride hubs",
+      kpiValue: installed,
+      dataClass: "observed",
+      dataSource: "observed",
+      dataConfidence: Math.max(view.dataConfidence, 0.7),
+      sourceLabel: "Installed P+R hubs · Partner My Maps",
+      monitoringPeriod: `Baseline 0 → intervention ${hubCount} hubs`,
+      interventionType: "Park & Ride · zero-emission facility inventory",
+    };
+  }
+
+  if (pilotId === "tri-p2" && selectedKpi === "kpi4.1") {
+    return {
+      ...view,
+      name: "Park & Ride stations",
+      shortName: "P+R hubs",
+      kpiValue: scenario === "baseline" ? 60 : 74,
+      dataClass: "mock",
+      dataSource: "mock",
+      dataConfidence: 0.35,
+      sourceLabel: "MOCK satisfaction — no P+R user survey linked",
+      monitoringPeriod: "Mock placeholder · partner survey not delivered",
+      interventionType: "Park & Ride · mock satisfaction only",
+    };
+  }
+
   if (location && !scoped.length) {
     const kindLabel = INFRA_KIND_LABEL[location.kind] ?? location.kind;
     const registryOnlyNote =
       location.kind === "bike_lane_sensor"
-        ? "Registry position only — run build-trikala-bike-lane-sensors to link observed time-series."
+        ? selectedKpi === "kpi2.1"
+          ? "Registry position only — no linked LoRa time-series for this node. Fleet mock speed is shown when a joined sensor is selected."
+          : "Registry position only — run build-trikala-bike-lane-sensors to link observed time-series."
         : undefined;
     return {
       ...view,
@@ -318,6 +487,7 @@ export function buildTrikalaObservatoryView(
           : view.monitoringPeriod),
       segmentApiId: location.id,
       sourceLabel: location.folderPath.join(" › ") || "Partner My Maps registry",
+      dataClass: location.kind === "bike_lane_sensor" && selectedKpi === "kpi2.1" ? "derived" : view.dataClass,
     };
   }
 

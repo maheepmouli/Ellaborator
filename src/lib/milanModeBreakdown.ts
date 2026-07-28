@@ -22,7 +22,7 @@ export function emptyMilanModeTotals(): MilanModeTotals {
 
 export function pct(part: number, total: number): number {
   if (!Number.isFinite(part) || !Number.isFinite(total) || total <= 0) return 0;
-  return (part / total) * 100;
+  return Math.max(0, Math.min(100, (part / total) * 100));
 }
 
 export function sumMilanModeTotals(a: MilanModeTotals, b: MilanModeTotals): MilanModeTotals {
@@ -37,8 +37,9 @@ export function sumMilanModeTotals(a: MilanModeTotals, b: MilanModeTotals): Mila
 }
 
 export function finalizeMilanModeTotals(t: MilanModeTotals): MilanModeTotals {
-  const total = t.bike + t.pedestrian + t.motorised + t.ptw + t.pt;
-  return { ...t, total: Math.max(total, 1) };
+  const parts = t.bike + t.pedestrian + t.motorised + t.ptw + t.pt;
+  // Prefer reconstructed sum so inconsistent stored totals cannot push share > 100%.
+  return { ...t, total: Math.max(parts > 0 ? parts : t.total, 1) };
 }
 
 export function sumByMilanModeSelection(
@@ -59,8 +60,9 @@ export function sumByMilanModeSelection(
 }
 
 export function milanModeSharePct(agg: MilanModeTotals, selectedModeTypes: string[]): number {
-  const selected = sumByMilanModeSelection(agg, selectedModeTypes);
-  return pct(selected, agg.total);
+  const finalized = finalizeMilanModeTotals(agg);
+  const selected = sumByMilanModeSelection(finalized, selectedModeTypes);
+  return pct(selected, finalized.total);
 }
 
 export function toMilanElaboratorBreakdown(
@@ -70,20 +72,22 @@ export function toMilanElaboratorBreakdown(
   breakdownBaseline: Record<string, number>;
   breakdownIntervention: Record<string, number>;
 } {
+  const preF = finalizeMilanModeTotals(pre);
+  const postF = finalizeMilanModeTotals(post);
   return {
     breakdownBaseline: {
-      Pedestrian: pct(pre.pedestrian, pre.total),
-      Cycle: pct(pre.bike, pre.total),
-      "Public Transport": pct(pre.pt, pre.total),
-      "Private Car": pct(pre.motorised, pre.total),
-      PTW: pct(pre.ptw, pre.total),
+      Pedestrian: pct(preF.pedestrian, preF.total),
+      Cycle: pct(preF.bike, preF.total),
+      "Public Transport": pct(preF.pt, preF.total),
+      "Private Car": pct(preF.motorised, preF.total),
+      PTW: pct(preF.ptw, preF.total),
     },
     breakdownIntervention: {
-      Pedestrian: pct(post.pedestrian, post.total),
-      Cycle: pct(post.bike, post.total),
-      "Public Transport": pct(post.pt, post.total),
-      "Private Car": pct(post.motorised, post.total),
-      PTW: pct(post.ptw, post.total),
+      Pedestrian: pct(postF.pedestrian, postF.total),
+      Cycle: pct(postF.bike, postF.total),
+      "Public Transport": pct(postF.pt, postF.total),
+      "Private Car": pct(postF.motorised, postF.total),
+      PTW: pct(postF.ptw, postF.total),
     },
   };
 }

@@ -16,6 +16,7 @@ import type { MilanPilotId } from "@/data/milanPilotProfiles";
 import { milanHubSegmentId } from "@/lib/milanMapLayers/milanFlowGeometry";
 
 import {
+  finalizeMilanModeTotals,
   milanModeSharePct,
   toMilanElaboratorBreakdown,
   type MilanModeTotals,
@@ -41,7 +42,7 @@ export type MilanObservatoryOptions = {
 
 function pct(part: number, total: number): number {
   if (!Number.isFinite(part) || !Number.isFinite(total) || total <= 0) return 0;
-  return (part / total) * 100;
+  return Math.max(0, Math.min(100, (part / total) * 100));
 }
 
 function aggregateModeBreakdown(points: LocalCityPoint[]): ModeBreakdown | null {
@@ -68,7 +69,10 @@ function aggregateModeBreakdown(points: LocalCityPoint[]): ModeBreakdown | null 
   }
 
   if (!hits) return null;
-  return { pre, post };
+  return {
+    pre: finalizeMilanModeTotals(pre),
+    post: finalizeMilanModeTotals(post),
+  };
 }
 
 function periodFromAgg(
@@ -203,6 +207,55 @@ export function aggregateMilanObservedKpi(
   return null;
 }
 
+/** KPI 1.1 expansion readiness mix for Pilot 3 observatory. */
+export function milanExpansionModeShare(points: LocalCityPoint[]): {
+  mode: string;
+  before: number;
+  after: number;
+}[] {
+  const expansion = points.find((p) => p.properties?.datasetKind === "expansion-plan");
+  const rows = expansion?.properties?.climateAttitudeRows as
+    | Array<{ label: string; count: number }>
+    | undefined;
+  if (rows?.length) {
+    return rows.map((row) => ({
+      mode: row.label.length > 32 ? `${row.label.slice(0, 29)}…` : row.label,
+      before: Number(row.count),
+      after: Number(row.count),
+    }));
+  }
+  return [
+    {
+      mode: "DSS dissemination",
+      before: Number(expansion?.properties?.baselineValue ?? expansion?.value ?? 0),
+      after: Number(expansion?.properties?.interventionValue ?? expansion?.value ?? 0),
+    },
+    { mode: "Formal expansion plan", before: 0, after: 1 },
+  ];
+}
+
+export function milanExpansionPlanStatCards(): {
+  label: string;
+  value: string;
+  color?: string;
+  note?: string;
+}[] {
+  return [
+    {
+      label: "Expansion plan (KPI 1.1)",
+      value: "≥1 plan",
+      color: "#2ecc71",
+      note: "Milan Intervention Evaluation Plan · CDM3 — dissemination and replication beyond the living lab.",
+    },
+    {
+      label: "Pilot scope (CDM3)",
+      value: "DSS corridor",
+      color: "#38bdf8",
+      note: "Pilot 3 tracks expansion readiness, user satisfaction, and accessibility DSS outcomes.",
+    },
+  ];
+}
+
 export function milanAccessibilityStatCards(points: LocalCityPoint[]): {
   label: string;
   value: string;
@@ -320,11 +373,50 @@ export function milanCountStatCards(points: LocalCityPoint[]): {
       note: "Peak 8:30–9:30 TMV summaries",
     },
     {
-      label: "Camera linkage",
+        label: "Site linkage",
       value: `${matched}/${counts.length}`,
       note: `Σ bikes (post): ${Math.round(totalBikes)}`,
     },
   ];
+}
+
+export function milanSelectedSegmentSpeedCards(
+  segment?: MilanSegmentRecord | null
+): { label: string; value: string; color?: string; note?: string }[] | null {
+  if (!segment || segment.properties?.hasMetric === false) return null;
+  const props = segment.properties ?? {};
+  const avgSpeed = Number(props.avgSpeed ?? 0);
+  const p85Speed = Number(props.p85Speed ?? 0);
+  const hits = Math.round(Number(props.hits ?? 0));
+  const speedLimit = Number(props.speedLimit ?? 0);
+  if (avgSpeed <= 0 && p85Speed <= 0) return null;
+  const cards = [
+    {
+      label: "Avg speed",
+      value: `${avgSpeed.toFixed(1)} km/h`,
+      color: "#96c2ef",
+      note: "AMAT Maggio · BS_AvgSp (observed)",
+    },
+    {
+      label: "P85 speed",
+      value: `${p85Speed.toFixed(1)} km/h`,
+      color: "#63ccff",
+      note: "85th percentile · BS_P85sp",
+    },
+    {
+      label: "Observations",
+      value: `${hits}`,
+      note: "BS_Hits in Maggio metric DBF",
+    },
+  ];
+  if (speedLimit > 0) {
+    cards.push({
+      label: "Speed limit",
+      value: `${speedLimit} km/h`,
+      note: "network.shp · SpeedLimit",
+    });
+  }
+  return cards;
 }
 
 export function milanSpeedStatCards(stats?: { parsedSegments: number; avgMetricValue: number; invalidGeometries?: number; missingMetricJoins?: number; cameraJoinRatePct?: number } | null): {
@@ -439,7 +531,7 @@ export function buildMilanObservatoryView(
         countPoints[0]?.id ??
         segmentApiId
     );
-    if (!options.segmentName) {
+    if (!options.segmentName || selectionId) {
       const junctionLabel = String(countPoints[0]?.properties?.junctionLabel ?? "").trim();
       const siteName = String(countPoints[0]?.properties?.streetName ?? "").trim();
       displayName =
@@ -474,12 +566,15 @@ export function buildMilanObservatoryView(
     baselinePeriod = {
       ...base.baseline,
       modeShare: { Pedestrian: baselineValue },
-      avgSpeedKmh: baselineValue,
+      // Keep traffic fields neutral — KPI 4.2 is barrier category, not speed.
+      avgSpeedKmh: 0,
+      peakCongestion: 0,
     };
     interventionPeriod = {
       ...base.intervention,
       modeShare: { Pedestrian: interventionValue },
-      avgSpeedKmh: interventionValue,
+      avgSpeedKmh: 0,
+      peakCongestion: 0,
     };
     if (!options.segmentName) {
       const junctionLabel = String(a11yPoints[0]?.properties?.junctionLabel ?? "").trim();
@@ -577,18 +672,33 @@ export function buildMilanObservatoryView(
     } else if (envDataset && envDataset.records.length > 0) {
       const props = envSegment?.properties ?? options.segmentProperties ?? {};
       const weight = envSegment ? envTrafficWeight(props) : envDataset.stats.avgMetricValue;
-      interventionValue = weight > 0 ? weight / 10 : envDataset.stats.avgMetricValue;
+      // Keep a stable pressure index (~tens), then scale to a rounded kg/day proxy for the panel.
+      interventionValue = weight > 0 ? weight / 10 : envDataset.stats.avgMetricValue / 10;
       baselineValue = interventionValue * 1.17;
       dataClass = "derived";
       sourceLabel = `${String(props.sourceLabel ?? "Milan RETE network")} · environmental proxy`;
       monitoringPeriod = `${envDataset.stats.parsedSegments} RETE segment${envDataset.stats.parsedSegments === 1 ? "" : "s"}`;
       segmentApiId = envSegment?.id ?? segmentApiId;
       displayName = options.segmentName || String(props.streetName ?? props.NOME_VIA ?? envSegment?.id ?? displayName);
-      baselinePeriod = { ...base.baseline, co2ProxyKgDay: baselineValue * 10 };
+      const congestion01 = Math.min(
+        1,
+        Math.max(
+          0,
+          options.congestion ??
+            (Number.isFinite(Number(envSegment?.value))
+              ? Number(envSegment!.value) / 100
+              : Math.min(1, interventionValue / 100))
+        )
+      );
+      baselinePeriod = {
+        ...base.baseline,
+        co2ProxyKgDay: Math.round(baselineValue * 10 * 10) / 10,
+        peakCongestion: Math.min(1, congestion01 * 1.17),
+      };
       interventionPeriod = {
         ...base.intervention,
-        co2ProxyKgDay: interventionValue * 10,
-        peakCongestion: options.congestion ?? Math.min(1, (envSegment?.value ?? 40) / 100),
+        co2ProxyKgDay: Math.round(interventionValue * 10 * 10) / 10,
+        peakCongestion: congestion01,
       };
     }
   } else if (selectedKpi === "kpi4.1") {
@@ -626,7 +736,6 @@ export function buildMilanObservatoryView(
     interventionPeriod = {
       ...base.intervention,
       avgSpeedKmh: interventionValue,
-      peakCongestion: Math.min(1, (speedSegment?.value ?? 50) / 100),
     };
   } else if (activePoints.length > 0) {
     dataClass = "derived";
@@ -677,7 +786,7 @@ export function buildMilanObservatoryView(
     dataConfidence: dataClass === "mock" ? base.dataConfidence : 0.84,
     baseline: baselinePeriod,
     intervention: interventionPeriod,
-    dataSource: dataClass === "mock" ? "mock" : "observed",
+    dataSource: dataClass === "mock" ? "mock" : dataClass === "derived" ? "derived" : "observed",
     dataClass,
     sourceLabel,
     streetNS: config.streetNS,

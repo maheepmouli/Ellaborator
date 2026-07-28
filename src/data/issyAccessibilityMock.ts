@@ -28,6 +28,8 @@ export interface IssyAccessibilityFeatureMock {
   label: string;
   armLabel: string;
   qualityScore: number;
+  baselineScore: number;
+  /** existing = present in baseline; post-intervention = added after; planned = not yet installed */
   status: "existing" | "post-intervention" | "planned";
 }
 
@@ -39,18 +41,21 @@ export interface IssyAccessibilityPilotMock {
   compositeIndex: number;
   baselineIndex: number;
   totalFeatures: number;
+  baselineFeatureCount: number;
   confidencePct: number;
   breakdown: Record<string, number>;
+  baselineBreakdown: Record<string, number>;
   features: IssyAccessibilityFeatureMock[];
   disclaimer: string;
   methodology: string;
 }
 
+/** Distances along carriageway stubs — keep markers on the road near the junction. */
 const ARM_FIELD_DISTANCE_M: Record<IssyJunctionArmId, number> = {
-  west: 38,
-  east: 44,
-  north: 52,
-  south: 48,
+  west: 32,
+  east: 36,
+  north: 40,
+  south: 34,
 };
 
 /** Which junction arms get a mock asset — only on KPI 1.2 corridor segments. */
@@ -86,11 +91,19 @@ function placeFeaturesOnJunctionArms(pilotId: IssyPilotId): IssyAccessibilityFea
     const arm = getArm(armId);
     const category = SLOT_CATEGORIES[index % SLOT_CATEGORIES.length];
     const u = seededUnit(pilotId, index);
-    const distanceM = ARM_FIELD_DISTANCE_M[armId] + index * 11 + u * 9;
+    // Stagger along the arm so west/east duplicates don't stack; stay within ~80 m of hub.
+    const distanceM = ARM_FIELD_DISTANCE_M[armId] + index * 12 + u * 6;
     const [lat, lon] = placeFieldPointOnJunctionArm(armId, distanceM);
-    const qualityScore = Math.round(58 + u * 32);
+    const qualityScore = Math.round(62 + u * 28);
+    const baselineScore = Math.max(32, Math.round(qualityScore - 10 - (index % 4) * 3));
+    // Deterministic mix so every pilot always has map points + a visible before→after delta.
+    // Seed-based status previously marked all issy-p1 slots "planned" → 0 map features.
     const status: IssyAccessibilityFeatureMock["status"] =
-      u > 0.7 ? "post-intervention" : u > 0.2 ? "existing" : "planned";
+      index === 0 || (slots.length > 3 && index === 1)
+        ? "existing"
+        : index === slots.length - 1 && slots.length > 2
+          ? "planned"
+          : "post-intervention";
 
     return {
       id: `${pilotId}-a11y-${armId}-${index + 1}`,
@@ -101,17 +114,31 @@ function placeFeaturesOnJunctionArms(pilotId: IssyPilotId): IssyAccessibilityFea
       label: `${category} · ${arm.mapLabel}`,
       armLabel: arm.mapLabel,
       qualityScore,
+      baselineScore,
       status,
     };
   });
 }
 
-function breakdownFromFeatures(features: IssyAccessibilityFeatureMock[]): Record<string, number> {
-  const counts: Record<string, number> = {};
+function scoreBreakdown(
+  features: IssyAccessibilityFeatureMock[],
+  period: "baseline" | "intervention"
+): Record<string, number> {
+  const buckets = new Map<string, { sum: number; n: number }>();
   for (const f of features) {
-    counts[f.category] = (counts[f.category] ?? 0) + 1;
+    if (period === "baseline" && f.status !== "existing") continue;
+    if (period === "intervention" && f.status === "planned") continue;
+    const score = period === "baseline" ? f.baselineScore : f.qualityScore;
+    const existing = buckets.get(f.category) ?? { sum: 0, n: 0 };
+    existing.sum += score;
+    existing.n += 1;
+    buckets.set(f.category, existing);
   }
-  return counts;
+  const out: Record<string, number> = {};
+  for (const [cat, { sum, n }] of buckets) {
+    out[cat] = Math.round(sum / Math.max(1, n));
+  }
+  return out;
 }
 
 function buildProfile(
@@ -126,11 +153,15 @@ function buildProfile(
   }
 ): IssyAccessibilityPilotMock {
   const features = placeFeaturesOnJunctionArms(pilotId);
+  const interventionFeatures = features.filter((f) => f.status !== "planned");
+  const baselineFeatures = features.filter((f) => f.status === "existing");
   return {
     pilotId,
     anchor: { lat: ISSY_P2_JUNCTION.lat, lon: ISSY_P2_JUNCTION.lon },
-    totalFeatures: features.length,
-    breakdown: breakdownFromFeatures(features),
+    totalFeatures: interventionFeatures.length,
+    baselineFeatureCount: Math.max(1, baselineFeatures.length),
+    breakdown: scoreBreakdown(features, "intervention"),
+    baselineBreakdown: scoreBreakdown(features, "baseline"),
     features,
     disclaimer: ISSY_ACCESSIBILITY_MOCK_DISCLAIMER,
     ...config,
@@ -142,7 +173,7 @@ const ISSY_ACCESSIBILITY_BY_PILOT: Record<IssyPilotId, IssyAccessibilityPilotMoc
     title: "Pont d'Issy corridor — mock accessibility (5 arms)",
     reachScore: 74,
     compositeIndex: 72,
-    baselineIndex: 64,
+    baselineIndex: 58,
     confidencePct: 62,
     methodology:
       "Five mock assets on ISSY1 mode-share corridor arms only (traficissy segments at Pont d'Issy). Not a certified audit.",
@@ -151,7 +182,7 @@ const ISSY_ACCESSIBILITY_BY_PILOT: Record<IssyPilotId, IssyAccessibilityPilotMoc
     title: "Observatory corridor — mock accessibility (5 arms)",
     reachScore: 69,
     compositeIndex: 68,
-    baselineIndex: 61,
+    baselineIndex: 55,
     confidencePct: 58,
     methodology:
       "Five mock assets placed on the same three junction arms used for KPI 1.2 mode-share context — city inventory proxy, not field survey.",
@@ -160,7 +191,7 @@ const ISSY_ACCESSIBILITY_BY_PILOT: Record<IssyPilotId, IssyAccessibilityPilotMoc
     title: "GecoAir corridor — mock accessibility (3 arms)",
     reachScore: 61,
     compositeIndex: 59,
-    baselineIndex: 54,
+    baselineIndex: 48,
     confidencePct: 54,
     methodology:
       "Three mock walkability assets on west / east / south corridor arms where mode-share segments are monitored.",
@@ -174,13 +205,26 @@ export function getIssyAccessibilityMock(
   return ISSY_ACCESSIBILITY_BY_PILOT[pilotId as IssyPilotId];
 }
 
+/** Features visible for the active scenario (baseline fewer; intervention adds post assets). */
+export function issyAccessibilityFeaturesForScenario(
+  profile: IssyAccessibilityPilotMock,
+  scenario: ScenarioType = "intervention"
+): IssyAccessibilityFeatureMock[] {
+  if (scenario === "baseline") {
+    return profile.features.filter((f) => f.status === "existing");
+  }
+  // Intervention + comparison: show installed assets (existing + post-intervention).
+  return profile.features.filter((f) => f.status !== "planned");
+}
+
 export function issyAccessibilityToLocalPoints(
   profile: IssyAccessibilityPilotMock,
   scenario: ScenarioType = "intervention"
 ): LocalCityPoint[] {
   const useBaseline = scenario === "baseline";
-  return profile.features.map((feature, index) => {
-    const baselineValue = Math.max(35, feature.qualityScore - 8 - (index % 5));
+  const visible = issyAccessibilityFeaturesForScenario(profile, scenario);
+  return visible.map((feature) => {
+    const baselineValue = feature.baselineScore;
     const interventionValue = feature.qualityScore;
     const value = useBaseline ? baselineValue : interventionValue;
     return {
@@ -214,16 +258,22 @@ export function issyAccessibilityToLocalPoints(
   });
 }
 
-export function issyAccessibilityKpiHeadline(profile: IssyAccessibilityPilotMock): {
+export function issyAccessibilityKpiHeadline(
+  profile: IssyAccessibilityPilotMock,
+  scenario: ScenarioType = "intervention"
+): {
   mainValue: number;
   unit: string;
   change: number;
   breakdown: Record<string, number>;
+  baselineBreakdown: Record<string, number>;
 } {
+  const useBaseline = scenario === "baseline";
   return {
-    mainValue: profile.totalFeatures,
+    mainValue: useBaseline ? profile.baselineFeatureCount : profile.totalFeatures,
     unit: "features (mock)",
-    change: Math.max(1, profile.totalFeatures - 1),
+    change: profile.totalFeatures - profile.baselineFeatureCount,
     breakdown: { ...profile.breakdown },
+    baselineBreakdown: { ...profile.baselineBreakdown },
   };
 }

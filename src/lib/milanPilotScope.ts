@@ -1,13 +1,13 @@
 import type { MilanPilotId } from "@/data/milanPilotProfiles";
 import { MILAN_PILOT_ANCHORS } from "@/lib/milanMapConfig";
 
-/** mil-p3 = observed layers from Pilot 1 and Pilot 2 combined (not CDM3 mock). */
+/** mil-p3 = Pilot 1 + Pilot 2 observed layers, plus CDM3-native rows (e.g. expansion hub). */
 export const MILAN_COMBINED_PILOT_ID: MilanPilotId = "mil-p3";
 
 const SOURCE_BY_SCOPE: Record<MilanPilotId, MilanPilotId[]> = {
   "mil-p1": ["mil-p1"],
   "mil-p2": ["mil-p2"],
-  "mil-p3": ["mil-p1", "mil-p2"],
+  "mil-p3": ["mil-p1", "mil-p2", "mil-p3"],
 };
 
 export function milanSourcePilotIds(

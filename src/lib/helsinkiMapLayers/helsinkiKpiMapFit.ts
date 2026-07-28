@@ -19,7 +19,7 @@ const HELSINKI_KPI_FIT: Record<
   /** FVH1 multi-hub mode-share / hazard clusters across central Helsinki. */
   "city-hubs": { maxZoom: 14, pad: 0.22, fallbackZoom: 12 },
   /** FVH2 Kallio parking / accessibility sample. */
-  kallio: { maxZoom: 16, pad: 0.22, fallbackZoom: 15 },
+  kallio: { maxZoom: 15, pad: 0.28, fallbackZoom: 14 },
   /** FVH3 single Viikki crossing hub. */
   viikki: { maxZoom: 17, pad: 0.35, fallbackZoom: 16 },
   /** KPI 3.2 citywide colour-rated climate points. */
@@ -104,6 +104,6 @@ export function fitHelsinkiKpiView(
   map.fitBounds(bounds.pad(cfg.pad), {
     animate: false,
     maxZoom: cfg.maxZoom,
-    padding: [48, 48],
+    padding: [72, 72],
   });
 }

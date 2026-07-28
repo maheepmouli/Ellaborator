@@ -161,7 +161,9 @@ export async function renderHelsinkiMapLayers(
         circlesInfluenceOut,
         showSitePolygon: false,
       });
-      await renderHelsinkiViikkiContextLayers(options, { tramSubtle: true, innotrafik: false });
+      if (pilotId === "hel-p3") {
+        await renderHelsinkiViikkiContextLayers(options, { tramSubtle: true, innotrafik: false });
+      }
       if (wire) {
         await renderHelsinkiKpi12Layers({
           map,
@@ -193,7 +195,12 @@ export async function renderHelsinkiMapLayers(
         circlesInfluenceOut,
         showSitePolygon: false,
       });
-      await renderHelsinkiViikkiContextLayers(options, { tramSubtle: false, innotrafik: true });
+      // FVH3: tram/Innotrafik as monitoring context only — not survey points.
+      if (pilotId === "hel-p3") {
+        await renderHelsinkiViikkiContextLayers(options, { tramSubtle: true, innotrafik: true });
+      } else {
+        await renderHelsinkiViikkiContextLayers(options, { tramSubtle: false, innotrafik: true });
+      }
       if (wire) {
         await renderHelsinkiKpi21Layers({
           map,
@@ -253,7 +260,8 @@ export async function renderHelsinkiMapLayers(
       await renderHelsinkiEscooterLayer({
         map,
         selectedPilotId,
-        maxPoints: 50,
+        maxPoints: 70,
+        scenario,
         segmentInteractionEnabled,
         segmentHandlers,
         activeMapSegmentId,
@@ -265,7 +273,7 @@ export async function renderHelsinkiMapLayers(
 
     case "kpi4.1":
     case "kpi4.2": {
-      const stackKallioEscooter = selectedKpi === "kpi4.2" && selectedPilotId === "hel-p2";
+      const isKallioAccessibility = selectedKpi === "kpi4.2" && selectedPilotId === "hel-p2";
       await renderHelsinkiInterventionUnderlay({
         map,
         selectedPilotId,
@@ -278,6 +286,23 @@ export async function renderHelsinkiMapLayers(
         circlesInfluenceOut,
         showSitePolygon: false,
       });
+      // FVH2 Kallio: parking observations only — never Viikki UX hub / tram "sensors".
+      if (isKallioAccessibility) {
+        await renderHelsinkiEscooterLayer({
+          map,
+          emphasizeAccessibility: false,
+          flaggedOnly: false,
+          maxPoints: 70,
+          scenario,
+          selectedPilotId,
+          segmentInteractionEnabled,
+          segmentHandlers,
+          activeMapSegmentId,
+          circlesOut,
+          markersOut,
+        });
+        return true;
+      }
       await renderHelsinkiViikkiContextLayers(options, { tramSubtle: true, innotrafik: false });
       await renderHelsinkiUxSurveyLayer({
         map,
@@ -288,22 +313,8 @@ export async function renderHelsinkiMapLayers(
         circlesOut,
         markersOut,
         circlesInfluenceOut,
-        fitMap: !stackKallioEscooter,
+        fitMap: true,
       });
-      if (stackKallioEscooter) {
-        await renderHelsinkiEscooterLayer({
-          map,
-          emphasizeAccessibility: true,
-          flaggedOnly: true,
-          maxPoints: 40,
-          selectedPilotId,
-          segmentInteractionEnabled,
-          segmentHandlers,
-          activeMapSegmentId,
-          circlesOut,
-          markersOut,
-        });
-      }
       return true;
     }
 

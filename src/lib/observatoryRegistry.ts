@@ -26,14 +26,6 @@ export type ObservatoryConfig = {
   emptyState?: string;
 };
 
-const UNIFIED_OBSERVATORY_TABS: ObservatoryTab[] = [
-  { id: "overview", label: "Overview" },
-  { id: "data", label: "Data" },
-  { id: "beforeAfter", label: "Before/After" },
-  { id: "kpiAnalysis", label: "KPI Analysis" },
-  { id: "methodology", label: "Methodology" },
-];
-
 const KPI_OBSERVATORY: Record<string, Omit<ObservatoryConfig, "kpiId" | "emptyState">> = {
   "kpi1.2": {
     title: "Mode share observatory",
@@ -98,7 +90,10 @@ const KPI_OBSERVATORY: Record<string, Omit<ObservatoryConfig, "kpiId" | "emptySt
   },
 };
 
-const COMMON_CITY_TABS: ObservatoryTab[] = UNIFIED_OBSERVATORY_TABS;
+const DEFAULT_OBSERVATORY_TABS: ObservatoryTab[] = [
+  { id: "overview", label: "Overview" },
+  { id: "beforeAfter", label: "Before/After" },
+];
 
 export function getObservatoryConfig(
   kpiId: string,
@@ -108,11 +103,13 @@ export function getObservatoryConfig(
   const kpiBase = KPI_OBSERVATORY[kpiId] ?? KPI_OBSERVATORY["kpi2.1"];
   const base = {
     ...kpiBase,
-    tabs: UNIFIED_OBSERVATORY_TABS,
+    tabs: DEFAULT_OBSERVATORY_TABS,
     subtitle:
       city === "Issy-les-Moulineaux"
         ? kpiBase.subtitle
-        : "Intervention-first observatory shell with explicit trust, data readiness, and methodology context.",
+        : city === "Copenhagen"
+          ? "Directional counts for the selected camera corridor."
+          : "Intervention-first observatory shell with explicit trust, data readiness, and methodology context.",
   };
   const readiness = KPI_READINESS_MATRIX.find((c) => c.city === city && c.kpiId === kpiId);
 

@@ -57,7 +57,7 @@ export interface KPIFrameworkConfig {
 export const KPI_FRAMEWORK: Record<KPIFrameworkId, KPIFrameworkConfig> = {
   "kpi1.1": {
     id: "kpi1.1",
-    displayName: "Intervention Expansion",
+    displayName: "Plans to expand interventions beyond the LL",
     description:
       "Formal expansion-plan readiness for the intervention site, supported by linked monitoring assets when a structured plan artifact is still pending.",
     question: "Is at least one formal expansion plan in place for the intervention?",
@@ -163,7 +163,7 @@ export const KPI_FRAMEWORK: Record<KPIFrameworkId, KPIFrameworkConfig> = {
   },
   "kpi4.1": {
     id: "kpi4.1",
-    displayName: "User Satisfaction",
+    displayName: "User satisfaction for interventions",
     description:
       "Perception-based KPI reported as share of respondents satisfied, with method and sample size.",
     question: "How satisfied are users with the mobility interventions?",
@@ -184,7 +184,7 @@ export const KPI_FRAMEWORK: Record<KPIFrameworkId, KPIFrameworkConfig> = {
   },
   "kpi4.2": {
     id: "kpi4.2",
-    displayName: "Accessibility and Security",
+    displayName: "Increase in accessibility and security",
     description:
       "Accessibility and security improvements based on installed features (ramps, tactile paving, lighting, seating, crossings) and their coverage.",
     question: "How accessible are public spaces for all users?",

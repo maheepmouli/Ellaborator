@@ -13,7 +13,7 @@ export const ISSY_JUNCTION_ARM_VISUAL_DISCLAIMER =
   "Context streets show low-opacity observed traficissy segment geometry around the monitored intervention corridor. They are not zone-to-zone OD measurements.";
 
 export const ISSY_JUNCTION_KPI12_ARM_NOTE =
-  "Mode share comes from the OD CSV at zone level. The monitored intervention corridor shows only traffic context from the traficissy segment API. No direct mode-share measurement is available for contextual streets.";
+  "Mode share comes from the OD CSV at zone / pilot level. The map shows the camera hub only (same hub style as other cities) — not street-segment mode share.";
 
 export type IssyDataSourceKind = "traficissy-segment" | "od-csv" | "bike-api" | "infra-api" | "derived-proxy" | "mock";
 
@@ -70,7 +70,7 @@ export function getIssyPilotInterventionCopy(pilotId: string | null | undefined)
       return {
         title: "Luminous and interactive road markings for bicycles",
         summary:
-          "In December 2024, a light-emitting marking system was installed in Issy-les-Moulineaux to improve safety on shared mobility lanes. LED panels in the pavement activate when cyclists approach and when the traffic light is green, alerting drivers with illuminated signals.",
+          "In December 2024, a light-emitting pavement marking system was installed in Issy-les-Moulineaux to enhance safety on shared-mobility lanes. The system activates LED panels embedded in the pavement when cyclists approach and the traffic light is green.",
         schematicCaption: "Visualized movement direction / derived representation — not measured per street segment.",
       };
     case "issy-p3":

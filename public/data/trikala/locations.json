@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-15T09:52:17.706Z",
+  "generatedAt": "2026-07-28T13:25:34.661Z",
   "sourceKml": "scripts/data/trikala-partner-map/doc.kml",
   "locationCount": 57,
   "sensorJoinCount": 7,
@@ -166,6 +166,7 @@
       "pilotId": "tri-p1",
       "linkedKpis": [
         "kpi2.1",
+        "kpi4.1",
         "kpi4.2"
       ],
       "segmentId": "tri-p1-smart-crossing",
@@ -188,11 +189,11 @@
       "folderPath": [
         "Air Quality Sensors"
       ],
-      "pilotId": "tri-p1",
+      "pilotId": "tri-p4",
       "linkedKpis": [
         "kpi3.2"
       ],
-      "segmentId": "tri-p1-environmental-sensor",
+      "segmentId": "tri-p4-environmental-sensor",
       "matchTokens": [
         "LAIKI"
       ],
@@ -208,11 +209,11 @@
       "folderPath": [
         "Air Quality Sensors"
       ],
-      "pilotId": "tri-p1",
+      "pilotId": "tri-p4",
       "linkedKpis": [
         "kpi3.2"
       ],
-      "segmentId": "tri-p1-environmental-sensor",
+      "segmentId": "tri-p4-environmental-sensor",
       "matchTokens": [
         "MILITARY",
         "SCHOOL"
@@ -232,6 +233,7 @@
       "pilotId": "tri-p1",
       "linkedKpis": [
         "kpi2.1",
+        "kpi4.1",
         "kpi4.2"
       ],
       "segmentId": "tri-p1-smart-crossing",
@@ -254,6 +256,7 @@
       "pilotId": "tri-p1",
       "linkedKpis": [
         "kpi2.1",
+        "kpi4.1",
         "kpi4.2"
       ],
       "segmentId": "tri-p1-smart-crossing",
@@ -272,11 +275,11 @@
       "folderPath": [
         "Air Quality Sensors"
       ],
-      "pilotId": "tri-p1",
+      "pilotId": "tri-p4",
       "linkedKpis": [
         "kpi3.2"
       ],
-      "segmentId": "tri-p1-environmental-sensor",
+      "segmentId": "tri-p4-environmental-sensor",
       "matchTokens": [
         "OTE",
         "SQUARE"
@@ -293,11 +296,11 @@
       "folderPath": [
         "Air Quality Sensors"
       ],
-      "pilotId": "tri-p1",
+      "pilotId": "tri-p4",
       "linkedKpis": [
         "kpi3.2"
       ],
-      "segmentId": "tri-p1-environmental-sensor",
+      "segmentId": "tri-p4-environmental-sensor",
       "matchTokens": [
         "FANARI",
         "KARDITSIS"
@@ -314,11 +317,11 @@
       "folderPath": [
         "Air Quality Sensors"
       ],
-      "pilotId": "tri-p1",
+      "pilotId": "tri-p4",
       "linkedKpis": [
         "kpi3.2"
       ],
-      "segmentId": "tri-p1-environmental-sensor",
+      "segmentId": "tri-p4-environmental-sensor",
       "matchTokens": [
         "TRAIN",
         "STATION"
@@ -335,11 +338,11 @@
       "folderPath": [
         "Air Quality Sensors"
       ],
-      "pilotId": "tri-p1",
+      "pilotId": "tri-p4",
       "linkedKpis": [
         "kpi3.2"
       ],
-      "segmentId": "tri-p1-environmental-sensor",
+      "segmentId": "tri-p4-environmental-sensor",
       "matchTokens": [
         "PARKING",
         "COURTHOUSE"
@@ -356,11 +359,11 @@
       "folderPath": [
         "Air Quality Sensors"
       ],
-      "pilotId": "tri-p1",
+      "pilotId": "tri-p4",
       "linkedKpis": [
         "kpi3.2"
       ],
-      "segmentId": "tri-p1-environmental-sensor",
+      "segmentId": "tri-p4-environmental-sensor",
       "matchTokens": [
         "MATSOPOULOS"
       ],
@@ -377,10 +380,7 @@
         "Parking Stations"
       ],
       "pilotId": "tri-p2",
-      "linkedKpis": [
-        "kpi3.1",
-        "kpi1.2"
-      ],
+      "linkedKpis": [],
       "segmentId": "tri-p2-park-ride",
       "matchTokens": [
         "UNDERGROUND",
@@ -400,10 +400,7 @@
         "Parking Stations"
       ],
       "pilotId": "tri-p2",
-      "linkedKpis": [
-        "kpi3.1",
-        "kpi1.2"
-      ],
+      "linkedKpis": [],
       "segmentId": "tri-p2-park-ride",
       "matchTokens": [
         "MUNICIPAL",
@@ -422,10 +419,7 @@
         "Parking Stations"
       ],
       "pilotId": "tri-p2",
-      "linkedKpis": [
-        "kpi3.1",
-        "kpi1.2"
-      ],
+      "linkedKpis": [],
       "segmentId": "tri-p2-park-ride",
       "matchTokens": [
         "UNDERGROUND",
@@ -445,10 +439,7 @@
         "Parking Stations"
       ],
       "pilotId": "tri-p2",
-      "linkedKpis": [
-        "kpi3.1",
-        "kpi1.2"
-      ],
+      "linkedKpis": [],
       "segmentId": "tri-p2-park-ride",
       "matchTokens": [
         "OPENAIR",
@@ -468,10 +459,7 @@
         "Parking Stations"
       ],
       "pilotId": "tri-p2",
-      "linkedKpis": [
-        "kpi3.1",
-        "kpi1.2"
-      ],
+      "linkedKpis": [],
       "segmentId": "tri-p2-park-ride",
       "matchTokens": [
         "FREE",
@@ -491,10 +479,7 @@
         "Parking Stations"
       ],
       "pilotId": "tri-p2",
-      "linkedKpis": [
-        "kpi3.1",
-        "kpi1.2"
-      ],
+      "linkedKpis": [],
       "segmentId": "tri-p2-park-ride",
       "matchTokens": [
         "FREE",
@@ -513,10 +498,7 @@
         "Parking Stations"
       ],
       "pilotId": "tri-p2",
-      "linkedKpis": [
-        "kpi3.1",
-        "kpi1.2"
-      ],
+      "linkedKpis": [],
       "segmentId": "tri-p2-park-ride",
       "matchTokens": [
         "PARKING",

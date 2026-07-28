@@ -40,6 +40,8 @@ import { SafetyPressureChart } from "@/components/observatory/charts/SafetyPress
 import { FacilityCategoryChart } from "@/components/observatory/charts/FacilityCategoryChart";
 import { ClimateComparisonChart } from "@/components/observatory/charts/ClimateComparisonChart";
 import { LikertDistributionChart } from "@/components/observatory/charts/LikertDistributionChart";
+import { SurveyPieChart } from "@/components/observatory/charts/SurveyPieChart";
+import { SentimentGaugeChart } from "@/components/observatory/charts/SentimentGaugeChart";
 import { DirectionBreakdownPanel } from "@/components/observatory/charts/DirectionBreakdownPanel";
 import { StatCardsChart } from "@/components/observatory/charts/StatCardsChart";
 import { getTrikalaSegmentInsights, getTrikalaWomenMobilityModeShareRows } from "@/services/trikalaSurveyParser";
@@ -83,6 +85,7 @@ function renderGraphic(
   graphicId: ObservatoryGraphicId,
   payload: ReturnType<typeof buildObservatoryGraphicPayload>,
   compact: boolean,
+  zone: ObservatoryGraphicZone,
   onSelectDirectionId?: (id: string) => void
 ) {
   if (!payload) return null;
@@ -139,11 +142,23 @@ function renderGraphic(
     case "envProxy":
     case "reteBand":
     case "proxyDelta":
-      return <ClimateComparisonChart payload={payload} compact={compact} />;
+      return (
+        <ClimateComparisonChart
+          payload={payload}
+          compact={compact}
+          showSegmentMap={zone === "header"}
+        />
+      );
+    case "surveyPie":
     case "surveyLikert":
+      return <SurveyPieChart payload={payload} compact={compact} />;
     case "accessLikert":
     case "likertRadar":
-      return <LikertDistributionChart payload={payload} compact={compact} />;
+      return payload.surveyDistribution?.after?.length ? (
+        <SurveyPieChart payload={payload} compact={compact} />
+      ) : (
+        <LikertDistributionChart payload={payload} compact={compact} />
+      );
     case "directionModeBreakdown":
     case "directionBreakdown":
       return (
@@ -155,6 +170,7 @@ function renderGraphic(
       );
     case "sentimentGauge":
     case "sentiment":
+      return <SentimentGaugeChart payload={payload} compact={compact} />;
     case "dssBars":
     case "accessibilityBars":
       return payload.likert?.length && payload.kpiId === "kpi4.2" ? (
@@ -178,6 +194,8 @@ export interface ObservatoryGraphicSlotProps {
   selectedDirectionId?: string | null;
   onSelectDirectionId?: (id: string) => void;
   selectedSegmentId?: string | null;
+  /** Force a specific graphic (e.g. overview before/after for every KPI). */
+  graphicOverride?: ObservatoryGraphicId;
   /** Header strip mode — renders schematic only with caption export */
   headerMode?: boolean;
   onCaptionsReady?: (captions: { primary: string; secondary: string; tertiary: string }) => void;
@@ -194,16 +212,19 @@ export function ObservatoryGraphicSlot({
   selectedDirectionId,
   onSelectDirectionId,
   selectedSegmentId,
+  graphicOverride,
   headerMode,
 }: ObservatoryGraphicSlotProps) {
   const observatoryType = resolveObservatoryType(cityName, pilotId);
-  const spec = resolveObservatoryGraphic(
-    observatoryType,
-    selectedKpi,
-    zone,
-    pilotId,
-    selectedSegmentId
-  );
+  const spec = graphicOverride
+    ? ({ graphicId: graphicOverride, kind: "chart", variant: "compact" } as const)
+    : resolveObservatoryGraphic(
+        observatoryType,
+        selectedKpi,
+        zone,
+        pilotId,
+        selectedSegmentId
+      );
   const cityCenter = useMemo(() => getCityCenter(cityName), [cityName]);
   const isTrikala = cityName.toLowerCase().includes("trikala");
   const isMilan = cityName === "Milan";
@@ -243,7 +264,11 @@ export function ObservatoryGraphicSlot({
       return [];
     }
     if (selectedKpi === "kpi3.2" && !milanHasObservedClimateData(milanEnvForObservatory)) {
-      return buildMilanJunctionClimateMockPoints(junctions, milanPilotId);
+      return buildMilanJunctionClimateMockPoints(
+        junctions,
+        milanPilotId,
+        milanSpeedForObservatory.records
+      );
     }
     if (
       selectedKpi === "kpi4.2" &&
@@ -301,6 +326,7 @@ export function ObservatoryGraphicSlot({
             trikalaWomenMobilityModeShare:
               isTrikala && pilotId !== "tri-p2" ? trikalaWomenMobilityModeShare : undefined,
             milanSegmentStats: isMilan ? milanSpeedForObservatory?.stats : undefined,
+            milanSpeedRecords: isMilan ? milanSpeedForObservatory?.records : undefined,
           })
         : null,
     [
@@ -320,14 +346,15 @@ export function ObservatoryGraphicSlot({
       trikalaLocationsBundle?.locations,
       trikalaLocationsBundle?.sensorJoins,
       milanSpeedForObservatory?.stats,
+      milanSpeedForObservatory?.records,
       milanJunctionMockPoints,
     ]
   );
 
   const pilot = getPilotById(cityName, pilotId);
   const missingNotice = getKpiMissingDataNotice(cityName, selectedKpi, pilot);
-  // Only the header strip is compact — overview / before-after / analysis need full hit targets.
-  const compact = Boolean(headerMode) || zone === "header";
+  // Header strip uses the large schematic — freed space after removing repetitive chips.
+  const compact = zone === "header" && !headerMode;
   const showTrikalaPilot2Illustrative =
     isTrikala &&
     pilotId === "tri-p2" &&
@@ -351,36 +378,44 @@ export function ObservatoryGraphicSlot({
     );
   }
 
-  const graphic = renderGraphic(spec.graphicId, payload, compact, onSelectDirectionId);
+  const graphic = renderGraphic(spec.graphicId, payload, compact, zone, onSelectDirectionId);
 
   if (headerMode) {
-    const captions = kpiStatusCaption(
-      observatoryType,
-      selectedKpi,
-      payload.dataClass,
-      cityName,
-      payload.sourceLabel
-    );
-    return (
-      <div className="flex items-center gap-3 w-full">
-        {graphic}
-        <div className="flex-1 space-y-2" data-observatory-captions>
-          <div className="flex items-center gap-2 text-[10px]">
-            <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ background: OBS_C.cyan }} />
-            <span className="text-white/55">{captions.primary}</span>
-          </div>
-          <div className="flex items-center gap-2 text-[10px]">
-            <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ background: OBS_C.lime }} />
-            <span className="text-white/55">{captions.secondary}</span>
-          </div>
-          <div className="flex items-center gap-2 text-[10px]">
-            <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ background: OBS_C.lavender }} />
-            <span className="text-white/55">{captions.tertiary}</span>
-          </div>
+    const isGauge = spec.graphicId === "sentimentGauge" || spec.graphicId === "sentiment";
+    const isCompactSpeed =
+      spec.graphicId === "streetSegmentSchematic" || spec.graphicId === "speedProfile";
+    // Helsinki FVH2 facilities: never show junction SensorDot schematic in the header.
+    const hideSensorSchematic =
+      cityName === "Helsinki" &&
+      pilotId === "hel-p2" &&
+      selectedKpi === "kpi3.1" &&
+      (spec.graphicId === "junctionSchematic" || spec.graphicId === "interventionPointsSchematic");
+    if (hideSensorSchematic) {
+      return (
+        <div className="flex justify-center items-center w-full min-h-0 py-1">
+          {renderGraphic("facilityInventory", payload, true, zone, onSelectDirectionId)}
         </div>
+      );
+    }
+    return (
+      <div
+        className={`flex justify-center items-center w-full ${
+          isGauge ? "min-h-[200px] py-1" : isCompactSpeed ? "min-h-0 py-1" : "min-h-[320px]"
+        }`}
+      >
+        {graphic}
       </div>
     );
   }
+
+  const captions = kpiStatusCaption(
+    observatoryType,
+    selectedKpi,
+    payload.dataClass,
+    cityName,
+    payload.sourceLabel,
+    pilotId
+  );
 
   return (
     <div className="space-y-2 mb-3">
@@ -389,9 +424,22 @@ export function ObservatoryGraphicSlot({
         <SourceTag label={payload.sourceLabel} />
         <span className="text-[9px] text-white/40">{dataClassLabel(payload.dataClass)}</span>
       </div>
+      {zone === "overview" && (
+        <div
+          className={obsGlassCardClass(true)}
+          style={obsGlassCardStyle()}
+        >
+          <p className="text-[11px] font-semibold text-white/70 mb-2">Evidence for this view</p>
+          <ul className="list-disc pl-4 space-y-1 text-[10px] text-white/65 leading-relaxed">
+            <li>{captions.primary}</li>
+            <li>{captions.secondary}</li>
+            <li>{captions.tertiary}</li>
+          </ul>
+        </div>
+      )}
       {payload.dataClass === "mock" && <MockDisclaimer />}
       {showTrikalaPilot2Illustrative && (
-        <IllustrativeDisclaimer text="Illustrative intermodal proxy per P+R hub — partner occupancy survey pending (June 2026 drop)." />
+        <IllustrativeDisclaimer text="Illustrative bike uptake from park-and-ride facilities (Evaluation Plan KPI 1.2) — partner occupancy survey pending." />
       )}
       {missingNotice && payload.dataClass !== "observed" && (
         <p className="text-[10px] text-amber-100/85 leading-relaxed">{missingNotice}</p>

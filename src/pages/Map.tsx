@@ -15,6 +15,13 @@ import { getPilotsByCity, findPilotByIdGlobally, SelectedPilot, ViewState } from
 import { CITY_DATA, ELABORATOR_KPIS } from "@/data/kpiDefinitions";
 import { resolveMapLegend, type MapLegendMarker } from "@/lib/mapLayerLegend";
 import { ISSY_P2_JUNCTION, ISSY_JUNCTION_SEGMENT_IDS, isIssyStudyPilot } from "@/lib/issyPilot2Junction";
+import { getIssyZoneCentroids } from "@/services/issyFlowData";
+import { useIssyFlowData } from "@/hooks/use-issy-flow-data";
+import {
+  buildIssyZoneModeShareStudyView,
+  buildIssyZoneSustainableModeSharePoints,
+  parseIssyZoneSegmentId,
+} from "@/lib/issyFlowAggregates";
 import { getKpi32TimeSeriesIntensity } from "@/lib/kpi32YearIntensity";
 import { useLatestTrafficData } from "@/hooks/use-traffic-data";
 import { pickDefaultSegment, buildJunctionStudyView } from "@/lib/issyJunctionAnalytics";
@@ -30,12 +37,18 @@ import { isIssyCity } from "@/lib/issyMapRouting";
 import { getIssyPilotProfile } from "@/data/issyPilotProfiles";
 import { getIssySentimentMock, issySentimentKpiHeadline } from "@/data/issySentimentMock";
 import {
+  buildIssyCityClimateStudyView,
   buildIssyClimateHexStudyView,
+  isIssyClimateCitySegmentId,
   parseIssyClimateHexSegmentId,
 } from "@/lib/issyClimateHexObservatory";
 import { useIssyWorkbooks } from "@/hooks/use-issy-workbooks";
 import { canOpenObservatory } from "@/lib/observatoryAccess";
-import { isCopenhagenObservatoryContext } from "@/lib/copenhagenMapSelection";
+import {
+  isCopenhagenObservatoryContext,
+  copenhagenSiteSegmentId,
+  parseCopenhagenMapSelection,
+} from "@/lib/copenhagenMapSelection";
 import { getCopenhagenPilotLatLngBounds } from "@/data/copenhagenCameraSites";
 import type { MapSelectionState } from "@/types/mapSelection";
 import { useMilanEnvironmentSegments, useMilanSpeedSegments } from "@/hooks/use-milan-segment-data";
@@ -60,9 +73,18 @@ import {
 import { getPilotGeometryRecord } from "@/lib/pilotGeometryContract";
 import type { PilotGeometryRenderSpec } from "@/lib/pilotGeometryRenderer";
 import { fetchSharepointManifest } from "@/data/sharepointDatasets";
-import { TimeWindowChip } from "@/components/TimeWindowChip";
 import { MapIntelligenceProvider, useMapIntelligence } from "@/context/MapIntelligenceContext";
 import { useMapSideInsets } from "@/hooks/use-map-side-insets";
+
+/** Milan camera hubs: persisted click beats stale hover so observatory matches the selected sensor. */
+function resolveObservatorySegmentId(
+  city: string,
+  selectedId: string | null | undefined,
+  hoveredId: string | null | undefined
+): string | null {
+  if (city === "Milan") return selectedId ?? hoveredId ?? null;
+  return hoveredId ?? selectedId ?? null;
+}
 
 /** Glyphs aligned with geometry: discs for points, short bars for polylines, squares for polygons, strips for ramps. */
 function LegendSwatch({ marker, color }: { marker: Exclude<MapLegendMarker, "polygonRamp">; color: string }) {
@@ -106,6 +128,7 @@ type SegmentContext = {
   segmentName: string;
   speed: number | null;
   congestion: number | null;
+  properties?: Record<string, unknown>;
 };
 
 type DataQualitySummary = {
@@ -172,6 +195,10 @@ const MapContent = () => {
   const [milanEnvWindow, setMilanEnvWindow] = useState<"08-09" | "18-19">("08-09");
   /** Issy KPI 1.2 zone-flow CSV weekday vs weekend (React Query key shared with map). */
   const [issyFlowDayCategory, setIssyFlowDayCategory] = useState<"all" | "weekday" | "weekend">("all");
+  const { data: issyFlowFeatures = [] } = useIssyFlowData(
+    issyFlowDayCategory,
+    isIssyCity(selectedCity) && selectedKpi === "kpi1.2"
+  );
   /** Sidebar chart drills → animate map viewport to pilot anchors. */
   const pilotFlyNonceRef = useRef(0);
   const [pilotFlyToSignal, setPilotFlyToSignal] = useState<{
@@ -314,7 +341,25 @@ const MapContent = () => {
     if (profile && selectedPilot.supportedKpis.includes(profile.defaultKpi)) {
       setSelectedKpi(profile.defaultKpi);
     }
-    requestPilotMapFocus(ISSY_P2_JUNCTION.lat, ISSY_P2_JUNCTION.lon, 17);
+    // Pilot 2 = city-wide observatory — fit OD zones, not Pont d'Issy corridor zoom.
+    if (selectedPilot.id === "issy-p2") {
+      const zones = getIssyZoneCentroids();
+      if (zones.length >= 2) {
+        const lats = zones.map((z) => z.lat);
+        const lons = zones.map((z) => z.lon);
+        requestPilotMapBounds(
+          [
+            [Math.min(...lats), Math.min(...lons)],
+            [Math.max(...lats), Math.max(...lons)],
+          ],
+          14
+        );
+      } else {
+        requestPilotMapFocus(ISSY_P2_JUNCTION.lat, ISSY_P2_JUNCTION.lon, 14);
+      }
+    } else {
+      requestPilotMapFocus(ISSY_P2_JUNCTION.lat, ISSY_P2_JUNCTION.lon, 17);
+    }
     const defaultSeg = pickDefaultSegment(issyJunctionTraffic?.results ?? []);
     if (defaultSeg) {
       patchSelection({ segmentId: defaultSeg.id });
@@ -325,11 +370,12 @@ const MapContent = () => {
       kpi: profile?.defaultKpi ?? selectedKpi,
       segmentId: defaultSeg?.id ?? null,
     });
-  }, [selectedPilot?.id, requestPilotMapFocus, issyJunctionTraffic?.results, selectedCity, selectedPilot?.supportedKpis, patchSelection]);
+  }, [selectedPilot?.id, requestPilotMapFocus, requestPilotMapBounds, issyJunctionTraffic?.results, selectedCity, selectedPilot?.supportedKpis, patchSelection]);
 
   useEffect(() => {
     if (!selectedPilot) return;
     if (selectedPilot.id.startsWith("issy-p")) return;
+    if (selectedPilot.id.startsWith("hel-")) return;
     if (selectedPilot.id === "tri-p2") {
       requestPilotMapBounds(getTrikalaPilot2FitBounds(selectedKpi), 17);
       return;
@@ -398,7 +444,11 @@ const MapContent = () => {
       return [];
     }
     if (selectedKpi === "kpi3.2" && !milanHasObservedClimateData(milanEnvForObservatory)) {
-      return buildMilanJunctionClimateMockPoints(junctions, milanPilotId);
+      return buildMilanJunctionClimateMockPoints(
+        junctions,
+        milanPilotId,
+        milanSpeedForObservatory.records
+      );
     }
     if (
       selectedKpi === "kpi4.2" &&
@@ -627,10 +677,20 @@ const MapContent = () => {
         },
         date_et_heure_de_comptage_utc: new Date().toISOString(),
         distance_metres: 0,
-        vitesse_km_h: p.properties?.avgSpeed != null ? Number(p.properties.avgSpeed) : null,
+        vitesse_km_h:
+          selectedKpi === "kpi4.2"
+            ? null
+            : p.properties?.avgSpeed != null
+              ? Number(p.properties.avgSpeed)
+              : null,
         temps_perdu_secondes: 0,
+        // KPI 4.2 values are equal-access % — do not map them to congestion.
         indice_de_congestion:
-          p.value != null && Number.isFinite(p.value) ? Math.min(1, p.value / 100) : null,
+          selectedKpi === "kpi4.2"
+            ? null
+            : p.value != null && Number.isFinite(p.value)
+              ? Math.min(1, p.value / 100)
+              : null,
         geo_point_2d: { lat: p.lat, lon: p.lon },
       }));
     }
@@ -648,6 +708,47 @@ const MapContent = () => {
 
   useEffect(() => {
     if (!selectedPilot?.id || isIssyCity(selectedCity) || isTrikalaMap) return;
+
+    // Copenhagen: default observatory map = OTC workbook hub (Stormgade 4-way cross),
+    // never the first flat directional row from local points.
+    if (isCopenhagenMap) {
+      const junction = getPrimaryJunctionConfig(selectedPilot.id);
+      const defaultWorkbook =
+        junction?.segmentApiId &&
+        ["stormgade", "norreport", "gammeltorv", "hojbro", "vandkunsten"].includes(
+          junction.segmentApiId
+        )
+          ? junction.segmentApiId
+          : "stormgade";
+      const defaultSiteId = copenhagenSiteSegmentId(defaultWorkbook);
+      const parsed = parseCopenhagenMapSelection(selectedJunctionSegmentId);
+
+      if (!selectedJunctionSegmentId) {
+        patchSelection({ segmentId: defaultSiteId });
+        setMapContext({
+          segmentName: junction?.name ?? "Stormgade camera hub",
+          speed: null,
+          congestion: null,
+        });
+        return;
+      }
+
+      // Keep explicit map hub / camera clicks.
+      if (parsed.kind === "site" || parsed.kind === "location") return;
+
+      // Replace only the legacy auto-pick (first observatory point row).
+      const autoId = observatorySegments[0]?.id;
+      if (autoId && selectedJunctionSegmentId === autoId) {
+        patchSelection({ segmentId: defaultSiteId });
+        setMapContext({
+          segmentName: junction?.name ?? "Stormgade camera hub",
+          speed: null,
+          congestion: null,
+        });
+      }
+      return;
+    }
+
     const segmentIds = observatorySegments.map((s) => s.id);
     if (segmentIds.length > 0) {
       // Preserve map click/hover selection when it is still a valid observatory target.
@@ -684,28 +785,12 @@ const MapContent = () => {
     scopedObservatoryPoints,
     patchSelection,
     isTrikalaMap,
+    isCopenhagenMap,
     selectedJunctionSegmentId,
   ]);
 
   const junctionConfig = selectedPilot?.id ? getPrimaryJunctionConfig(selectedPilot.id) : null;
 
-  const activeTimeWindowLabel = useMemo(() => {
-    if (selectedCity.toLowerCase().includes("issy") && selectedKpi === "kpi1.2" && !issyJunctionStudy) {
-      const day =
-        issyFlowDayCategory === "weekday"
-          ? "Weekday"
-          : issyFlowDayCategory === "weekend"
-            ? "Weekend"
-            : "All days";
-      return `${day} · ${scenario}`;
-    }
-    if (selectedCity === "Milan" && selectedKpi === "kpi3.2") {
-      return milanEnvWindow === "08-09" ? "Morning 08–09" : "Evening 18–19";
-    }
-    if (scenario === "baseline") return "Baseline period";
-    if (scenario === "comparison") return "Comparison";
-    return "Intervention / observed";
-  }, [selectedCity, selectedKpi, issyJunctionStudy, issyFlowDayCategory, scenario, milanEnvWindow]);
   // KPI panel appears only when a pilot is selected
   const showPanel = viewLevel === "PILOT_DATA" && selectedCity;
   const selectedKpiMeta = ELABORATOR_KPIS.find((kpi) => kpi.id === selectedKpi);
@@ -774,7 +859,11 @@ const MapContent = () => {
     }
 
     if (selectedCity === "Milan") {
-      const selectionId = hoveredSegmentId ?? selectedJunctionSegmentId;
+      const selectionId = resolveObservatorySegmentId(
+        selectedCity,
+        selectedJunctionSegmentId,
+        hoveredSegmentId
+      );
       const milanRecord =
         selectedKpi === "kpi3.2"
           ? milanEnvForObservatory?.records?.find((r) => r.id === selectionId)
@@ -810,8 +899,50 @@ const MapContent = () => {
       const climateCellId =
         selectedKpi === "kpi3.2" ? parseIssyClimateHexSegmentId(issySelectionId) : null;
 
-      if (climateCellId && junctionConfig) {
+      // Pilot 2 city OD zones — observatory tracks the zone under the cursor.
+      const zoneId = parseIssyZoneSegmentId(issySelectionId);
+      if (zoneId != null && selectedKpi === "kpi1.2" && issyFlowFeatures.length) {
+        const zonePoints = buildIssyZoneSustainableModeSharePoints(
+          issyFlowFeatures,
+          getIssyZoneCentroids()
+        );
+        const zone = zonePoints.find((z) => z.zone === zoneId);
+        if (zone) {
+          return mergeJunctionConfig(
+            buildIssyZoneModeShareStudyView(zone, {
+              pilotLabel: label,
+              pilotId: selectedPilot.id,
+              scenario,
+              features: issyFlowFeatures,
+              centroids: getIssyZoneCentroids(),
+            }),
+            junctionConfig
+          );
+        }
+      }
+
+      // KPI 3.2 — one city-wide climate reading (hex cells retired for map UX).
+      if (selectedKpi === "kpi3.2" && junctionConfig) {
         const cityRow = CITY_DATA.find((c) => c.city === selectedCity);
+        if (
+          isIssyClimateCitySegmentId(issySelectionId) ||
+          !issySelectionId ||
+          climateCellId == null
+        ) {
+          return mergeJunctionConfig(
+            buildIssyCityClimateStudyView(junctionConfig, {
+              pilotLabel: label,
+              pilotId: selectedPilot.id,
+              scenario,
+              kpiRow: cityRow?.kpiData["kpi3.2"],
+              kpi32Year: emissionsIntensityYear,
+              classeur: issyClasseur,
+              cityLat: cityRow?.lat,
+              cityLon: cityRow?.lon,
+            }),
+            junctionConfig
+          );
+        }
         const hexView = buildIssyClimateHexStudyView(climateCellId, junctionConfig, {
           pilotLabel: label,
           pilotId: selectedPilot.id,
@@ -888,7 +1019,9 @@ const MapContent = () => {
           segmentName: mapContext?.segmentName ?? String(activeSeg.segment),
           speed: mapContext?.speed ?? activeSeg.vitesse_km_h ?? null,
           congestion: mapContext?.congestion ?? activeSeg.indice_de_congestion ?? null,
-          properties: milanRecord?.properties,
+          properties:
+            milanRecord?.properties ??
+            (selectedCity === "Helsinki" ? mapContext?.properties : undefined),
         },
         intensity,
         selectedModeTypes
@@ -926,10 +1059,16 @@ const MapContent = () => {
     selectedModeTypes,
     hoveredSegmentId,
     issyClasseur,
+    issyFlowFeatures,
   ]);
 
   const mapLegendSpec = resolveMapLegend(selectedCity || "", selectedKpi, scenario, {
     issyJunctionStudy,
+    pilotId: selectedPilot?.id ?? intel.pilotId ?? null,
+    milanSpeedRecords:
+      selectedCity === "Milan" && selectedKpi === "kpi2.1"
+        ? milanSpeedForObservatory?.records
+        : undefined,
     milanIllustrativeLayer:
       selectedCity === "Milan" &&
       (selectedKpi === "kpi1.2" || selectedKpi === "kpi3.2" || selectedKpi === "kpi4.2") &&
@@ -1007,9 +1146,22 @@ const MapContent = () => {
         const nextKpi = resolvePilotDefaultKpi(pilot, selectedKpi);
         setSelectedKpi(nextKpi);
         setIntelKpiId(nextKpi);
+        // Copenhagen pilots always open on the default OTC hub map (Stormgade for P1).
+        if (pilot.id.startsWith("cph-")) {
+          const junction = getPrimaryJunctionConfig(pilot.id);
+          const workbook = junction?.segmentApiId ?? "stormgade";
+          const siteId = copenhagenSiteSegmentId(workbook);
+          patchSelection({ segmentId: siteId });
+          setHoveredSegmentId(null);
+          setMapContext({
+            segmentName: junction?.name ?? "Camera hub",
+            speed: null,
+            congestion: null,
+          });
+        }
       }
     },
-    [resolveCityLabelFromPilot, setIntelCity, resolvePilotDefaultKpi, selectedKpi, setIntelKpiId]
+    [resolveCityLabelFromPilot, setIntelCity, resolvePilotDefaultKpi, selectedKpi, setIntelKpiId, patchSelection]
   );
 
   const handleSegmentHover = useCallback(
@@ -1042,9 +1194,15 @@ const MapContent = () => {
         speed: detail.speed ?? null,
         congestion: detail.congestion ?? null,
       });
-      // Milan accessibility/climate points: keep selection in sync on hover so the
-      // observatory panel tracks the glowing DSS markers the user is pointing at.
-      if (selectedCity === "Milan") {
+      // Milan / Issy P2 zone dots: keep selection in sync on hover so the
+      // observatory panel tracks the marker under the cursor.
+      if (
+        selectedCity === "Milan" ||
+        (isIssyCity(selectedCity) &&
+          selectedPilot?.id === "issy-p2" &&
+          selectedKpi === "kpi1.2" &&
+          detail.segmentId.startsWith("issy-zone-"))
+      ) {
         patchSelection({ segmentId: detail.segmentId });
         setMapSelection({
           segmentId: detail.segmentId,
@@ -1071,7 +1229,21 @@ const MapContent = () => {
     const nextKpi = resolvePilotDefaultKpi(pilot, selectedKpi);
     setSelectedKpi(nextKpi);
     setIntelKpiId(nextKpi);
-    setMapSelection((prev) => ({ ...prev, pilotId, kpi: nextKpi }));
+    if (pilot?.id.startsWith("cph-")) {
+      const junction = getPrimaryJunctionConfig(pilot.id);
+      const workbook = junction?.segmentApiId ?? "stormgade";
+      const siteId = copenhagenSiteSegmentId(workbook);
+      patchSelection({ segmentId: siteId });
+      setHoveredSegmentId(null);
+      setMapContext({
+        segmentName: junction?.name ?? "Camera hub",
+        speed: null,
+        congestion: null,
+      });
+      setMapSelection({ segmentId: siteId, city: selectedCity, pilotId, kpi: nextKpi });
+    } else {
+      setMapSelection((prev) => ({ ...prev, pilotId, kpi: nextKpi }));
+    }
   };
 
   return (
@@ -1120,11 +1292,30 @@ const MapContent = () => {
           onSegmentHover={handleSegmentHover}
           onJunctionSegmentClick={(detail) => {
             patchSelection({ segmentId: detail.segmentId });
+            setHoveredSegmentId(detail.segmentId);
             setMapContext({
               segmentName: detail.segmentName,
               speed: detail.speed ?? null,
               congestion: detail.congestion ?? null,
+              properties: detail.properties,
             });
+            if (selectedCity === "Helsinki") {
+              const fromPropsLat = Number(detail.properties?.lat);
+              const fromPropsLon = Number(detail.properties?.lon);
+              if (Number.isFinite(fromPropsLat) && Number.isFinite(fromPropsLon)) {
+                requestPilotMapFocus(fromPropsLat, fromPropsLon, 16);
+              } else {
+                const match = scopedObservatoryPoints.find((point) => {
+                  const segmentId = String(
+                    point.properties?.segmentId ?? point.properties?.siteId ?? point.id
+                  );
+                  return segmentId === detail.segmentId;
+                });
+                if (match) {
+                  requestPilotMapFocus(match.lat, match.lon, 16);
+                }
+              }
+            }
             if (isCopenhagenMap) {
               if (!detail.segmentId.startsWith("loc:") && !detail.segmentId.startsWith("site:")) {
                 setSelectedDirectionId(detail.segmentId);
@@ -1163,15 +1354,6 @@ const MapContent = () => {
           runtimeLinkage={runtimeLinkage}
         />
       </motion.div>
-
-      {!showTour && showPanel && (
-        <div className="fixed left-1/2 -translate-x-1/2 top-[4.25rem] z-[58] pointer-events-none">
-          <TimeWindowChip
-            label={activeTimeWindowLabel}
-            detail={dataQualitySummary?.temporalCoverage}
-          />
-        </div>
-      )}
 
       {/* Left Insight Panel - Only visible at city zoom level */}
       {!showTour && showPanel && (
@@ -1288,26 +1470,49 @@ const MapContent = () => {
                       mapLegendSpec.marker === "ramp" || mapLegendSpec.marker === "polygonRamp";
                     if (stripRamp) {
                       const isPolyStrip = mapLegendSpec.marker === "polygonRamp";
+                      const labeledTicks = items.filter((item) => item.label);
                       return (
                         <div>
-                          <div className="flex items-center gap-px rounded overflow-hidden ring-1 ring-white/15">
-                            {items.map((item, i) =>
-                              isPolyStrip ? (
+                          <div
+                            className="h-3 w-full rounded overflow-hidden ring-1 ring-white/15"
+                            style={{
+                              background: isPolyStrip
+                                ? undefined
+                                : `linear-gradient(90deg, ${items.map((item) => item.color).join(", ")})`,
+                            }}
+                            aria-label="Intensity scale"
+                          >
+                            {isPolyStrip ? (
+                              <div className="flex h-full items-center gap-px">
+                                {items.map((item, i) => (
+                                  <span
+                                    key={`strip-p-${i}`}
+                                    className="inline-block h-full flex-1 min-w-0 border-r border-white/10 last:border-r-0"
+                                    style={{ backgroundColor: item.color }}
+                                    aria-hidden
+                                  />
+                                ))}
+                              </div>
+                            ) : null}
+                          </div>
+                          <div className="mt-1.5 flex justify-between gap-1 text-intel-meta text-white/80">
+                            {(labeledTicks.length ? labeledTicks : [items[0], items[items.length - 1]].filter(Boolean)).map(
+                              (item, i, arr) => (
                                 <span
-                                  key={`strip-p-${i}`}
-                                  className="inline-block h-3 flex-1 min-w-0 border-r border-white/10 last:border-r-0"
-                                  style={{ backgroundColor: item.color }}
-                                  aria-hidden
-                                />
-                              ) : (
-                                <LegendSwatch key={`strip-${i}-${item.color}`} marker="ramp" color={item.color} />
+                                  key={`tick-${i}-${item?.label}`}
+                                  className={`min-w-0 truncate ${i === 0 ? "text-left" : i === arr.length - 1 ? "text-right" : "text-center"}`}
+                                >
+                                  {item?.label}
+                                </span>
                               )
                             )}
                           </div>
-                          <div className="mt-1.5 flex justify-between gap-2 text-intel-meta text-white/80">
-                            <span className="truncate text-left">{items[0]?.label || "Lower"}</span>
-                            <span className="truncate text-right">{items[items.length - 1]?.label || "Higher"}</span>
-                          </div>
+                          {!isPolyStrip && (
+                            <div className="mt-1 flex justify-between text-[10px] text-white/55">
+                              <span>Lower intensity</span>
+                              <span>Higher intensity</span>
+                            </div>
+                          )}
                         </div>
                       );
                     }
@@ -1407,7 +1612,11 @@ const MapContent = () => {
             : undefined
         }
         segments={observatorySegments}
-        selectedSegmentId={hoveredSegmentId ?? selectedJunctionSegmentId}
+        selectedSegmentId={resolveObservatorySegmentId(
+          selectedCity,
+          selectedJunctionSegmentId,
+          hoveredSegmentId
+        )}
         onSelectSegmentId={(id) => patchSelection({ segmentId: id })}
         selectedKpi={selectedKpi}
         scenario={scenario}
@@ -1425,7 +1634,8 @@ const MapContent = () => {
         selectedModeTypes={selectedModeTypes}
         selectedDirectionId={effectiveDirectionId}
         onSelectDirectionId={(id) => {
-          setSelectedDirectionId(id);
+          // Zone arms navigate to another OD zone; reset direction so the new hub picks its first link.
+          setSelectedDirectionId(id.startsWith("issy-zone-") ? null : id);
           patchSelection({ segmentId: id });
           setMapSelection((prev) => ({ ...prev, segmentId: id }));
         }}

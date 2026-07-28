@@ -9,43 +9,42 @@ export const TRIKALA_PILOT_PROFILES: Record<TrikalaPilotId, CityPilotProfile> = 
     city: "Trikala",
     title: "Smart crossing — Military School",
     interventionSummary:
-      "Smart crossing at Vasili Tsitsani / Military School corridor — baseline and post-intervention survey waves (n≈143) with traffic-signal nodes and corridor air-quality sensors from partner My Maps.",
+      "A smart pedestrian crossing will be installed outside the Military School in Trikala, using sensors and LED lighting to alert drivers when pedestrians are approaching.",
     objectives: [
-      "Measure perceived crossing safety before and after smart-crossing deployment.",
-      "Monitor corridor accessibility for school routes and vulnerable users.",
-      "Link survey Likert deltas to observed crossing infrastructure geometry.",
+      "Alert drivers when pedestrians approach the Military School crossing.",
+      "Improve school-route crossing safety with sensors and LED lighting.",
     ],
     expectedImpacts: [
-      "Improved crossing safety and cyclist visibility at the Military School junction.",
-      "Reduced perceived risk on Asklipiou × Stratigou Sarafi approaches.",
+      "Safer crossings for pedestrians and school users.",
+      "Clearer visibility of approaching pedestrians for drivers.",
     ],
     geometryType: "line",
     dataAvailability:
-      "Partner My Maps coordinates + 6 SharePoint survey workbooks (baseline + post). Post-intervention sensor time-series pending.",
+      "Partner My Maps coordinates + smart-crossing survey workbooks (baseline + post).",
     methodologyNotes:
-      "Real baseline vs post Likert deltas from paired smart-crossing surveys. Map layers use partner KML geodata (crossing site, TZAMI, traffic lights, corridor sensors).",
-    observatoryType: "street-segment",
+      "Intervention-focused pilot profile. Smart-crossing survey evidence remains in the observatory; citywide Smart Citizen air-quality sensors live under Pilot 4.",
+    observatoryType: "intervention",
   },
   "tri-p2": {
     id: "tri-p2",
     city: "Trikala",
     title: "Park & Ride stations",
     interventionSummary:
-      "Second ELABORATOR intervention — SMY, DEH, and GiSeMi Park & Ride hubs with municipal parking context. Partner polygon geodata integrated; structured post-intervention survey workbook still pending.",
+      "Three park-and-ride stations will be installed: one at the Mill of Matsopoulos and two smaller stations near key tourist attractions in the city center. Each station will include bike and e-scooter docking facilities, a fleet of 30 new bicycles, 60 biometric sensors, and fleet management software.",
     objectives: [
-      "Surface intermodal shift potential at peripheral P+R hubs.",
-      "Map parking supply and bike-station connectivity around P+R sites.",
-      "Prepare observatory for post-intervention mode-share tracking when partner data arrives.",
+      "Provide park-and-ride access at Matsopoulos Mill and central tourist sites.",
+      "Support bike and e-scooter docking with shared fleet management.",
+      "Track bike uptake from P+R facilities (% change in walking, cycling, micromobility).",
     ],
     expectedImpacts: [
-      "Increased park-and-ride uptake reducing inner-city car trips.",
-      "Better visibility of multimodal access at SMY, DEH, and GiSeMi.",
+      "Modal shift from private cars to cycling and walking near mobility hubs.",
+      "Increased bike / micromobility use linked to the three P+R stations.",
     ],
     geometryType: "polygon",
     dataAvailability:
-      "Partner My Maps polygon geodata for 3 P+R sites. SharePoint P+R survey folder empty in June 2026 drop.",
+      "Partner My Maps P+R polygons (SMY · DEH · GiSeMi). KPI 3.1 counts the three installed hubs (0→3).",
     methodologyNotes:
-      "Infrastructure-only pilot until post-intervention counts arrive (expected end of June per partner). Municipal parking nodes shown as context layer.",
+      "Intervention Evaluation Plan: KPI 1.2 bike uptake from P+R; KPI 3.1 installed facilities = the three P+R hubs. KPI 4.1 has no P+R satisfaction survey — panel figure is mock only; map shows Park and ride dots/labels.",
     observatoryType: "area",
   },
   "tri-p3": {
@@ -53,21 +52,44 @@ export const TRIKALA_PILOT_PROFILES: Record<TrikalaPilotId, CityPilotProfile> = 
     city: "Trikala",
     title: "Redesigned bike lanes",
     interventionSummary:
-      "Bike lane safety redesign monitored through baseline and post surveys (n≈310 baseline) plus 30 partner bike-lane sensor nodes and 7 municipal bike stations from My Maps.",
+      "The project will improve cycling infrastructure by redesigning existing bike lanes and implementing a sensor-based monitoring system to enhance safety and efficiency. A total of 60 sensors will monitor bicycle usage and traffic patterns, while 10 additional sensors will detect illegal parking in bike lanes and provide real-time alerts. The intervention places particular emphasis on addressing safety concerns for female cyclists, creating a safer and more inclusive cycling environment.",
     objectives: [
-      "Track bike-lane safety, encroachment factors, and night-cycling perceptions.",
-      "Visualise sensor fleet coverage across redesigned corridors.",
-      "Connect infrastructure quality (KPI 4.2) to perceived safety (KPI 2.1).",
+      "Redesign bike lanes and monitor usage with a city sensor network.",
+      "Detect illegal parking in bike lanes and alert in real time.",
+      "Improve safety and inclusiveness for female cyclists.",
     ],
     expectedImpacts: [
-      "Reduced lane encroachment and higher night-cycling confidence.",
-      "Evidence-backed bike network narrative for stakeholder review.",
+      "Safer, better-monitored cycling corridors.",
+      "Reduced lane encroachment and a more inclusive cycling environment.",
     ],
     geometryType: "line",
     dataAvailability:
-      "Partner My Maps point geodata (30 bike-lane sensors, 7 bike stations) + paired bike safety survey workbooks.",
+      "Bike-lane sensor registry (map geography) plus online bike-safety survey workbooks for KPI 4.2. No radar speed feed — KPI 2.1 speed is mocked from LoRa FREE/BUSY occupancy.",
     methodologyNotes:
-      "Survey aggregates joined to bike-lane sensor registry. Women mobility and SMARTA app surveys remain city-wide context on Pilot 1 observatory.",
+      "KPI 4.2 uses baseline + post online bike-safety survey (accessibility, condition, safety Likert). Map pins mark bike-lane sensor locations only. KPI 2.1 occupancy is observed; mock speed = 18×(1−busy%) km/h with a constructed pre-redesign baseline offset.",
     observatoryType: "corridor",
+  },
+  "tri-p4": {
+    id: "tri-p4",
+    city: "Trikala",
+    title: "SMARTA2 app expansion",
+    interventionSummary:
+      "The SMARTA2 app, which facilitates access to sustainable transport options, will be expanded to include additional mobility modes and new user engagement features. Citywide Smart Citizen Kit nodes support climate / air-quality monitoring.",
+    objectives: [
+      "Expand SMARTA2 to cover additional sustainable mobility modes.",
+      "Strengthen user engagement features in the app.",
+      "Monitor environmental conditions via the Smart Citizen Kit fleet.",
+    ],
+    expectedImpacts: [
+      "Easier access to sustainable transport options.",
+      "Higher digital engagement with multimodal services.",
+      "Transparent citywide air-quality monitoring coverage.",
+    ],
+    geometryType: "point",
+    dataAvailability:
+      "SMARTA app survey evidence where available + Smart Citizen Kit environmental metrics (partner My Maps nodes).",
+    methodologyNotes:
+      "Digital-service intervention with citywide environmental sensor fleet for KPI 3.2 (moved from Pilot 1 smart-crossing scope).",
+    observatoryType: "intervention",
   },
 };

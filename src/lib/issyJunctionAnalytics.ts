@@ -60,13 +60,21 @@ export interface JunctionStudyView {
   observedAt?: string;
   distanceMetres?: number;
   /** Mock registry vs live API-derived metrics. */
-  dataSource?: "mock" | "observed";
+  dataSource?: "mock" | "observed" | "derived";
   /** City shell: observed / derived / modelled / mock classification. */
   dataClass?: "observed" | "derived" | "modelled" | "mock";
   /** Primary provenance label for footer and overview. */
   sourceLabel?: string;
   streetNS?: string;
   streetEW?: string;
+  /** Issy Pilot 2 zone focus — OD destination arms for the header schematic. */
+  odLinks?: Array<{
+    id: string;
+    direction: string;
+    bearingDeg: number;
+    baselinePct: number;
+    interventionPct: number;
+  }>;
 }
 
 function armFromSegment(segment: TrafficSegment): (typeof ISSY_JUNCTION_ARMS)[number] | undefined {

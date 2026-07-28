@@ -22,35 +22,7 @@ function cityToSlug(displayName: string): string {
     .replace(/[^a-z0-9\-]/gi, "");
 }
 
-export const STORY_PINS: StoryPin[] = [
-  {
-    id: "mil-p2-corridor",
-    citySlug: "milan",
-    pilotIds: ["mil-p2"],
-    lat: 45.4595,
-    lng: 9.178,
-    title: "Tactical intervention at stadium",
-    body: "Policy story: corridor links hubs and schools. Compare segment KPI with city card; Milan AMAT-derived layers underpin safety and environment views.",
-  },
-  {
-    id: "cp-p1-hub",
-    citySlug: "copenhagen",
-    pilotIds: ["cph-p1"],
-    lat: 55.6855,
-    lng: 12.559,
-    title: "Parking relocation street",
-    body: "OpenTrafficCam-informed counts underpin mode and flow views here; headline KPI may still aggregate demo CITY_DATA alongside map layers.",
-  },
-  {
-    id: "hel-p1-sample",
-    citySlug: "helsinki",
-    pilotIds: ["hel-p1"],
-    lat: 60.17,
-    lng: 24.945,
-    title: "Telraam-informed segment",
-    body: "Before/after KPIs use Telraam flows; segment reads can differ from city-wide summaries — check badges.",
-  },
-];
+export const STORY_PINS: StoryPin[] = [];
 
 export function getStoryPointsForPilot(displayCityName: string, pilotId: string | null | undefined): StoryPin[] {
   if (!pilotId) return [];
@@ -212,25 +184,25 @@ export const PILOT_SCROLL_STORIES: Record<string, PilotScrollStoryStep[]> = {
   ],
   "mil-p3": [
     {
-      id: "m3-combined",
-      eyebrow: "Pilot 1 + Pilot 2",
-      title: "Combined Olympic routes and stadium corridor",
+      id: "m3-cdm3",
+      eyebrow: "CDM3 · Decision Support System",
+      title: "Architectural barriers assessment DSS",
       narrative:
-        "Pilot 3 unions the observed datasets from Pilot 1 (Olympic routes universal design) and Pilot 2 (stadium tactical intervention) — AMAT counts, speed segments, RETE environmental proxy, and DSS accessibility rows appear together without synthetic CDM3 mock layers.",
-      kpiHints: ["kpi4.2", "kpi2.1", "kpi1.2", "kpi3.2", "kpi3.1"],
-      spotlight: "Each map point keeps its source pilotId (mil-p1 or mil-p2) for provenance.",
+        "Pilot 3 follows the Milan Intervention Evaluation Plan for CDM3: expansion readiness beyond the living lab (KPI 1.1), user satisfaction (KPI 4.1), and accessibility & security via the DSS (KPI 4.2).",
+      kpiHints: ["kpi1.1", "kpi4.1", "kpi4.2"],
+      spotlight: "CDM1–CDM2 mobility/safety/climate KPIs are out of scope for Pilot 3.",
     },
     {
       id: "m3-outcomes",
-      title: "Cross-corridor comparison",
+      title: "DSS evaluation focus",
       narrative:
-        "Use Pilot 3 to compare mode share, safety segments, environmental pressure, and accessibility inventory across both Milan intervention areas in one observatory view.",
+        "Use Pilot 3 to track whether expansion plans exist, how satisfied users are with accessibility interventions, and how barrier routing scores change along monitored civic addresses.",
       bullets: [
-        "Mode share: AMAT camera-linked count sites from both pilots.",
-        "Safety: merged speed shapefile segments clipped to each pilot buffer.",
-        "Accessibility: DSS workbook rows tagged mil-p1 and mil-p2.",
+        "KPI 1.1 — Plans to expand interventions beyond the LL.",
+        "KPI 4.1 — User satisfaction for interventions.",
+        "KPI 4.2 — Increase in accessibility and security (DSS).",
       ],
-      spotlight: "Source pilotId is preserved on each point for provenance.",
+      spotlight: "Evaluation-plan matrix: CDM3 marks only 1.1, 4.1, and 4.2.",
     },
   ],
   "cph-p1": [

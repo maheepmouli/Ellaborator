@@ -99,22 +99,22 @@ Higher value ⇒ higher pressure / lower speed condition. Junction study aggrega
 ### Segment / map
 
 ```
-environmentalPressure = indice_de_congestion × 100
+environmentalPressure = city time-series intensity(year)   // one value for Issy
 ```
 
-### Sidebar chart / hex field
+Map shows a **city-wide** halo + hub (not a spatial hex grid). Hex cells were a visual proxy only.
+
+### Sidebar chart
 
 ```
 intensity(year) = clamp(timeSeries[year].value, 0, 120)
-
-polygonBase = intensity(selectedYear) ?? (100 − mainValue)
 ```
 
-Junction / hex colouring may scale segment pressure by chart-year anchor for visual consistency — **not** measured CO₂.
+Optional ASIF / Classeur workbook contributes a city total CO₂ rate when loaded — still one municipal reading.
 
-Label as **derived proxy**. Do not present as measured CO₂ reduction unless emissions inventory data is integrated.
+Label as **derived proxy** (or **modelled** when ASIF is active). Do not present as measured CO₂ reduction unless emissions inventory data is integrated.
 
-Pilot 3 (GecoAir) narrative is citizen / app-driven; map hex field remains proxy unless GecoAir feeds are wired in.
+Pilot 3 (GecoAir) narrative is citizen / app-driven; map remains a city-level proxy unless GecoAir feeds are wired in.
 
 ## E. KPI 3.1 — Zero-Emission Facilities and Services
 

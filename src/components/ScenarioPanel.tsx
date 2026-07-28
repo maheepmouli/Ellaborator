@@ -10,6 +10,7 @@ import { useCopenhagenEmissions } from "@/hooks/use-copenhagen-emissions";
 import { resolveKpiProvenance, provenanceConfidenceLine } from "@/lib/kpiProvenance";
 import { formatConfidenceLine } from "@/lib/kpiMissingDataMessage";
 import { getLocalCityDiagnostics } from "@/services/localCityData";
+import { aggregateHelsinkiObservedKpi } from "@/lib/helsinkiKpiDisplay";
 import type { PilotGeometryRenderSpec } from "@/lib/pilotGeometryRenderer";
 
 interface ScenarioPanelProps {
@@ -48,11 +49,19 @@ const ScenarioPanel = ({
   const selectedPilot = getPilotById(selectedCity, selectedPilotId);
   const isCopenhagenMobility = selectedCity === "Copenhagen" && selectedKpi === "kpi1.2";
   const isCopenhagenCamera = selectedCity === "Copenhagen" && isCopenhagenCameraKpi(selectedKpi);
-  const copenhagenCenter = cityData ? { lat: cityData.lat, lon: cityData.lon } : null;
+  const isHelsinkiCity = selectedCity === "Helsinki";
+  const cityCenter = cityData ? { lat: cityData.lat, lon: cityData.lon } : null;
   const { data: copenhagenPoints } = useLocalCityData(
     "Copenhagen",
     selectedKpi,
-    isCopenhagenCamera ? copenhagenCenter : isCopenhagenMobility ? copenhagenCenter : null,
+    isCopenhagenCamera ? cityCenter : isCopenhagenMobility ? cityCenter : null,
+    selectedPilotId,
+    "intervention"
+  );
+  const { data: helsinkiPoints } = useLocalCityData(
+    "Helsinki",
+    selectedKpi,
+    isHelsinkiCity ? cityCenter : null,
     selectedPilotId,
     "intervention"
   );
@@ -84,11 +93,20 @@ const ScenarioPanel = ({
     return { baseline, intervention, change: intervention - baseline };
   })();
 
+  const helsinkiObserved = (() => {
+    if (!isHelsinkiCity || !helsinkiPoints?.length) return null;
+    return aggregateHelsinkiObservedKpi(
+      helsinkiPoints.filter((p) => p.properties?.dataOrigin === "local-city-dataset"),
+      selectedKpi
+    );
+  })();
+
   if (!kpiDef || !kpiValue) return null;
 
   const diagnostics = getLocalCityDiagnostics(selectedCity, selectedKpi, selectedPilotId);
   const mapUsesLocalDataset = Boolean(
-    copenhagenPoints?.some((p) => p.properties?.dataOrigin === "local-city-dataset")
+    copenhagenPoints?.some((p) => p.properties?.dataOrigin === "local-city-dataset") ||
+      helsinkiPoints?.some((p) => p.properties?.dataOrigin === "local-city-dataset")
   );
   const provenance = resolveKpiProvenance({
     city: selectedCity,
@@ -97,21 +115,28 @@ const ScenarioPanel = ({
     diagnostics,
     dataQualitySummary,
     manifestAvailable,
-    panelUsesObservedSlice: Boolean(copenhagenObserved),
+    panelUsesObservedSlice: Boolean(copenhagenObserved || helsinkiObserved?.hasSelectedRecords),
     mapUsesLocalDataset,
     copenhagenEmissionsActive: selectedKpi === "kpi3.2" && Boolean(cphEmissions?.flows?.length),
   });
 
   const baselineMainValue = copenhagenObserved
     ? copenhagenObserved.baseline
+    : helsinkiObserved
+      ? helsinkiObserved.baselineMain
     : Math.max(0, Number(kpiValue.mainValue) - (kpiValue.change || 0));
   const interventionMainValue = copenhagenObserved
     ? copenhagenObserved.intervention
+    : helsinkiObserved
+      ? helsinkiObserved.interventionMain
     : Number(kpiValue.mainValue);
-  const changeValue = copenhagenObserved?.change ?? kpiValue.change;
+  const changeValue = copenhagenObserved?.change ?? helsinkiObserved?.change ?? kpiValue.change;
   const changeLabel = `${changeValue > 0 ? "+" : ""}${changeValue.toFixed(1)}${kpiDef.unit === "%" ? "pp" : ""}`;
   const methodLabel = kpiDefinition?.method || (kpiFramework?.isModelled ? "Modelled estimate" : "Observed / reported");
-  const isHelsinkiObservedBeforeAfter = selectedCity === "Helsinki" && (selectedKpi === "kpi1.2" || selectedKpi === "kpi2.1");
+  const isHelsinkiObservedBeforeAfter =
+    selectedCity === "Helsinki" &&
+    (selectedKpi === "kpi1.2" || selectedKpi === "kpi2.1") &&
+    !!helsinkiObserved;
   const isCopenhagenObservedBeforeAfter = isCopenhagenMobility;
   const temporalLabel = isHelsinkiObservedBeforeAfter || isCopenhagenObservedBeforeAfter ? "before-after" : "single-period";
   const spatialLabel =

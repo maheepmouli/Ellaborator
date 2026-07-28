@@ -35,6 +35,8 @@ export function whenLeafletMapSettled(map: LeafletMap, fn: () => void): () => vo
 
 /** Force divIcon markers to repaint (fixes invisible markers until the next pan). */
 export function nudgeLeafletMarkers(map: LeafletMap, markers: Marker[] | null | undefined = []): void {
+  // Mid-zoom setPosition fights Leaflet's marker pane transform → diagonal ghost trails.
+  if (isLeafletMapAnimating(map)) return;
   if (!Array.isArray(markers) || markers.length === 0) {
     map.invalidateSize({ pan: false });
     return;
@@ -98,11 +100,18 @@ export function scheduleLeafletLayerRepaint(
 ): void {
   const safeMarkers = Array.isArray(markers) ? markers : [];
   const safeCircles = Array.isArray(circles) ? circles : [];
-  nudgeLeafletMapLayers(map, safeMarkers, safeCircles);
-  requestAnimationFrame(() => {
+  const run = () => {
     nudgeLeafletMapLayers(map, safeMarkers, safeCircles);
-    requestAnimationFrame(() => nudgeLeafletMapLayers(map, safeMarkers, safeCircles));
-  });
+    requestAnimationFrame(() => {
+      nudgeLeafletMapLayers(map, safeMarkers, safeCircles);
+      requestAnimationFrame(() => nudgeLeafletMapLayers(map, safeMarkers, safeCircles));
+    });
+  };
+  if (isLeafletMapAnimating(map)) {
+    map.once("moveend", run);
+    return;
+  }
+  run();
 }
 
 export function layoutZoomTier(zoom: number): number {
@@ -116,7 +125,16 @@ export function kpiUsesZoomDependentMarkerLayout(
   kpi: string
 ): boolean {
   if (cityName?.toLowerCase().includes("copenhagen")) {
-    if (kpi === "kpi3.2" || kpi === "kpi4.1" || kpi === "kpi2.1") return false;
+    // Point layers use zoomStable fan-out — re-layout on zoom tiers caused trails.
+    if (
+      kpi === "kpi3.1" ||
+      kpi === "kpi3.2" ||
+      kpi === "kpi4.1" ||
+      kpi === "kpi4.2" ||
+      kpi === "kpi2.1"
+    ) {
+      return false;
+    }
   }
   if (cityName?.toLowerCase().includes("issy")) {
     if (kpi === "kpi3.2" || kpi === "kpi4.1" || kpi === "kpi4.2") return false;

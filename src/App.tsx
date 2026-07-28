@@ -19,6 +19,7 @@ import SafetyStars from "./pages/kpi/SafetyStars";
 import StakeholderReport from "./pages/StakeholderReport";
 import PlotSpike from "./pages/PlotSpike";
 import StoryPilotPage from "./pages/StoryPilotPage";
+import Wp7Compliance from "./pages/Wp7Compliance";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +40,7 @@ const App = () => (
           <Route path="/about" element={<About />} />
           <Route path="/kpis" element={<KPIs />} />
           <Route path="/data-catalogue" element={<DataCatalogue />} />
+          <Route path="/wp7-compliance" element={<Wp7Compliance />} />
           <Route path="/compare" element={<Compare />} />
           <Route path="/city/:cityId" element={<CityDetail />} />
           <Route path="/report" element={<StakeholderReport />} />

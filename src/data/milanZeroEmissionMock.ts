@@ -2,6 +2,7 @@ import type { MilanPilotId } from "@/data/milanPilotProfiles";
 import { MILAN_PILOT_ANCHORS } from "@/lib/milanMapConfig";
 import { milanSourcePilotIds } from "@/lib/milanPilotScope";
 import type { LocalCityPoint } from "@/services/localCityData";
+import type { MilanSegmentRecord } from "@/services/milanSegmentData";
 import type { ScenarioType } from "@/types/normalized-city-data";
 
 export const MILAN_ZEM_MOCK_DISCLAIMER =
@@ -170,6 +171,169 @@ function scenarioValue(
   if (scenario === "baseline") return facility.baselineUnits;
   if (scenario === "comparison") return facility.interventionUnits - facility.baselineUnits;
   return facility.interventionUnits;
+}
+
+function segmentLengthMeters(coords: [number, number][]): number {
+  let length = 0;
+  for (let i = 1; i < coords.length; i += 1) {
+    const [lat1, lon1] = coords[i - 1]!;
+    const [lat2, lon2] = coords[i]!;
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) ** 2;
+    length += 2 * 6371000 * Math.asin(Math.min(1, Math.sqrt(a)));
+  }
+  return length;
+}
+
+function pointAlongSegment(
+  coords: [number, number][],
+  t: number
+): { lat: number; lon: number } | null {
+  if (coords.length < 2) return null;
+  const clamped = Math.max(0, Math.min(1, t));
+  const total = segmentLengthMeters(coords);
+  if (total <= 0) {
+    const mid = coords[Math.floor(coords.length / 2)]!;
+    return { lat: mid[0], lon: mid[1] };
+  }
+  let remaining = total * clamped;
+  for (let i = 1; i < coords.length; i += 1) {
+    const a = coords[i - 1]!;
+    const b = coords[i]!;
+    const step = segmentLengthMeters([a, b]);
+    if (remaining <= step || i === coords.length - 1) {
+      const u = step > 0 ? remaining / step : 0;
+      return {
+        lat: a[0] + (b[0] - a[0]) * u,
+        lon: a[1] + (b[1] - a[1]) * u,
+      };
+    }
+    remaining -= step;
+  }
+  const last = coords[coords.length - 1]!;
+  return { lat: last[0], lon: last[1] };
+}
+
+/**
+ * Pick spatially spread sample points along the intervention network so mock
+ * facilities sit on Maggio / network.shp corridors instead of clustering at the pilot anchor.
+ * Sticky #07 / #18: same placement for Pilot 1 and Pilot 2.
+ */
+export function sampleInterventionNetworkSites(
+  records: MilanSegmentRecord[],
+  count: number
+): Array<{ lat: number; lon: number; streetName: string; segmentId: string }> {
+  if (!records.length || count <= 0) return [];
+
+  const usable = records.filter((r) => (r.coordinates?.length ?? 0) >= 2);
+  if (!usable.length) return [];
+
+  // Candidate midpoints — prefer longer links so badges sit on readable corridors.
+  const candidates = usable
+    .map((segment) => {
+      const length = segmentLengthMeters(segment.coordinates);
+      const mid = pointAlongSegment(segment.coordinates, 0.5) ?? {
+        lat: segment.coordinates[0]![0],
+        lon: segment.coordinates[0]![1],
+      };
+      return {
+        lat: mid.lat,
+        lon: mid.lon,
+        streetName: String(segment.properties?.streetName ?? "Intervention corridor"),
+        segmentId: segment.id,
+        length,
+      };
+    })
+    .sort((a, b) => b.length - a.length);
+
+  // Keep a diverse pool (longest ~40% of network) then farthest-point sample.
+  const poolSize = Math.min(candidates.length, Math.max(count * 12, 48));
+  const pool = candidates.slice(0, poolSize);
+  if (pool.length <= count) {
+    return pool.map(({ lat, lon, streetName, segmentId }) => ({
+      lat,
+      lon,
+      streetName,
+      segmentId,
+    }));
+  }
+
+  const picked: typeof pool = [pool[0]!];
+  while (picked.length < count) {
+    let best = pool[0]!;
+    let bestScore = -1;
+    for (const candidate of pool) {
+      if (picked.some((p) => p.segmentId === candidate.segmentId)) continue;
+      // Min squared distance to already picked sites (degrees² — fine for local Milan extent).
+      let minDist = Number.POSITIVE_INFINITY;
+      for (const existing of picked) {
+        const dLat = candidate.lat - existing.lat;
+        const dLon = candidate.lon - existing.lon;
+        const d2 = dLat * dLat + dLon * dLon;
+        if (d2 < minDist) minDist = d2;
+      }
+      // Slight preference for longer corridors when distances are similar.
+      const score = minDist + Math.min(0.00002, candidate.length / 5e8);
+      if (score > bestScore) {
+        bestScore = score;
+        best = candidate;
+      }
+    }
+    picked.push(best);
+  }
+
+  // Nudge each site along its segment so badges don't sit exactly on shared vertices.
+  return picked.map((site, index) => {
+    const segment = usable.find((r) => r.id === site.segmentId) ?? usable[index % usable.length]!;
+    const t = 0.22 + (0.56 * (index + 1)) / (count + 1);
+    const point = pointAlongSegment(segment.coordinates, t) ?? {
+      lat: site.lat,
+      lon: site.lon,
+    };
+    return {
+      lat: point.lat,
+      lon: point.lon,
+      streetName: String(segment.properties?.streetName ?? site.streetName),
+      segmentId: segment.id,
+    };
+  });
+}
+
+/**
+ * Remap mock facility coordinates onto intervention network samples when Maggio/network geometry is loaded.
+ */
+export function placeMilanZeroEmissionAlongNetwork(
+  points: LocalCityPoint[],
+  networkSegments: MilanSegmentRecord[] | undefined | null
+): LocalCityPoint[] {
+  if (!points.length || !networkSegments?.length) return points;
+  const sites = sampleInterventionNetworkSites(networkSegments, points.length);
+  if (!sites.length) return points;
+
+  return points.map((point, index) => {
+    const site = sites[index % sites.length]!;
+    const streetFromNetwork = site.streetName;
+    return {
+      ...point,
+      lat: site.lat,
+      lon: site.lon,
+      properties: {
+        ...point.properties,
+        networkSegmentId: site.segmentId,
+        streetName:
+          streetFromNetwork && streetFromNetwork !== "Intervention corridor"
+            ? streetFromNetwork
+            : point.properties?.streetName,
+        locationMethod: "intervention_network_sample",
+        spatialNote: `${MILAN_ZEM_MOCK_DISCLAIMER} Placed along AMAT network.shp corridor samples.`,
+      },
+    };
+  });
 }
 
 export function milanZeroEmissionFacilityCount(scopePilotId: string): number {

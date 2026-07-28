@@ -4,7 +4,6 @@ import type { SegmentInteractionHandlers } from "@/lib/wireMapSegmentInteraction
 import { wireMarkerSegment } from "@/lib/wireMapSegmentInteraction";
 import { renderCopenhagenRadarFlowLayout } from "@/lib/copenhagenMapLayers/copenhagenRadarFlowLayout";
 import { renderCopenhagenTrafficPulseOverlay } from "@/lib/copenhagenMapLayers/copenhagenTrafficPulse";
-import { renderMobilityHubFovCone } from "@/lib/copenhagenMapLayers/renderMobilityHubFov";
 import { bindCopenhagenMapTooltip } from "@/lib/copenhagenMapLayers/copenhagenMapTooltips";
 import type { CopenhagenObservedPoint } from "@/lib/copenhagenMapLayers/renderCopenhagenMapLayers";
 import {
@@ -171,7 +170,6 @@ export function renderMilanMapLayers(options: RenderMilanMapLayersOptions): numb
     markersOut,
     circlesOut,
     polylinesOut,
-    polygonsOut,
     wireCircleMarker,
   } = options;
 
@@ -201,13 +199,6 @@ export function renderMilanMapLayers(options: RenderMilanMapLayersOptions): numb
       props0.junctionLabel ?? props0.streetName ?? milanSiteKeyFromPoint(props0)
     ).split(" · ")[0];
     const hubSelected = milanFeatureSelected(selectedSegmentId, hubSegmentId, hubSegmentId);
-
-    if (polygonsOut) {
-      renderMobilityHubFovCone(map, hub.lat, hub.lon, radarFlows, polygonsOut, {
-        selected: hubSelected,
-        ringScale: MILAN_HUB_RING_SCALE,
-      });
-    }
 
     renderCopenhagenRadarFlowLayout({
       map,

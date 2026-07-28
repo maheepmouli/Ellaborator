@@ -1,18 +1,39 @@
 {
   "acceptability": {
-    "pilotId": "cph-p1",
-    "beforeMean": 5.236551215917465,
-    "afterMean": 4.792117465224111,
+    "pilotId": "cph-p2",
+    "beforeMean": 5.2378497790868925,
+    "afterMean": 4.793822393822394,
     "beforePct": 70.6,
     "afterPct": 63.2,
-    "sampleBefore": 1377,
-    "sampleAfter": 1377,
+    "sampleBefore": 1358,
+    "sampleAfter": 1295,
+    "source": "Acceptability_Intervention1_BEFORE/AFTER.xlsx",
+    "method": "Public acceptability Likert 1–7 (Intervention 1 / Medieval City). Chart style aligned with Trikala smart-crossing baseline pie charts (ELABORATOR Baseline data_smart crossing).",
+    "locationNote": "Survey was not geolocated to a single street point — pin sits at the Medieval City / Vandkunsten pilot-area centroid (inferred).",
     "likert": [
       {
         "label": "Overall acceptability",
         "before": 70.6,
         "after": 63.2
       }
+    ],
+    "distributionBefore": [
+      { "score": 1, "label": "1 — Strongly disagree", "count": 137, "pct": 10.1 },
+      { "score": 2, "label": "2", "count": 69, "pct": 5.1 },
+      { "score": 3, "label": "3", "count": 102, "pct": 7.5 },
+      { "score": 4, "label": "4 — Neutral", "count": 97, "pct": 7.1 },
+      { "score": 5, "label": "5", "count": 151, "pct": 11.1 },
+      { "score": 6, "label": "6", "count": 225, "pct": 16.6 },
+      { "score": 7, "label": "7 — Strongly agree", "count": 577, "pct": 42.5 }
+    ],
+    "distributionAfter": [
+      { "score": 1, "label": "1 — Strongly disagree", "count": 175, "pct": 13.5 },
+      { "score": 2, "label": "2", "count": 95, "pct": 7.3 },
+      { "score": 3, "label": "3", "count": 101, "pct": 7.8 },
+      { "score": 4, "label": "4 — Neutral", "count": 136, "pct": 10.5 },
+      { "score": 5, "label": "5", "count": 145, "pct": 11.2 },
+      { "score": 6, "label": "6", "count": 230, "pct": 17.8 },
+      { "score": 7, "label": "7 — Strongly agree", "count": 413, "pct": 31.9 }
     ]
   },
   "safetyPerception": {

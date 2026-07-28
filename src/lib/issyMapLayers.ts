@@ -8,7 +8,7 @@ import {
   type MapScenario,
 } from "@/lib/junctionScenarioValues";
 import { satisfactionFieldColor } from "@/lib/issyMapRouting";
-import { getKpi32TimeSeriesIntensity } from "@/lib/kpi32YearIntensity";
+import { resolveKpi32ScenarioIntensities } from "@/lib/kpi32YearIntensity";
 import type { BicycleCountingRecord } from "@/types/bicycle-counting";
 import type { CyclingInfrastructureRecord } from "@/types/cycling-infrastructure";
 import { infrastructureChartLabelMatchesFeature } from "@/lib/infrastructureChartMapLink";
@@ -25,14 +25,22 @@ import {
 } from "@/lib/wireMapSegmentInteraction";
 import { pickNearestJunctionSegmentId } from "@/lib/renderIssyJunctionArms";
 import { allocateClasseurCo2ToHexGrid } from "@/lib/issyClasseurEmissions";
-import { issyClimateHexSegmentId } from "@/lib/issyClimateHexObservatory";
+import { ISSY_CLIMATE_CITY_ID, issyClimateHexSegmentId } from "@/lib/issyClimateHexObservatory";
 import type { IssyClasseurEmissionsSnapshot } from "@/types/issy-workbooks";
 import type { IssyAccessibilityPilotMock } from "@/data/issyAccessibilityMock";
-import { ISSY_ACCESSIBILITY_MOCK_DISCLAIMER } from "@/data/issyAccessibilityMock";
+import {
+  ISSY_ACCESSIBILITY_MOCK_DISCLAIMER,
+  issyAccessibilityFeaturesForScenario,
+} from "@/data/issyAccessibilityMock";
+import type { ScenarioType } from "@/types/normalized-city-data";
 import type { IssySentimentPilotMock } from "@/data/issySentimentMock";
 import { ISSY_SENTIMENT_MOCK_DISCLAIMER } from "@/data/issySentimentMock";
 import { dataSourceTrustLabel } from "@/lib/issyDataTransparency";
 import { provenanceBadgesHtml } from "@/lib/dataProvenance";
+import {
+  issyZoneSustainablePctColor,
+  type IssyZoneModeSharePoint,
+} from "@/lib/issyFlowAggregates";
 
 /** Neon tokens for KPI 3.1 dark-map styling */
 const FACILITY_LINE_GLOW = "#2ecc71";
@@ -163,8 +171,9 @@ export function renderIssyClimateHexField(
   } = {}
 ): number {
   const scenario = options.scenario ?? "intervention";
-  const yearAnchor = getKpi32TimeSeriesIntensity(options.kpiRow, options.kpi32Year ?? null);
-  const interventionBase = yearAnchor ?? options.kpiRow?.mainValue ?? 52;
+  const { baseline: seriesBaseline, intervention: seriesIntervention } =
+    resolveKpi32ScenarioIntensities(options.kpiRow, options.kpi32Year ?? null);
+  const interventionBase = seriesIntervention;
   const cells = buildClimateHexGrid(centerLat, centerLon, {
     rings: options.rings ?? 7,
     cellSizeM: options.cellSizeM ?? 58,
@@ -187,7 +196,10 @@ export function renderIssyClimateHexField(
           100,
           (alloc.baselineCo2GPerHour / (options.classeur!.totalBaselineCo2G * 0.55)) * 100
         )
-      : Math.min(100, intervention * (1.08 + (idx % 5) * 0.02));
+      : Math.min(
+          100,
+          cell.intensity * (seriesBaseline / Math.max(seriesIntervention, 1))
+        );
     const delta = alloc
       ? intervention - baseline
       : intervention - baseline;
@@ -263,6 +275,150 @@ export function renderIssyClimateHexField(
     rendered++;
   });
   return rendered;
+}
+
+/**
+ * KPI 3.2 — one city-wide climate reading (halo + hub).
+ * Not a spatial hex field: partners supply a city intensity / optional ASIF total.
+ */
+export function renderIssyCityClimateReading(
+  map: L.Map,
+  cityLat: number,
+  cityLon: number,
+  refs: IssyLayerRefs,
+  options: {
+    kpiRow?: CityKPIData;
+    kpi32Year?: string | null;
+    filterRange?: [number, number];
+    scenario?: MapScenario;
+    segmentHandlers?: SegmentInteractionHandlers;
+    selectedSegmentId?: string | null;
+    classeur?: IssyClasseurEmissionsSnapshot | null;
+  } = {}
+): number {
+  const scenario = options.scenario ?? "intervention";
+  const { baseline, intervention } = resolveKpi32ScenarioIntensities(
+    options.kpiRow,
+    options.kpi32Year ?? null
+  );
+  const delta = intervention - baseline;
+  const displayIntensity =
+    scenario === "baseline"
+      ? baseline
+      : scenario === "comparison"
+        ? Math.abs(delta)
+        : intervention;
+
+  if (options.filterRange) {
+    const [lo, hi] = options.filterRange;
+    if (displayIntensity < lo || displayIntensity > hi) return 0;
+  }
+
+  const style =
+    scenario === "comparison"
+      ? {
+          fillColor: delta < 0 ? COMPARISON_FAVOURABLE_COLOR : COMPARISON_OTHER_COLOR,
+          fillOpacity: 0.28,
+          color: delta < 0 ? COMPARISON_FAVOURABLE_COLOR : COMPARISON_OTHER_COLOR,
+          weight: 2,
+        }
+      : climateHexStyle(displayIntensity);
+
+  const usesClasseur = !!options.classeur;
+  const detail: SegmentInteractionDetail = {
+    segmentId: ISSY_CLIMATE_CITY_ID,
+    segmentName: usesClasseur
+      ? `Issy city climate · ${Math.round(options.classeur!.totalBaselineCo2G)} g CO₂/h`
+      : `Issy city climate · ${displayIntensity.toFixed(0)}% pressure`,
+    speed: null,
+    congestion: displayIntensity / 100,
+    properties: {
+      displayIntensity,
+      baselineIntensity: baseline,
+      delta,
+      datasetKind: "climate-city",
+      cityWide: true,
+    },
+  };
+
+  const halo = L.circle([cityLat, cityLon], {
+    radius: 1400,
+    fillColor: style.fillColor,
+    fillOpacity: Math.min(0.32, style.fillOpacity + 0.08),
+    color: style.color,
+    weight: 1.5,
+    opacity: 0.55,
+    interactive: true,
+  }).addTo(map);
+
+  const hub = L.circleMarker([cityLat, cityLon], {
+    radius: 14,
+    fillColor: style.fillColor,
+    fillOpacity: 0.95,
+    color: "#ffffff",
+    weight: 2,
+    opacity: 1,
+    interactive: true,
+  }).addTo(map);
+
+  const popupHtml = `
+    <div style="font-family:'DM Sans',sans-serif;padding:8px;min-width:170px">
+      <p style="font-size:11px;color:#8578C3;margin:0 0 4px;text-transform:uppercase">City-wide climate</p>
+      <p style="font-size:16px;font-weight:bold;color:#2F1B6D;margin:0">${
+        usesClasseur
+          ? `${Math.round(options.classeur!.totalBaselineCo2G)} g CO₂/h`
+          : `${displayIntensity.toFixed(1)}% pressure`
+      }</p>
+      ${
+        options.kpi32Year
+          ? `<p style="font-size:10px;color:#A78BFA;margin-top:4px">Chart year ${options.kpi32Year}</p>`
+          : ""
+      }
+      <p style="font-size:10px;color:#96C2EF;margin-top:4px">${
+        usesClasseur ? "ASIF model · city total" : "One reading for all of Issy · derived proxy"
+      }</p>
+      <p style="font-size:10px;color:#96C2EF;margin-top:6px;font-weight:600">Click for observatory</p>
+    </div>`;
+
+  halo.bindPopup(popupHtml);
+  hub.bindPopup(popupHtml);
+
+  const wireCity = (layer: L.Circle | L.CircleMarker) => {
+    const handlers = options.segmentHandlers;
+    if (!handlers) return;
+    const isSelected =
+      !options.selectedSegmentId || options.selectedSegmentId === ISSY_CLIMATE_CITY_ID;
+    layer.setStyle?.({
+      // circleMarker uses setStyle too
+      opacity: isSelected ? 1 : 0.55,
+    } as L.PathOptions);
+
+    layer.on("mouseover", () => {
+      handlers.onSegmentHover?.(detail);
+      handlers.onSegmentFocus?.({
+        segmentName: detail.segmentName,
+        speed: null,
+        congestion: detail.congestion ?? null,
+      });
+    });
+    layer.on("mouseout", () => {
+      handlers.onSegmentHover?.(null);
+    });
+    layer.on("click", () => {
+      handlers.onJunctionSegmentClick?.(detail);
+      handlers.onSegmentFocus?.({
+        segmentName: detail.segmentName,
+        speed: null,
+        congestion: detail.congestion ?? null,
+      });
+    });
+  };
+
+  wireCity(halo);
+  wireCity(hub);
+  refs.circles.push(halo);
+  refs.circles.push(hub);
+  return 1;
 }
 
 /** KPI 4.1 — mock survey samples on corridor arms (GecoAir placeholder). */
@@ -434,11 +590,14 @@ export function renderIssyAccessibilityField(
     segmentHandlers?: SegmentInteractionHandlers;
     selectedSegmentId?: string | null;
     mockProfile?: IssyAccessibilityPilotMock | null;
+    scenario?: ScenarioType;
   } = {}
 ): void {
   const profile = options.mockProfile;
   const mockBadge = provenanceBadgesHtml([dataSourceTrustLabel("mock"), "KPI 4.2"]);
-  const features = profile?.features ?? [];
+  const features = profile
+    ? issyAccessibilityFeaturesForScenario(profile, options.scenario ?? "intervention")
+    : [];
   features.forEach((feature) => {
     if (options.filterRange) {
       const [lo, hi] = options.filterRange;
@@ -795,4 +954,109 @@ export function renderIssyMovementNodes(
     n++;
   });
   return n;
+}
+
+/** Issy Pilot 2 — city-wide sustainable mobility % at OD zone centroids. */
+export function renderIssyCityModeShareZones(
+  map: L.Map,
+  zonePoints: IssyZoneModeSharePoint[],
+  refs: IssyLayerRefs,
+  options: {
+    scenario?: MapScenario;
+    segmentHandlers?: SegmentInteractionHandlers;
+    selectedSegmentId?: string | null;
+    filterRange?: [number, number];
+  } = {}
+): void {
+  const scenario = options.scenario ?? "intervention";
+  const maxVolume = Math.max(
+    1,
+    ...zonePoints.map((z) =>
+      scenario === "baseline" ? z.baselineVolume : z.interventionVolume
+    )
+  );
+
+  zonePoints.forEach((zone) => {
+    const displayPct =
+      scenario === "baseline"
+        ? zone.baselineSustainablePct
+        : scenario === "comparison"
+          ? Math.abs(zone.deltaPp)
+          : zone.interventionSustainablePct;
+    if (options.filterRange) {
+      const [lo, hi] = options.filterRange;
+      const comparePct =
+        scenario === "comparison" ? zone.interventionSustainablePct : displayPct;
+      if (comparePct < lo || comparePct > hi) return;
+    }
+
+    const fill =
+      scenario === "comparison"
+        ? zone.deltaPp >= 0
+          ? "#22c55e"
+          : "#ef4444"
+        : issyZoneSustainablePctColor(
+            scenario === "baseline" ? zone.baselineSustainablePct : zone.interventionSustainablePct
+          );
+    const volumeShare =
+      (scenario === "baseline" ? zone.baselineVolume : zone.interventionVolume) / maxVolume;
+    const radius = Math.max(9, Math.min(22, 9 + volumeShare * 12 + displayPct * 0.06));
+    const segmentId = `issy-zone-${zone.zone}`;
+    const isSelected = options.selectedSegmentId === segmentId;
+
+    const pin = L.circleMarker([zone.lat, zone.lon], {
+      radius: isSelected ? radius + 3 : radius,
+      fillColor: fill,
+      color: "#ffffff",
+      weight: isSelected ? 3 : 2,
+      fillOpacity: 0.92,
+      opacity: 1,
+      className: "issy-city-mode-share-zone",
+      bubblingMouseEvents: false,
+    }).addTo(map);
+    const el = pin.getElement();
+    if (el) el.style.cursor = "pointer";
+
+    pin.bindTooltip(
+      `${zone.label} · ${
+        scenario === "comparison"
+          ? `${zone.deltaPp >= 0 ? "+" : ""}${zone.deltaPp.toFixed(1)} pp`
+          : `${displayPct.toFixed(1)}% sustainable`
+      }`,
+      { direction: "top", opacity: 1, className: "tri-segment-tooltip" }
+    );
+
+    const detail = {
+      segmentId,
+      segmentName: `${zone.label} · sustainable mobility`,
+      speed: null as number | null,
+      congestion: null as number | null,
+      properties: {
+        datasetKind: "issy-zone-mode-share",
+        zone: zone.zone,
+        baselineSustainablePct: zone.baselineSustainablePct,
+        interventionSustainablePct: zone.interventionSustainablePct,
+        deltaPp: zone.deltaPp,
+      },
+    };
+    if (options.segmentHandlers) {
+      wireCircleMarkerSegment(pin, detail, options.segmentHandlers, {
+        baseRadius: radius,
+        highlightRadius: radius + 4,
+        selectedSegmentId: options.selectedSegmentId,
+        baseStyle: {
+          fillColor: fill,
+          color: "#ffffff",
+          weight: 2,
+          fillOpacity: 0.92,
+        },
+        highlightStyle: {
+          weight: 3,
+          fillOpacity: 1,
+          color: "#E0F2FE",
+        },
+      });
+    }
+    refs.circles.push(pin);
+  });
 }

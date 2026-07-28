@@ -1,0 +1,647 @@
+{
+  "source": {
+    "pdf": "ELABORATOR _Baseline data_smart crossing.pptx.pdf",
+    "title": "Analysis of results — Questionnaire on road cross safety",
+    "city": "Trikala",
+    "year": 2024,
+    "intervention": "Installation of one smart crossing near stadium, primary school and Military School",
+    "channels": [
+      "e-trikala social media",
+      "Municipality official site",
+      "Military School Secretary site",
+      "QR posters in the area"
+    ],
+    "openPeriod": "2 weeks",
+    "baselineWorkbook": "baseline data of the smart crossing on line survey_english.xlsx",
+    "postWorkbook": "Post Intervention _ELABORATOR_ Smart crossing_raw data eng.xlsx"
+  },
+  "sample": {
+    "baselineN": 143,
+    "postN": 65
+  },
+  "demographicsBaseline": {
+    "age": {
+      "min": 12,
+      "max": 64,
+      "note": "PDF: majority 20-21; range 12-64 (workbook includes outliers)"
+    },
+    "sex": {
+      "w": 56,
+      "m": 84,
+      "other": 3
+    },
+    "role": [
+      {
+        "label": "Resident of the area",
+        "count": 63
+      },
+      {
+        "label": "Employee in the area",
+        "count": 31
+      },
+      {
+        "label": "Millitary School student",
+        "count": 14
+      },
+      {
+        "label": "student",
+        "count": 11
+      },
+      {
+        "label": "Visitor",
+        "count": 11
+      },
+      {
+        "label": "Citizen of Trikala",
+        "count": 4
+      },
+      {
+        "label": "Teacher",
+        "count": 3
+      },
+      {
+        "label": "resident of the area",
+        "count": 2
+      },
+      {
+        "label": "I pass through the spot all the time",
+        "count": 1
+      },
+      {
+        "label": "parent of a student",
+        "count": 1
+      },
+      {
+        "label": "resident of another area",
+        "count": 1
+      },
+      {
+        "label": "Public Survant",
+        "count": 1
+      }
+    ],
+    "frequency": {
+      "several times a week": 49,
+      "rarely": 20,
+      "daily": 56,
+      "a few times per monath": 18
+    },
+    "mainReason": [
+      {
+        "label": "going to/from the Military school",
+        "count": 69
+      },
+      {
+        "label": "walking to/from my workplace",
+        "count": 39
+      },
+      {
+        "label": "exercise",
+        "count": 21
+      },
+      {
+        "label": "commuting to/from school",
+        "count": 6
+      },
+      {
+        "label": "casual stroll",
+        "count": 3
+      },
+      {
+        "label": "moving towards the city center",
+        "count": 2
+      },
+      {
+        "label": "super market ",
+        "count": 1
+      },
+      {
+        "label": "c",
+        "count": 1
+      },
+      {
+        "label": "passing by with a car",
+        "count": 1
+      }
+    ],
+    "dangerousSituationEncounter": {
+      "No": 64,
+      "Yes": 79
+    },
+    "bikeLanesNearby": {
+      "No": 86,
+      "Yes": 57
+    }
+  },
+  "questions": {
+    "condition": {
+      "pdfQuestionKey": "condition",
+      "baselineHeader": "6. How would you rate the current condition of the crossing? (from 1=very bad to 4= excellent)",
+      "postHeader": "6. How would you evaluate the current condition of the crossing?",
+      "baseline": {
+        "n": 143,
+        "mean": 2.343,
+        "pct": 58.6,
+        "distribution": [
+          {
+            "score": 1,
+            "label": "1 — Very bad",
+            "count": 29,
+            "pct": 20.3
+          },
+          {
+            "score": 2,
+            "label": "2 — Fair",
+            "count": 57,
+            "pct": 39.9
+          },
+          {
+            "score": 3,
+            "label": "3 — Good",
+            "count": 36,
+            "pct": 25.2
+          },
+          {
+            "score": 4,
+            "label": "4 — Excellent",
+            "count": 21,
+            "pct": 14.7
+          }
+        ]
+      },
+      "post": {
+        "n": 65,
+        "mean": 2.138,
+        "pct": 53.5,
+        "distribution": [
+          {
+            "score": 1,
+            "label": "1 — Very bad",
+            "count": 19,
+            "pct": 29.2
+          },
+          {
+            "score": 2,
+            "label": "2 — Fair",
+            "count": 24,
+            "pct": 36.9
+          },
+          {
+            "score": 3,
+            "label": "3 — Good",
+            "count": 16,
+            "pct": 24.6
+          },
+          {
+            "score": 4,
+            "label": "4 — Excellent",
+            "count": 6,
+            "pct": 9.2
+          }
+        ]
+      }
+    },
+    "perceivedSafety": {
+      "pdfQuestionKey": "perceivedSafety",
+      "baselineHeader": "7. How safe do you feel when using the crossing? (from 1=not at all safe to 4= completely safe)",
+      "postHeader": "7. How safe do you feel each time you use the crossing?",
+      "baseline": {
+        "n": 143,
+        "mean": 2.112,
+        "pct": 52.8,
+        "distribution": [
+          {
+            "score": 1,
+            "label": "1 — Not at all safe",
+            "count": 49,
+            "pct": 34.3
+          },
+          {
+            "score": 2,
+            "label": "2 — Somewhat unsafe",
+            "count": 44,
+            "pct": 30.8
+          },
+          {
+            "score": 3,
+            "label": "3 — Somewhat safe",
+            "count": 35,
+            "pct": 24.5
+          },
+          {
+            "score": 4,
+            "label": "4 — Completely safe",
+            "count": 15,
+            "pct": 10.5
+          }
+        ]
+      },
+      "post": {
+        "n": 65,
+        "mean": 1.877,
+        "pct": 46.9,
+        "distribution": [
+          {
+            "score": 1,
+            "label": "1 — Not at all safe",
+            "count": 27,
+            "pct": 41.5
+          },
+          {
+            "score": 2,
+            "label": "2 — Somewhat unsafe",
+            "count": 24,
+            "pct": 36.9
+          },
+          {
+            "score": 3,
+            "label": "3 — Somewhat safe",
+            "count": 9,
+            "pct": 13.8
+          },
+          {
+            "score": 4,
+            "label": "4 — Completely safe",
+            "count": 5,
+            "pct": 7.7
+          }
+        ]
+      }
+    },
+    "maintenance": {
+      "pdfQuestionKey": "maintenance",
+      "baselineHeader": "8. In your opinion, how well maintained is the crossing? (from 1= not at all well to 4= very well)",
+      "postHeader": "8. In your opinion, how well is the crossing maintained?",
+      "baseline": {
+        "n": 143,
+        "mean": 2.273,
+        "pct": 56.8,
+        "distribution": [
+          {
+            "score": 1,
+            "label": "1 — Not at all well",
+            "count": 35,
+            "pct": 24.5
+          },
+          {
+            "score": 2,
+            "label": "2 — Somewhat poorly",
+            "count": 57,
+            "pct": 39.9
+          },
+          {
+            "score": 3,
+            "label": "3 — Somewhat well",
+            "count": 28,
+            "pct": 19.6
+          },
+          {
+            "score": 4,
+            "label": "4 — Very well",
+            "count": 23,
+            "pct": 16.1
+          }
+        ]
+      },
+      "post": {
+        "n": 65,
+        "mean": 1.923,
+        "pct": 48.1,
+        "distribution": [
+          {
+            "score": 1,
+            "label": "1 — Not at all well",
+            "count": 26,
+            "pct": 40.0
+          },
+          {
+            "score": 2,
+            "label": "2 — Somewhat poorly",
+            "count": 23,
+            "pct": 35.4
+          },
+          {
+            "score": 3,
+            "label": "3 — Somewhat well",
+            "count": 11,
+            "pct": 16.9
+          },
+          {
+            "score": 4,
+            "label": "4 — Very well",
+            "count": 5,
+            "pct": 7.7
+          }
+        ]
+      }
+    },
+    "accessibilityImpression": {
+      "pdfQuestionKey": "accessibilityImpression",
+      "baselineHeader": "11. What is your overall impression of the area near the crossing in terms of accessibility? (Are there obstacles such as limited access to benches, ramps, crossings, etc.?) (from 1=very bad to 4=very good)",
+      "postHeader": "11. What is your overall impression of the area near the crossing in terms of accessibility? (Are there obstacles, e.g., limited access to benches, ramps, crossings, etc.)?",
+      "baseline": {
+        "n": 143,
+        "mean": 2.364,
+        "pct": 59.1,
+        "distribution": [
+          {
+            "score": 1,
+            "label": "1 — Very bad",
+            "count": 27,
+            "pct": 18.9
+          },
+          {
+            "score": 2,
+            "label": "2 — Fair",
+            "count": 55,
+            "pct": 38.5
+          },
+          {
+            "score": 3,
+            "label": "3 — Good",
+            "count": 43,
+            "pct": 30.1
+          },
+          {
+            "score": 4,
+            "label": "4 — Very good",
+            "count": 18,
+            "pct": 12.6
+          }
+        ]
+      },
+      "post": {
+        "n": 65,
+        "mean": 2.0,
+        "pct": 50.0,
+        "distribution": [
+          {
+            "score": 1,
+            "label": "1 — Very bad",
+            "count": 25,
+            "pct": 38.5
+          },
+          {
+            "score": 2,
+            "label": "2 — Fair",
+            "count": 20,
+            "pct": 30.8
+          },
+          {
+            "score": 3,
+            "label": "3 — Good",
+            "count": 15,
+            "pct": 23.1
+          },
+          {
+            "score": 4,
+            "label": "4 — Very good",
+            "count": 5,
+            "pct": 7.7
+          }
+        ]
+      }
+    },
+    "connectivity": {
+      "pdfQuestionKey": "connectivity",
+      "baselineHeader": "12. How is the area connected to other parts of the city? Is there good access to public transportation? (from 1=very bad to 4=very good)",
+      "postHeader": "12. How is the area connected to other parts of the city? Is there good access to public transportation?",
+      "baseline": {
+        "n": 143,
+        "mean": 2.371,
+        "pct": 59.3,
+        "distribution": [
+          {
+            "score": 1,
+            "label": "1 — Very bad",
+            "count": 27,
+            "pct": 18.9
+          },
+          {
+            "score": 2,
+            "label": "2 — Fair",
+            "count": 49,
+            "pct": 34.3
+          },
+          {
+            "score": 3,
+            "label": "3 — Good",
+            "count": 54,
+            "pct": 37.8
+          },
+          {
+            "score": 4,
+            "label": "4 — Very good",
+            "count": 13,
+            "pct": 9.1
+          }
+        ]
+      },
+      "post": {
+        "n": 65,
+        "mean": 1.877,
+        "pct": 46.9,
+        "distribution": [
+          {
+            "score": 1,
+            "label": "1 — Very bad",
+            "count": 28,
+            "pct": 43.1
+          },
+          {
+            "score": 2,
+            "label": "2 — Fair",
+            "count": 22,
+            "pct": 33.8
+          },
+          {
+            "score": 3,
+            "label": "3 — Good",
+            "count": 10,
+            "pct": 15.4
+          },
+          {
+            "score": 4,
+            "label": "4 — Very good",
+            "count": 5,
+            "pct": 7.7
+          }
+        ]
+      }
+    },
+    "cyclistSafety": {
+      "pdfQuestionKey": "cyclistSafety",
+      "baselineHeader": "14. How safe is the road for a cyclist? (from 1=not at all safe to 4=completely safe)",
+      "postHeader": "14.  How safe is the road for a cyclist?",
+      "baseline": {
+        "n": 143,
+        "mean": 1.769,
+        "pct": 44.2,
+        "distribution": [
+          {
+            "score": 1,
+            "label": "1 — Not at all safe",
+            "count": 65,
+            "pct": 45.5
+          },
+          {
+            "score": 2,
+            "label": "2 — Somewhat unsafe",
+            "count": 55,
+            "pct": 38.5
+          },
+          {
+            "score": 3,
+            "label": "3 — Somewhat safe",
+            "count": 14,
+            "pct": 9.8
+          },
+          {
+            "score": 4,
+            "label": "4 — Completely safe",
+            "count": 9,
+            "pct": 6.3
+          }
+        ]
+      },
+      "post": {
+        "n": 65,
+        "mean": 1.569,
+        "pct": 39.2,
+        "distribution": [
+          {
+            "score": 1,
+            "label": "1 — Not at all safe",
+            "count": 38,
+            "pct": 58.5
+          },
+          {
+            "score": 2,
+            "label": "2 — Somewhat unsafe",
+            "count": 17,
+            "pct": 26.2
+          },
+          {
+            "score": 3,
+            "label": "3 — Somewhat safe",
+            "count": 10,
+            "pct": 15.4
+          },
+          {
+            "score": 4,
+            "label": "4 — Completely safe",
+            "count": 0,
+            "pct": 0.0
+          }
+        ]
+      }
+    }
+  },
+  "openSuggestionsThemes": {
+    "accessibilitySustainability": [
+      "Create a bicycle path",
+      "Add ramp at crossing end (wheelchair access)",
+      "Cycle path, lighting, road hubs",
+      "Pedestrian bridge / shorten road",
+      "Benches and meeting space",
+      "Special marking and lighting",
+      "Reconstruction of sidewalk with ramps and bike path",
+      "Stronger signalling",
+      "Traffic light / elevated walkways",
+      "More recreation areas and greenery for shade"
+    ],
+    "crossingSafety": [
+      "Roadblocks / speed reduction",
+      "Better visible markings",
+      "Traffic lights, cameras, enforcement",
+      "Pedestrian bridge or underground passage",
+      "Light signals like post-office crossing",
+      "Flashing pavement markings",
+      "Elevated crossing with reflectors and lights",
+      "Speed limit on whole road and lighting",
+      "Driver and pedestrian road education"
+    ]
+  },
+  "userSatisfaction": {
+    "primaryMetric": "perceivedSafety",
+    "scale": "Likert 1–4 (not at all safe → completely safe)",
+    "baselinePct": 52.8,
+    "postPct": 46.9,
+    "baselineMean": 2.112,
+    "postMean": 1.877,
+    "distributionBefore": [
+      {
+        "score": 1,
+        "label": "1 — Not at all safe",
+        "count": 49,
+        "pct": 34.3
+      },
+      {
+        "score": 2,
+        "label": "2 — Somewhat unsafe",
+        "count": 44,
+        "pct": 30.8
+      },
+      {
+        "score": 3,
+        "label": "3 — Somewhat safe",
+        "count": 35,
+        "pct": 24.5
+      },
+      {
+        "score": 4,
+        "label": "4 — Completely safe",
+        "count": 15,
+        "pct": 10.5
+      }
+    ],
+    "distributionAfter": [
+      {
+        "score": 1,
+        "label": "1 — Not at all safe",
+        "count": 27,
+        "pct": 41.5
+      },
+      {
+        "score": 2,
+        "label": "2 — Somewhat unsafe",
+        "count": 24,
+        "pct": 36.9
+      },
+      {
+        "score": 3,
+        "label": "3 — Somewhat safe",
+        "count": 9,
+        "pct": 13.8
+      },
+      {
+        "score": 4,
+        "label": "4 — Completely safe",
+        "count": 5,
+        "pct": 7.7
+      }
+    ],
+    "likertSummary": [
+      {
+        "label": "Perceived crossing safety",
+        "before": 52.8,
+        "after": 46.9
+      },
+      {
+        "label": "Crossing condition",
+        "before": 58.6,
+        "after": 53.5
+      },
+      {
+        "label": "Maintenance",
+        "before": 56.8,
+        "after": 48.1
+      },
+      {
+        "label": "Accessibility impression",
+        "before": 59.1,
+        "after": 50.0
+      }
+    ]
+  }
+}

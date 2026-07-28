@@ -38,8 +38,8 @@
     }
   },
   {
-    "id": "tri-p1-environmental-fleet",
-    "pilotId": "tri-p1",
+    "id": "tri-p4-environmental-fleet",
+    "pilotId": "tri-p4",
     "title": "Smart Citizen Kit sensor fleet",
     "type": "narrative",
     "linkedDatasetIds": [
@@ -217,7 +217,7 @@
     }
   },
   {
-    "id": "tri-p1-sensor-kit-poster",
+    "id": "tri-p4-sensor-kit-poster",
     "pilotId": "tri-p1",
     "title": "ELABORATOR sensor kit poster",
     "type": "pdf",

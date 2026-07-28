@@ -1,6 +1,7 @@
 import type { KPIValue } from "@/data/kpiDefinitions";
 import type { IssyFlowFeature } from "@/services/issyFlowData";
 import { mapIssyVehicleCategoryToElaboratorMode } from "@/lib/travelModeMapLink";
+import type { JunctionStudyView } from "@/lib/issyJunctionAnalytics";
 
 export type IssyScenarioSlice = "baseline" | "intervention" | "comparison";
 
@@ -140,7 +141,7 @@ function sustainableShareFromBreakdown(breakdown: Record<string, number>): numbe
     (sum, [mode, pct]) => (SUSTAINABLE_MODES.has(mode) ? sum + pct : sum),
     0
   );
-  return Math.round(sust * 10) / 10;
+  return Math.max(0, Math.min(100, Math.round(sust * 10) / 10));
 }
 
 /** KPI 1.2 card + chart values from Issy zone-flow CSV (observed OD volumes, not mock CITY_DATA). */
@@ -176,6 +177,279 @@ export function buildIssyModeShareKpiSlices(
     breakdown: interventionBreakdown,
   };
   return { baseline, intervention };
+}
+
+export interface IssyZoneModeSharePoint {
+  zone: number;
+  label: string;
+  lat: number;
+  lon: number;
+  baselineSustainablePct: number;
+  interventionSustainablePct: number;
+  deltaPp: number;
+  baselineVolume: number;
+  interventionVolume: number;
+  breakdownBaseline: Record<string, number>;
+  breakdownIntervention: Record<string, number>;
+}
+
+/**
+ * City-scale KPI 1.2 points for Issy Pilot 2 — sustainable mode share % at each OD zone centroid.
+ * Volumes attributed when the zone is origin or destination (zone activity).
+ */
+export function buildIssyZoneSustainableModeSharePoints(
+  features: IssyFlowFeature[] | undefined,
+  centroids: Array<{ zone: number; lat: number; lon: number; label: string }>
+): IssyZoneModeSharePoint[] {
+  if (!features?.length || !centroids.length) return [];
+
+  return centroids
+    .map((centroid) => {
+      const touching = features.filter(
+        (f) => f.fromZone === centroid.zone || f.toZone === centroid.zone
+      );
+      if (!touching.length) return null;
+
+      const baselineVolumes = aggregateIssyVolumesByElaboratorMode(touching, "baseline");
+      const interventionVolumes = aggregateIssyVolumesByElaboratorMode(touching, "intervention");
+      const breakdownBaseline = volumesToPercentBreakdown(baselineVolumes);
+      const breakdownIntervention = volumesToPercentBreakdown(interventionVolumes);
+      const baselineSustainablePct = sustainableShareFromBreakdown(breakdownBaseline);
+      const interventionSustainablePct = sustainableShareFromBreakdown(breakdownIntervention);
+      const baselineVolume = ELABORATOR_MODE_SHARE_MODES.reduce((s, m) => s + baselineVolumes[m], 0);
+      const interventionVolume = ELABORATOR_MODE_SHARE_MODES.reduce(
+        (s, m) => s + interventionVolumes[m],
+        0
+      );
+      if (baselineVolume <= 0 && interventionVolume <= 0) return null;
+
+      return {
+        zone: centroid.zone,
+        label: centroid.label,
+        lat: centroid.lat,
+        lon: centroid.lon,
+        baselineSustainablePct,
+        interventionSustainablePct,
+        deltaPp: Math.round((interventionSustainablePct - baselineSustainablePct) * 10) / 10,
+        baselineVolume,
+        interventionVolume,
+        breakdownBaseline,
+        breakdownIntervention,
+      } satisfies IssyZoneModeSharePoint;
+    })
+    .filter((row): row is IssyZoneModeSharePoint => row != null);
+}
+
+export function issyZoneSustainablePctColor(pct: number): string {
+  if (pct >= 50) return "#22c55e";
+  if (pct >= 40) return "#84cc16";
+  if (pct >= 30) return "#f59e0b";
+  return "#ef4444";
+}
+
+export function parseIssyZoneSegmentId(segmentId: string | null | undefined): number | null {
+  if (!segmentId) return null;
+  const match = /^issy-zone-(\d+)$/.exec(segmentId);
+  if (!match) return null;
+  const zone = Number(match[1]);
+  return Number.isFinite(zone) ? zone : null;
+}
+
+export function issyZoneSegmentId(zone: number): string {
+  return `issy-zone-${zone}`;
+}
+
+/** Compass bearing from origin → destination (0 = north, clockwise). */
+function bearingBetween(
+  from: { lat: number; lon: number },
+  to: { lat: number; lon: number }
+): number {
+  const φ1 = (from.lat * Math.PI) / 180;
+  const φ2 = (to.lat * Math.PI) / 180;
+  const Δλ = ((to.lon - from.lon) * Math.PI) / 180;
+  const y = Math.sin(Δλ) * Math.cos(φ2);
+  const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+  return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
+}
+
+/**
+ * City-layout compass slots for Issy OD zones (matches centroid map: NW/NE/Core/S/SW/SE).
+ * Used so schematic arms fan out on the rose instead of clustering when the
+ * origin sits on the city edge (true geodesic bearings all point inward).
+ */
+const ISSY_ZONE_LAYOUT_BEARING: Record<number, number> = {
+  1: 315, // NW
+  2: 45, // NE
+  3: 0, // Core — treat as “north of diagram centre” when absolute slot needed
+  4: 180, // South
+  5: 225, // SW
+  6: 135, // SE
+};
+
+/** Prefer layout slot; for Core use inward geodesic so it reads “toward centre”. */
+function issyZoneSchematicBearing(
+  originZone: number,
+  destZone: number,
+  origin: { lat: number; lon: number },
+  dest: { lat: number; lon: number }
+): number {
+  if (destZone === 3) return bearingBetween(origin, dest);
+  const slot = ISSY_ZONE_LAYOUT_BEARING[destZone];
+  if (typeof slot === "number") return slot;
+  return bearingBetween(origin, dest);
+}
+
+/**
+ * Top OD destinations from a zone — schematic arms that select other zones.
+ * OBSERVED volumes from ISSY1 OD CSV; sustainable % is DERIVED from mode mix on those links.
+ */
+export function buildIssyZoneOdLinks(
+  originZone: number,
+  features: IssyFlowFeature[] | undefined,
+  centroids: Array<{ zone: number; lat: number; lon: number; label: string }>,
+  maxArms = 3
+): NonNullable<JunctionStudyView["odLinks"]> {
+  if (!features?.length || !centroids.length) return [];
+  const origin = centroids.find((c) => c.zone === originZone);
+  if (!origin) return [];
+
+  const byDest = new Map<number, { baseline: number; intervention: number }>();
+  for (const f of features) {
+    let other: number | null = null;
+    if (f.fromZone === originZone && f.toZone !== originZone) other = f.toZone;
+    else if (f.toZone === originZone && f.fromZone !== originZone) other = f.fromZone;
+    if (other == null) continue;
+    const prev = byDest.get(other) ?? { baseline: 0, intervention: 0 };
+    prev.baseline += f.baselineValue;
+    prev.intervention += f.interventionValue;
+    byDest.set(other, prev);
+  }
+
+  const ranked = [...byDest.entries()]
+    .map(([toZone, vols]) => ({ toZone, ...vols, activity: vols.baseline + vols.intervention }))
+    .filter((r) => r.activity > 0)
+    .sort((a, b) => b.activity - a.activity)
+    .slice(0, maxArms);
+
+  const zonePoints = buildIssyZoneSustainableModeSharePoints(features, centroids);
+  const pctByZone = new Map(zonePoints.map((z) => [z.zone, z] as const));
+
+  return ranked.flatMap((row) => {
+    const dest = centroids.find((c) => c.zone === row.toZone);
+    const stats = pctByZone.get(row.toZone);
+    if (!dest || !stats) return [];
+    const bearingDeg = issyZoneSchematicBearing(originZone, row.toZone, origin, dest);
+    return [
+      {
+        id: issyZoneSegmentId(row.toZone),
+        // Keep zone label only — no extra “north/west” suffix (that was fighting the layout).
+        direction: dest.label,
+        bearingDeg,
+        baselinePct: stats.baselineSustainablePct,
+        interventionPct: stats.interventionSustainablePct,
+      },
+    ];
+  });
+}
+
+/** Observatory panel view for a city-scale OD zone (Issy Pilot 2 KPI 1.2). */
+export function buildIssyZoneModeShareStudyView(
+  zone: IssyZoneModeSharePoint,
+  options: {
+    pilotLabel?: string;
+    pilotId?: string | null;
+    scenario?: "baseline" | "intervention" | "comparison";
+    features?: IssyFlowFeature[];
+    centroids?: Array<{ zone: number; lat: number; lon: number; label: string }>;
+  } = {}
+): JunctionStudyView {
+  const scenario = options.scenario ?? "intervention";
+  const kpiValue =
+    scenario === "baseline" ? zone.baselineSustainablePct : zone.interventionSustainablePct;
+  const bandColor = issyZoneSustainablePctColor(kpiValue);
+  const odLinks =
+    options.features && options.centroids
+      ? buildIssyZoneOdLinks(zone.zone, options.features, options.centroids)
+      : undefined;
+
+  const toPeriod = (
+    label: string,
+    period: string,
+    breakdown: Record<string, number>,
+    volume: number,
+    sustainablePct: number
+  ) => ({
+    label,
+    period,
+    modeShare: {
+      Pedestrian: breakdown.Pedestrian ?? 0,
+      Cycle: breakdown.Cycle ?? 0,
+      "Public Transport": breakdown["Public Transport"] ?? 0,
+      Car: breakdown["Private Car"] ?? breakdown.Car ?? 0,
+      PTW: breakdown.PTW ?? 0,
+    },
+    dailyCycleCount: Math.round(volume * ((breakdown.Cycle ?? 0) / 100)),
+    peakCongestion: Math.max(0, Math.min(1, 1 - sustainablePct / 100)),
+    avgSpeedKmh: 0,
+    co2ProxyKgDay: 0,
+    trendCycle: [
+      Math.round(sustainablePct * 0.9),
+      Math.round(sustainablePct * 0.95),
+      Math.round(sustainablePct),
+    ],
+    trendCar: [
+      Math.round((100 - sustainablePct) * 0.95),
+      Math.round(100 - sustainablePct),
+      Math.round((100 - sustainablePct) * 1.02),
+    ],
+  });
+
+  return {
+    id: issyZoneSegmentId(zone.zone),
+    segmentApiId: issyZoneSegmentId(zone.zone),
+    name: zone.label,
+    shortName: `Zone ${zone.zone}`,
+    armLabel: zone.label,
+    armId: "west",
+    armColor: bandColor,
+    bandColor,
+    kpiBand: kpiValue >= 50 ? "high" : kpiValue >= 30 ? "medium" : "low",
+    kpiValue: Math.round(kpiValue * 10) / 10,
+    selectedKpi: "kpi1.2",
+    kpiLabel: "Sustainable mobility share",
+    pilot: options.pilotLabel ?? "Issy-les-Moulineaux",
+    interventionType: "Mobility Observatory (city scale)",
+    coordinates: [zone.lat, zone.lon],
+    monitoringPeriod: "Nov 2024 baseline · Nov 2025 post",
+    sensors: 1,
+    approachesCovered: odLinks?.length ?? 6,
+    totalApproaches: 6,
+    dataConfidence: 82,
+    baseline: toPeriod(
+      "Baseline OD",
+      "Nov 2024",
+      zone.breakdownBaseline,
+      zone.baselineVolume,
+      zone.baselineSustainablePct
+    ),
+    intervention: toPeriod(
+      "Post OD",
+      "Nov 2025",
+      zone.breakdownIntervention,
+      zone.interventionVolume,
+      zone.interventionSustainablePct
+    ),
+    timeline: [
+      { date: "Nov 2024", event: "ISSY1 OD baseline extract", status: "done" },
+      { date: "Nov 2025", event: "ISSY1 OD post-intervention extract", status: "done" },
+    ],
+    dataSource: "observed",
+    dataClass: "observed",
+    sourceLabel: "ISSY1 zone OD CSV · sustainable mobility %",
+    streetNS: zone.label,
+    streetEW: "Issy city OD zones",
+    odLinks,
+  };
 }
 
 export function humanizeIssyCategory(cat: string): string {

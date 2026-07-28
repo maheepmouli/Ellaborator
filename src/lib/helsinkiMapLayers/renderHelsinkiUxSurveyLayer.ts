@@ -7,7 +7,6 @@ import {
 } from "@/lib/helsinkiDataPaths";
 import { wireCircleMarkerSegment, type SegmentInteractionHandlers } from "@/lib/wireMapSegmentInteraction";
 import { scheduleLeafletLayerRepaint } from "@/lib/leafletMapSync";
-import { renderHelsinkiPilotInfluence } from "@/lib/helsinkiMapLayers/helsinkiMapHelpers";
 import { fitHelsinkiKpiView } from "@/lib/helsinkiMapLayers/helsinkiKpiMapFit";
 import {
   mapScenarioDisplayValue,
@@ -27,29 +26,24 @@ export interface RenderHelsinkiUxSurveyLayerOptions {
   fitMap?: boolean;
 }
 
-/** FVH3 Viikki UX survey hub (KPI 4.1 / 4.2) — single marker, peer-style. */
+/** FVH3 Viikki UX survey hub (KPI 4.1 / 4.2) — single on-site marker, peer-style. */
 export function renderHelsinkiUxSurveyLayer(
   options: RenderHelsinkiUxSurveyLayerOptions
 ): Promise<void> {
   const {
     map,
     scenario = "baseline",
-    selectedPilotId,
     segmentInteractionEnabled,
     segmentHandlers,
     circlesOut,
     markersOut,
-    circlesInfluenceOut,
     fitMap = true,
   } = options;
 
   return fetchHelsinkiJson<HelsinkiUxSurvey>(HELSINKI_VIIKKI_UX_SURVEY_JSON).then((ux) => {
     if (!ux) return;
 
-    if (circlesInfluenceOut) {
-      renderHelsinkiPilotInfluence(map, selectedPilotId ?? "hel-p3", circlesInfluenceOut);
-    }
-
+    // No soft influence disc for KPI 4.1 — survey is the single crossing point only.
     const baseline = ux.overallSatisfiedPct;
     const intervention = Math.min(100, baseline + (100 - baseline) * 0.18);
     const display = mapScenarioDisplayValue(scenario, baseline, intervention, {
@@ -82,7 +76,7 @@ export function renderHelsinkiUxSurveyLayer(
         <p style="font-size:18px;font-weight:700;color:#2F1B6D;margin:0 0 4px 0;">${display.toFixed(1)}% satisfied</p>
         <p style="font-size:10px;color:${color};font-weight:700;margin:0 0 6px 0;">${meets ? "Meets" : "Below"} the ≥75% KPI 4.1 target</p>
         <p style="font-size:10px;color:#96C2EF;margin:2px 0;">Observed ${baseline.toFixed(1)}% · outlook ${intervention.toFixed(1)}%</p>
-        <p style="font-size:10px;color:#96C2EF;margin:2px 0;">${ux.totalResponses} completed responses</p>
+        <p style="font-size:10px;color:#96C2EF;margin:2px 0;">${ux.totalResponses} completed responses · on-site only</p>
         <div style="margin-top:6px;border-top:1px solid rgba(101,125,245,0.2);padding-top:4px;">
           ${questionRows}
         </div>
@@ -110,11 +104,15 @@ export function renderHelsinkiUxSurveyLayer(
 
     circlesOut.push(marker);
     if (fitMap) {
-      fitHelsinkiKpiView(
-        map,
-        [{ lat: HELSINKI_VIIKKI_ANCHOR.lat, lon: HELSINKI_VIIKKI_ANCHOR.lng }],
-        "viikki"
-      );
+      const viikki = L.latLng(HELSINKI_VIIKKI_ANCHOR.lat, HELSINKI_VIIKKI_ANCHOR.lng);
+      const nearViikki = map.distance(map.getCenter(), viikki) < 2500;
+      if (!nearViikki) {
+        fitHelsinkiKpiView(
+          map,
+          [{ lat: HELSINKI_VIIKKI_ANCHOR.lat, lon: HELSINKI_VIIKKI_ANCHOR.lng }],
+          "viikki"
+        );
+      }
     }
     scheduleLeafletLayerRepaint(map, markersOut);
   });

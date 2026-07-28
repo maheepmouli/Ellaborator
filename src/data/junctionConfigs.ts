@@ -235,19 +235,19 @@ const ISSY_P3: JunctionConfig = {
 const CPH_P1: JunctionConfig = {
   id: "cph-p1-junction",
   pilotId: "cph-p1",
-  name: "Norregade / Nørre Voldgade",
-  shortName: "Norreport camera",
+  name: "Frederiksholmskanal / Stormgade",
+  shortName: "Stormgade camera hub",
   pilot: pilotLabel("cph-p1"),
   interventionType: interventionType("cph-p1"),
-  coordinates: [55.682312, 12.570922],
+  coordinates: [55.675535, 12.575545],
   monitoringPeriod: "OpenTrafficCam · directional pre/post",
   sensors: 1,
-  approachesCovered: 2,
-  totalApproaches: 2,
+  approachesCovered: 4,
+  totalApproaches: 4,
   dataConfidence: 88,
-  streetNS: "Nørregade",
-  streetEW: "Nørre Voldgade",
-  segmentApiId: "norreport",
+  streetNS: "Frederiksholmskanal",
+  streetEW: "Stormgade",
+  segmentApiId: "stormgade",
   baseline: period(
     "Baseline",
     "Mar – May 2024",
@@ -285,9 +285,9 @@ const CPH_P2: JunctionConfig = {
   shortName: "Vandkunsten camera",
   pilot: pilotLabel("cph-p2"),
   interventionType: interventionType("cph-p2"),
-  coordinates: [55.677575, 12.579961],
+  coordinates: [55.676056, 12.574152],
   monitoringPeriod: "OpenTrafficCam · directional pre/post",
-  sensors: 1,
+  sensors: 4,
   approachesCovered: 2,
   totalApproaches: 2,
   dataConfidence: 86,
@@ -830,6 +830,50 @@ const TRI_P3: JunctionConfig = {
   ],
 };
 
+const TRI_P4: JunctionConfig = {
+  id: "tri-p4-smarta2",
+  pilotId: "tri-p4",
+  name: "SMARTA2 app expansion",
+  shortName: "SMARTA2 app",
+  pilot: pilotLabel("tri-p4"),
+  interventionType: interventionType("tri-p4"),
+  coordinates: coords("tri-p4"),
+  monitoringPeriod: "2024 — ongoing",
+  sensors: 0,
+  approachesCovered: 0,
+  totalApproaches: 0,
+  dataConfidence: 62,
+  streetNS: "Digital services",
+  streetEW: "City-wide access",
+  segmentApiId: "tri-p1-smarta-app",
+  baseline: period(
+    "Baseline",
+    "2024",
+    modeShare({ pedestrian: 16, cycle: 18, pt: 22, car: 44 }),
+    90,
+    0.4,
+    18,
+    140,
+    -8,
+    20
+  ),
+  intervention: period(
+    "Expanded app",
+    "2025 — ongoing",
+    modeShare({ pedestrian: 17, cycle: 20, pt: 24, car: 39 }),
+    95,
+    0.36,
+    18.5,
+    130,
+    6,
+    -18
+  ),
+  timeline: [
+    { date: "2024", event: "SMARTA baseline deployment", status: "done" },
+    { date: "2025", event: "SMARTA2 mode and engagement expansion", status: "active" },
+  ],
+};
+
 const ALL_CONFIGS: JunctionConfig[] = [
   ISSY_P1,
   ISSY_P2,
@@ -847,6 +891,7 @@ const ALL_CONFIGS: JunctionConfig[] = [
   TRI_P1,
   TRI_P2,
   TRI_P3,
+  TRI_P4,
 ];
 
 export const JUNCTION_REGISTRY: Record<string, JunctionConfig[]> = ALL_CONFIGS.reduce(

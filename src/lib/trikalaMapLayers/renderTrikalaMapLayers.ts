@@ -20,7 +20,7 @@ import {
 import type { TrikalaLocation } from "@/data/trikalaLocationRegistry";
 import { renderTrikalaInfrastructureLayers } from "./renderTrikalaInfrastructureLayers";
 import { renderTrikalaModeShareRadar } from "./renderTrikalaModeShareRadar";
-import { renderTrikalaPilot2ModeShareRadar } from "./renderTrikalaPilot2ModeShareRadar";
+// Pilot 2 no longer uses CV-camera FOV radar — P+R polygons + bike-hub markers only.
 import { resolveTrikalaSurveyIconSpec } from "./trikalaPointIcons";
 import { createMapPointDivIcon } from "@/lib/mapPointIcons";
 
@@ -123,7 +123,7 @@ function renderSmartCrossingVector(
   segmentHandlers: SegmentInteractionHandlers,
   polylinesOut: L.Polyline[]
 ): void {
-  if (selectedKpi !== "kpi2.1" && selectedKpi !== "kpi4.2") return;
+  if (selectedKpi !== "kpi2.1" && selectedKpi !== "kpi4.1" && selectedKpi !== "kpi4.2") return;
   if (!hasSmartCrossingRecords(records)) return;
 
   const coords = buildSmartCrossingPolyline(anchor);
@@ -174,7 +174,7 @@ function shouldHideAggregateSurveyMarkers(
   // Pilot 3 always shows survey pins alongside sensor nodes (different KPI semantics).
   if (selectedPilotId === "tri-p3") return false;
   if (selectedPilotId !== "tri-p1") return false;
-  if (selectedKpi !== "kpi2.1" && selectedKpi !== "kpi4.2") return false;
+  if (selectedKpi !== "kpi2.1" && selectedKpi !== "kpi4.1" && selectedKpi !== "kpi4.2") return false;
   return infrastructureLocations.some((l) => l.kind === "smart_crossing_site");
 }
 
@@ -287,38 +287,23 @@ export function renderTrikalaMapLayers(options: RenderTrikalaMapLayersOptions): 
   } = options;
 
   const modeShareRadarActive =
-    (selectedPilotId === "tri-p1" &&
-      selectedKpi === "kpi1.2" &&
-      renderTrikalaModeShareRadar({
-        map,
-        hub: anchor,
-        segmentInsights,
-        scenario,
-        selectedSegmentId,
-        segmentHandlers,
-        markersOut,
-        circlesOut,
-        polylinesOut,
-        polygonsOut,
-        wireCircleMarker,
-        getValueColor,
-      })) ||
-    (selectedPilotId === "tri-p2" &&
-      selectedKpi === "kpi1.2" &&
-      renderTrikalaPilot2ModeShareRadar({
-        map,
-        hub: anchor,
-        locations: infrastructureLocations,
-        scenario,
-        selectedSegmentId,
-        segmentHandlers,
-        markersOut,
-        circlesOut,
-        polylinesOut,
-        polygonsOut,
-        wireCircleMarker,
-        getValueColor,
-      }));
+    selectedPilotId === "tri-p1" &&
+    selectedKpi === "kpi1.2" &&
+    renderTrikalaModeShareRadar({
+      map,
+      hub: anchor,
+      segmentInsights,
+      scenario,
+      selectedSegmentId,
+      segmentHandlers,
+      markersOut,
+      circlesOut,
+      polylinesOut,
+      polygonsOut,
+      wireCircleMarker,
+      getValueColor,
+    });
+  // Pilot 2 KPI 1.2: evaluation plan measures bike uptake at P+R hubs — not CV-camera FOV stacks.
 
   if (shouldRenderWomenMobilityRings(selectedPilotId, selectedKpi) && !modeShareRadarActive) {
     renderSegmentGlowRings(map, anchor, segmentInsights, circlesOut as L.Circle[], selectedKpi);
@@ -330,15 +315,17 @@ export function renderTrikalaMapLayers(options: RenderTrikalaMapLayersOptions): 
       if (point.properties?.datasetKind !== "bike-lane-sensor") return;
       const locId = String(point.properties?.segmentId ?? "");
       if (!locId.startsWith("tri-loc-")) return;
+      // Prefer scenario-adjusted point.value so baseline vs intervention changes marker scale.
+      // kpi2.1 value = occupancy stress %; kpi4.2 value = availability % → invert to busy for scale.
       const busy =
-        typeof point.properties?.busyPct === "number"
-          ? point.properties.busyPct
-          : selectedKpi === "kpi2.1"
-            ? point.value
-            : typeof point.properties?.availabilityPct === "number"
-              ? 100 - point.properties.availabilityPct
-              : 100 - point.value;
-      bikeLaneBusyPctByLocationId[locId] = busy;
+        selectedKpi === "kpi2.1"
+          ? Number(point.value)
+          : selectedKpi === "kpi4.2"
+            ? 100 - Number(point.value)
+            : typeof point.properties?.busyPct === "number"
+              ? Number(point.properties.busyPct)
+              : 100 - Number(point.value);
+      if (Number.isFinite(busy)) bikeLaneBusyPctByLocationId[locId] = busy;
     });
 
     renderTrikalaInfrastructureLayers({
@@ -355,6 +342,7 @@ export function renderTrikalaMapLayers(options: RenderTrikalaMapLayersOptions): 
       polygonsOut,
       hideParkRideHubMarkers: modeShareRadarActive,
       bikeLaneBusyPctByLocationId,
+      scenario,
     });
   } else {
     renderSmartCrossingVector(

@@ -9,13 +9,15 @@ import {
 } from "@/lib/issyClasseurEmissions";
 import { ISSY_P2_JUNCTION } from "@/lib/issyPilot2Junction";
 import { haversineMeters } from "@/lib/issyPilot2Junction";
-import { getKpi32TimeSeriesIntensity } from "@/lib/kpi32YearIntensity";
+import { getKpi32TimeSeriesIntensity, resolveKpi32ScenarioIntensities } from "@/lib/kpi32YearIntensity";
 import { getSegmentHighlight, segmentMetricKindForKpi } from "@/lib/segmentHighlight";
 import type { MapScenario } from "@/lib/junctionScenarioValues";
 import type { JunctionStudyView } from "@/lib/issyJunctionAnalytics";
 import type { IssyClasseurEmissionsSnapshot } from "@/types/issy-workbooks";
 
 export const ISSY_CLIMATE_HEX_PREFIX = "issy-climate-hex:";
+/** Single city-level climate selection (KPI 3.2) — not a spatial hex cell. */
+export const ISSY_CLIMATE_CITY_ID = "issy-climate-city";
 
 export function issyClimateHexSegmentId(cellId: string): string {
   return `${ISSY_CLIMATE_HEX_PREFIX}${cellId}`;
@@ -24,6 +26,10 @@ export function issyClimateHexSegmentId(cellId: string): string {
 export function parseIssyClimateHexSegmentId(segmentId: string | null | undefined): string | null {
   if (!segmentId?.startsWith(ISSY_CLIMATE_HEX_PREFIX)) return null;
   return segmentId.slice(ISSY_CLIMATE_HEX_PREFIX.length);
+}
+
+export function isIssyClimateCitySegmentId(segmentId: string | null | undefined): boolean {
+  return segmentId === ISSY_CLIMATE_CITY_ID;
 }
 
 export interface IssyClimateHexCellMetrics {
@@ -245,5 +251,116 @@ export function buildIssyClimateHexStudyView(
       trendCar: [],
     },
     timeline: [],
+  };
+}
+
+/**
+ * City-wide KPI 3.2 reading — one intensity for all of Issy (year time series / optional ASIF total).
+ * The map hex field was a visual proxy; partners only supply city-level climate context.
+ */
+export function buildIssyCityClimateStudyView(
+  config: JunctionConfig,
+  options: {
+    pilotLabel: string;
+    pilotId?: string | null;
+    scenario?: MapScenario;
+    kpiRow?: CityKPIData;
+    kpi32Year?: string | null;
+    classeur?: IssyClasseurEmissionsSnapshot | null;
+    cityLat?: number;
+    cityLon?: number;
+  }
+): JunctionStudyView {
+  const scenario = options.scenario ?? "intervention";
+  const interventionCopy = getIssyPilotInterventionCopy(options.pilotId);
+  const kpiDef = getKpiDefinition("kpi3.2");
+  const { baseline: baselineIntensity, intervention: interventionIntensity } =
+    resolveKpi32ScenarioIntensities(options.kpiRow, options.kpi32Year ?? null);
+  const usesClasseur = !!options.classeur;
+  const displayIntensity =
+    scenario === "baseline"
+      ? baselineIntensity
+      : scenario === "comparison"
+        ? Math.abs(interventionIntensity - baselineIntensity)
+        : interventionIntensity;
+
+  const metric = segmentMetricKindForKpi("kpi3.2");
+  const highlight = getSegmentHighlight(
+    displayIntensity,
+    displayIntensity * 0.85,
+    displayIntensity * 1.15,
+    metric
+  );
+
+  const baselineCo2 = usesClasseur
+    ? co2GPerHourToKgDay(options.classeur!.totalBaselineCo2G)
+    : co2FromIntensity(baselineIntensity, 0);
+  const interventionCo2 = usesClasseur
+    ? co2GPerHourToKgDay(
+        options.classeur!.totalBaselineCo2G * (interventionIntensity / Math.max(baselineIntensity, 1))
+      )
+    : co2FromIntensity(interventionIntensity, 0);
+
+  const lat = options.cityLat ?? 48.8247;
+  const lon = options.cityLon ?? 2.27;
+
+  return {
+    id: ISSY_CLIMATE_CITY_ID,
+    segmentApiId: ISSY_CLIMATE_CITY_ID,
+    name: usesClasseur
+      ? `Issy city climate · ${Math.round(options.classeur!.totalBaselineCo2G)} g CO₂/h`
+      : `Issy city climate · ${displayIntensity.toFixed(0)}% pressure`,
+    shortName: "Issy city climate",
+    armLabel: "City-wide",
+    armId: "west",
+    armColor: highlight.color,
+    bandColor: highlight.color,
+    kpiBand: highlight.band,
+    kpiValue: Math.round(displayIntensity * 10) / 10,
+    selectedKpi: "kpi3.2",
+    kpiLabel: kpiDef?.name ?? "Climate and Environmental Impact",
+    pilot: options.pilotLabel,
+    interventionType: interventionCopy.title,
+    coordinates: [lat, lon],
+    monitoringPeriod: usesClasseur
+      ? `ASIF city model · chart year ${options.kpi32Year ?? "latest"}`
+      : `City time series · chart year ${options.kpi32Year ?? "latest"}`,
+    sensors: 0,
+    approachesCovered: 1,
+    totalApproaches: 1,
+    dataConfidence: usesClasseur ? 78 : 70,
+    dataSource: usesClasseur ? options.classeur!.datasetId : undefined,
+    dataClass: usesClasseur ? "modelled" : "derived",
+    sourceLabel: usesClasseur
+      ? "ASIF emissions model (Classeur.xlsx) · city total"
+      : "City KPI 3.2 time series · derived environmental pressure",
+    streetNS: "Issy-les-Moulineaux",
+    streetEW: "City-wide climate reading",
+    baseline: {
+      label: usesClasseur ? "Baseline (ASIF city)" : "Baseline (city series)",
+      period: usesClasseur ? "Nov 2024 traffic inputs" : "Pre-intervention city proxy",
+      modeShare: {},
+      dailyCycleCount: 0,
+      peakCongestion: baselineIntensity / 100,
+      avgSpeedKmh: Math.round(28 + (100 - baselineIntensity) * 0.12),
+      co2ProxyKgDay: baselineCo2,
+      trendCycle: [],
+      trendCar: [],
+    },
+    intervention: {
+      label: scenario === "comparison" ? "Comparison" : usesClasseur ? "Scenario (ASIF scaled)" : "Intervention (city)",
+      period: usesClasseur ? "KPI reduction factor applied" : "Current city intensity",
+      modeShare: {},
+      dailyCycleCount: 0,
+      peakCongestion: interventionIntensity / 100,
+      avgSpeedKmh: Math.round(28 + (100 - interventionIntensity) * 0.12),
+      co2ProxyKgDay: interventionCo2,
+      trendCycle: [],
+      trendCar: [],
+    },
+    timeline: [
+      { date: "2022–2025", event: "City climate / pressure time series", status: "done" },
+      { date: "Pilot 3", event: "GecoAir citizen awareness (app narrative)", status: "active" },
+    ],
   };
 }

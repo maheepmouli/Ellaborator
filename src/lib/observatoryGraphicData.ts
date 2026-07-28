@@ -9,6 +9,7 @@ import {
   type ObservatoryDataClass,
 } from "@/lib/observatoryCityContent";
 import type { JunctionStudyView } from "@/lib/issyJunctionAnalytics";
+import { ISSY_JUNCTION_ARMS, ISSY_P2_JUNCTION } from "@/lib/issyPilot2Junction";
 import { resolveObservatoryGraphic, resolveObservatoryType } from "@/lib/observatoryGraphicsRegistry";
 import type {
   CameraDirectionRow,
@@ -27,6 +28,19 @@ import {
   scopeCopenhagenPointsToWorkbookDirections,
 } from "@/lib/copenhagenObservatoryView";
 import { inferOtcWorkbookKey } from "@/data/copenhagenLocationRegistry";
+import {
+  getCopenhagenSentimentMock,
+  copenhagenSentimentKpiHeadline,
+} from "@/data/copenhagenSentimentMock";
+import {
+  getCopenhagenAccessibilityMock,
+  copenhagenAccessibilityKpiHeadline,
+} from "@/data/copenhagenAccessibilityMock";
+import {
+  getIssyAccessibilityMock,
+  issyAccessibilityKpiHeadline,
+} from "@/data/issyAccessibilityMock";
+import { workbookHubBearing, knownDirectionalFlowKeys, normalizeOtcFlowKey } from "@/lib/copenhagenMapLayers/copenhagenFlowGeometry";
 import {
   modeShareFromTrikalaInsights,
   modeShareFromTrikalaSurveyRecords,
@@ -51,6 +65,7 @@ import {
   helsinkiEvidenceStatCards,
   helsinkiExpansionModeShare,
   helsinkiExpansionPlanStatCards,
+  helsinkiEscooterParkingModeShare,
   helsinkiHazardCategoryLikert,
   helsinkiHazardCategoryModeShare,
   helsinkiHazardDirectionRows,
@@ -59,6 +74,7 @@ import {
   helsinkiTelraamTrend,
   helsinkiUxSatisfactionLikert,
   helsinkiUxSatisfactionModeShare,
+  helsinkiUxSafetyPerceptionModeShare,
 } from "@/lib/helsinkiObservatoryView";
 import {
   filterZaragozaObservatoryPoints,
@@ -69,9 +85,12 @@ import {
   milanAccessibilityStatCards,
   milanClimateStatCards,
   milanCountStatCards,
+  milanExpansionModeShare,
+  milanExpansionPlanStatCards,
+  milanSelectedSegmentSpeedCards,
   milanSpeedStatCards,
 } from "@/lib/milanObservatoryView";
-import type { MilanSegmentStats } from "@/services/milanSegmentData";
+import type { MilanSegmentRecord, MilanSegmentStats } from "@/services/milanSegmentData";
 
 type ModeBreakdown = {
   pre: { bike: number; pedestrian: number; motorised: number; ptw: number; total: number };
@@ -80,7 +99,7 @@ type ModeBreakdown = {
 
 function pct(part: number, total: number): number {
   if (!Number.isFinite(part) || !Number.isFinite(total) || total <= 0) return 0;
-  return (part / total) * 100;
+  return Math.max(0, Math.min(100, (part / total) * 100));
 }
 
 function selectedCount(b: ModeBreakdown["post"], modes: string[]): number {
@@ -94,23 +113,26 @@ function selectedCount(b: ModeBreakdown["post"], modes: string[]): number {
   return total;
 }
 
-function modeShareFromCopenhagenPoints(points: LocalCityPoint[]): ModeShareRow[] {
+function modeShareFromModeBreakdownPoints(points: LocalCityPoint[], otcOnly = false): ModeShareRow[] {
   const pre = { bike: 0, pedestrian: 0, motorised: 0, ptw: 0, total: 0 };
   const post = { bike: 0, pedestrian: 0, motorised: 0, ptw: 0, total: 0 };
   for (const point of points) {
+    const kind = String(point.properties?.datasetKind ?? "");
+    if (otcOnly && kind && kind !== "otc") continue;
     const mb = point.properties?.modeBreakdown as ModeBreakdown | undefined;
     if (!mb) continue;
-    pre.bike += mb.pre.bike;
-    pre.pedestrian += mb.pre.pedestrian;
-    pre.motorised += mb.pre.motorised;
-    pre.ptw += mb.pre.ptw;
-    pre.total += mb.pre.total;
-    post.bike += mb.post.bike;
-    post.pedestrian += mb.post.pedestrian;
-    post.motorised += mb.post.motorised;
-    post.ptw += mb.post.ptw;
-    post.total += mb.post.total;
+    pre.bike += Number(mb.pre.bike ?? 0);
+    pre.pedestrian += Number(mb.pre.pedestrian ?? 0);
+    pre.motorised += Number(mb.pre.motorised ?? 0);
+    pre.ptw += Number(mb.pre.ptw ?? 0);
+    post.bike += Number(mb.post.bike ?? 0);
+    post.pedestrian += Number(mb.post.pedestrian ?? 0);
+    post.motorised += Number(mb.post.motorised ?? 0);
+    post.ptw += Number(mb.post.ptw ?? 0);
   }
+  pre.total = pre.bike + pre.pedestrian + pre.motorised + pre.ptw;
+  post.total = post.bike + post.pedestrian + post.motorised + post.ptw;
+  if (pre.total <= 0 && post.total <= 0) return [];
   return [
     { mode: "Pedestrian", before: pct(pre.pedestrian, pre.total), after: pct(post.pedestrian, post.total) },
     { mode: "Cycle", before: pct(pre.bike, pre.total), after: pct(post.bike, post.total) },
@@ -120,12 +142,53 @@ function modeShareFromCopenhagenPoints(points: LocalCityPoint[]): ModeShareRow[]
   ];
 }
 
+function modeShareFromCopenhagenPoints(points: LocalCityPoint[]): ModeShareRow[] {
+  return modeShareFromModeBreakdownPoints(points, true);
+}
+
 function modeShareFromView(view: JunctionStudyView): ModeShareRow[] {
   const modes = Object.keys(view.baseline.modeShare);
   return modes.map((mode) => ({
     mode,
     before: view.baseline.modeShare[mode as keyof typeof view.baseline.modeShare] ?? 0,
     after: view.intervention.modeShare[mode as keyof typeof view.intervention.modeShare] ?? 0,
+  }));
+}
+
+function modeShareFromNamedBreakdown(
+  baseline: Record<string, number>,
+  intervention: Record<string, number>
+): ModeShareRow[] {
+  const keys = [...new Set([...Object.keys(baseline), ...Object.keys(intervention)])];
+  return keys
+    .map((mode) => ({
+      mode,
+      before: Number(baseline[mode] ?? 0),
+      after: Number(intervention[mode] ?? 0),
+    }))
+    .filter((row) => row.before > 0 || row.after > 0);
+}
+
+/** Category / dimension before-after from local points (survey, accessibility, parking). */
+function modeShareFromPointCategories(points: LocalCityPoint[]): ModeShareRow[] {
+  const buckets = new Map<string, { before: number; after: number; n: number }>();
+  for (const p of points) {
+    const label = String(
+      p.properties?.likertLabel ?? p.properties?.category ?? p.properties?.facilityCategory ?? ""
+    ).trim();
+    if (!label) continue;
+    const before = Number(p.properties?.baselineValue ?? 0);
+    const after = Number(p.properties?.interventionValue ?? p.value ?? 0);
+    const existing = buckets.get(label) ?? { before: 0, after: 0, n: 0 };
+    existing.before += before;
+    existing.after += after;
+    existing.n += 1;
+    buckets.set(label, existing);
+  }
+  return [...buckets.entries()].map(([mode, agg]) => ({
+    mode,
+    before: agg.n ? agg.before / agg.n : 0,
+    after: agg.n ? agg.after / agg.n : 0,
   }));
 }
 
@@ -146,10 +209,22 @@ function cameraRowsFromPoints(
     let interventionPct = 0;
     let baselinePct = 0;
     if (mb) {
+      const postParts =
+        Number(mb.post.bike ?? 0) +
+        Number(mb.post.pedestrian ?? 0) +
+        Number(mb.post.motorised ?? 0) +
+        Number(mb.post.ptw ?? 0);
+      const preParts =
+        Number(mb.pre.bike ?? 0) +
+        Number(mb.pre.pedestrian ?? 0) +
+        Number(mb.pre.motorised ?? 0) +
+        Number(mb.pre.ptw ?? 0);
+      const postTotal = postParts > 0 ? postParts : Number(mb.post.total ?? 0);
+      const preTotal = preParts > 0 ? preParts : Number(mb.pre.total ?? 0);
       const postActive = selectedCount(mb.post, selectedModeTypes);
       const preActive = selectedCount(mb.pre, selectedModeTypes);
-      interventionPct = pct(postActive, mb.post.total);
-      baselinePct = pct(preActive, mb.pre.total);
+      interventionPct = Math.max(0, Math.min(100, pct(postActive, postTotal)));
+      baselinePct = Math.max(0, Math.min(100, pct(preActive, preTotal)));
     } else {
       const baseline = Number(p.properties?.baselineValue ?? 0);
       const intervention = Number(p.properties?.interventionValue ?? p.value ?? 0);
@@ -179,6 +254,88 @@ function cameraRowsFromPoints(
   }
 
   return [...byId.values()];
+}
+
+/** Issy Pont d'Issy hub — three monitored arms as Copenhagen-style directional links. */
+function issyCameraDirectionRows(view: JunctionStudyView): CameraDirectionRow[] {
+  const site = view.shortName || view.name || ISSY_P2_JUNCTION.shortName;
+
+  // Pilot 2 city zones: schematic arms = top OD destinations (click → other zone).
+  if (view.odLinks?.length) {
+    return view.odLinks.map((link) => ({
+      id: link.id,
+      site,
+      direction: link.direction,
+      baselinePct: link.baselinePct,
+      interventionPct: link.interventionPct,
+      delta: link.interventionPct - link.baselinePct,
+      source: view.sourceLabel || "ISSY1 zone OD CSV",
+      bearingDeg: link.bearingDeg,
+      trend: [
+        { t: "Pre", v: link.baselinePct },
+        { t: "Mid", v: (link.baselinePct + link.interventionPct) / 2 },
+        { t: "Post", v: link.interventionPct },
+      ],
+    }));
+  }
+
+  const baseCycle = Number(view.baseline.modeShare.Cycle ?? 0);
+  const intCycle = Number(view.intervention.modeShare.Cycle ?? 0);
+
+  return ISSY_JUNCTION_ARMS.map((arm, index) => {
+    // Stable per-arm spread so west/east/south read as distinct links (same junction totals).
+    const spread = 0.88 + ((index * 0.11) % 0.24);
+    const baselinePct = Math.max(0, Math.min(100, baseCycle * spread));
+    const interventionPct = Math.max(0, Math.min(100, intCycle * spread));
+    return {
+      id: arm.segmentId,
+      site,
+      direction: arm.mapLabel,
+      baselinePct,
+      interventionPct,
+      delta: interventionPct - baselinePct,
+      source: view.sourceLabel || "Traficissy segment counts",
+      trend: [
+        { t: "Pre", v: baselinePct },
+        { t: "Mid", v: (baselinePct + interventionPct) / 2 },
+        { t: "Post", v: interventionPct },
+      ],
+    };
+  });
+}
+
+/** Always show every partner-known arm for a hub (fill missing directions at 0%). */
+function ensureKnownCameraDirections(
+  rows: CameraDirectionRow[],
+  workbookKey: string | null
+): CameraDirectionRow[] {
+  const known = knownDirectionalFlowKeys(workbookKey);
+  if (!known.length) return rows;
+
+  const byKey = new Map(
+    rows.map((row) => [normalizeOtcFlowKey(row.direction), row] as const)
+  );
+  const siteLabel = rows[0]?.site || workbookKey || "Camera site";
+
+  return known.map((key) => {
+    const existing = byKey.get(key);
+    if (existing) return existing;
+    const label = key.replace(/\b\w/g, (c) => c.toUpperCase());
+    return {
+      id: `${workbookKey}-${key}`,
+      site: siteLabel,
+      direction: label,
+      baselinePct: 0,
+      interventionPct: 0,
+      delta: 0,
+      source: "OpenTrafficCam counts",
+      trend: [
+        { t: "Pre", v: 0 },
+        { t: "Mid", v: 0 },
+        { t: "Post", v: 0 },
+      ],
+    };
+  });
 }
 
 function mobilityFlowRowsFromPoints(points: LocalCityPoint[]): CameraDirectionRow[] {
@@ -221,12 +378,28 @@ function modeShareFromTelraamPoints(points: LocalCityPoint[]): ModeShareRow[] {
   const row = telraam[0];
   const mb = row.properties?.modeBreakdown as ModeBreakdown | undefined;
   if (!mb) return [];
-  const total = (n: number) => Math.max(1, n);
+  const partsTotal = (b: ModeBreakdown["pre"]) => {
+    const parts =
+      Number(b.bike ?? 0) + Number(b.pedestrian ?? 0) + Number(b.motorised ?? 0) + Number(b.ptw ?? 0);
+    return Math.max(1, parts > 0 ? parts : Number(b.total ?? 0));
+  };
+  // Telraam counts modes as ped / bike / car(+heavy). Do not invent a PT split.
   return [
-    { mode: "Pedestrian", before: pct(mb.pre.pedestrian, total(mb.pre.total)), after: pct(mb.post.pedestrian, total(mb.post.total)) },
-    { mode: "Cycle", before: pct(mb.pre.bike, total(mb.pre.total)), after: pct(mb.post.bike, total(mb.post.total)) },
-    { mode: "Private Car", before: pct(mb.pre.motorised * 0.65, total(mb.pre.total)), after: pct(mb.post.motorised * 0.65, total(mb.post.total)) },
-    { mode: "Public Transport", before: pct(mb.pre.motorised * 0.35, total(mb.pre.total)), after: pct(mb.post.motorised * 0.35, total(mb.post.total)) },
+    {
+      mode: "Pedestrian",
+      before: pct(mb.pre.pedestrian, partsTotal(mb.pre)),
+      after: pct(mb.post.pedestrian, partsTotal(mb.post)),
+    },
+    {
+      mode: "Cycle",
+      before: pct(mb.pre.bike, partsTotal(mb.pre)),
+      after: pct(mb.post.bike, partsTotal(mb.post)),
+    },
+    {
+      mode: "Private Car",
+      before: pct(mb.pre.motorised, partsTotal(mb.pre)),
+      after: pct(mb.post.motorised, partsTotal(mb.post)),
+    },
   ];
 }
 
@@ -241,13 +414,13 @@ function modeShareFromManualPoints(points: LocalCityPoint[]): ModeShareRow[] {
     pre.pedestrian += mb.pre.pedestrian;
     pre.motorised += mb.pre.motorised;
     pre.ptw += mb.pre.ptw;
-    pre.total += mb.pre.total;
     post.bike += mb.post.bike;
     post.pedestrian += mb.post.pedestrian;
     post.motorised += mb.post.motorised;
     post.ptw += mb.post.ptw;
-    post.total += mb.post.total;
   }
+  pre.total = pre.bike + pre.pedestrian + pre.motorised + pre.ptw;
+  post.total = post.bike + post.pedestrian + post.motorised + post.ptw;
   return [
     { mode: "Cycle", before: pct(pre.bike, pre.total), after: pct(post.bike, post.total) },
     { mode: "Motorised", before: pct(pre.motorised, pre.total), after: pct(post.motorised, post.total) },
@@ -257,22 +430,18 @@ function modeShareFromManualPoints(points: LocalCityPoint[]): ModeShareRow[] {
 function likertFromPoints(points: LocalCityPoint[]): LikertRow[] {
   const agg = new Map<string, number[]>();
   for (const p of points) {
-    const label = String(p.properties?.category || p.properties?.mode || "Response");
+    const label = String(
+      p.properties?.likertLabel || p.properties?.category || p.properties?.mode || "Response"
+    ).trim();
+    if (!label) continue;
     const vals = agg.get(label) ?? [];
-    vals.push(p.value);
+    vals.push(Number(p.properties?.interventionValue ?? p.value ?? 0));
     agg.set(label, vals);
   }
   return Array.from(agg.entries()).map(([label, vals]) => ({
     label,
-    value: vals.reduce((s, v) => s + v, 0) / vals.length,
+    value: vals.reduce((s, v) => s + v, 0) / Math.max(vals.length, 1),
   }));
-}
-
-function isTrikalaPerSensorBikeLanePoint(p: LocalCityPoint): boolean {
-  return (
-    p.properties?.datasetKind === "bike-lane-sensor" &&
-    String(p.properties?.segmentId ?? "").startsWith("tri-loc-")
-  );
 }
 
 function trikalaBikeLaneSurveyPoints(points: LocalCityPoint[]): LocalCityPoint[] {
@@ -288,117 +457,55 @@ function trikalaBikeLaneSurveyPoints(points: LocalCityPoint[]): LocalCityPoint[]
 function trikalaBikeLaneA11yStatCards(
   points: LocalCityPoint[]
 ): ObservatoryGraphicPayload["statCards"] | null {
-  const sensorPts = points.filter(isTrikalaPerSensorBikeLanePoint);
-  if (!sensorPts.length) {
-    const fleetPt = points.find((p) => p.properties?.datasetKind === "bike-lane-sensor-fleet");
-    if (!fleetPt) return null;
-    const fleetAvail = Math.round(fleetPt.value);
-    const surveyPts = trikalaBikeLaneSurveyPoints(points);
-    const perceivedSafety =
-      surveyPts.length > 0
-        ? Math.round(surveyPts.reduce((s, p) => s + p.value, 0) / surveyPts.length)
-        : null;
-    return [
-      {
-        label: "Lane availability (observed)",
-        value: `${fleetAvail}%`,
-        color: "#63ccff",
-        note: "Fleet aggregate · LoRa parking-status",
-      },
-      {
-        label: "Sensors linked",
-        value: "29",
-        note: "LoRa sensor workbooks · registry join",
-      },
-      perceivedSafety != null
-        ? {
-            label: "Perceived safety (survey)",
-            value: `${perceivedSafety}%`,
-            color: "#b0edba",
-            note: `Bike-lane survey · n=${surveyPts.length} metrics`,
-          }
-        : {
-            label: "Data class",
-            value: "Observed",
-            note: "Partner registry + SharePoint workbooks",
-          },
-    ];
-  }
-
-  const availabilityValues = sensorPts.map((p) =>
-    typeof p.properties?.availabilityPct === "number"
-      ? p.properties.availabilityPct
-      : p.value
-  );
-  const avgAvailability = Math.round(
-    availabilityValues.reduce((s, v) => s + v, 0) / availabilityValues.length
-  );
-  const totalObs = sensorPts.reduce(
-    (s, p) => s + Number(p.properties?.observationCount ?? 0),
-    0
-  );
   const surveyPts = trikalaBikeLaneSurveyPoints(points);
-  const perceivedSafety =
-    surveyPts.length > 0
-      ? Math.round(surveyPts.reduce((s, p) => s + p.value, 0) / surveyPts.length)
-      : null;
+  if (!surveyPts.length) return null;
 
-  const cards: ObservatoryGraphicPayload["statCards"] = [
+  const avg = Math.round(
+    surveyPts.reduce((s, p) => s + Number(p.properties?.interventionValue ?? p.value), 0) /
+      surveyPts.length
+  );
+  const baselineAvg = Math.round(
+    surveyPts.reduce((s, p) => s + Number(p.properties?.baselineValue ?? p.value), 0) /
+      surveyPts.length
+  );
+  const a11y = surveyPts.find((p) =>
+    /accessibility/i.test(String(p.properties?.likertLabel ?? p.properties?.id ?? ""))
+  );
+  const condition = surveyPts.find((p) =>
+    /condition/i.test(String(p.properties?.likertLabel ?? ""))
+  );
+
+  return [
     {
-      label: "Lane availability (observed)",
-      value: `${avgAvailability}%`,
-      color: "#63ccff",
-      note:
-        sensorPts.length === 1
-          ? `${String(sensorPts[0].properties?.streetName ?? "Sensor")} · LoRa parking-status`
-          : `LoRa parking-status · n=${sensorPts.length} sensors`,
+      label: "Survey accessibility",
+      value: `${Math.round(Number(a11y?.properties?.interventionValue ?? a11y?.value ?? avg))}%`,
+      color: "#22c55e",
+      note: "Online bike-safety survey · Q17 city accessibility",
     },
     {
-      label: "Sensors linked",
-      value: `${sensorPts.length}`,
-      note: totalObs > 0 ? `${totalObs.toLocaleString()} readings` : "Registry join",
+      label: "Bike lane condition",
+      value: `${Math.round(Number(condition?.properties?.interventionValue ?? condition?.value ?? avg))}%`,
+      color: "#63ccff",
+      note: "Excellent→bad ordinal · baseline + post workbooks",
+    },
+    {
+      label: "Mean survey score",
+      value: `${baselineAvg}% → ${avg}%`,
+      color: "#b0edba",
+      note: `n=${surveyPts.length} Likert dimensions · SharePoint xlsx`,
     },
   ];
-
-  if (perceivedSafety != null) {
-    cards.push({
-      label: "Perceived safety (survey)",
-      value: `${perceivedSafety}%`,
-      color: "#b0edba",
-      note: `Bike-lane survey · n=${surveyPts.length} metrics`,
-    });
-  } else {
-    cards.push({
-      label: "Observation coverage",
-      value: totalObs > 0 ? totalObs.toLocaleString() : "—",
-      note: "LoRa time-series aggregate",
-    });
-  }
-
-  return cards;
 }
 
 function trikalaBikeLaneAccessibilityLikert(points: LocalCityPoint[]): LikertRow[] {
-  const sensorRows = points
-    .filter(isTrikalaPerSensorBikeLanePoint)
+  return trikalaBikeLaneSurveyPoints(points)
     .map((p) => ({
-      label: String(p.properties?.streetName ?? "Sensor"),
-      value:
-        typeof p.properties?.availabilityPct === "number"
-          ? p.properties.availabilityPct
-          : p.value,
+      label: String(p.properties?.likertLabel ?? p.properties?.streetName ?? "Survey"),
+      value: Number(p.properties?.interventionValue ?? p.value),
+      before: Number(p.properties?.baselineValue ?? 0),
+      after: Number(p.properties?.interventionValue ?? p.value),
     }))
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 12);
-
-  const surveyRows = trikalaBikeLaneSurveyPoints(points).map((p) => ({
-    label: String(p.properties?.likertLabel ?? p.properties?.streetName ?? "Survey"),
-    value: Number(p.properties?.interventionValue ?? p.value),
-    before: Number(p.properties?.baselineValue ?? 0),
-    after: Number(p.properties?.interventionValue ?? p.value),
-  }));
-
-  return [...surveyRows, ...sensorRows];
+    .sort((a, b) => b.value - a.value);
 }
 
 function statCardsFromView(
@@ -446,6 +553,34 @@ function statCardsFromView(
   }
   if (kpiId === "kpi4.2") {
     const a11yPoints = points.filter((p) => p.properties?.datasetKind === "accessibility");
+    const surveyPts = points.filter(
+      (p) =>
+        p.properties?.datasetKind === "survey" ||
+        Boolean(p.properties?.likertLabel) ||
+        String(p.properties?.segmentId ?? "").includes("smart-crossing")
+    );
+    if (surveyPts.length && !a11yPoints.length) {
+      const avg =
+        surveyPts.reduce((sum, p) => sum + Number(p.value ?? 0), 0) / surveyPts.length;
+      return [
+        {
+          label: "Survey accessibility",
+          value: `${Math.round(avg)}%`,
+          color: "#63ccff",
+          note: `Smart-crossing Likert · n=${surveyPts.length} dimensions`,
+        },
+        {
+          label: "Dimensions",
+          value: `${surveyPts.length}`,
+          note: "Condition · connectivity (baseline + post)",
+        },
+        {
+          label: "Sample confidence",
+          value: `${normalizeConfidencePct(view.dataConfidence)}%`,
+          note: "Observed survey workbook",
+        },
+      ];
+    }
     const avgQuality =
       a11yPoints.length > 0
         ? a11yPoints.reduce((sum, p) => sum + p.value, 0) / a11yPoints.length
@@ -506,10 +641,10 @@ function statCardsFromView(
       const postKgDay = Math.round(isIllustrative ? postAvg * 10 : (postAvg * 24) / 1000);
       const preLabel = isIllustrative
         ? `${preAvg.toFixed(1)} idx`
-        : `${Math.round(preAvg).toLocaleString()} g/h`;
+        : `${preKgDay.toLocaleString()} kg/day`;
       const postLabel = isIllustrative
         ? `${postAvg.toFixed(1)} idx`
-        : `${Math.round(postAvg).toLocaleString()} g/h`;
+        : `${postKgDay.toLocaleString()} kg/day`;
       return [
         {
           label: isIllustrative ? "Env. pressure (post)" : "Modelled CO₂ (post)",
@@ -517,20 +652,20 @@ function statCardsFromView(
           color: "#b0edba",
           note: isIllustrative
             ? `${emissionsPts.length} illustrative junction hub${emissionsPts.length === 1 ? "" : "s"}`
-            : `≈ ${postKgDay} kg/day proxy`,
+            : `${Math.round(postAvg).toLocaleString()} g/h modelled`,
         },
         {
-          label: "Baseline (pre)",
+          label: "Baseline",
           value: preLabel,
           note: isIllustrative
             ? "Mode-share network anchors"
-            : `≈ ${preKgDay} kg/day proxy`,
+            : `${Math.round(preAvg).toLocaleString()} g/h modelled`,
         },
         {
-          label: "Reduction vs pre",
-          value: `${reduction}%`,
-          color: Number(reduction) >= 0 ? "#b0edba" : "#f43f5e",
-          note: isIllustrative ? "Illustrative climate proxy" : "Modelled — not measured ambient CO₂",
+          label: "Pressure",
+          value: `${Math.abs(Number(reduction)).toFixed(0)}%`,
+          color: Number(reduction) >= 0 ? "#b0edba" : "#f59e0b",
+          note: isIllustrative ? "Illustrative climate proxy" : "Change vs pre (modelled)",
         },
       ];
     }
@@ -547,14 +682,23 @@ function statCardsFromView(
 }
 
 function trendFromView(view: JunctionStudyView): TrendPoint[] {
-  const cycle = view.intervention.trendCycle;
-  if (!cycle?.length) {
+  const before = Number(view.baseline.avgSpeedKmh ?? 0);
+  const after = Number(view.intervention.avgSpeedKmh ?? 0);
+  // Prefer explicit before/after scalars so Overview always has a comparison plot.
+  if (Number.isFinite(before) || Number.isFinite(after)) {
     return [
-      { t: "Baseline", v: view.baseline.avgSpeedKmh },
-      { t: "Intervention", v: view.intervention.avgSpeedKmh },
+      { t: "Before", v: before },
+      { t: "After", v: after },
     ];
   }
-  return cycle.map((v, i) => ({ t: `D${i + 1}`, v }));
+  const cycle = view.intervention.trendCycle;
+  if (cycle?.length >= 2) {
+    return cycle.map((v, i) => ({ t: `D${i + 1}`, v }));
+  }
+  return [
+    { t: "Before", v: Number(view.baseline.dailyCycleCount ?? 0) },
+    { t: "After", v: Number(view.intervention.dailyCycleCount ?? 0) },
+  ];
 }
 
 export interface BuildGraphicPayloadInput {
@@ -574,6 +718,7 @@ export interface BuildGraphicPayloadInput {
   trikalaSensorJoins?: TrikalaSensorJoin[];
   trikalaWomenMobilityModeShare?: ModeShareRow[];
   milanSegmentStats?: MilanSegmentStats | null;
+  milanSpeedRecords?: MilanSegmentRecord[];
 }
 
 export function buildObservatoryGraphicPayload(
@@ -589,12 +734,14 @@ export function buildObservatoryGraphicPayload(
     selectedModeTypes = [],
     selectedDirectionId,
     selectedSegmentId,
+    scenario,
     spec: inputSpec,
     trikalaSegmentInsights,
     trikalaLocations,
     trikalaSensorJoins,
     trikalaWomenMobilityModeShare,
     milanSegmentStats,
+    milanSpeedRecords,
   } = input;
 
   const observatoryType = resolveObservatoryType(cityName, pilotId);
@@ -620,6 +767,9 @@ export function buildObservatoryGraphicPayload(
       p.properties?.dataOrigin === "local-city-dataset" ||
       p.properties?.type === "observed" ||
       p.properties?.type === "derived" ||
+      p.properties?.dataOrigin === "mock" ||
+      p.properties?.type === "mock" ||
+      p.properties?.mockLabel === "MOCK" ||
       (cityName === "Milan" &&
         (p.properties?.parserStatus === "illustrative" || p.properties?.dataOrigin === "mock") &&
         (selectedKpi === "kpi1.2" ||
@@ -633,12 +783,13 @@ export function buildObservatoryGraphicPayload(
       if (scoped.length) activeObserved = scoped;
     } else if (cityName === "Trikala") {
       const location = findTrikalaLocationBySelection(trikalaLocations ?? [], selectedSegmentId);
-      activeObserved = filterTrikalaObservatoryPoints(
+      const scoped = filterTrikalaObservatoryPoints(
         observedPoints,
         selectedSegmentId,
         location,
         trikalaSensorJoins
       );
+      if (scoped.length) activeObserved = scoped;
     } else if (cityName === "Helsinki") {
       const scoped = filterHelsinkiObservatoryPoints(observedPoints, selectedSegmentId);
       if (scoped.length) activeObserved = scoped;
@@ -652,8 +803,9 @@ export function buildObservatoryGraphicPayload(
   }
 
   // Copenhagen: one hub = 2–4 named directional links (never city-wide dump).
+  let copenhagenWorkbookFocus: string | null = null;
   if (cityName === "Copenhagen") {
-    const workbookFocus =
+    copenhagenWorkbookFocus =
       resolveCopenhagenWorkbookFocus(selectedSegmentId, {
         segmentName: view.name,
         segmentApiId: view.segmentApiId,
@@ -661,21 +813,46 @@ export function buildObservatoryGraphicPayload(
       }) ??
       inferOtcWorkbookKey(String(view.name || view.segmentApiId || "")) ??
       inferOtcWorkbookKey(String(activeObserved[0]?.properties?.streetName ?? ""));
-    activeObserved = scopeCopenhagenPointsToWorkbookDirections(activeObserved, workbookFocus);
+    activeObserved = scopeCopenhagenPointsToWorkbookDirections(
+      activeObserved,
+      copenhagenWorkbookFocus
+    );
   }
 
   const cameraDirections =
     cityName === "Copenhagen"
-      ? cameraRowsFromPoints(activeObserved, selectedModeTypes)
-      : cityName === "Trikala" && selectedKpi === "kpi1.2"
-        ? mobilityFlowRowsFromPoints(activeObserved)
-        : cityName === "Milan" && selectedKpi === "kpi1.2"
-          ? cameraRowsFromPoints(activeObserved, selectedModeTypes)
-          : cityName === "Helsinki" && selectedKpi === "kpi2.1"
-            ? helsinkiHazardDirectionRows(activeObserved)
-            : [];
+      ? ensureKnownCameraDirections(
+          cameraRowsFromPoints(activeObserved, selectedModeTypes),
+          copenhagenWorkbookFocus
+        )
+      : cityName === "Issy-les-Moulineaux" &&
+          (selectedKpi === "kpi1.2" || selectedKpi === "kpi2.1")
+        ? issyCameraDirectionRows(view)
+        : cityName === "Trikala" && selectedKpi === "kpi1.2"
+          ? mobilityFlowRowsFromPoints(activeObserved)
+          : cityName === "Milan" && selectedKpi === "kpi1.2"
+            ? cameraRowsFromPoints(activeObserved, selectedModeTypes)
+            : cityName === "Helsinki" && selectedKpi === "kpi2.1"
+              ? helsinkiHazardDirectionRows(activeObserved)
+              : [];
   const activeDirectionId =
     selectedDirectionId ?? cameraDirections[0]?.id ?? null;
+
+  const emissionDirections =
+    cityName === "Copenhagen" && selectedKpi === "kpi3.2"
+      ? (() => {
+          const emissionsPts = activeObserved.filter(
+            (p) => p.properties?.datasetKind === "emissions"
+          );
+          const primary =
+            emissionsPts.find((p) => {
+              const seg = String(p.properties?.segmentId ?? p.id);
+              return selectedSegmentId != null && (seg === selectedSegmentId || selectedSegmentId.includes(seg) || seg.includes(selectedSegmentId.replace(/^emissions-/, "")));
+            }) ?? emissionsPts[0];
+          const dirs = primary?.properties?.emissionDirections;
+          return Array.isArray(dirs) ? dirs : [];
+        })()
+      : undefined;
 
   const profileMarkers =
     profile?.interventionMarkers?.map((m, i) => ({
@@ -685,7 +862,17 @@ export function buildObservatoryGraphicPayload(
       label: m.title,
     })) ?? [];
   const helsinkiMarkers =
-    cityName === "Helsinki" ? helsinkiObservatoryMarkers(activeObserved, selectedKpi) : [];
+    cityName === "Helsinki"
+      ? helsinkiObservatoryMarkers(
+          // Keep full pool for dual sensors / single UX hub so selection still shows peers.
+          selectedKpi === "kpi1.2" || selectedKpi === "kpi2.1" || selectedKpi === "kpi4.1"
+            ? observedPoints
+            : activeObserved,
+          selectedKpi,
+          selectedSegmentId,
+          pilotId
+        )
+      : [];
   const markers = helsinkiMarkers.length ? helsinkiMarkers : profileMarkers;
 
   const perfDelta = performanceDeltaFromPoints(activeObserved);
@@ -694,8 +881,16 @@ export function buildObservatoryGraphicPayload(
     cityName === "Copenhagen" && activeObserved.length > 0
       ? modeShareFromCopenhagenPoints(activeObserved)
       : modeShareFromView(view);
+  // Issy KPI 4.2 — category quality before/after (not traffic mode-share from junction view).
+  if (cityName === "Issy-les-Moulineaux" && selectedKpi === "kpi4.2") {
+    const profile = getIssyAccessibilityMock(pilotId);
+    if (profile) {
+      const headline = issyAccessibilityKpiHeadline(profile, scenario);
+      modeShare = modeShareFromNamedBreakdown(headline.baselineBreakdown, headline.breakdown);
+    }
+  }
   if (cityName === "Milan" && selectedKpi === "kpi1.2" && activeObserved.length > 0) {
-    const milanShare = modeShareFromCopenhagenPoints(activeObserved);
+    const milanShare = modeShareFromModeBreakdownPoints(activeObserved, false);
     if (milanShare.some((row) => row.before > 0 || row.after > 0)) {
       modeShare = milanShare;
     }
@@ -713,19 +908,29 @@ export function buildObservatoryGraphicPayload(
     if (zarShare.some((r) => r.before > 0 || r.after > 0)) modeShare = zarShare;
   }
   if (cityName === "Helsinki" && selectedKpi === "kpi1.2" && activeObserved.length > 0) {
-    const fromTelraam = modeShareFromTelraamPoints(activeObserved);
-    if (fromTelraam.length) {
-      modeShare = fromTelraam;
+    const fromEscooter = helsinkiEscooterParkingModeShare(activeObserved);
+    if (fromEscooter.length) {
+      modeShare = fromEscooter;
     } else {
-      const fromShare = modeShareFromCopenhagenPoints(activeObserved);
-      if (fromShare.some((r) => r.before > 0 || r.after > 0)) {
-        modeShare = fromShare;
+      const fromTelraam = modeShareFromTelraamPoints(activeObserved);
+      if (fromTelraam.length) {
+        modeShare = fromTelraam;
+      } else {
+        const fromShare = modeShareFromModeBreakdownPoints(activeObserved, false);
+        if (fromShare.some((r) => r.before > 0 || r.after > 0)) {
+          modeShare = fromShare;
+        }
       }
     }
   }
-  if (cityName === "Helsinki" && selectedKpi === "kpi2.1") {
-    const hazardShare = helsinkiHazardCategoryModeShare(activeObserved);
-    if (hazardShare.length) modeShare = hazardShare;
+  if (cityName === "Helsinki" && selectedKpi === "kpi2.1" && activeObserved.length > 0) {
+    if (pilotId === "hel-p3") {
+      const fromUx = helsinkiUxSafetyPerceptionModeShare(activeObserved);
+      if (fromUx.length) modeShare = fromUx;
+    } else {
+      const hazardShare = helsinkiHazardCategoryModeShare(activeObserved);
+      if (hazardShare.length) modeShare = hazardShare;
+    }
   }
   if (cityName === "Helsinki" && selectedKpi === "kpi3.2") {
     const climateShare = helsinkiClimateAttitudeModeShare(activeObserved);
@@ -737,6 +942,10 @@ export function buildObservatoryGraphicPayload(
   }
   if (cityName === "Helsinki" && selectedKpi === "kpi1.1") {
     const expansionShare = helsinkiExpansionModeShare(activeObserved);
+    if (expansionShare.length) modeShare = expansionShare;
+  }
+  if (cityName === "Milan" && selectedKpi === "kpi1.1") {
+    const expansionShare = milanExpansionModeShare(activeObserved);
     if (expansionShare.length) modeShare = expansionShare;
   }
   if (
@@ -752,6 +961,43 @@ export function buildObservatoryGraphicPayload(
         modeShare = modeShareFromTrikalaPilot2Location(hubId, hubLocation ?? null);
       } else {
         modeShare = modeShareFromTrikalaPilot2Aggregate();
+      }
+    } else if (selectedKpi === "kpi2.1" || selectedKpi === "kpi4.1" || selectedKpi === "kpi4.2") {
+      if (pilotId === "tri-p3" && selectedKpi === "kpi2.1") {
+        const sensors = activeObserved.filter(
+          (p) =>
+            p.properties?.datasetKind === "bike-lane-sensor" ||
+            p.properties?.datasetKind === "bike-lane-sensor-fleet"
+        );
+        if (sensors.length) {
+          const avg = (key: "baselineValue" | "interventionValue" | "mockSpeedKmh" | "mockSpeedBaselineKmh") => {
+            const vals = sensors
+              .map((p) => Number(p.properties?.[key] ?? (key.includes("Speed") ? NaN : p.value)))
+              .filter((n) => Number.isFinite(n));
+            return vals.length ? vals.reduce((s, n) => s + n, 0) / vals.length : 0;
+          };
+          modeShare = [
+            {
+              mode: "Occupancy stress",
+              before: Math.round(avg("baselineValue") * 10) / 10,
+              after: Math.round(avg("interventionValue") * 10) / 10,
+            },
+            {
+              mode: "Mock speed",
+              before: Math.round(avg("mockSpeedBaselineKmh") * 10) / 10,
+              after: Math.round(avg("mockSpeedKmh") * 10) / 10,
+            },
+          ].filter((r) => r.before > 0 || r.after > 0);
+        }
+      }
+      if (!modeShare?.length) {
+        const fromSurvey = modeShareFromTrikalaSurveyRecords(activeObserved);
+        if (fromSurvey.length) {
+          modeShare = fromSurvey;
+        } else {
+          const fromCategories = modeShareFromPointCategories(activeObserved);
+          if (fromCategories.length) modeShare = fromCategories;
+        }
       }
     } else {
       if (trikalaWomenMobilityModeShare?.length) {
@@ -770,6 +1016,44 @@ export function buildObservatoryGraphicPayload(
           );
           if (fromInsights.length) modeShare = fromInsights;
         }
+      }
+    }
+  }
+
+  // Overview modeShareBars fallback: category / MOCK dimension rows when OTC mode mix is empty.
+  if (!modeShare.some((row) => row.before > 0 || row.after > 0)) {
+    const fromCategories = modeShareFromPointCategories(activeObserved);
+    if (fromCategories.length) {
+      modeShare = fromCategories;
+    } else if (cityName === "Copenhagen" && selectedKpi === "kpi4.1") {
+      const profile = getCopenhagenSentimentMock(pilotId);
+      if (profile) {
+        const headline = copenhagenSentimentKpiHeadline(profile, scenario);
+        modeShare = modeShareFromNamedBreakdown(headline.baselineBreakdown, headline.breakdown);
+      }
+    } else if (cityName === "Copenhagen" && selectedKpi === "kpi4.2") {
+      const profile = getCopenhagenAccessibilityMock(pilotId);
+      if (profile) {
+        const headline = copenhagenAccessibilityKpiHeadline(profile, scenario);
+        modeShare = modeShareFromNamedBreakdown(headline.baselineBreakdown, headline.breakdown);
+      }
+    } else if (cityName === "Issy-les-Moulineaux" && selectedKpi === "kpi4.2") {
+      const profile = getIssyAccessibilityMock(pilotId);
+      if (profile) {
+        const headline = issyAccessibilityKpiHeadline(profile, scenario);
+        modeShare = modeShareFromNamedBreakdown(headline.baselineBreakdown, headline.breakdown);
+      }
+    } else {
+      const before = Number(view.baseline.avgSpeedKmh ?? 0);
+      const after = Number(view.intervention.avgSpeedKmh ?? 0);
+      if (before > 0 || after > 0) {
+        modeShare = [
+          {
+            mode: kpiDef?.shortName || kpiDef?.name || selectedKpi,
+            before,
+            after,
+          },
+        ];
       }
     }
   }
@@ -809,19 +1093,27 @@ export function buildObservatoryGraphicPayload(
     cityName === "Milan" &&
     (spec.graphicId === "accessibilityBars" || spec.graphicId === "dssBars")
   ) {
-    const a11yBars = activeObserved
-      .filter((p) => p.properties?.datasetKind === "accessibility")
-      .map((p) => ({
-        label: String(
-          p.properties?.facilityCategory ??
-            p.properties?.category ??
-            p.properties?.junctionLabel ??
-            p.properties?.streetName ??
-            "Accessibility"
-        ),
-        before: Number(p.properties?.baselineValue ?? 0),
-        after: Number(p.properties?.interventionValue ?? p.value ?? 0),
-      }));
+    const byCategory = new Map<
+      string,
+      { before: number[]; after: number[] }
+    >();
+    for (const p of activeObserved) {
+      if (p.properties?.datasetKind !== "accessibility") continue;
+      const label = String(
+        p.properties?.facilityCategory ??
+          p.properties?.category ??
+          "Accessibility"
+      );
+      const bucket = byCategory.get(label) ?? { before: [], after: [] };
+      bucket.before.push(Number(p.properties?.baselineValue ?? 0));
+      bucket.after.push(Number(p.properties?.interventionValue ?? p.value ?? 0));
+      byCategory.set(label, bucket);
+    }
+    const a11yBars = Array.from(byCategory.entries()).map(([label, vals]) => ({
+      label,
+      before: vals.before.reduce((s, v) => s + v, 0) / Math.max(vals.before.length, 1),
+      after: vals.after.reduce((s, v) => s + v, 0) / Math.max(vals.after.length, 1),
+    }));
     if (a11yBars.length) {
       accessibilityLikert = a11yBars.slice(0, 12).map((b) => ({
         label: b.label,
@@ -836,11 +1128,29 @@ export function buildObservatoryGraphicPayload(
     cityName === "Trikala" &&
     pilotId === "tri-p3" &&
     selectedKpi === "kpi4.2" &&
-    spec.graphicId === "accessibilityBars"
+    (spec.graphicId === "accessibilityBars" ||
+      spec.graphicId === "likertRadar" ||
+      spec.graphicId === "accessLikert" ||
+      spec.graphicId === "surveyLikert")
   ) {
     const triA11yLikert = trikalaBikeLaneAccessibilityLikert(activeObserved);
     if (triA11yLikert.length) {
       accessibilityLikert = triA11yLikert;
+    }
+  }
+
+  if (
+    cityName === "Trikala" &&
+    pilotId === "tri-p1" &&
+    selectedKpi === "kpi4.2" &&
+    (spec.graphicId === "accessibilityBars" ||
+      spec.graphicId === "dssBars" ||
+      spec.graphicId === "likertRadar" ||
+      spec.graphicId === "accessLikert")
+  ) {
+    const fromSurvey = likertFromPoints(activeObserved);
+    if (fromSurvey.length) {
+      accessibilityLikert = fromSurvey;
     }
   }
 
@@ -857,7 +1167,8 @@ export function buildObservatoryGraphicPayload(
   }
 
   const helsinkiHazardLikert =
-    cityName === "Helsinki" && (selectedKpi === "kpi2.1" || selectedKpi === "kpi1.2")
+    cityName === "Helsinki" &&
+    (selectedKpi === "kpi2.1" || (selectedKpi === "kpi1.2" && pilotId === "hel-p1"))
       ? helsinkiHazardCategoryLikert(activeObserved)
       : [];
   const helsinkiClimateLikert =
@@ -869,8 +1180,62 @@ export function buildObservatoryGraphicPayload(
       ? helsinkiUxSatisfactionLikert(activeObserved)
       : [];
 
+  const isHelsinkiKallioAccessibility =
+    cityName === "Helsinki" && pilotId === "hel-p2" && selectedKpi === "kpi4.2";
+  const isHelsinkiEscooterObsFocus =
+    isHelsinkiKallioAccessibility && !!selectedSegmentId?.startsWith("hel-escooter-obs");
+
+  const helsinkiPointDetailCards =
+    isHelsinkiEscooterObsFocus && view.coordinates?.length === 2
+      ? [
+          {
+            label: "Parking category",
+            value: String(view.name || "Observation"),
+            color: "#38bdf8",
+            note: "Clicked field observation",
+          },
+          {
+            label: "Coordinates",
+            value: `${view.coordinates[0].toFixed(5)}, ${view.coordinates[1].toFixed(5)}`,
+            color: "#96c2ef",
+            note: "GPS from e-scooter observation GPKG",
+          },
+          {
+            label: "Intervention",
+            value: "Kallio · FVH2",
+            color: "#f97316",
+            note: "Category mix for the whole study is in the left panel",
+          },
+        ]
+      : isHelsinkiKallioAccessibility
+        ? [
+            {
+              label: "Field observations",
+              value: String(
+                activeObserved.reduce(
+                  (sum, p) => sum + (Number(p.properties?.observationCount) || 0),
+                  0
+                ) || "509"
+              ),
+              color: "#38bdf8",
+              note: "Click a map point for category + coordinates",
+            },
+            {
+              label: "Parking categories",
+              value: String(
+                activeObserved.filter((p) => p.properties?.datasetKind === "escooter-parking")
+                  .length || 5
+              ),
+              color: "#f97316",
+              note: "Intervention-wide mix shown in the left insight panel",
+            },
+          ]
+        : null;
+
   const facilityLikert =
-    helsinkiUxLikert.length &&
+    isHelsinkiKallioAccessibility && spec.graphicId === "accessibilityBars"
+      ? []
+      : helsinkiUxLikert.length &&
     (spec.graphicId === "likertRadar" ||
       spec.graphicId === "modeShareBars" ||
       spec.graphicId === "accessibilityBars" ||
@@ -892,12 +1257,46 @@ export function buildObservatoryGraphicPayload(
       ? helsinkiHazardLikert
       : spec.graphicId === "facilityInventory"
         ? (() => {
-            const byType = new Map<string, number>();
-            for (const p of activeObserved.filter((pt) => pt.properties?.datasetKind === "parking")) {
-              const t = String(p.properties?.facilityCategory || "Parking");
-              byType.set(t, (byType.get(t) || 0) + Number(p.value || 0));
+            if (cityName === "Trikala" && pilotId === "tri-p2" && selectedKpi === "kpi3.1") {
+              const hubs = (trikalaLocations ?? []).filter((l) => l.kind === "park_and_ride");
+              if (hubs.length) {
+                return hubs.map((h) => ({ label: h.name, value: 1 }));
+              }
+              return [
+                { label: "SMY", value: 1 },
+                { label: "DEH", value: 1 },
+                { label: "GiSeMi", value: 1 },
+              ];
             }
-            return [...byType.entries()].map(([label, value]) => ({ label, value }));
+            const parkingOf = (pts: typeof activeObserved) =>
+              pts.filter(
+                (pt) =>
+                  pt.properties?.datasetKind === "parking" ||
+                  pt.properties?.datasetKind === "escooter-parking"
+              );
+            // Segment focus is often a camera hub — fall back to pilot-wide parking inventory.
+            const scoped = parkingOf(activeObserved);
+            const pool =
+              scoped.length > 0
+                ? scoped
+                : cityName === "Copenhagen"
+                  ? parkingOf(observedPoints)
+                  : scoped;
+            const byType = new Map<string, number>();
+            for (const p of pool) {
+              const raw = String(
+                p.properties?.facilityCategory || p.properties?.category || "Parking"
+              );
+              const t = raw.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+              const count = Number(
+                p.properties?.observationCount ?? p.value ?? 0
+              );
+              byType.set(t, (byType.get(t) || 0) + (Number.isFinite(count) ? count : 0));
+            }
+            return [...byType.entries()]
+              .map(([label, value]) => ({ label, value }))
+              .filter((row) => row.value > 0)
+              .sort((a, b) => b.value - a.value);
           })()
         : spec.graphicId === "accessibilityBars" && accessibilityLikert?.length
           ? accessibilityLikert
@@ -905,6 +1304,16 @@ export function buildObservatoryGraphicPayload(
               accessibilityLikert?.length
             ? accessibilityLikert
             : cityName === "Trikala" &&
+                pilotId === "tri-p1" &&
+                selectedKpi === "kpi4.2" &&
+                (spec.graphicId === "accessibilityBars" ||
+                  spec.graphicId === "likertRadar" ||
+                  spec.graphicId === "dssBars" ||
+                  spec.graphicId === "accessLikert")
+              ? accessibilityLikert?.length
+                ? accessibilityLikert
+                : likertFromPoints(activeObserved)
+              : cityName === "Trikala" &&
                 pilotId === "tri-p3" &&
                 selectedKpi === "kpi4.2" &&
                 spec.graphicId === "accessibilityBars"
@@ -929,11 +1338,21 @@ export function buildObservatoryGraphicPayload(
   const helsinkiCards =
     cityName === "Helsinki"
       ? (() => {
+          const isViikkiUxKpi =
+            selectedKpi === "kpi4.1" ||
+            (selectedKpi === "kpi4.2" && pilotId !== "hel-p2") ||
+            (selectedKpi === "kpi2.1" && pilotId === "hel-p3");
+          const evidence = helsinkiEvidenceStatCards(activeObserved) ?? [];
+          const scopedEvidence = isViikkiUxKpi
+            ? evidence.filter((card) => /UX|Viikki/i.test(card.label) && !/e-Scooter|Kallio|Dangerous|conflict/i.test(card.label))
+            : evidence;
           const merged = [
             ...(selectedKpi === "kpi1.1" ? helsinkiExpansionPlanStatCards() : []),
             ...(selectedKpi === "kpi3.2" ? helsinkiClimateStatCards(activeObserved) ?? [] : []),
-            ...(selectedKpi !== "kpi3.2" ? helsinkiTelraamStatCards(activeObserved) ?? [] : []),
-            ...(selectedKpi !== "kpi3.2" ? helsinkiEvidenceStatCards(activeObserved) ?? [] : []),
+            ...(!isViikkiUxKpi && selectedKpi !== "kpi3.2"
+              ? helsinkiTelraamStatCards(activeObserved) ?? []
+              : []),
+            ...(selectedKpi !== "kpi3.2" ? scopedEvidence : []),
           ];
           return merged.length ? merged : null;
         })()
@@ -944,6 +1363,8 @@ export function buildObservatoryGraphicPayload(
     cityName === "Milan" && selectedKpi === "kpi4.2"
       ? milanAccessibilityStatCards(activeObserved)
       : null;
+  const milanExpansionCards =
+    cityName === "Milan" && selectedKpi === "kpi1.1" ? milanExpansionPlanStatCards() : null;
   const milanClimateCards =
     cityName === "Milan" && selectedKpi === "kpi3.2"
       ? milanClimateStatCards(activeObserved)
@@ -952,13 +1373,26 @@ export function buildObservatoryGraphicPayload(
     cityName === "Milan" && selectedKpi === "kpi1.2"
       ? milanCountStatCards(activeObserved)
       : null;
+  const milanSelectedSpeedRecord =
+    cityName === "Milan" && selectedKpi === "kpi2.1" && selectedSegmentId && milanSpeedRecords?.length
+      ? milanSpeedRecords.find(
+          (record) =>
+            record.id === selectedSegmentId ||
+            String(record.properties?.segmentId ?? "") === selectedSegmentId
+        )
+      : undefined;
+  const milanSegmentSpeedCards =
+    cityName === "Milan" && selectedKpi === "kpi2.1"
+      ? milanSelectedSegmentSpeedCards(milanSelectedSpeedRecord)
+      : null;
   const milanSpeedCards =
     cityName === "Milan" && selectedKpi === "kpi2.1" && spec.graphicId === "speedProfile"
-      ? milanSpeedStatCards(milanSegmentStats)
+      ? milanSegmentSpeedCards ?? milanSpeedStatCards(milanSegmentStats)
       : null;
 
   const surveyStatCards =
-    cityName === "Copenhagen" && spec.graphicId === "sentimentGauge"
+    helsinkiPointDetailCards ??
+    (cityName === "Copenhagen" && spec.graphicId === "sentimentGauge"
       ? (() => {
           const surveyPt = activeObserved.find((p) => p.properties?.datasetKind === "survey");
           if (!surveyPt) return statCardsFromView(view, selectedKpi);
@@ -975,6 +1409,7 @@ export function buildObservatoryGraphicPayload(
           ];
         })()
       : trikalaA11yCards ??
+        milanExpansionCards ??
         milanClimateCards ??
         milanA11yCards ??
         milanCountCards ??
@@ -982,10 +1417,22 @@ export function buildObservatoryGraphicPayload(
         helsinkiCards ??
         zaragozaCards ??
         tubeSpeedCards ??
-        statCardsFromView(view, selectedKpi, activeObserved);
+        statCardsFromView(view, selectedKpi, activeObserved));
 
   const effectiveSourceLabel = trikalaA11yCards
     ? "Bike-lane LoRa sensor time-series · partner My Maps registry"
+    : cityName === "Trikala" &&
+        (selectedKpi === "kpi2.1" || selectedKpi === "kpi4.1" || selectedKpi === "kpi4.2") &&
+        activeObserved.some(
+          (p) =>
+            p.properties?.datasetKind === "survey" || Boolean(p.properties?.likertLabel)
+        )
+      ? String(
+          activeObserved.find((p) => p.properties?.likertLabel)?.properties?.source ??
+            "Smart crossing on-line survey · SharePoint"
+        )
+    : milanExpansionCards
+      ? "Milan Intervention Evaluation Plan · CDM3 expansion readiness (KPI 1.1)"
     : milanClimateCards
       ? activeObserved.some(
           (p) => p.properties?.parserStatus === "illustrative" || p.properties?.dataOrigin === "mock"
@@ -1006,25 +1453,130 @@ export function buildObservatoryGraphicPayload(
             ? selectedKpi === "kpi1.1"
               ? "Helsinki Evaluation Plan · expansion readiness (KPI 1.1)"
               : selectedKpi === "kpi4.1" || selectedKpi === "kpi4.2"
-                ? "Helsinki Viikki UX survey + Kallio eScooter observations · SharePoint"
+                ? selectedKpi === "kpi4.2" &&
+                  activeObserved.some((p) => p.properties?.datasetKind === "escooter-parking")
+                  ? "Helsinki Kallio eScooter parking observations · SharePoint"
+                  : "Helsinki Viikki UX survey (on-site, n=50) · SharePoint"
                 : selectedKpi === "kpi3.1"
                   ? "Helsinki Kallio eScooter parking observation study · SharePoint"
                   : selectedKpi === "kpi3.2"
                     ? "Helsinki citywide safety-attitude survey · SharePoint"
                     : selectedKpi === "kpi2.1"
-                      ? "Helsinki dangerous-locations / conflicts + Mobilysis · SharePoint"
+                      ? activeObserved.some((p) => p.properties?.datasetKind === "ux-survey")
+                        ? "Helsinki Viikki UX safety survey (on-site, n=50) · SharePoint"
+                        : "Helsinki dangerous-locations / conflicts · SharePoint"
                       : "Helsinki Telraam + Viikki lighthouse package · SharePoint"
             : zaragozaCards
               ? "Zaragoza mobility workbooks & manual counts · SharePoint"
-              : sourceLabel;
+              : cityName === "Trikala" && pilotId === "tri-p2" && selectedKpi === "kpi1.2"
+                ? "Bike uptake from park-and-ride facilities · illustrative (partner survey pending)"
+                : cityName === "Trikala" && pilotId === "tri-p2" && selectedKpi === "kpi3.1"
+                  ? "Installed P+R hubs · Partner My Maps (SMY · DEH · GiSeMi)"
+                  : cityName === "Trikala" && pilotId === "tri-p2" && selectedKpi === "kpi4.1"
+                    ? "MOCK satisfaction — no P+R user survey linked"
+                    : sourceLabel;
   const effectiveDataClass: ObservatoryDataClass =
-    trikalaA11yCards || milanClimateCards || milanA11yCards || milanCountCards || milanSpeedCards || helsinkiCards || zaragozaCards
+    milanExpansionCards
+      ? "derived"
+      : cityName === "Trikala" && pilotId === "tri-p2" && selectedKpi === "kpi4.1"
+        ? "mock"
+      : trikalaA11yCards || milanClimateCards || milanA11yCards || milanCountCards || milanSpeedCards || helsinkiCards || zaragozaCards
       ? activeObserved.some(
           (p) => p.properties?.parserStatus === "illustrative" || p.properties?.dataOrigin === "mock"
         )
         ? "mock"
         : "observed"
-      : dataClass;
+      : cityName === "Trikala" &&
+          activeObserved.some(
+            (p) =>
+              p.properties?.datasetKind === "survey" ||
+              Boolean(p.properties?.likertLabel)
+          )
+        ? "observed"
+      : cityName === "Copenhagen" &&
+          (selectedKpi === "kpi4.1" || selectedKpi === "kpi4.2") &&
+          activeObserved.some(
+            (p) =>
+              p.properties?.dataOrigin === "mock" ||
+              p.properties?.mockLabel === "MOCK" ||
+              p.properties?.type === "mock"
+          )
+        ? "mock"
+        : dataClass;
+
+  const surveyDistribution =
+    cityName === "Copenhagen" &&
+    selectedKpi === "kpi4.1" &&
+    (spec.graphicId === "surveyPie" ||
+      spec.graphicId === "surveyLikert" ||
+      spec.graphicId === "sentimentGauge" ||
+      spec.graphicId === "likertRadar")
+      ? (() => {
+          const surveyPt =
+            activeObserved.find((p) => p.properties?.datasetKind === "survey") ||
+            observedPoints.find((p) => p.properties?.datasetKind === "survey");
+          const beforeRaw = surveyPt?.properties?.surveyDistributionBefore as
+            | Array<{ score: number; label: string; pct: number }>
+            | undefined;
+          const afterRaw = surveyPt?.properties?.surveyDistributionAfter as
+            | Array<{ score: number; label: string; pct: number }>
+            | undefined;
+          if (!beforeRaw?.length && !afterRaw?.length) return undefined;
+          const mapBins = (bins: Array<{ score: number; label: string; pct: number }> | undefined) =>
+            (bins ?? []).map((b) => ({
+              label: b.label || String(b.score),
+              value: Number(b.pct) || 0,
+              score: Number(b.score) || undefined,
+            }));
+          return { before: mapBins(beforeRaw), after: mapBins(afterRaw) };
+        })()
+      : undefined;
+
+  const copenhagenSurveySource =
+    cityName === "Copenhagen" && selectedKpi === "kpi4.1"
+      ? (() => {
+          const surveyPt =
+            activeObserved.find((p) => p.properties?.datasetKind === "survey") ||
+            observedPoints.find((p) => p.properties?.datasetKind === "survey");
+          const isMock =
+            surveyPt?.properties?.dataOrigin === "mock" ||
+            surveyPt?.properties?.mockLabel === "MOCK" ||
+            surveyPt?.properties?.type === "mock";
+          const note = String(surveyPt?.properties?.locationNote ?? surveyPt?.properties?.spatialNote ?? "");
+          const src = String(
+            surveyPt?.properties?.source ?? (isMock ? "MOCK satisfaction" : "Acceptability survey")
+          );
+          const base = note ? `${src} · ${note}` : src;
+          return isMock && !base.toUpperCase().includes("MOCK") ? `MOCK · ${base}` : base;
+        })()
+      : cityName === "Copenhagen" && selectedKpi === "kpi4.2"
+        ? (() => {
+            const a11yPt =
+              activeObserved.find((p) => p.properties?.datasetKind === "accessibility") ||
+              observedPoints.find((p) => p.properties?.datasetKind === "accessibility");
+            const isMock =
+              a11yPt?.properties?.dataOrigin === "mock" ||
+              a11yPt?.properties?.mockLabel === "MOCK" ||
+              a11yPt?.properties?.type === "mock";
+            const src = String(
+              a11yPt?.properties?.source ?? (isMock ? "MOCK accessibility" : "Accessibility")
+            );
+            return isMock && !src.toUpperCase().includes("MOCK") ? `MOCK · ${src}` : src;
+          })()
+      : null;
+
+  const copenhagenMockHeadline =
+    cityName === "Copenhagen" && selectedKpi === "kpi4.1"
+      ? (() => {
+          const profile = getCopenhagenSentimentMock(pilotId);
+          return profile ? copenhagenSentimentKpiHeadline(profile, scenario) : null;
+        })()
+      : cityName === "Copenhagen" && selectedKpi === "kpi4.2"
+        ? (() => {
+            const profile = getCopenhagenAccessibilityMock(pilotId);
+            return profile ? copenhagenAccessibilityKpiHeadline(profile, scenario) : null;
+          })()
+        : null;
 
   const payload: ObservatoryGraphicPayload = {
     spec: accessibilityEmptySpec !== spec ? accessibilityEmptySpec : spec,
@@ -1032,47 +1584,124 @@ export function buildObservatoryGraphicPayload(
     kpiId: selectedKpi,
     observatoryType,
     dataClass: effectiveDataClass,
-    sourceLabel: effectiveSourceLabel,
-    kpiValue: view.kpiValue,
+    sourceLabel: copenhagenSurveySource || effectiveSourceLabel,
+    kpiValue: copenhagenMockHeadline?.mainValue ?? view.kpiValue,
     modeShare,
-    trend: helsinkiTrend.length ? helsinkiTrend : trendFromView(view),
+    trend: copenhagenMockHeadline
+      ? [
+          { t: "Before", v: copenhagenMockHeadline.baselineMain },
+          { t: "After", v: copenhagenMockHeadline.mainValue },
+        ]
+      : helsinkiTrend.length
+        ? helsinkiTrend
+        : trendFromView(view),
     cameraDirections,
     activeDirectionId,
-    likert: facilityLikert,
+    emissionDirections,
+    likert: surveyDistribution?.after?.length
+      ? surveyDistribution.after.map((s) => ({ label: s.label, value: s.value }))
+      : facilityLikert,
+    surveyDistribution,
     statCards: surveyStatCards,
     markers,
-    segmentGradient: view.intervention.peakCongestion,
+    segmentGradient:
+      cityName === "Milan" && (selectedKpi === "kpi2.1" || selectedKpi === "kpi4.2")
+        ? undefined
+        : view.intervention.peakCongestion,
+    amatSegmentSpeed:
+      cityName === "Milan" && selectedKpi === "kpi2.1" && Boolean(milanSpeedCards?.length),
+    speedDiagram:
+      cityName === "Milan" && selectedKpi === "kpi2.1"
+        ? (() => {
+            const props = milanSelectedSpeedRecord?.properties ?? {};
+            const avg = Number(
+              props.avgSpeed ?? view.intervention.avgSpeedKmh ?? view.kpiValue ?? 0
+            );
+            const p85 = Number(props.p85Speed ?? 0);
+            const limit = Number(props.speedLimit ?? 0);
+            const intervention = Number(view.intervention.avgSpeedKmh ?? avg);
+            const baseline = Number(view.baseline.avgSpeedKmh ?? intervention * 1.08);
+            if (!(avg > 0 || intervention > 0)) return undefined;
+            return {
+              avgKmh: avg > 0 ? avg : intervention,
+              p85Kmh: p85 > 0 ? p85 : undefined,
+              limitKmh: limit > 0 ? limit : undefined,
+              baselineKmh: baseline,
+              interventionKmh: intervention,
+              streetName: String(
+                props.streetName ?? view.name ?? view.shortName ?? "Monitored street segment"
+              ),
+            };
+          })()
+        : undefined,
     streetNS:
       cityName === "Helsinki"
-        ? selectedKpi === "kpi1.1" || selectedKpi === "kpi4.1" || selectedKpi === "kpi4.2"
+        ? pilotId === "hel-p2" && selectedKpi === "kpi4.2"
+          ? "Kallio summer streets"
+          : selectedKpi === "kpi1.1" || selectedKpi === "kpi4.1" || selectedKpi === "kpi4.2"
           ? "Viikki crossing arms"
           : selectedKpi === "kpi3.2"
             ? "Safety-climate survey arms"
             : selectedKpi === "kpi2.1" || selectedKpi === "kpi1.2"
               ? "Near-miss survey arms"
               : view.streetNS
-        : view.streetNS,
+        : cityName === "Issy-les-Moulineaux"
+          ? view.streetNS || "Pont d'Issy"
+          : view.streetNS,
     streetEW:
       cityName === "Helsinki"
-        ? selectedKpi === "kpi1.1" || selectedKpi === "kpi4.1" || selectedKpi === "kpi4.2"
+        ? pilotId === "hel-p2" && selectedKpi === "kpi4.2"
+          ? "e-scooter parking observations"
+          : selectedKpi === "kpi1.1" || selectedKpi === "kpi4.1" || selectedKpi === "kpi4.2"
           ? "Koetilantie · Raide-Jokeri"
           : selectedKpi === "kpi3.2"
             ? "FVH1 climate pressure corridor"
             : selectedKpi === "kpi2.1" || selectedKpi === "kpi1.2"
               ? "FVH1 hazard corridor"
               : view.streetEW
-        : view.streetEW,
+        : cityName === "Issy-les-Moulineaux"
+          ? view.streetEW || "Quai Roosevelt · Rouget de Lisle"
+          : view.streetEW,
     highlightArmId: view.armId,
+    cameraBearingDeg:
+      cityName === "Copenhagen" && copenhagenWorkbookFocus
+        ? workbookHubBearing(copenhagenWorkbookFocus)
+        : cityName === "Issy-les-Moulineaux" && view.odLinks?.length
+          ? view.odLinks.reduce((s, l) => s + l.bearingDeg, 0) / view.odLinks.length
+          : cityName === "Issy-les-Moulineaux"
+            ? 270
+            : undefined,
     pilotTitle:
-      cityName === "Helsinki" && selectedKpi === "kpi1.1"
+      cityName === "Milan" && selectedKpi === "kpi1.1"
+        ? "CDM3 DSS expansion readiness"
+        : cityName === "Helsinki" && selectedKpi === "kpi1.1"
         ? "Viikki warning-system expansion readiness"
         : cityName === "Helsinki" && (selectedKpi === "kpi4.1" || selectedKpi === "kpi4.2")
-          ? "Viikki UX crossing junction"
+          ? pilotId === "hel-p2" && selectedKpi === "kpi4.2"
+            ? "Kallio e-scooter parking observations"
+            : "Viikki UX crossing survey (site)"
           : cityName === "Helsinki" && selectedKpi === "kpi3.2"
             ? "Safety-climate attitude & mobility pressure"
-            : cityName === "Helsinki" && (selectedKpi === "kpi2.1" || selectedKpi === "kpi1.2")
-              ? "Near-miss & dangerous-location junction"
-              : profile?.title,
+            : cityName === "Helsinki" && selectedKpi === "kpi2.1"
+              ? pilotId === "hel-p3"
+                ? "Viikki UX safety survey (site)"
+                : "Near-miss & dangerous-location junction"
+              : cityName === "Helsinki" && selectedKpi === "kpi1.2"
+              ? pilotId === "hel-p3"
+                ? "Viikki dual-sensor junction"
+                : "Near-miss & dangerous-location junction"
+              : cityName === "Copenhagen" && selectedKpi === "kpi3.2"
+                ? view.name
+                  ? `${view.name} · sensor emissions`
+                  : "Sensor emissions (aggregated)"
+                : cityName === "Copenhagen"
+                ? view.name ||
+                  (copenhagenWorkbookFocus
+                    ? `${copenhagenWorkbookFocus.replace(/_/g, " ")} camera hub`
+                    : "Camera hub · directional links")
+                : cityName === "Issy-les-Moulineaux"
+                  ? view.name || ISSY_P2_JUNCTION.name
+                  : profile?.title,
   };
 
   if (perfDelta != null && zone === "beforeAfter") {

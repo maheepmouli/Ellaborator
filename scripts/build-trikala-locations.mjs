@@ -16,19 +16,20 @@ const OUT = path.join(ROOT, "public", "data", "trikala");
 const ENV_XLSX = path.join(ROOT, "public", "sharepoint-data", "Trikala", "smart_citizen_kit_environmental_metrics.xlsx");
 
 const KPI_BY_KIND = {
-  smart_crossing_site: ["kpi2.1", "kpi4.2"],
-  traffic_signal: ["kpi2.1", "kpi4.2"],
+  smart_crossing_site: ["kpi2.1", "kpi4.1", "kpi4.2"],
+  traffic_signal: ["kpi2.1", "kpi4.1", "kpi4.2"],
   air_quality_sensor: ["kpi3.2"],
   bike_station: ["kpi1.2", "kpi3.1", "kpi4.1"],
   park_and_ride: ["kpi1.2", "kpi3.1", "kpi4.1"],
-  parking_station: ["kpi3.1", "kpi1.2"],
+  // Municipal car parks are context only — omit from KPI maps (evaluation plan: P+R / bike facilities).
+  parking_station: [],
   bike_lane_sensor: ["kpi2.1", "kpi4.2"],
 };
 
 const SEGMENT_BY_KIND = {
   smart_crossing_site: "tri-p1-smart-crossing",
   traffic_signal: "tri-p1-smart-crossing",
-  air_quality_sensor: "tri-p1-environmental-sensor",
+  air_quality_sensor: "tri-p4-environmental-sensor",
   bike_station: "tri-p3-bike-lane",
   park_and_ride: "tri-p2-park-ride",
   parking_station: "tri-p2-park-ride",
@@ -38,7 +39,7 @@ const SEGMENT_BY_KIND = {
 const PILOT_BY_KIND = {
   smart_crossing_site: "tri-p1",
   traffic_signal: "tri-p1",
-  air_quality_sensor: "tri-p1",
+  air_quality_sensor: "tri-p4",
   park_and_ride: "tri-p2",
   parking_station: "tri-p2",
   bike_station: "tri-p3",

@@ -1,4 +1,5 @@
 export { renderMilanMapLayers } from "./renderMilanMapLayers";
+export { renderMilanKpi11Layers } from "./renderMilanKpi11Layers";
 export {
   anchorModeSharePointsToJunctions,
   prepareMilanModeShareDisplayPoints,
@@ -16,12 +17,14 @@ export {
   aggregateMilanJunctionMockKpi,
   buildMilanJunctionAccessibilityMockPoints,
   buildMilanJunctionClimateMockPoints,
+  milanClimatePressureColor,
   milanHasObservedAccessibilityData,
   milanHasObservedClimateData,
   milanHasObservedModeShareData,
   milanJunctionAnchorsForPilot,
 } from "./milanJunctionKpiMock";
 export { renderMilanSpeedSegmentUnderlay, milanSpeedSegmentMetric } from "./renderMilanSpeedUnderlay";
+export { buildMilanSpeedLegendItems } from "./milanSpeedLegend";
 export {
   milanHubSegmentId,
   milanSiteKeyFromPoint,

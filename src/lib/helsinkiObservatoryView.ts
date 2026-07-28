@@ -23,6 +23,25 @@ export function filterHelsinkiObservatoryPoints(
   selectionId: string
 ): LocalCityPoint[] {
   const normalized = selectionId.replace(/^hel-area:/, "");
+
+  // FVH3 dual sensors — scope to the clicked device only (before broad Viikki fallback).
+  if (
+    selectionId === "hel-viikki-mobilysis-camera" ||
+    selectionId === "hel-mobilysis-vru" ||
+    (selectionId.includes("mobilysis") && !selectionId.includes("telraam"))
+  ) {
+    const camera = points.filter((p) => p.properties?.datasetKind === "mobilysis-gate");
+    if (camera.length) return camera;
+  }
+  if (
+    selectionId.includes("9000007091") ||
+    selectionId === "hel-viikki-telraam" ||
+    (/telraam/i.test(selectionId) && !/mobilysis/i.test(selectionId))
+  ) {
+    const telraam = points.filter((p) => p.properties?.datasetKind === "telraam");
+    if (telraam.length) return telraam;
+  }
+
   const direct = points.filter((p) => {
     const sid = String(p.properties?.segmentId ?? p.properties?.siteId ?? p.id ?? "");
     const rid = pointRecordId(p);
@@ -84,13 +103,42 @@ export function filterHelsinkiObservatoryPoints(
   if (selectionId.startsWith("hel-escooter") || selectionId.startsWith("hel-kallio")) {
     return points.filter((p) => {
       const kind = String(p.properties?.datasetKind ?? "");
-      return kind === "escooter-parking" || kind === "telraam";
+      const segmentId = String(p.properties?.segmentId ?? p.properties?.siteId ?? "");
+      if (kind !== "escooter-parking") return false;
+      if (
+        selectionId.startsWith("hel-escooter-hub") ||
+        selectionId === "hel-kallio-mode-share"
+      ) {
+        return segmentId === selectionId || selectionId.includes(segmentId);
+      }
+      return true;
     });
   }
   return points;
 }
 
 type HelsinkiStatCard = { label: string; value: string; color?: string; note?: string };
+
+export function helsinkiEscooterParkingModeShare(points: LocalCityPoint[]): ModeShareRow[] {
+  const hub =
+    points.find((p) => Array.isArray(p.properties?.parkingCategories)) ?? points[0];
+  const categories = hub?.properties?.parkingCategories as
+    | Array<{ label: string; count: number }>
+    | undefined;
+  const total =
+    Number(hub?.properties?.observationCount) ||
+    categories?.reduce((sum, row) => sum + Number(row.count || 0), 0) ||
+    0;
+  if (!categories?.length || total <= 0) return [];
+  return categories.slice(0, 6).map((row) => {
+    const pct = Number(((row.count / total) * 100).toFixed(1));
+    return {
+      mode: shortLabel(row.label, 26),
+      before: pct,
+      after: pct,
+    };
+  });
+}
 
 export function helsinkiHazardCategoryLikert(points: LocalCityPoint[]): LikertRow[] {
   const dangerous = points.find((p) => p.properties?.datasetKind === "dangerous-location");
@@ -129,23 +177,17 @@ export function helsinkiClimateAttitudeModeShare(points: LocalCityPoint[]): Mode
   const rows = attitude?.properties?.climateAttitudeRows as
     | Array<{ label: string; count: number }>
     | undefined;
-  const shift = 0.18;
-  const toBeforeAfter = (label: string, value: number): ModeShareRow => {
-    const lower = label.toLowerCase();
-    const isPositive = lower.includes("positive");
-    const isNegative = lower.includes("negative");
-    let after = value;
-    if (isPositive) after = Math.min(100, value + (100 - value) * shift);
-    else if (isNegative) after = Math.max(0, value * (1 - shift));
-    else after = Math.max(0, value * (1 - shift * 0.35));
+  // Survey rows are single-wave shares — do not invent a soft before/after delta.
+  const toObserved = (label: string, value: number): ModeShareRow => {
+    const pct = Number(Math.max(0, Math.min(100, value)).toFixed(1));
     return {
       mode: shortLabel(label, 32),
-      before: Number(value.toFixed(1)),
-      after: Number(after.toFixed(1)),
+      before: pct,
+      after: pct,
     };
   };
   if (rows?.length) {
-    return rows.map((row) => toBeforeAfter(row.label, Number(row.count)));
+    return rows.map((row) => toObserved(row.label, Number(row.count)));
   }
   if (!attitude) return [];
   const positive = Number(attitude.value) || 0;
@@ -154,9 +196,9 @@ export function helsinkiClimateAttitudeModeShare(points: LocalCityPoint[]): Mode
   const negative = negMatch ? Number(negMatch[1]) : Math.max(0, 100 - positive);
   const neutral = Math.max(0, Number((100 - positive - negative).toFixed(1)));
   return [
-    toBeforeAfter("Positive safety climate", positive),
-    toBeforeAfter("Negative safety climate", negative),
-    toBeforeAfter("Neutral / other", neutral),
+    toObserved("Positive safety climate", positive),
+    toObserved("Negative safety climate", negative),
+    toObserved("Neutral / other", neutral),
   ];
 }
 
@@ -167,32 +209,77 @@ export function helsinkiClimateAttitudeLikert(points: LocalCityPoint[]): LikertR
   }));
 }
 
-/** FVH3 UX survey — question satisfaction as before/after share rows. */
+/** FVH3 UX survey — crossing safety perceptions (pptx p.8) as observed share rows. */
+export function helsinkiUxSafetyPerceptionModeShare(points: LocalCityPoint[]): ModeShareRow[] {
+  const ux = points.find((p) => p.properties?.datasetKind === "ux-survey");
+  if (!ux) return [];
+  const rows: ModeShareRow[] = [];
+  const unsafe = Number(ux.properties?.feltCrossingUnsafeBeforePct);
+  if (Number.isFinite(unsafe)) {
+    rows.push({
+      mode: "Felt unsafe before",
+      before: Number(unsafe.toFixed(1)),
+      after: Number(unsafe.toFixed(1)),
+    });
+  }
+  const satisfaction = (ux.properties?.uxSatisfactionRows as
+    | Array<{ label: string; count: number }>
+    | undefined) ?? [];
+  satisfaction.forEach((row) => {
+    if (!/safety|impact|functionality|other light rail/i.test(row.label)) return;
+    const pct = Number(row.count);
+    rows.push({
+      mode: shortLabel(row.label, 34),
+      before: Number(pct.toFixed(1)),
+      after: Number(pct.toFixed(1)),
+    });
+  });
+  const noticed = ux.properties?.noticedWarningSystemPct as
+    | { signs?: number | null; sound?: number | null; lights?: number | null }
+    | undefined;
+  if (noticed) {
+    (
+      [
+        ["Noticed signs", noticed.signs],
+        ["Noticed sound", noticed.sound],
+        ["Noticed lights", noticed.lights],
+      ] as const
+    ).forEach(([label, value]) => {
+      if (value == null || !Number.isFinite(Number(value))) return;
+      rows.push({
+        mode: label,
+        before: Number(Number(value).toFixed(1)),
+        after: Number(Number(value).toFixed(1)),
+      });
+    });
+  }
+  if (!rows.length) return helsinkiUxSatisfactionModeShare(points);
+  return rows;
+}
+
+/** FVH3 UX survey — question satisfaction as observed share rows (post-installation only). */
 export function helsinkiUxSatisfactionModeShare(points: LocalCityPoint[]): ModeShareRow[] {
   const ux = points.find((p) => p.properties?.datasetKind === "ux-survey");
   const rows = ux?.properties?.uxSatisfactionRows as
     | Array<{ label: string; count: number }>
     | undefined;
-  const shift = 0.18;
   if (rows?.length) {
     return rows.map((row) => {
-      const before = Number(row.count);
-      const after = Math.min(100, before + (100 - before) * shift);
+      const observed = Number(row.count);
       return {
         mode: shortLabel(row.label, 34),
-        before: Number(before.toFixed(1)),
-        after: Number(after.toFixed(1)),
+        before: Number(observed.toFixed(1)),
+        after: Number(observed.toFixed(1)),
       };
     });
   }
   if (!ux) return [];
-  const before = Number(ux.value) || 0;
-  const after = Math.min(100, before + (100 - before) * shift);
+  const observed = Number(ux.value) || 0;
   return [
     {
       mode: "Overall warning-system satisfaction",
-      before: Number(before.toFixed(1)),
-      after: Number(after.toFixed(1)),
+      before: Number(observed.toFixed(1)),
+      after: Number(observed.toFixed(1)),
     },
   ];
 }
@@ -342,9 +429,29 @@ export function helsinkiHazardDirectionRows(points: LocalCityPoint[]): CameraDir
   });
 }
 
+function isTelraamSelection(selectionId?: string | null): boolean {
+  if (!selectionId) return false;
+  return (
+    selectionId.includes("9000007091") ||
+    selectionId === "hel-viikki-telraam" ||
+    (/telraam/i.test(selectionId) && !/mobilysis/i.test(selectionId))
+  );
+}
+
+function isCameraSelection(selectionId?: string | null): boolean {
+  if (!selectionId) return false;
+  return (
+    selectionId === "hel-viikki-mobilysis-camera" ||
+    selectionId === "hel-mobilysis-vru" ||
+    (selectionId.includes("mobilysis") && !selectionId.includes("telraam"))
+  );
+}
+
 export function helsinkiObservatoryMarkers(
   points: LocalCityPoint[],
-  selectedKpi: string
+  selectedKpi: string,
+  selectionId?: string | null,
+  pilotId?: string | null
 ): Array<{ id: string; x: number; y: number; label?: string; tone?: string; count?: number }> {
   const markers: Array<{
     id: string;
@@ -359,6 +466,55 @@ export function helsinkiObservatoryMarkers(
   const dangerous = points.find((p) => p.properties?.datasetKind === "dangerous-location");
   const telraam = points.find((p) => p.properties?.datasetKind === "telraam");
   const mobilysis = points.find((p) => p.properties?.datasetKind === "mobilysis-gate");
+
+  // FVH3 KPI 1.2 — junction shows Telraam + camera; highlight the selected sensor.
+  if (selectedKpi === "kpi1.2" && pilotId === "hel-p3" && mobilysis) {
+    const telSelected = isTelraamSelection(selectionId);
+    const camSelected = isCameraSelection(selectionId);
+    if (telraam) {
+      markers.push({
+        id: String(telraam.properties?.segmentId ?? "hel-telraam"),
+        x: 78,
+        y: 72,
+        label: telSelected ? "Telraam · selected" : "Telraam",
+        tone: telSelected ? "telraam-selected" : "telraam",
+        count: Number(telraam.properties?.observationCount) || undefined,
+      });
+    }
+    markers.push({
+      id: String(mobilysis.properties?.segmentId ?? "hel-viikki-mobilysis-camera"),
+      x: 22,
+      y: 72,
+      label: camSelected ? "Camera · selected" : "Camera / Mobilysis",
+      tone: camSelected ? "camera-selected" : "camera",
+      count: Number(mobilysis.properties?.observationCount) || undefined,
+    });
+    return markers;
+  }
+
+  // FVH3 KPI 2.1 / 4.1 / 4.2 — single on-site UX survey marker at the crossing.
+  // Also match when pilotId is missing but UX survey evidence is present (avoid Kallio bleed).
+  if (
+    (pilotId === "hel-p3" || points.some((p) => p.properties?.datasetKind === "ux-survey")) &&
+    (selectedKpi === "kpi2.1" || selectedKpi === "kpi4.1" || selectedKpi === "kpi4.2") &&
+    !(pilotId === "hel-p2" && selectedKpi === "kpi4.2")
+  ) {
+    const ux = points.find((p) => p.properties?.datasetKind === "ux-survey");
+    if (ux) {
+      markers.push({
+        id: String(ux.properties?.segmentId ?? "hel-viikki-ux-survey"),
+        x: 50,
+        y: 42,
+        label:
+          selectedKpi === "kpi2.1"
+            ? `Felt unsafe ${Number(ux.properties?.feltCrossingUnsafeBeforePct ?? ux.value).toFixed(0)}%`
+            : `Satisfied ${Number(ux.value).toFixed(0)}%`,
+        tone: "sensor",
+        count: Number(ux.properties?.observationCount) || 50,
+      });
+      return markers;
+    }
+  }
 
   const conflictModes = (conflicts?.properties?.conflictModes as
     | Array<{ label: string; count: number }>
@@ -413,7 +569,7 @@ export function helsinkiObservatoryMarkers(
     });
   });
 
-  if (telraam && (selectedKpi === "kpi1.1" || selectedKpi === "kpi1.2" || selectedKpi === "kpi2.1" || selectedKpi === "kpi3.2" || selectedKpi === "kpi4.1" || selectedKpi === "kpi4.2")) {
+  if (telraam && (selectedKpi === "kpi1.1" || selectedKpi === "kpi2.1" || selectedKpi === "kpi3.2" || selectedKpi === "kpi4.1" || selectedKpi === "kpi4.2")) {
     markers.push({
       id: "hel-telraam",
       x: 78,
@@ -576,7 +732,7 @@ export function helsinkiEvidenceStatCards(points: LocalCityPoint[]): HelsinkiSta
       0
     );
     cards.push({
-      label: "e-Scooter categories (FVH2 · KPI 3.1)",
+      label: "e-Scooter parking (FVH2 · KPI 3.1 / 4.2)",
       value: `${escooter.length} categories`,
       color: "#f97316",
       note: `${totalObservations} field observations · 20 planned sensors not delivered`,

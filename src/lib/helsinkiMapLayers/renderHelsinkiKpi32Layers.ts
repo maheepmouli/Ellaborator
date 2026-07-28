@@ -143,11 +143,13 @@ export function renderHelsinkiKpi32Layers(
   const {
     map,
     scenario = "baseline",
+    selectedPilotId,
     activeMapSegmentId,
     segmentInteractionEnabled,
     segmentHandlers,
     circlesOut,
   } = options;
+  const pilotId = selectedPilotId ?? "hel-p1";
 
   return Promise.all([
     loadHelsinkiDangerousLocationsGeoJson(),
@@ -187,15 +189,15 @@ export function renderHelsinkiKpi32Layers(
         id: `hel-climate-pt-${index + 1}`,
         lat: pt.lat,
         lon: pt.lon,
-        label: `Mobility-pressure point ${index + 1}`,
+        label: `Climate-proxy sample point ${index + 1}`,
         baselineScore,
         interventionScore,
-        note: `Local hazard density ${density} · intervention applies attitude relief (−${(relief * 100).toFixed(0)}% pressure proxy, not ambient CO₂)`,
+        note: `Illustrative pressure proxy from local hazard density ${density} (not ambient CO₂ and not a direct mobility sensor).`,
         radius: 3.5 + (baselineScore / 100) * 2.5,
       };
     });
 
-    if (attitude) {
+    if (pilotId === "hel-p3" && attitude) {
       const positive = attitude.ratesTrafficSafetyPositivelyPct ?? 0;
       const negative = attitude.ratesTrafficSafetyNegativelyPct ?? 0;
       const baselineScore = Math.max(
@@ -215,7 +217,7 @@ export function renderHelsinkiKpi32Layers(
       });
     }
 
-    if (telraam) {
+    if (pilotId === "hel-p3" && telraam) {
       const carPct = telraam.modeShare.carPct;
       const sustainablePct = telraam.modeShare.bikePct + telraam.modeShare.pedestrianPct;
       climatePoints.push({

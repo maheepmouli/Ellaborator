@@ -200,8 +200,8 @@ function buildEvidenceManifest(mediaFiles, docFiles) {
       },
     },
     {
-      id: "tri-p1-environmental-fleet",
-      pilotId: "tri-p1",
+      id: "tri-p4-environmental-fleet",
+      pilotId: "tri-p4",
       title: "Smart Citizen Kit sensor fleet",
       type: "narrative",
       linkedDatasetIds: ["tri-environmental-sensors"],
@@ -328,10 +328,11 @@ function buildEvidenceManifest(mediaFiles, docFiles) {
     },
     {
       test: /sensorkit|sensor_kit/i,
-      id: "tri-p1-sensor-kit-poster",
+      id: "tri-p4-sensor-kit-poster",
       title: "ELABORATOR sensor kit poster",
       methods: ["Smart Citizen Kit"],
       datasets: ["tri-environmental-sensors", "tri-docs-bundle"],
+      pilotId: "tri-p4",
     },
     {
       test: /smart_crossing|smart.crossing/i,

@@ -9,11 +9,18 @@ import {
 
 export const CPH_PARKING_POPUP_CLASS = "cph-parking-popup";
 
+/** Colours for I100275 `Parkering` bay types — keep in sync with `CPH_FACILITY_ITEMS`. */
 const PARKING_NEON: Record<string, string> = {
-  handicap: "#00d2ff",
-  cykel: "#2ecc71",
-  erhverv: "#ffb300",
   almindelig: "#ff4d4d",
+  erhverv: "#ffb300",
+  besog: "#fbbf24",
+  handicap: "#00d2ff",
+  taxi: "#a78bfa",
+  elbil: "#38bdf8",
+  delebil: "#34d399",
+  ambassade: "#f472b6",
+  cykel: "#2ecc71",
+  other: "#94a3b8",
 };
 
 export function normalizeCopenhagenSegmentKey(value: string): string {
@@ -40,13 +47,12 @@ export function parkingSegmentDetailFromProps(
   const street = String(props.Vejnavn ?? props.streetName ?? "Parking");
   const category = String(props.Parkering ?? props.P_ordning ?? props.facilityCategory ?? "Parking");
   const bays = Number(props.Antal_plad ?? props.bays ?? 0);
-  const segmentId =
-    selectedKpi === "kpi4.2"
-      ? buildAccessibilitySegmentId(category)
-      : buildParkingSegmentId(street, category);
+  // Unique per street+type so map selection matches a real bay cluster, not city-wide type.
+  const segmentId = buildParkingSegmentId(street, category);
   const segmentName = bays
     ? `${street} · ${category} · ${bays} ${bays === 1 ? "bay" : "bays"}`
     : `${street} · ${category}`;
+  void selectedKpi;
   return { segmentId, segmentName };
 }
 
@@ -56,14 +62,20 @@ export function getParkingCategoryLabel(feature?: GeoJSON.Feature): string {
 }
 
 export function resolveParkingCategoryColor(category: string): string {
-  const t = category.toLowerCase();
+  const t = category
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
   if (t.includes("handicap")) return PARKING_NEON.handicap;
   if (t.includes("cykel")) return PARKING_NEON.cykel;
-  if (t.includes("erhverv") || t.includes("besøg") || t.includes("besog") || t.includes("besogs")) {
-    return PARKING_NEON.erhverv;
-  }
+  if (t.includes("erhverv")) return PARKING_NEON.erhverv;
+  if (t.includes("besog")) return PARKING_NEON.besog;
+  if (t.includes("taxi")) return PARKING_NEON.taxi;
+  if (t.includes("el-bil") || t.includes("elbil")) return PARKING_NEON.elbil;
+  if (t.includes("delebil")) return PARKING_NEON.delebil;
+  if (t.includes("ambassade")) return PARKING_NEON.ambassade;
   if (t.includes("almindelig")) return PARKING_NEON.almindelig;
-  return "#94a3b8";
+  return PARKING_NEON.other;
 }
 
 export function buildParkingPopupHtml(props: Record<string, unknown>): string {

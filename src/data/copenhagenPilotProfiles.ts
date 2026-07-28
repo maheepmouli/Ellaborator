@@ -16,11 +16,21 @@ export const COPENHAGEN_PILOT_PROFILES: Record<CopenhagenPilotId, CityPilotProfi
       COPENHAGEN_PILOT_REGISTRY["cph-p1"].objective.primary,
       ...COPENHAGEN_PILOT_REGISTRY["cph-p1"].objective.secondary,
     ],
-    expectedImpacts: COPENHAGEN_PILOT_REGISTRY["cph-p1"].evaluation.methods,
+    expectedImpacts: [
+      "Discourage car use; improve walkability and bikeability",
+      "Possible increase in car traffic around the Medieval City",
+      "Freed-up public space in the streets",
+      "Reduced near encounters between cars and VRUs",
+      "Reduced car use",
+      "Changes in modal shift",
+      "Lower air pollution",
+      "Lower car traffic locally",
+    ],
     geometryType: "point",
     dataAvailability:
-      "OTC, Flow cameras, Manual counts, Telraam, and surveys (pilot-scoped locations on map).",
-    methodologyNotes: COPENHAGEN_PILOT_REGISTRY["cph-p1"].evaluation.caveats.join(" "),
+      "OpenTrafficCam directional counts at monitored camera corridors (primary source for KPI 1.2).",
+    methodologyNotes:
+      "Ready when OpenTrafficCam directional rows are loaded for the selected pilot scope.",
     observatoryType: "camera",
   },
   "cph-p2": {

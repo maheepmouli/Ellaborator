@@ -15,6 +15,15 @@ export function getKpi32TimeSeriesIntensity(
   return Math.max(0, Math.min(120, Number(row.value)));
 }
 
+/** Earliest time-series intensity — city baseline residual pressure (typically ~100). */
+export function getKpi32BaselineIntensity(kpiValue: KPIValue | undefined): number | null {
+  if (!kpiValue?.timeSeries?.length) return null;
+  const sorted = [...kpiValue.timeSeries].sort((a, b) => a.year - b.year);
+  const row = sorted[0];
+  if (row === undefined) return null;
+  return Math.max(0, Math.min(120, Number(row.value)));
+}
+
 /**
  * Intensity passed into `generateEmissionZones` when no year is selected (legacy: mainValue = reduction %).
  */
@@ -31,4 +40,19 @@ export function resolveKpi32PolygonBaseIntensity(
   const fromYear = getKpi32TimeSeriesIntensity(kpiValue, selectedYearLabel);
   if (fromYear !== null) return Math.max(0, Math.min(100, fromYear));
   return defaultKpi32PolygonIntensity(kpiValue);
+}
+
+/**
+ * Baseline vs intervention residual intensities for KPI 3.2 map colouring.
+ * Baseline = earliest series year (or 100); intervention = selected year / headline.
+ */
+export function resolveKpi32ScenarioIntensities(
+  kpiValue: KPIValue | undefined,
+  selectedYearLabel: string | null | undefined
+): { baseline: number; intervention: number } {
+  const seriesBaseline = getKpi32BaselineIntensity(kpiValue);
+  const yearOrDefault = resolveKpi32PolygonBaseIntensity(kpiValue, selectedYearLabel);
+  const baseline = Math.max(0, Math.min(100, seriesBaseline ?? 100));
+  const intervention = Math.max(0, Math.min(100, yearOrDefault));
+  return { baseline, intervention };
 }

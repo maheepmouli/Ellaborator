@@ -95,7 +95,7 @@ export const CITY_INTEGRATION_ROWS: CityIntegrationRow[] = [
     integrationStatus: "integrated",
     runtimeStatus: "survey_derived",
     confidence: "medium",
-    notes: "Likert survey aggregates at pilot anchor; Smart Citizen Kit fleet for KPI 3.2; media/docs in /data/trikala/.",
+    notes: "Likert survey aggregates at pilot anchors; Smart Citizen Kit fleet (KPI 3.2) scoped to Pilot 4; media/docs in /data/trikala/.",
   },
   {
     city: "Milan",

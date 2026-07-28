@@ -134,7 +134,7 @@ const INTELLIGENT_CAMERAS: CopenhagenLocation[] = [
     name: "Vandkunsten (camera 1)",
     lat: 55.676102,
     lon: 12.574599,
-    pilotIds: ["cph-p2", "cph-p3"],
+    pilotIds: ["cph-p1", "cph-p2", "cph-p3"],
     linkedDatasetIds: ["cph-otc-counts"],
     otcWorkbookKey: "vandkunsten",
     mapVisible: true,
@@ -145,7 +145,7 @@ const INTELLIGENT_CAMERAS: CopenhagenLocation[] = [
     name: "Vandkunsten (camera 2)",
     lat: 55.675961,
     lon: 12.574234,
-    pilotIds: ["cph-p2", "cph-p3"],
+    pilotIds: ["cph-p1", "cph-p2", "cph-p3"],
     linkedDatasetIds: ["cph-otc-counts"],
     otcWorkbookKey: "vandkunsten",
     mapVisible: true,
@@ -156,7 +156,7 @@ const INTELLIGENT_CAMERAS: CopenhagenLocation[] = [
     name: "Vandkunsten (camera 3)",
     lat: 55.675949,
     lon: 12.573609,
-    pilotIds: ["cph-p2", "cph-p3"],
+    pilotIds: ["cph-p1", "cph-p2", "cph-p3"],
     linkedDatasetIds: ["cph-otc-counts"],
     otcWorkbookKey: "vandkunsten",
     mapVisible: true,
@@ -167,7 +167,7 @@ const INTELLIGENT_CAMERAS: CopenhagenLocation[] = [
     name: "Vandkunsten (camera 4)",
     lat: 55.676213,
     lon: 12.574165,
-    pilotIds: ["cph-p2", "cph-p3"],
+    pilotIds: ["cph-p1", "cph-p2", "cph-p3"],
     linkedDatasetIds: ["cph-otc-counts"],
     otcWorkbookKey: "vandkunsten",
     mapVisible: true,
@@ -229,19 +229,20 @@ const OTC_WORKBOOK_SITES: CopenhagenLocation[] = [
     id: "wb-vandkunsten",
     kind: "otc_workbook_site",
     name: "Vandkunsten / Rådhusstræde",
-    lat: 55.677575,
-    lon: 12.579961,
-    pilotIds: ["cph-p2", "cph-p3"],
+    // Camera-cluster centroid on Rådhusstræde (not the Højbro-overlap Excel overview pin).
+    lat: 55.676056,
+    lon: 12.574152,
+    pilotIds: ["cph-p1", "cph-p2", "cph-p3"],
     linkedDatasetIds: ["cph-otc-counts"],
     otcWorkbookKey: "vandkunsten",
     mapVisible: true,
-    monitoredDirections: ["east", "west"],
+    monitoredDirections: ["north", "south"],
     evaluationRules: {
       excludeFridays: true,
       weekdaySampleCount: 3,
     },
     notes:
-      "Workbook aggregation endpoint — distinct from four physical Vandkunsten cameras. Construction bias for cars possible; Platomo verification ongoing.",
+      "OpenTrafficCam Countings_Vandkunsten workbook — Rådhusstræde N/S directional links. Construction bias for cars possible; Platomo verification ongoing.",
   },
   {
     id: "wb-gammeltorv",
@@ -560,6 +561,10 @@ const METHODOLOGY_KEY_ALIASES: Record<string, string> = {
   "wb-norreport": "norreport",
   "ic-norreport": "norreport",
   "wb-vandkunsten": "vandkunsten",
+  "ic-vandkunsten-1": "vandkunsten",
+  "ic-vandkunsten-2": "vandkunsten",
+  "ic-vandkunsten-3": "vandkunsten",
+  "ic-vandkunsten-4": "vandkunsten",
   "telraam-vestergade-5": "vestergade-5",
 };
 
@@ -678,12 +683,38 @@ export function otcRecordMatchesPilotScope(
   return getOtcWorkbookKeysForPilot(pilotId).has(workbookKey);
 }
 
+/** Sticky #32 — partner manual counts belong to Pilot 1 + Pilot 3 only (not Pilot 2). */
+export const CPH_MANUAL_COUNT_PILOT_IDS: readonly CopenhagenPilotId[] = ["cph-p1", "cph-p3"];
+
+/** Parking / zero-emission facility inventory is shared across Copenhagen pilots. */
+export const CPH_PARKING_INVENTORY_PILOT_IDS: readonly CopenhagenPilotId[] = [
+  "cph-p1",
+  "cph-p2",
+  "cph-p3",
+];
+
 /** Pilot scope for any Copenhagen normalized record (OTC, Telraam, surveys, parking, etc.). */
 export function copenhagenRecordMatchesPilotScope(
-  record: { interventionId?: string; streetName?: string },
+  record: { interventionId?: string; streetName?: string; datasetKind?: string },
   pilotId: string | null | undefined
 ): boolean {
   if (!pilotId?.startsWith("cph-")) return true;
+
+  // Sticky #32: never attach medieval-city manual counts to Pilot 2 (bike parking).
+  if (record.datasetKind === "manual") {
+    return (CPH_MANUAL_COUNT_PILOT_IDS as readonly string[]).includes(pilotId);
+  }
+
+  // Zero-emission / parking bay inventory is a shared facilities layer across pilots.
+  if (record.datasetKind === "parking" || record.datasetKind === "accessibility") {
+    return (CPH_PARKING_INVENTORY_PILOT_IDS as readonly string[]).includes(pilotId);
+  }
+
+  // Acceptability / perception surveys are Medieval City–area (not geolocated) — show on all pilots.
+  if (record.datasetKind === "survey") {
+    return true;
+  }
+
   if (record.interventionId === pilotId) return true;
   const siteName = record.streetName ?? "";
   if (siteName && otcRecordMatchesPilotScope(siteName, pilotId)) return true;
