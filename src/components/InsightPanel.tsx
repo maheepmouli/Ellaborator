@@ -89,6 +89,7 @@ import {
   copenhagenAccessibilityKpiHeadline,
 } from "@/data/copenhagenAccessibilityMock";
 import { getIssyAccessibilityMock, issyAccessibilityKpiHeadline } from "@/data/issyAccessibilityMock";
+import { aggregateMilanFacilitySiteKpi } from "@/data/milanZeroEmissionMock";
 import { getCityPilotProfile } from "@/data/cityPilotProfiles";
 import { getPrimaryJunctionConfig, hasJunctionConfig } from "@/data/junctionConfigs";
 import { getCityReadinessSummary } from "@/data/kpiReadinessMatrix";
@@ -477,7 +478,10 @@ const InsightPanel = ({
   const milanCenter = cityData ? { lat: cityData.lat, lon: cityData.lon } : null;
   const shouldUseMilanLocalPoints =
     isMilanCity &&
-    (selectedKpi === "kpi1.2" || selectedKpi === "kpi4.1" || selectedKpi === "kpi4.2");
+    (selectedKpi === "kpi1.2" ||
+      selectedKpi === "kpi3.1" ||
+      selectedKpi === "kpi4.1" ||
+      selectedKpi === "kpi4.2");
   const { data: milanLocalPoints } = useLocalCityData(
     "Milan",
     selectedKpi,
@@ -644,6 +648,14 @@ const InsightPanel = ({
         change: milanIllustrativeSatisfactionKpi.change,
       };
     }
+    if (selectedKpi === "kpi3.1" && milanLocalPoints?.length) {
+      const facilities = milanLocalPoints.filter(
+        (p) => p.properties?.datasetKind === "parking"
+      );
+      if (facilities.length) {
+        return aggregateMilanFacilitySiteKpi(facilities);
+      }
+    }
     return null;
   }, [
     isMilanCity,
@@ -653,6 +665,7 @@ const InsightPanel = ({
     milanIllustrativeClimateKpi,
     milanIllustrativeAccessibilityKpi,
     milanIllustrativeSatisfactionKpi,
+    milanLocalPoints,
   ]);
   const copenhagenCenter = cityData ? { lat: cityData.lat, lon: cityData.lon } : null;
   const shouldUseCopenhagenObserved =
@@ -861,6 +874,7 @@ const InsightPanel = ({
     if (copenhagenAccessibilityFromMock?.unit) return copenhagenAccessibilityFromMock.unit;
     if (issyAccessibilityFromMock?.unit) return issyAccessibilityFromMock.unit;
     if (isMilanCity && selectedKpi === "kpi2.1" && milanSegmentHeadline) return "km/h";
+    if (isMilanCity && selectedKpi === "kpi3.1" && milanSegmentHeadline) return "sites";
     // RETE headline is converted to % reduction; illustrative junction mock stays an index.
     if (isMilanCity && selectedKpi === "kpi3.2" && usingMilanIllustrativeClimate) return " env. idx";
     if (isMilanCity && selectedKpi === "kpi3.2" && milanSegmentHeadline) return "% reduction";

@@ -175,6 +175,8 @@ export function renderLocalCityInteractivePoints(
   const valueLabel =
     selectedKpi === "kpi1.2" || selectedKpi === "kpi4.2"
       ? "%"
+      : selectedKpi === "kpi3.1"
+        ? " units"
       : selectedKpi === "kpi3.2"
         ? ""
         : "%";

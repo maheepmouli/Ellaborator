@@ -13,6 +13,10 @@ import type { LocalCityPoint } from "@/services/localCityData";
 import type { MilanSegmentDataset, MilanSegmentRecord } from "@/services/milanSegmentData";
 import { MILAN_PILOT_ANCHORS } from "@/lib/milanMapConfig";
 import type { MilanPilotId } from "@/data/milanPilotProfiles";
+import {
+  aggregateMilanFacilitySiteKpi,
+  filterMilanFacilityPointsForScenario,
+} from "@/data/milanZeroEmissionMock";
 import { milanHubSegmentId } from "@/lib/milanMapLayers/milanFlowGeometry";
 
 import {
@@ -609,28 +613,24 @@ export function buildMilanObservatoryView(
       const isIllustrative = facilityPoints.some(
         (p) => p.properties?.parserStatus === "illustrative" || p.properties?.dataOrigin === "mock"
       );
-      baselineValue = facilityPoints.reduce(
-        (s, p) => s + Number(p.properties?.baselineValue ?? 0),
-        0
-      );
-      interventionValue = facilityPoints.reduce(
-        (s, p) => s + Number(p.properties?.interventionValue ?? p.value ?? 0),
-        0
-      );
+      const siteKpi = aggregateMilanFacilitySiteKpi(facilityPoints);
+      const scenarioSites = filterMilanFacilityPointsForScenario(facilityPoints, scenario).length;
+      baselineValue = siteKpi.baselineMain;
+      interventionValue = siteKpi.interventionMain;
       dataClass = isIllustrative ? "mock" : "observed";
       sourceLabel = isIllustrative
         ? "Illustrative zero-emission facility inventory (KPI 3.1)"
         : "Milan zero-emission facility deployment inventory";
-      monitoringPeriod = `${facilityPoints.length} facility site${facilityPoints.length === 1 ? "" : "s"} · deployment units`;
+      monitoringPeriod = `${scenarioSites} visible site${scenarioSites === 1 ? "" : "s"} · ${facilityPoints.length} pilot facilities`;
       segmentApiId = String(
         facilityPoints[0]?.properties?.segmentId ??
           facilityPoints[0]?.properties?.siteKey ??
           segmentApiId
       );
-      baselinePeriod = { ...base.baseline, dailyCycleCount: baselineValue };
+      baselinePeriod = { ...base.baseline, dailyCycleCount: siteKpi.baselineMain };
       interventionPeriod = {
         ...base.intervention,
-        dailyCycleCount: interventionValue,
+        dailyCycleCount: siteKpi.interventionMain,
       };
       if (!options.segmentName) {
         const junctionLabel = String(facilityPoints[0]?.properties?.junctionLabel ?? "").trim();

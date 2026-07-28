@@ -25,7 +25,7 @@ import { useMilanEnvironmentSegments, useMilanSpeedSegments } from "@/hooks/use-
 import { getStoryPointsForPilot } from "@/data/storyConfig";
 import { SEGMENT_PRESSURE_ITEMS } from "@/lib/mapLayerLegend";
 import { buildMilanSpeedLegendItems } from "@/lib/milanMapLayers";
-import { placeMilanZeroEmissionAlongNetwork } from "@/data/milanZeroEmissionMock";
+import { placeMilanZeroEmissionAlongNetwork, filterMilanFacilityPointsForScenario, aggregateMilanFacilitySiteKpi } from "@/data/milanZeroEmissionMock";
 import {
   bindJunctionObservatoryLayer,
   renderIssyJunctionHubPulse,
@@ -229,8 +229,9 @@ function spreadPilotOverviewPositions(
   meanLat /= n;
   meanLng /= n;
 
-  // Compact ring — 3× 320px cards must remain inside a ~z11–12 city frame (metro overview).
-  const radiusDeg = Math.min(0.07, Math.max(0.038, 0.018 * n + 0.028));
+  // 280px-wide cards need ~0.16–0.20° separation at city overview zoom (z10–11).
+  const radiusDeg =
+    n <= 2 ? 0.1 : n === 3 ? 0.17 : Math.min(0.14, Math.max(0.08, 0.022 * n + 0.05));
 
   const indexed = coords.map((c, i) => {
     const dx = c.lng - meanLng;
@@ -265,7 +266,8 @@ function fitMapToPilotOverviewCards(
 ): void {
   if (!positions.length) return;
   const isMilan = (options?.cityName ?? "").toLowerCase().includes("milan");
-  const overviewZoom = isMilan ? 11 : 13;
+  const multiPilot = positions.length >= 3;
+  const overviewZoom = isMilan || multiPilot ? 10 : 13;
   if (positions.length === 1) {
     map.flyTo(positions[0], overviewZoom, { duration: 0.55 });
     return;
@@ -273,7 +275,7 @@ function fitMapToPilotOverviewCards(
   let bounds = L.latLngBounds(positions.map(([lat, lng]) => L.latLng(lat, lng)));
   if (!bounds.isValid()) return;
   // Expand beyond marker anchors so 280×220 HTML cards aren't clipped at the edge.
-  bounds = bounds.pad(isMilan ? 1.35 : 0.95);
+  bounds = bounds.pad(isMilan || multiPilot ? 1.6 : 0.95);
   map.fitBounds(bounds, {
     // Left InsightPanel (~380) + right gap + half card (~140) horizontally;
     // header/legend + half card (~110) vertically.
@@ -1473,10 +1475,11 @@ const HeroMap = ({
         const rawZemPoints = filterMilanLocalPoints(localCityPoints ?? [], milanPilotId).filter(
           (p) => p.properties?.datasetKind === "parking"
         );
-        const zemPoints = placeMilanZeroEmissionAlongNetwork(
+        const placedZemPoints = placeMilanZeroEmissionAlongNetwork(
           rawZemPoints,
           milanSpeedSegments?.records
         );
+        const zemPoints = filterMilanFacilityPointsForScenario(placedZemPoints, scenario);
         const placedOnNetwork = zemPoints.some(
           (p) => p.properties?.locationMethod === "intervention_network_sample"
         );
@@ -1513,23 +1516,16 @@ const HeroMap = ({
           ];
           // Fit the corridor network + facilities (same for Pilot 1 and Pilot 2).
           fitMapToLatLngs(fitCoords);
-          const baselineTotal = zemPoints.reduce(
-            (sum, p) => sum + Number(p.properties?.baselineValue ?? 0),
-            0
-          );
-          const interventionTotal = zemPoints.reduce(
-            (sum, p) => sum + Number(p.properties?.interventionValue ?? p.value ?? 0),
-            0
-          );
+          const siteKpi = aggregateMilanFacilitySiteKpi(placedZemPoints);
           setMilanLayerQa({
             layer: "zero-emission",
-            parsed: zemPoints.length,
+            parsed: placedZemPoints.length,
             rendered: zemPoints.length,
             missingJoins: 0,
             invalidGeometry: 0,
-            avgValue: interventionTotal / Math.max(zemPoints.length, 1),
+            avgValue: zemPoints.length,
             dataConfidence: "proxy",
-            statusMessage: `KPI 3.1 illustrative inventory · ${zemPoints.length} sites along network.shp · ${baselineTotal} → ${interventionTotal} deployment units`,
+            statusMessage: `KPI 3.1 illustrative inventory · ${zemPoints.length} visible site${zemPoints.length === 1 ? "" : "s"} (${siteKpi.baselineMain} baseline → ${siteKpi.interventionMain} intervention)`,
           });
           addInterventionLayer(cityData, showInterventionLayer);
           return;
@@ -3227,23 +3223,17 @@ const HeroMap = ({
       const scoped = filterMilanLocalPoints(localCityPoints ?? [], selectedPilotId).filter(
         (p) => p.properties?.datasetKind === "parking"
       );
-      const baselineTotal = scoped.reduce(
-        (sum, p) => sum + Number(p.properties?.baselineValue ?? 0),
-        0
-      );
-      const interventionTotal = scoped.reduce(
-        (sum, p) => sum + Number(p.properties?.interventionValue ?? p.value ?? 0),
-        0
-      );
+      const siteKpi = aggregateMilanFacilitySiteKpi(scoped);
+      const visible = filterMilanFacilityPointsForScenario(scoped, scenario).length;
       onDataQualitySummaryChange({
-        recordsLabel: `${scoped.length} zero-emission facility sites`,
+        recordsLabel: `${visible} zero-emission facility site${visible === 1 ? "" : "s"}`,
         spatialQuality: "pilot corridor placement · taxonomy badges",
         dataType: "illustrative KPI 3.1 facility inventory",
         temporalCoverage: "illustrative baseline vs post-intervention deployment",
         confidence: scoped.length >= 4 ? "Medium" : "Low",
         provenanceType: "mock",
         geometryLinkage: "matched",
-        spatialSystemHint: `${baselineTotal} → ${interventionTotal} deployment units across ${scoped.length} sites`,
+        spatialSystemHint: `${siteKpi.baselineMain} baseline sites → ${siteKpi.interventionMain} intervention sites`,
       });
       return;
     }
@@ -3762,7 +3752,7 @@ const HeroMap = ({
         setViewLevel("CITY_INTERVENTIONS");
         onCitySelect?.(city.city);
         const map = mapRef.current!;
-        map.flyTo([city.lat, city.lon], city.city.toLowerCase().includes("milan") ? 11 : 13, {
+        map.flyTo([city.lat, city.lon], city.city.toLowerCase().includes("milan") ? 10 : 13, {
           duration: 1.2,
         });
         whenLeafletMapSettled(map, () => {
@@ -3964,7 +3954,7 @@ const HeroMap = ({
           const map = mapRef.current;
           map.flyTo(
             [cityData.lat, cityData.lon],
-            isMilanCityName(selectedCity) ? 11 : 13,
+            isMilanCityName(selectedCity) ? 10 : 13,
             { duration: 1.2 }
           );
           whenLeafletMapSettled(map, () => {

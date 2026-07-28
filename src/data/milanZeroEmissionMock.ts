@@ -55,7 +55,7 @@ const MILAN_ZERO_EMISSION_FACILITIES: MilanZeroEmissionFacility[] = [
     facilityCategory: "shared mobility",
     latOffset: 0.0026,
     lonOffset: -0.0014,
-    baselineUnits: 1,
+    baselineUnits: 0,
     interventionUnits: 2,
   },
   {
@@ -88,7 +88,7 @@ const MILAN_ZERO_EMISSION_FACILITIES: MilanZeroEmissionFacility[] = [
     facilityCategory: "pedestrian",
     latOffset: 0.0034,
     lonOffset: 0.0011,
-    baselineUnits: 1,
+    baselineUnits: 0,
     interventionUnits: 3,
   },
   {
@@ -110,7 +110,7 @@ const MILAN_ZERO_EMISSION_FACILITIES: MilanZeroEmissionFacility[] = [
     facilityCategory: "shared mobility",
     latOffset: 0.0022,
     lonOffset: -0.0026,
-    baselineUnits: 2,
+    baselineUnits: 0,
     interventionUnits: 4,
   },
   {
@@ -143,7 +143,7 @@ const MILAN_ZERO_EMISSION_FACILITIES: MilanZeroEmissionFacility[] = [
     facilityCategory: "pedestrian",
     latOffset: 0.0031,
     lonOffset: 0.0005,
-    baselineUnits: 1,
+    baselineUnits: 0,
     interventionUnits: 2,
   },
   {
@@ -339,6 +339,41 @@ export function placeMilanZeroEmissionAlongNetwork(
 export function milanZeroEmissionFacilityCount(scopePilotId: string): number {
   const sources = milanSourcePilotIds(scopePilotId);
   return MILAN_ZERO_EMISSION_FACILITIES.filter((f) => sources.includes(f.pilotId)).length;
+}
+
+/** Site counts for KPI 3.1 headline — matches visible map points, not summed deployment units. */
+export function aggregateMilanFacilitySiteKpi(points: LocalCityPoint[]): {
+  baselineMain: number;
+  interventionMain: number;
+  change: number;
+} {
+  const facilities = points.filter((p) => p.properties?.datasetKind === "parking");
+  const baselineMain = facilities.filter(
+    (p) => Number(p.properties?.baselineValue ?? 0) > 0
+  ).length;
+  const interventionMain = facilities.filter(
+    (p) => Number(p.properties?.interventionValue ?? 0) > 0
+  ).length;
+  return {
+    baselineMain,
+    interventionMain,
+    change: interventionMain - baselineMain,
+  };
+}
+
+/** Hide intervention-only facility sites in baseline scenario (and vice versa when units are zero). */
+export function filterMilanFacilityPointsForScenario(
+  points: LocalCityPoint[],
+  scenario: ScenarioType = "intervention"
+): LocalCityPoint[] {
+  return points.filter((point) => {
+    if (point.properties?.datasetKind !== "parking") return true;
+    const baseline = Number(point.properties?.baselineValue ?? 0);
+    const intervention = Number(point.properties?.interventionValue ?? point.value ?? 0);
+    if (scenario === "baseline") return baseline > 0;
+    if (scenario === "intervention") return intervention > 0;
+    return baseline > 0 || intervention > 0;
+  });
 }
 
 export function milanZeroEmissionToLocalPoints(

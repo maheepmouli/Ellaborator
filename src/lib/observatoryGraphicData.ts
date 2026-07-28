@@ -93,6 +93,7 @@ import {
 import { milanSatisfactionStatCards } from "@/services/milanSurveyParser";
 import type { MilanSegmentRecord, MilanSegmentStats } from "@/services/milanSegmentData";
 import { modeShareRowsFromMilanPoints } from "@/lib/milanModeBreakdown";
+import { filterMilanFacilityPointsForScenario } from "@/data/milanZeroEmissionMock";
 
 type ModeBreakdown = {
   pre: { bike: number; pedestrian: number; motorised: number; ptw: number; total: number };
@@ -1280,7 +1281,9 @@ export function buildObservatoryGraphicPayload(
             const scoped = parkingOf(activeObserved);
             const pool =
               scoped.length > 0
-                ? scoped
+                ? cityName === "Milan" && selectedKpi === "kpi3.1"
+                  ? filterMilanFacilityPointsForScenario(scoped, scenario)
+                  : scoped
                 : cityName === "Copenhagen"
                   ? parkingOf(observedPoints)
                   : scoped;
@@ -1290,9 +1293,10 @@ export function buildObservatoryGraphicPayload(
                 p.properties?.facilityCategory || p.properties?.category || "Parking"
               );
               const t = raw.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-              const count = Number(
-                p.properties?.observationCount ?? p.value ?? 0
-              );
+              const count =
+                cityName === "Milan" && selectedKpi === "kpi3.1"
+                  ? 1
+                  : Number(p.properties?.observationCount ?? p.value ?? 0);
               byType.set(t, (byType.get(t) || 0) + (Number.isFinite(count) ? count : 0));
             }
             return [...byType.entries()]
