@@ -398,6 +398,17 @@ export const CITY_DATA: CityKPIData[] = [
     lon: -0.8891,
     population: "675K",
     kpiData: {
+      "kpi1.1": {
+        mainValue: 1,
+        unit: "plans",
+        change: 1,
+        status: "after",
+        breakdown: {
+          "Formal expansion plans": 1,
+          "DSS dissemination activities": 1,
+          "Replication readiness": 1,
+        },
+      },
       "kpi1.2": {
         mainValue: 35,
         unit: "%",

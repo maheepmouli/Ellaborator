@@ -312,6 +312,48 @@ const EXTRACTIONS = [
     label: "zar-air-quality-xlsx",
   },
   {
+    zip: "Zaragoza Lighthouse-20260625T113918Z-3-001.zip",
+    match: /RoadSafetyCitizenSurvey_BaselinePerceptionAssessment\.xlsx$/i,
+    dest: "Zaragoza/1. BASELINE DATA from Zaragoza/RoadSafetyCitizenSurvey_BaselinePerceptionAssessment.xlsx",
+    label: "zar-road-safety-survey",
+  },
+  {
+    zip: "Zaragoza Lighthouse-20260625T113918Z-3-001.zip",
+    match: /Barriers and Ctizen Expectations\.xlsx$/i,
+    dest: "Zaragoza/1. BASELINE DATA from Zaragoza/ELABORATOR_Survey on the identification of Barriers and Ctizen Expectations.xlsx",
+    label: "zar-barriers-survey",
+  },
+  {
+    zip: "Zaragoza Lighthouse-20260625T113918Z-3-001.zip",
+    match: /Comparativa KPIs baselime\.xlsx$/i,
+    dest: "Zaragoza/1. BASELINE DATA from Zaragoza/Comparativa KPIs baselime.xlsx",
+    label: "zar-comparativa-kpis",
+  },
+  {
+    zip: "Zaragoza Lighthouse-20260625T113918Z-3-001.zip",
+    match: /ZaragozaOneToOne_March2026\.xlsx$/i,
+    dest: "Zaragoza/1. BASELINE DATA from Zaragoza/ZaragozaOneToOne_March2026.xlsx",
+    label: "zar-one-to-one-march2026",
+  },
+  {
+    zip: "Zaragoza Lighthouse-20260625T113918Z-3-001.zip",
+    match: /Monitoring traffic school M Salas/i,
+    dest: "Zaragoza/1. BASELINE DATA from Zaragoza/Monitoring traffic school M Salas 1-10-2025.xlsx",
+    label: "zar-school-msalas",
+  },
+  {
+    zip: "Zaragoza Lighthouse-20260625T113918Z-3-001.zip",
+    match: /Monitoring traffic school Az/i,
+    dest: "Zaragoza/1. BASELINE DATA from Zaragoza/Monitoring traffic school Azua 16-10-2025.xlsx",
+    label: "zar-school-azua",
+  },
+  {
+    zip: "Zaragoza Lighthouse-20260625T113918Z-3-001.zip",
+    match: /Zaragoza Intervention Evaluation Plan_3052025\.docx$/i,
+    dest: "Zaragoza/Zaragoza Intervention Evaluation Plan_3052025.docx",
+    label: "zar-evaluation-plan",
+  },
+  {
     zip: "Milano-20260709T084301Z-2-001.zip",
     match: /Milan_Accessibility_Features_DSS_Analysis_CIRCE\.xlsx$/i,
     dest: "Milan/Eval data Ex ante/8. Data - accessibility features/Milan_Accessibility_Features_DSS_Analysis_CIRCE.xlsx",

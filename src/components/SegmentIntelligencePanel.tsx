@@ -70,9 +70,9 @@ import {
 } from "@/lib/issyDataTransparency";
 import { CityObservatoryTabContent } from "@/components/CityObservatoryTabContent";
 import {
-  dataClassLabel,
   observatoryCorridorLabel,
 } from "@/lib/observatoryCityContent";
+import { DataProvenanceBadge } from "@/components/DataProvenanceBadge";
 import { isIssyCity } from "@/lib/issyMapRouting";
 import { ObservatoryGraphicSlot } from "@/components/observatory/ObservatoryGraphicSlot";
 import type { ObservatoryGraphicZone } from "@/lib/observatoryGraphicTypes";
@@ -1159,7 +1159,14 @@ function ObservatoryTabContent({
       selectedDirectionId={selectedDirectionId}
       onSelectDirectionId={onSelectDirectionId}
       selectedSegmentId={selectedSegmentId}
-      graphicOverride={zone === "overview" ? "modeShareBars" : undefined}
+      // KPI 4.2: city accessibility cards (Equal access / Baseline / Change), not segment mode-share bars.
+      graphicOverride={
+        selectedKpi === "kpi4.2"
+          ? "accessibilityBars"
+          : zone === "overview"
+            ? "modeShareBars"
+            : undefined
+      }
     />
   );
 
@@ -1614,8 +1621,22 @@ export default function SegmentIntelligencePanel({
   const isHelsinkiEscooterPointFocus =
     resolvedCity === "Helsinki" &&
     !!selectedSegmentId?.startsWith("hel-escooter-obs");
+  const isHelsinkiHubPointFocus =
+    resolvedCity === "Helsinki" &&
+    !!selectedSegmentId &&
+    (selectedSegmentId.startsWith("hel-safety") ||
+      selectedSegmentId.startsWith("hel-hazard") ||
+      selectedSegmentId.startsWith("hel-dangerous") ||
+      selectedSegmentId.startsWith("hel-conflict") ||
+      selectedSegmentId.startsWith("hel-climate") ||
+      selectedSegmentId.includes("cluster") ||
+      selectedSegmentId.includes("attitude"));
   const useSegmentFocusHeader =
-    isTrikalaSegmentFocus || isMilanPointFocus || isIssyZoneFocus || isHelsinkiEscooterPointFocus;
+    isTrikalaSegmentFocus ||
+    isMilanPointFocus ||
+    isIssyZoneFocus ||
+    isHelsinkiEscooterPointFocus ||
+    isHelsinkiHubPointFocus;
   const headerTitle = useSegmentFocusHeader ? view?.name ?? corridorLabel : corridorLabel;
   const headerSubtitle = useSegmentFocusHeader
     ? isIssyZoneFocus
@@ -1624,7 +1645,9 @@ export default function SegmentIntelligencePanel({
         ? view?.coordinates
           ? `${view.coordinates[0].toFixed(5)}, ${view.coordinates[1].toFixed(5)}`
           : "Field observation"
-        : corridorLabel
+        : isHelsinkiHubPointFocus
+          ? "FVH1 survey evidence · click map hubs to focus"
+          : corridorLabel
     : view?.name ?? "";
 
   useEffect(() => {
@@ -1709,13 +1732,11 @@ export default function SegmentIntelligencePanel({
                 <div className="flex items-center gap-1.5">
                   <motion.div
                     className="h-2 w-2 rounded-full"
-                    style={{ background: dataClass === "mock" ? C.amber : C.lime }}
+                    style={{ background: dataClass === "mock" ? C.amber : dataClass === "observed" ? C.lime : C.cyan }}
                     animate={{ opacity: [1, 0.3, 1] }}
                     transition={{ duration: 2, repeat: Infinity }}
                   />
-                  <span className="text-[10px] font-medium text-primary-foreground/80 uppercase tracking-widest">
-                    {dataClassLabel(dataClass)}
-                  </span>
+                  <DataProvenanceBadge type={dataClass} />
                 </div>
                 <div
                   className="ml-auto px-2.5 py-0.5 rounded-full text-[10px] font-semibold border border-white/25 bg-white/10 text-primary-foreground"
@@ -1764,7 +1785,11 @@ export default function SegmentIntelligencePanel({
 
             {/* ── Default observatory map (hub schematic above tabs) ──────── */}
             {!(resolvedCity === "Copenhagen" && selectedKpi === "kpi3.1") &&
-            !(resolvedCity === "Milan" && selectedKpi === "kpi4.2") ? (
+            !(resolvedCity === "Milan" && selectedKpi === "kpi4.2") &&
+            !(resolvedCity === "Issy-les-Moulineaux" && selectedKpi === "kpi4.2") &&
+            pilotId !== "tri-p1" &&
+            pilotId !== "tri-p4" &&
+            pilotId !== "hel-p1" ? (
             <div
               className="flex-shrink-0 px-5 py-4"
               style={{ borderBottom: `1px solid ${C.border}`, background: "rgba(255,255,255,0.025)" }}

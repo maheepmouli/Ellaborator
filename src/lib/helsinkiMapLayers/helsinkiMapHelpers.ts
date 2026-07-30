@@ -282,6 +282,11 @@ export function renderHelsinkiSurveyPointUnderlay(options: {
           segmentName: title,
           speed: null,
           congestion: null,
+          properties: {
+            lat,
+            lon,
+            datasetKind: kind === "conflict" ? "conflict" : "dangerous-location",
+          },
         },
         segmentHandlers,
         {

@@ -51,25 +51,36 @@ export function classifyDataOrigin(
   registrySource: "mock" | "observed" = "mock"
 ): ObservatoryDataClass {
   if (points.length === 0) return registrySource === "observed" ? "derived" : "mock";
-  const origins = points.map((p) => String(p.properties?.type || p.properties?.dataOrigin || ""));
+
+  const isMockPoint = (p: LocalCityPoint) => {
+    const type = String(p.properties?.type ?? "").toLowerCase();
+    const origin = String(p.properties?.dataOrigin ?? "").toLowerCase();
+    const kind = String(p.properties?.datasetKind ?? "").toLowerCase();
+    const mockLabel = String(p.properties?.mockLabel ?? "").toUpperCase();
+    const id = String(p.id ?? p.properties?.id ?? "").toLowerCase();
+    const source = String(p.properties?.source ?? "").toLowerCase();
+    if (mockLabel === "MOCK") return true;
+    if (type === "mock" || origin === "mock") return true;
+    if (origin.includes("coverage-fallback")) return true;
+    if (id.includes("-mock-") || id.includes("mock-")) return true;
+    if (source.includes("mock") || kind.includes("mock")) return true;
+    return false;
+  };
+
+  if (points.some(isMockPoint)) return "mock";
+
+  const origins = points.map((p) => String(p.properties?.type || p.properties?.dataOrigin || "").toLowerCase());
   if (origins.some((o) => o === "observed" || o.includes("local-city-dataset"))) return "observed";
   if (origins.some((o) => o === "derived")) return "derived";
-  if (origins.some((o) => o === "modelled" || o.includes("fallback"))) return "modelled";
-  if (origins.some((o) => o === "mock")) return "mock";
-  return registrySource;
+  if (origins.some((o) => o === "modelled" || o.includes("fallback"))) return "derived";
+  return registrySource === "observed" ? "observed" : registrySource;
 }
 
+/** User-facing trust chip — always OBSERVED | DERIVED | MOCK. */
 export function dataClassLabel(dataClass: ObservatoryDataClass): string {
-  switch (dataClass) {
-    case "observed":
-      return "Observed";
-    case "derived":
-      return "Derived";
-    case "modelled":
-      return "Modelled";
-    default:
-      return "Mock";
-  }
+  if (dataClass === "observed") return "OBSERVED";
+  if (dataClass === "derived" || dataClass === "modelled") return "DERIVED";
+  return "MOCK";
 }
 
 export function confidenceFromDataClass(
@@ -80,13 +91,10 @@ export function confidenceFromDataClass(
   if (dataClass === "observed") {
     return { label: "High", pct: Math.max(72, pct) };
   }
-  if (dataClass === "derived") {
+  if (dataClass === "derived" || dataClass === "modelled") {
     return { label: "Medium", pct: Math.max(48, Math.round(pct * 0.85)) };
   }
-  if (dataClass === "modelled") {
-    return { label: "Low", pct: 38 };
-  }
-  return { label: "Registry mock", pct: Math.round(pct * 0.7) };
+  return { label: "Low", pct: Math.min(42, Math.round(pct * 0.7)) };
 }
 
 /** Junction configs use 0–100; some views pass 0–1 — always return 0–100. */

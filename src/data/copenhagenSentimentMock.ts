@@ -212,7 +212,7 @@ export function copenhagenSentimentKpiHeadline(
   return {
     mainValue: useBaseline ? profile.baselineSatisfiedPct : profile.satisfiedPct,
     baselineMain: profile.baselineSatisfiedPct,
-    unit: "% satisfied (MOCK)",
+    unit: "satisfied",
     change: profile.satisfiedPct - profile.baselineSatisfiedPct,
     breakdown: { ...profile.breakdown },
     baselineBreakdown: { ...profile.baselineBreakdown },

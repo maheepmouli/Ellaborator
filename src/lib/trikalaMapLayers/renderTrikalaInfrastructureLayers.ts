@@ -24,6 +24,11 @@ import {
 } from "./trikalaZoneHighlights";
 import { spreadOverlappingPositions } from "@/lib/copenhagenMarkerLayout";
 import { scheduleLeafletLayerRepaint } from "@/lib/leafletMapSync";
+import { renderHubRipplePulseOverlay } from "@/lib/copenhagenMapLayers/copenhagenTrafficPulse";
+import { fitTriParkRideHubBounds, TRIKALA_P2_PARK_RIDE_HUBS } from "./trikalaParkRideBounds";
+
+/** Show CSS ripples from city/pilot fit zoom (P+R hubs sit farther apart than street cameras). */
+const TRIKALA_P2_MODE_SHARE_PULSE_MIN_ZOOM = 11;
 
 export interface RenderTrikalaInfrastructureOptions {
   map: L.Map;
@@ -83,6 +88,79 @@ function syncInfraMarkerRadii(): void {
 
 function isVisible(loc: TrikalaLocation, selectedKpi: string): boolean {
   return loc.mapVisible !== false && loc.linkedKpis.includes(selectedKpi);
+}
+
+/**
+ * Pilot 2 · KPI 1.2 — Copenhagen/Issy-style mode-share ripples at each P+R hub
+ * (SMY · DEH · GiSeMi): blue hub point + CSS ripple, no icon badges.
+ */
+function renderTrikalaPilot2ModeShareRipples(
+  map: L.Map,
+  locations: TrikalaLocation[],
+  selectedKpi: string,
+  selectedSegmentId: string | null | undefined,
+  segmentHandlers: SegmentInteractionHandlers,
+  markersOut: L.Marker[],
+  circlesOut: L.Circle[]
+): void {
+  let hubs = locations
+    .filter((l) => l.kind === "park_and_ride" && isVisible(l, selectedKpi))
+    .map((l) => ({ id: l.id, name: l.name, lat: l.lat, lng: l.lng }));
+
+  if (!hubs.length) {
+    hubs = TRIKALA_P2_PARK_RIDE_HUBS.map((h) => ({
+      id: h.id,
+      name: h.name,
+      lat: h.lat,
+      lng: h.lng,
+    }));
+  }
+
+  const circleMarkers = circlesOut as unknown as L.CircleMarker[];
+
+  hubs.forEach((hub) => {
+    const segmentId = hub.id;
+    const segmentName = `${hub.name} Park & Ride`;
+
+    renderHubRipplePulseOverlay(
+      map,
+      hub.lat,
+      hub.lng,
+      false,
+      markersOut,
+      circleMarkers,
+      {
+        showAnchorDot: true,
+        ringColor: "#38bdf8",
+        minZoom: TRIKALA_P2_MODE_SHARE_PULSE_MIN_ZOOM,
+        ringScale: 1,
+        interaction: {
+          segmentId,
+          segmentName,
+          segmentHandlers,
+          selectedSegmentId,
+          wireCircleMarker: wireCircleMarkerSegment,
+        },
+      }
+    );
+
+    const hubDot = circleMarkers[circleMarkers.length - 1];
+    if (hubDot && "bindTooltip" in hubDot) {
+      hubDot.bindPopup(
+        infrastructurePopupHtml(
+          hub.name,
+          "park_and_ride",
+          "Pilot 2 · KPI 1.2 bike uptake from P+R"
+        )
+      );
+      hubDot.bindTooltip(hub.name, {
+        direction: "top",
+        className: "tri-segment-tooltip",
+        opacity: 0.94,
+        offset: [0, -8],
+      });
+    }
+  });
 }
 
 function renderParkAndRidePolygons(
@@ -252,14 +330,23 @@ function renderInfrastructureMarkers(
   const hideMunicipalCarParking = selectedPilotId === "tri-p2";
   const hideBikeStationsForFacilityCount =
     selectedPilotId === "tri-p2" && (selectedKpi === "kpi3.1" || selectedKpi === "kpi4.1");
+  // Pilot 3 · KPI 2.1 — only LoRa bike-lane sensors (plain dots); hide bike-station icons.
+  const triP3SafetySensorsOnly = selectedPilotId === "tri-p3" && selectedKpi === "kpi2.1";
+  // Pilot 4 · KPI 4.1 — survey plain points only; skip infra icon badges.
+  const triP4SatisfactionSurveyOnly = selectedPilotId === "tri-p4" && selectedKpi === "kpi4.1";
 
   const zoom = map.getZoom();
+
+  if (triP4SatisfactionSurveyOnly) {
+    return;
+  }
 
   locations
     .filter((loc) => pointKinds.has(loc.kind) && isVisible(loc, selectedKpi))
     .filter((loc) => !(triP1CrossingKpi && loc.kind === "traffic_signal"))
     .filter((loc) => !(hideMunicipalCarParking && loc.kind === "parking_station"))
     .filter((loc) => !(hideBikeStationsForFacilityCount && loc.kind === "bike_station"))
+    .filter((loc) => !(triP3SafetySensorsOnly && loc.kind !== "bike_lane_sensor"))
     .forEach((loc) => {
       const useMobilityHub = triP1CrossingKpi && loc.kind === "smart_crossing_site";
       const spread = bikeLaneSpread.get(loc.id);
@@ -305,31 +392,77 @@ function renderInfrastructureMarkers(
         popupMetric
       );
 
+      // KPI 4.1 smart crossing: blue point from satisfaction zone (no ripple, no icon).
+      if (useMobilityHub && selectedKpi === "kpi4.1") {
+        return;
+      }
+
+      // KPI 2.1 smart crossing: Issy-style blue hub + CSS ripple (no pedestrian icon).
+      if (useMobilityHub && selectedKpi === "kpi2.1") {
+        renderHubRipplePulseOverlay(
+          map,
+          lat,
+          lng,
+          false,
+          markersOut,
+          circlesOut as unknown as L.CircleMarker[],
+          {
+            showAnchorDot: true,
+            ringColor: "#38bdf8",
+            ringScale: 1.25,
+            minZoom: 11,
+            interaction: {
+              segmentId,
+              segmentName,
+              segmentHandlers,
+              selectedSegmentId,
+              wireCircleMarker: wireCircleMarkerSegment,
+            },
+          }
+        );
+        return;
+      }
+
       if (useBikeLaneHitMarkers && loc.kind === "bike_lane_sensor") {
         const stressAccent =
           selectedKpi === "kpi2.1" && typeof observedBusy === "number"
             ? observedBusy >= 50
               ? "#f59e0b"
               : "#22c55e"
-            : undefined;
-        const hitMarker = L.marker([lat, lng], {
-          icon: createMapPointDivIcon(iconSpec, segmentName, {
-            accent: stressAccent,
-            glow: stressAccent,
-          }),
+            : selectedKpi === "kpi4.2"
+              ? "#22c55e"
+              : "#00ffff";
+
+        // Plain coloured points only — per-sensor CSS ripples overlap into visual noise on Pilot 3.
+        const point = L.circleMarker([lat, lng], {
+          radius: isSelected ? 9 : 7,
+          fillColor: stressAccent,
+          color: "#ffffff",
+          weight: 2,
+          fillOpacity: 0.95,
+          opacity: 1,
           interactive: true,
-          zIndexOffset: isSelected ? 1200 : 950,
-          riseOnHover: true,
         }).addTo(map);
-        hitMarker.bindPopup(popupHtml);
-        hitMarker.bindTooltip(loc.name, {
+        point.bindPopup(popupHtml);
+        point.bindTooltip(loc.name, {
           direction: "top",
           className: "tri-segment-tooltip",
           opacity: 0.94,
           offset: [0, -6],
         });
-        wireMarkerSegment(hitMarker, segmentDetail, segmentHandlers);
-        markersOut.push(hitMarker);
+        wireCircleMarkerSegment(point, segmentDetail, segmentHandlers, {
+          baseRadius: 7,
+          highlightRadius: 11,
+          selectedSegmentId,
+          baseStyle: {
+            fillColor: stressAccent,
+            color: "#ffffff",
+            weight: 2,
+            fillOpacity: 0.95,
+            opacity: 1,
+          },
+        });
+        circlesOut.push(point);
         return;
       }
 
@@ -471,6 +604,10 @@ export function renderTrikalaInfrastructureLayers(
   const hideParkRideEntirely =
     selectedPilotId === "tri-p2" && selectedKpi === "kpi3.1" && scenario === "baseline";
 
+  // Pilot 2 · KPI 1.2: mode-share ripple hubs (not static icons / site polygons).
+  const usePilot2ModeShareRipples =
+    selectedPilotId === "tri-p2" && selectedKpi === "kpi1.2" && !hideParkRideEntirely;
+
   renderTrikalaEnvironmentalZones(map, mapLocations, selectedKpi, circlesOut, markersOut);
   renderTrikalaSatisfactionZones(
     map,
@@ -479,22 +616,35 @@ export function renderTrikalaInfrastructureLayers(
     selectedKpi,
     selectedPilotId,
     circlesOut,
-    markersOut
+    markersOut,
+    { segmentHandlers, selectedSegmentId }
   );
   renderTrikalaAccessibilityZones(map, mapLocations, selectedKpi, circlesOut, markersOut);
 
-  renderParkAndRidePolygons(
-    map,
-    mapLocations,
-    selectedKpi,
-    selectedPilotId,
-    selectedSegmentId,
-    segmentHandlers,
-    polygonsOut,
-    markersOut,
-    hideParkRideHubMarkers,
-    hideParkRideEntirely
-  );
+  if (usePilot2ModeShareRipples) {
+    renderTrikalaPilot2ModeShareRipples(
+      map,
+      mapLocations,
+      selectedKpi,
+      selectedSegmentId,
+      segmentHandlers,
+      markersOut,
+      circlesOut
+    );
+  } else {
+    renderParkAndRidePolygons(
+      map,
+      mapLocations,
+      selectedKpi,
+      selectedPilotId,
+      selectedSegmentId,
+      segmentHandlers,
+      polygonsOut,
+      markersOut,
+      hideParkRideHubMarkers,
+      hideParkRideEntirely
+    );
+  }
   renderSmartCrossingFromRegistry(
     map,
     anchor,

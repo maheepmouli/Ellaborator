@@ -52,6 +52,18 @@ export function trafficPulseHtml(isInboundDominant: boolean): string {
   `;
 }
 
+/** Ripple rings tinted to a KPI colour (e.g. Issy sustainable-% zone dots). */
+export function coloredTrafficPulseHtml(ringColor: string): string {
+  const safe = ringColor.replace(/[^\w#(),.%\s-]/g, "");
+  return `
+    <div class="traffic-pulse-container pulse-colored" style="--pulse-color:${safe}">
+      <div class="pulse-ring ring-1"></div>
+      <div class="pulse-ring ring-2"></div>
+      <div class="pulse-ring ring-3"></div>
+    </div>
+  `;
+}
+
 /** Diameter in screen px for a geographic radius at the current map zoom. */
 export function geographicDiameterPx(
   map: L.Map,
@@ -104,6 +116,8 @@ export function renderHubRipplePulseOverlay(
     showAnchorDot?: boolean;
     minZoom?: number;
     ringScale?: number;
+    /** When set, rings use this colour instead of inbound/outbound blue/red. */
+    ringColor?: string;
     interaction?: HubPulseInteraction;
   }
 ): void {
@@ -111,7 +125,11 @@ export function renderHubRipplePulseOverlay(
   const interaction = options?.interaction;
   const canWire = Boolean(interaction?.segmentId && interaction.segmentHandlers);
   const showCenter = options?.showAnchorDot !== false;
-  const anchorFill = isInboundDominant ? CPH_INBOUND_COLOR : CPH_OUTBOUND_COLOR;
+  const anchorFill = options?.ringColor
+    ? options.ringColor
+    : isInboundDominant
+      ? CPH_INBOUND_COLOR
+      : CPH_OUTBOUND_COLOR;
   const isSelected = Boolean(
     interaction?.selectedSegmentId && interaction.selectedSegmentId === interaction.segmentId
   );
@@ -128,7 +146,9 @@ export function renderHubRipplePulseOverlay(
 
     const pulseMarker = L.marker([hubLat, hubLon], {
       icon: L.divIcon({
-        html: trafficPulseHtml(isInboundDominant),
+        html: options?.ringColor
+          ? coloredTrafficPulseHtml(options.ringColor)
+          : trafficPulseHtml(isInboundDominant),
         className: "custom-traffic-pulse",
         iconSize: [diameter, diameter],
         iconAnchor: [half, half],

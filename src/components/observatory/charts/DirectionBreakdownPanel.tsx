@@ -13,24 +13,32 @@ export function DirectionBreakdownPanel({
   compact,
   onSelectDirection,
 }: DirectionBreakdownPanelProps) {
-  const rows = payload.cameraDirections ?? [];
+  const linkedRows = payload.cameraDirections ?? [];
+  const isMock = linkedRows.length === 0;
+  const rows = isMock
+    ? [
+        { id: "mock-n", direction: "North approach", site: "Demo camera", baselinePct: 42, interventionPct: 38 },
+        { id: "mock-e", direction: "East approach", site: "Demo camera", baselinePct: 28, interventionPct: 31 },
+        { id: "mock-s", direction: "South approach", site: "Demo camera", baselinePct: 18, interventionPct: 20 },
+        { id: "mock-w", direction: "West approach", site: "Demo camera", baselinePct: 12, interventionPct: 11 },
+      ]
+    : linkedRows;
   const activeId = payload.activeDirectionId;
-
-  if (!rows.length) {
-    return (
-      <div className={obsGlassCardClass(compact)} style={obsGlassCardStyle()}>
-        <p className="text-[11px] text-white/60">No directional camera observations linked.</p>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-2">
       {!compact && <PrePostTrendChart payload={payload} compact />}
       <div className={obsGlassCardClass(compact)} style={obsGlassCardStyle()}>
-        <p className="text-[11px] font-semibold text-white/70 mb-2">
-          {payload.kpiId === "kpi2.1" ? "Hazard types (click to focus)" : "Camera directions"}
-        </p>
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <p className="text-[11px] font-semibold text-white/70">
+            {payload.kpiId === "kpi2.1" ? "Hazard types (click to focus)" : "Camera directions"}
+          </p>
+          {isMock ? (
+            <span className="rounded px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-violet-100 bg-violet-500/30 border border-violet-300/35">
+              Mock plot
+            </span>
+          ) : null}
+        </div>
         <div className="space-y-1.5 max-h-40 overflow-y-auto">
           {rows.map((row, index) => (
             <button

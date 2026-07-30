@@ -22,7 +22,7 @@ function kpiDataNote(city: string, pilotId: string, kpiId: string): string | nul
     return "KPI 2.1 safety: observed traficissy segment speed/congestion with a derived safety-pressure proxy (not an official star rating).";
   }
   if (kpiId === "kpi3.2") {
-    return "KPI 3.2 climate: derived environmental pressure from traffic intensity — not measured CO₂ unless emissions data is linked.";
+    return "KPI 3.2 climate: city environment reading from ASIF Classeur / Issy climate layer (modelled CO₂ allocation — not ambient air-quality sensors).";
   }
   if (kpiId === "kpi3.1") {
     return "KPI 3.1 infrastructure: observed cycling facility API where geometry is available.";

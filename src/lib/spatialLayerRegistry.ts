@@ -131,7 +131,7 @@ export function resolveSpatialSystem(
     return "points";
   }
 
-  if (cityKey === "zaragoza" && (kpiId === "kpi1.2" || kpiId === "kpi2.1" || kpiId === "kpi4.2")) {
+  if (cityKey === "zaragoza" && (kpiId === "kpi1.2" || kpiId === "kpi2.1" || kpiId === "kpi3.2" || kpiId === "kpi4.1" || kpiId === "kpi4.2")) {
     return "points";
   }
 

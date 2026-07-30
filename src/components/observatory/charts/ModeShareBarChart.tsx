@@ -25,7 +25,17 @@ function colorForMode(mode: string): string {
 }
 
 export function ModeShareBarChart({ payload, compact, onSelectMode }: ModeShareBarChartProps) {
-  const rows = payload.modeShare ?? [];
+  const linkedRows = payload.modeShare ?? [];
+  const isMock = linkedRows.length === 0;
+  const rows = isMock
+    ? [
+        { mode: "Pedestrian", before: 16, after: 18 },
+        { mode: "Cycle", before: 10, after: 12 },
+        { mode: "Public Transport", before: 20, after: 22 },
+        { mode: "Private Car", before: 46, after: 40 },
+        { mode: "PTW", before: 8, after: 8 },
+      ]
+    : linkedRows;
   const maxVal = Math.max(1, ...rows.flatMap((r) => [r.before, r.after]));
   const fmtPct = (value: number) => `${Number(value).toFixed(1)}%`;
   const [activeMode, setActiveMode] = useState<string | null>(null);
@@ -64,7 +74,21 @@ export function ModeShareBarChart({ payload, compact, onSelectMode }: ModeShareB
                   ? "Bike uptake from P+R — before vs after"
                   : isEscooterParking
                     ? "Parking observations by category"
-                    : "Mode share — before vs after";
+                    : payload.kpiId === "kpi1.2" &&
+                        (/conflict|dangerous|FVH1|near-miss/i.test(payload.sourceLabel ?? "") ||
+                          (rows.length > 0 &&
+                            rows.every((r) => r.before === r.after) &&
+                            /Pedestrian|Cycle|Private Car|Public Transport/i.test(
+                              rows.map((r) => r.mode).join(" ")
+                            ) &&
+                            !/Telraam|Viikki lighthouse/i.test(payload.sourceLabel ?? "")))
+                      ? "Mode share — conflict survey (citywide)"
+                      : payload.kpiId === "kpi1.2" &&
+                          /hazard|dangerous|crossing|sidewalk|intersection|visibility|lighting|unsafe/i.test(
+                            rows.map((r) => r.mode).join(" ")
+                          )
+                        ? "Hazard types in focused cluster"
+                        : "Mode share — before vs after";
 
   return (
     <div
@@ -73,7 +97,13 @@ export function ModeShareBarChart({ payload, compact, onSelectMode }: ModeShareB
     >
       <div className="flex items-center justify-between gap-2 mb-3">
         <p className="text-[11px] font-semibold text-white/70">{title}</p>
-        {!compact && (
+        <div className="flex items-center gap-2">
+          {isMock ? (
+            <span className="rounded px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-violet-100 bg-violet-500/30 border border-violet-300/35">
+              Mock plot
+            </span>
+          ) : null}
+          {!compact && (
           <div className="flex items-center gap-3 text-[9px] uppercase tracking-wide text-white/40">
             <span className="inline-flex items-center gap-1">
               <span className="inline-block h-1.5 w-3 rounded-full" style={{ background: OBS_C.cyan, opacity: 0.55 }} />
@@ -84,17 +114,15 @@ export function ModeShareBarChart({ payload, compact, onSelectMode }: ModeShareB
               Intervention
             </span>
           </div>
-        )}
+          )}
+        </div>
       </div>
       <div className="grid grid-cols-[1fr_1fr] gap-2 mb-1 px-0.5">
         <p className="text-[9px] uppercase tracking-wide text-white/35">Baseline</p>
         <p className="text-[9px] uppercase tracking-wide text-white/35">Intervention</p>
       </div>
       <div className="space-y-2.5">
-        {rows.length === 0 ? (
-          <p className="text-[10px] text-white/45 py-4 text-center">No before/after share rows linked.</p>
-        ) : (
-          rows.map((row) => {
+        {rows.map((row) => {
             const color = colorForMode(row.mode);
             const beforeW = (row.before / maxVal) * 100;
             const afterW = (row.after / maxVal) * 100;
@@ -178,8 +206,7 @@ export function ModeShareBarChart({ payload, compact, onSelectMode }: ModeShareB
                 )}
               </button>
             );
-          })
-        )}
+          })}
       </div>
     </div>
   );

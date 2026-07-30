@@ -1,8 +1,12 @@
 import L from "leaflet";
 import type { TrikalaLocation } from "@/data/trikalaLocationRegistry";
+import { CPH_OUTBOUND_COLOR } from "@/lib/copenhagenMapLayers/copenhagenFlowGeometry";
+import {
+  wireCircleMarkerSegment,
+  type SegmentInteractionHandlers,
+} from "@/lib/wireMapSegmentInteraction";
 
 const ENV_ZONE_RADIUS_M = 95;
-const SATISFACTION_ZONE_RADIUS_M = 115;
 
 /** Muted zone palette — readable on dark basemap without neon blow-out. */
 const ZONE = {
@@ -92,7 +96,11 @@ export function renderTrikalaSatisfactionZones(
   selectedKpi: string,
   selectedPilotId: string | null | undefined,
   circlesOut: L.Circle[],
-  markersOut: L.Marker[]
+  markersOut: L.Marker[],
+  options?: {
+    segmentHandlers?: SegmentInteractionHandlers;
+    selectedSegmentId?: string | null;
+  }
 ): void {
   if (selectedKpi !== "kpi4.1") return;
 
@@ -131,17 +139,51 @@ export function renderTrikalaSatisfactionZones(
     label: crossingSite?.name ?? "Smart crossing",
   };
 
-  const zone = L.circle([center.lat, center.lng], {
-    radius: SATISFACTION_ZONE_RADIUS_M,
-    color: ZONE.satisfaction.stroke,
+  const segmentId = "tri-p1-smart-crossing";
+  const segmentName = "Smart crossing — Military School";
+  const isSelected = options?.selectedSegmentId === segmentId;
+
+  // User satisfaction: solid blue hub only — no CSS ripple (ripple is for road safety KPI 2.1).
+  const hub = L.circleMarker([center.lat, center.lng], {
+    radius: isSelected ? 10 : 8,
+    fillColor: CPH_OUTBOUND_COLOR,
+    color: "#ffffff",
     weight: 2.5,
-    opacity: 0.74,
-    fillColor: ZONE.satisfaction.fill,
-    fillOpacity: 0.18,
-    interactive: false,
-    className: "tri-satisfaction-zone",
+    fillOpacity: 1,
+    opacity: 1,
+    interactive: Boolean(options?.segmentHandlers),
+    className: "hub-ripple-center hub-ripple-center--interactive",
   }).addTo(map);
-  circlesOut.push(zone);
+
+  if (options?.segmentHandlers) {
+    wireCircleMarkerSegment(
+      hub,
+      { segmentId, segmentName, speed: null, congestion: null },
+      options.segmentHandlers,
+      {
+        baseRadius: 8,
+        highlightRadius: 12,
+        selectedSegmentId: options.selectedSegmentId,
+        baseStyle: {
+          fillColor: CPH_OUTBOUND_COLOR,
+          color: "#ffffff",
+          weight: 2.5,
+          fillOpacity: 1,
+          opacity: 1,
+        },
+        highlightStyle: {
+          fillColor: "#00ffff",
+          color: "#ffffff",
+          weight: 3,
+          fillOpacity: 1,
+          opacity: 1,
+        },
+      }
+    );
+  }
+
+  circlesOut.push(hub as unknown as L.Circle);
+
   addZoneTag(
     map,
     center.lat,

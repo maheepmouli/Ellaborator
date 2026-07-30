@@ -20,6 +20,7 @@ import {
 } from "@/lib/wireMapSegmentInteraction";
 import {
   clusterHelsinkiPointHubs,
+  finalizeHelsinkiFvh1SafetyHubs,
   type HelsinkiHazardHub,
 } from "@/lib/helsinkiMapLayers/helsinkiHazardHubs";
 import { fitHelsinkiKpiView } from "@/lib/helsinkiMapLayers/helsinkiKpiMapFit";
@@ -117,6 +118,13 @@ function drawSafetyRippleHub(options: {
     segmentName: hub.label,
     speed: null as null,
     congestion: null as null,
+    properties: {
+      lat: hub.lat,
+      lon: hub.lon,
+      observationCount: hub.count,
+      hazardCategories: hub.categories,
+      datasetKind: "dangerous-location",
+    },
   };
 
   const centerMarker = L.marker([hub.lat, hub.lon], {
@@ -317,6 +325,7 @@ export function renderHelsinkiKpi21Layers(
       limit: HELSINKI_SAFETY_HUB_LIMIT,
       idPrefix: "hel-safety-hub",
       labelPrefix: "Road-safety pressure cluster",
+      categoryProperty: "locationType",
     });
 
     const conflictHubs = clusterHelsinkiPointHubs(conflictsGeoJson.features, {
@@ -324,17 +333,17 @@ export function renderHelsinkiKpi21Layers(
       limit: 24,
       idPrefix: "hel-conflict",
       labelPrefix: "Conflict",
+      categoryProperty: "incidentType",
     });
-    const enriched = hubs.map((hub, index) => {
+    const enriched = finalizeHelsinkiFvh1SafetyHubs(hubs).map((hub) => {
       const nearestConflict = conflictHubs.find(
         (conflict) => Math.hypot(conflict.lat - hub.lat, conflict.lon - hub.lon) < 0.012
       );
       return {
         ...hub,
-        id: index === 0 ? "hel-dangerous-locations" : hub.id,
         label:
-          index === 0
-            ? `Primary safety pressure · ${hub.count} hazard reports`
+          hub.id === "hel-dangerous-locations"
+            ? hub.label
             : nearestConflict
               ? `${hub.label} · ~${nearestConflict.count} nearby conflicts`
               : hub.label,
@@ -342,18 +351,7 @@ export function renderHelsinkiKpi21Layers(
       };
     });
 
-    const finalHubs =
-      enriched.length > 0
-        ? enriched
-        : [
-            {
-              id: "hel-dangerous-locations",
-              lat: 60.171,
-              lon: 24.941,
-              count: 0,
-              label: "FVH1 survey safety hub",
-            },
-          ];
+    const finalHubs = enriched;
 
     finalHubs.forEach((hub, index) => {
       drawSafetyRippleHub({

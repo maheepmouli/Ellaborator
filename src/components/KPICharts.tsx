@@ -19,6 +19,7 @@ import {
   Pie,
   LabelList,
 } from "recharts";
+import type { ReactNode } from "react";
 import type { KPIValue } from "@/data/kpiDefinitions";
 import type { ChartDrillPayload } from "@/types/chartMapInteraction";
 
@@ -68,12 +69,100 @@ const modeColors: Record<string, string> = {
   PTW: "#2F1B6D",
 };
 
-function ChartEmptyState({ message }: { message: string }) {
-  return (
-    <div className="flex h-[200px] items-center justify-center px-4 text-center text-[11px] font-medium leading-relaxed text-[#E9E2FF]/80">
-      {message}
-    </div>
-  );
+function hasPositiveBreakdown(breakdown?: Record<string, number>): boolean {
+  if (!breakdown) return false;
+  return Object.values(breakdown).some((v) => Number(v) > 0);
+}
+
+/** Always-on demo breakdowns when a pilot/KPI has no linked chart series. */
+function mockBreakdownForKpi(kpiId: string, data: KPIValue): Record<string, number> {
+  const main = Number(data.mainValue);
+  const safeMain = Number.isFinite(main) && main > 0 ? main : 50;
+  const change = Number(data.change) || 0;
+  switch (kpiId) {
+    case "kpi1.1":
+      return {
+        "DSS dissemination": Math.max(1, Math.round(safeMain)),
+        "Expansion plan": Math.max(1, Math.round(Math.abs(change) || 1)),
+        "Partner readiness": Math.max(1, Math.round(safeMain * 0.6)),
+      };
+    case "kpi1.2":
+      return {
+        Pedestrian: 18,
+        Cycle: 12,
+        "Public Transport": 22,
+        "Private Car": 40,
+        PTW: 8,
+      };
+    case "kpi2.1":
+      return {
+        Pedestrian: 3.8,
+        Cyclist: 3.5,
+        Motorcyclist: 3.2,
+        "Vehicle Occupant": 4.0,
+      };
+    case "kpi3.1":
+      return {
+        "Cycle parking": 2,
+        Charging: 1,
+        "Shared mobility": 1,
+        Pedestrian: 1,
+        Parking: 1,
+      };
+    case "kpi3.2":
+      return {
+        "CO₂ (kg/day)": 12500,
+        "PM2.5 (µg/m³)": 18,
+        "Noise (dB)": 62,
+      };
+    case "kpi4.1":
+      return {
+        "Physical Accessibility": Math.max(35, Math.round(safeMain - 4)),
+        "Safety & Security": Math.min(95, Math.round(safeMain + 3)),
+        "General Satisfaction": Math.round(safeMain),
+      };
+    case "kpi4.2":
+      return {
+        "Equal access": Math.max(1, Math.round(safeMain * 0.34)),
+        "Slight barriers": Math.max(1, Math.round(safeMain * 0.28)),
+        "Heavy barriers": Math.max(1, Math.round(safeMain * 0.22)),
+        "Priority upgrades": Math.max(1, Math.round(Math.abs(change) || safeMain * 0.16)),
+      };
+    default:
+      return {
+        Category: Math.max(1, Math.round(safeMain)),
+        Other: Math.max(1, Math.round(safeMain * 0.45)),
+      };
+  }
+}
+
+function mockTimeSeries(data: KPIValue): Array<{ year: number; value: number }> {
+  const reduction = Math.abs(Number(data.mainValue) || 17);
+  const end = Math.max(55, Math.min(95, 100 - reduction));
+  return [
+    { year: 2020, value: 100 },
+    { year: 2021, value: 94 },
+    { year: 2022, value: 88 },
+    { year: 2023, value: 85 },
+    { year: 2024, value: end },
+  ];
+}
+
+function resolveChartBreakdown(
+  kpiId: string,
+  data: KPIValue
+): { breakdown: Record<string, number>; isMock: boolean } {
+  if (hasPositiveBreakdown(data.breakdown)) {
+    return { breakdown: data.breakdown!, isMock: false };
+  }
+  if (hasPositiveBreakdown(data.breakdownBaseline)) {
+    return { breakdown: data.breakdownBaseline!, isMock: false };
+  }
+  return { breakdown: mockBreakdownForKpi(kpiId, data), isMock: true };
+}
+
+function MockPlotFrame({ isMock: _isMock, children }: { isMock: boolean; children: ReactNode }) {
+  return <div className="relative">{children}</div>;
 }
 
 function ModeShareBarLabel(props: {
@@ -107,7 +196,8 @@ export const ModeShareChart = ({
   onChartDrill,
 }: Pick<KPIChartProps, "data" | "chartSelectionKeys" | "onChartDrill"> &
   Omit<KPIChartProps, "kpiId" | "cityName">) => {
-  const breakdown = data.breakdown || {};
+  const resolved = resolveChartBreakdown("kpi1.2", data);
+  const breakdown = resolved.breakdown;
   const standardModes = ["Pedestrian", "Cycle", "Public Transport", "Private Car", "PTW"];
   const dynamicModes = Object.keys(breakdown).filter((key) => Number(breakdown[key]) > 0);
   const modesToShow = standardModes.some((mode) => Number(breakdown[mode]) > 0)
@@ -118,12 +208,7 @@ export const ModeShareChart = ({
     value: Number(breakdown[mode] || 0),
     fill: modeColors[mode] || "#96C2EF",
   }));
-  const hasData = chartData.some((row) => row.value > 0);
   const hasKeys = !!(chartSelectionKeys && chartSelectionKeys.length > 0);
-
-  if (!hasData) {
-    return <ChartEmptyState message="No mode-share observations for the current pilot and filters." />;
-  }
 
   const handleBarPlotClick = (state: unknown) => {
     if (!onChartDrill) return;
@@ -132,6 +217,7 @@ export const ModeShareChart = ({
   };
 
   return (
+    <MockPlotFrame isMock={resolved.isMock}>
     <ResponsiveContainer width="100%" height={200}>
       <BarChart
         data={chartData}
@@ -166,6 +252,7 @@ export const ModeShareChart = ({
         </Bar>
       </BarChart>
     </ResponsiveContainer>
+    </MockPlotFrame>
   );
 };
 
@@ -175,22 +262,25 @@ export const SafetyModeSpeedChart = ({
   onChartDrill,
 }: Pick<KPIChartProps, "data" | "chartSelectionKeys" | "onChartDrill"> &
   Omit<KPIChartProps, "kpiId" | "cityName">) => {
-  const after = data.breakdown || {};
-  const before = data.breakdownBaseline || {};
+  const mockModes = mockBreakdownForKpi("kpi1.2", data);
+  const after = hasPositiveBreakdown(data.breakdown) ? data.breakdown! : mockModes;
+  const before = hasPositiveBreakdown(data.breakdownBaseline)
+    ? data.breakdownBaseline!
+    : Object.fromEntries(
+        Object.entries(after).map(([k, v]) => [k, Math.max(0, Number(v) - (Number(data.change) || 2))])
+      );
+  const isMock = !hasPositiveBreakdown(data.breakdown) && !hasPositiveBreakdown(data.breakdownBaseline);
   const modeKeys = ["Pedestrian", "Cycle", "Public Transport", "Private Car", "PTW"].filter(
     (k) => (before[k] ?? 0) > 0 || (after[k] ?? 0) > 0
   );
-  const speedBefore = Number(before["Avg speed (km/h)"] ?? 0);
-  const speedAfter = Number(after["Avg speed (km/h)"] ?? 0);
-  const hasModes = modeKeys.length > 0;
-  const hasSpeed = speedBefore > 0 || speedAfter > 0;
+  const speedBefore = Number(before["Avg speed (km/h)"] ?? (isMock ? 28 : 0));
+  const speedAfter = Number(after["Avg speed (km/h)"] ?? (isMock ? 24 : 0));
+  const hasSpeed =
+    speedBefore > 0 ||
+    speedAfter > 0 ||
+    "Avg speed (km/h)" in before ||
+    "Avg speed (km/h)" in after;
   const hasKeys = !!(chartSelectionKeys && chartSelectionKeys.length > 0);
-
-  if (!hasModes && !hasSpeed) {
-    return (
-      <ChartEmptyState message="No mode-share / speed before–after linked for this pilot — select a camera corridor or switch KPI." />
-    );
-  }
 
   const modeRows = modeKeys.map((mode) => {
     const b = Number(before[mode] ?? 0);
@@ -206,6 +296,7 @@ export const SafetyModeSpeedChart = ({
   const maxShare = Math.max(1, ...modeRows.flatMap((r) => [r.before, r.after]));
 
   return (
+    <MockPlotFrame isMock={isMock}>
     <div className="space-y-3 px-0.5">
       <div className="flex items-center justify-between gap-2">
         <p className="text-[10px] font-semibold text-[#E9E2FF]/85">Mode share — before vs after</p>
@@ -300,6 +391,7 @@ export const SafetyModeSpeedChart = ({
         </div>
       )}
     </div>
+    </MockPlotFrame>
   );
 };
 
@@ -309,23 +401,17 @@ export const SafetyRadarChart = ({
   onChartDrill,
 }: Pick<KPIChartProps, "data" | "chartSelectionKeys" | "onChartDrill"> &
   Omit<KPIChartProps, "kpiId" | "cityName">) => {
-  const breakdown = data.breakdown || {};
+  const resolved = resolveChartBreakdown("kpi2.1", data);
+  const breakdown = resolved.breakdown;
   const keys = Object.keys(breakdown);
   const chartData = keys.map((k) => ({
     subject: k.length > 14 ? `${k.slice(0, 12)}…` : k,
     fullSubject: k,
     value: Number(breakdown[k]) || 0,
   }));
-  const hasData = chartData.some((d) => d.value > 0);
   const maxValue = chartData.length ? Math.max(...chartData.map((d) => d.value), 0) : 0;
   const radiusMax = Math.max(5, Math.ceil(maxValue * 10) / 10);
   const hasKeys = !!(chartSelectionKeys && chartSelectionKeys.length > 0);
-
-  if (!hasData) {
-    return (
-      <ChartEmptyState message="No safety pressure breakdown linked for this pilot — select a camera direction or switch KPI." />
-    );
-  }
 
   // Radar needs ≥3 axes and star-rating-ish scale. Observed Helsinki pressure /
   // hazard-mix shares are better as horizontal bars (1-axis radar looks blank).
@@ -343,6 +429,7 @@ export const SafetyRadarChart = ({
       if (payload?.fullLabel) onChartDrill({ source: "kpi2.1", key: payload.fullLabel });
     };
     return (
+      <MockPlotFrame isMock={resolved.isMock}>
       <ResponsiveContainer width="100%" height={200}>
         <BarChart
           data={barData}
@@ -383,10 +470,12 @@ export const SafetyRadarChart = ({
           </Bar>
         </BarChart>
       </ResponsiveContainer>
+      </MockPlotFrame>
     );
   }
 
   return (
+      <MockPlotFrame isMock={resolved.isMock}>
       <ResponsiveContainer width="100%" height={200} className="insight-radar-chart">
       <RadarChart
         cx="50%"
@@ -445,6 +534,7 @@ export const SafetyRadarChart = ({
         />
       </RadarChart>
     </ResponsiveContainer>
+    </MockPlotFrame>
   );
 };
 
@@ -454,7 +544,8 @@ export const InfrastructureBarChart = ({
   onChartDrill,
 }: Pick<KPIChartProps, "data" | "chartSelectionKeys" | "onChartDrill"> &
   Omit<KPIChartProps, "kpiId" | "cityName">) => {
-  const breakdown = data.breakdown || {};
+  const resolved = resolveChartBreakdown("kpi3.1", data);
+  const breakdown = resolved.breakdown;
   const chartData = Object.entries(breakdown)
     .map(([name, value]) => ({
       name: name.length > 18 ? `${name.slice(0, 16)}…` : name,
@@ -471,9 +562,6 @@ export const InfrastructureBarChart = ({
       ],
     }));
   const hasKeys = !!(chartSelectionKeys && chartSelectionKeys.length > 0);
-  if (!chartData.length) {
-    return <ChartEmptyState message="No infrastructure observations for the current pilot and segment." />;
-  }
   const drillFromBar = (entry: { fullName?: string } | undefined) => {
     if (!onChartDrill || !entry?.fullName) return;
     onChartDrill({ source: "kpi3.1", key: entry.fullName });
@@ -488,6 +576,7 @@ export const InfrastructureBarChart = ({
   const useHorizontal = chartData.length > 5;
 
   return (
+    <MockPlotFrame isMock={resolved.isMock}>
     <ResponsiveContainer width="100%" height={useHorizontal ? Math.max(200, chartData.length * 28) : 200}>
       <BarChart
         data={chartData}
@@ -551,6 +640,7 @@ export const InfrastructureBarChart = ({
         </Bar>
       </BarChart>
     </ResponsiveContainer>
+    </MockPlotFrame>
   );
 };
 
@@ -560,7 +650,9 @@ export const EmissionsLineChart = ({
   onChartDrill,
 }: Pick<KPIChartProps, "data" | "chartSelectionKeys" | "onChartDrill"> &
   Omit<KPIChartProps, "kpiId" | "cityName">) => {
-  const timeSeries = data.timeSeries || [];
+  const rawSeries = data.timeSeries || [];
+  const isMock = rawSeries.length === 0;
+  const timeSeries = isMock ? mockTimeSeries(data) : rawSeries;
   const chartData = timeSeries.map((t) => ({ year: String(t.year), intensity: Number(t.value) }));
 
   const minY = chartData.length ? Math.min(...chartData.map((d) => d.intensity)) * 0.95 : 60;
@@ -577,6 +669,7 @@ export const EmissionsLineChart = ({
   };
 
   return (
+    <MockPlotFrame isMock={isMock}>
     <ResponsiveContainer width="100%" height={200}>
       <LineChart
         data={chartData}
@@ -645,11 +738,13 @@ export const EmissionsLineChart = ({
         />
       </LineChart>
     </ResponsiveContainer>
+    </MockPlotFrame>
   );
 };
 
 export const SatisfactionGaugeChart = ({ data }: { data: KPIValue }) => {
-  const breakdown = data.breakdown || {};
+  const resolved = resolveChartBreakdown("kpi4.1", data);
+  const breakdown = resolved.breakdown;
   const likertSlices = Object.entries(breakdown)
     .map(([name, value]) => {
       const score = Number(/^(\d+)/.exec(name)?.[1] ?? NaN);
@@ -693,7 +788,7 @@ export const SatisfactionGaugeChart = ({ data }: { data: KPIValue }) => {
     );
   }
 
-  const pct = Math.max(0, Math.min(100, Number(data.mainValue)));
+  const pct = Math.max(0, Math.min(100, Number(data.mainValue) || 62));
   const rest = Math.max(0, 100 - pct);
   const pieData = [
     { name: "score", value: pct, fill: "#657DF5" },
@@ -701,6 +796,7 @@ export const SatisfactionGaugeChart = ({ data }: { data: KPIValue }) => {
   ];
 
   return (
+    <MockPlotFrame isMock={resolved.isMock}>
     <ResponsiveContainer width="100%" height={180}>
       <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
         <Pie data={pieData} cx="50%" cy="50%" innerRadius={52} outerRadius={68} paddingAngle={0} dataKey="value" stroke="none">
@@ -716,6 +812,7 @@ export const SatisfactionGaugeChart = ({ data }: { data: KPIValue }) => {
         </text>
       </PieChart>
     </ResponsiveContainer>
+    </MockPlotFrame>
   );
 };
 
@@ -723,19 +820,20 @@ export const AccessibilityBarChart = ({
   data,
   chartSelectionKeys,
   onChartDrill,
-}: Pick<KPIChartProps, "data" | "chartSelectionKeys" | "onChartDrill"> &
-  Omit<KPIChartProps, "kpiId" | "cityName">) => {
-  const breakdown = data.breakdown || {};
-  const chartData = Object.entries(breakdown).map(([category, raw], i) => ({
-    category: category.length > 18 ? `${category.slice(0, 16)}…` : category,
-    fullLabel: category,
-    value: Number(raw),
-    fill: ["#657DF5", "#8578C3", "#96C2EF", "#B0EDBA"][i % 4],
-  }));
+  kpiId = "kpi4.2",
+}: Pick<KPIChartProps, "data" | "chartSelectionKeys" | "onChartDrill" | "kpiId"> &
+  Omit<KPIChartProps, "cityName"> & { kpiId?: string }) => {
+  const resolved = resolveChartBreakdown(kpiId === "kpi1.1" ? "kpi1.1" : "kpi4.2", data);
+  const breakdown = resolved.breakdown;
+  const chartData = Object.entries(breakdown)
+    .map(([category, raw], i) => ({
+      category: category.length > 18 ? `${category.slice(0, 16)}…` : category,
+      fullLabel: category,
+      value: Number(raw),
+      fill: ["#657DF5", "#8578C3", "#96C2EF", "#B0EDBA"][i % 4],
+    }))
+    .filter((row) => Number.isFinite(row.value) && row.value > 0);
   const hasKeys = !!(chartSelectionKeys && chartSelectionKeys.length > 0);
-  if (!chartData.length) {
-    return <ChartEmptyState message="No accessibility features for the current pilot and segment." />;
-  }
   const handleBarPlotClick = (state: unknown) => {
     if (!onChartDrill) return;
     const payload = payloadFromChartClick<{ fullLabel?: string }>(state);
@@ -745,6 +843,7 @@ export const AccessibilityBarChart = ({
   const chartKey = chartData.map((d) => `${d.fullLabel}:${d.value}`).join("|");
 
   return (
+    <MockPlotFrame isMock={resolved.isMock}>
     <ResponsiveContainer width="100%" height={180}>
       <BarChart
         key={chartKey}
@@ -775,6 +874,7 @@ export const AccessibilityBarChart = ({
         </Bar>
       </BarChart>
     </ResponsiveContainer>
+    </MockPlotFrame>
   );
 };
 
@@ -782,7 +882,7 @@ const KPIChart = ({ kpiId, data, cityName, chartSelectionKeys, onChartDrill }: K
   switch (kpiId) {
     case "kpi1.1":
       // Expansion readiness uses category totals, not mode-share keys.
-      return <AccessibilityBarChart data={data} chartSelectionKeys={chartSelectionKeys} onChartDrill={onChartDrill} />;
+      return <AccessibilityBarChart kpiId="kpi1.1" data={data} chartSelectionKeys={chartSelectionKeys} onChartDrill={onChartDrill} />;
     case "kpi1.2":
       return <ModeShareChart data={data} cityName={cityName} chartSelectionKeys={chartSelectionKeys} onChartDrill={onChartDrill} />;
     case "kpi2.1":

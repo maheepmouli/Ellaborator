@@ -82,6 +82,19 @@ export function filterPointsInPilotZone(
   pilotId: string | null | undefined
 ): LocalCityPoint[] {
   if (!pilotId) return points;
+  // FVH1 is citywide survey evidence — hub clusters span Helsinki; do not clip to the overview pin.
+  if (pilotId === "hel-p1") {
+    return points.filter((p) => {
+      const iid = String(p.properties?.interventionId ?? "");
+      const kind = String(p.properties?.datasetKind ?? "");
+      return (
+        iid === "hel-p1" ||
+        kind === "dangerous-location" ||
+        kind === "conflict" ||
+        kind === "safety-attitude-survey"
+      );
+    });
+  }
   return points.filter((p) => isInPilotZone(p.lat, p.lon, city, pilotId));
 }
 

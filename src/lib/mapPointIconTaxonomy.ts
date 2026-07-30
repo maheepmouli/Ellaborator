@@ -109,6 +109,8 @@ function categoryFromText(text: string): MapPointIconKey | null {
   ) return "pedestrian";
   if (text.includes("gate") || text.includes("mobilysis")) return "sensor";
   if (text.includes("survey") || text.includes("acceptability") || text.includes("likert")) return "pedestrian";
+  if (text.includes("air-quality") || text.includes("air quality") || text.includes("nanoenvi")) return "sensor";
+  if (text.includes("school-monitoring") || text.includes("manual-count") || text.includes("comparativa")) return "sensor";
   if (text.includes("near encounter") || text.includes("irap")) return "sensor";
   return null;
 }

@@ -130,6 +130,61 @@ export function placeFieldPointOnJunctionArm(
   return pointAtDistanceAlongPolyline(outward, Math.max(28, distanceFromJunctionM));
 }
 
+/** Destination [lat, lon] from a start point at bearing (deg) and distance (m). */
+function destinationPoint(
+  lat: number,
+  lon: number,
+  bearingDeg: number,
+  distanceM: number
+): [number, number] {
+  const R = 6371000;
+  const br = (bearingDeg * Math.PI) / 180;
+  const φ1 = (lat * Math.PI) / 180;
+  const λ1 = (lon * Math.PI) / 180;
+  const δ = distanceM / R;
+  const φ2 = Math.asin(Math.sin(φ1) * Math.cos(δ) + Math.cos(φ1) * Math.sin(δ) * Math.cos(br));
+  const λ2 =
+    λ1 +
+    Math.atan2(
+      Math.sin(br) * Math.sin(δ) * Math.cos(φ1),
+      Math.cos(δ) - Math.sin(φ1) * Math.sin(φ2)
+    );
+  return [(φ2 * 180) / Math.PI, (λ2 * 180) / Math.PI];
+}
+
+/**
+ * Land-side sidewalk pads at Pont d'Issy × Quai — never on the Seine bridge
+ * (west arm) and offset off the carriageway centreline.
+ * Bearings aim inland / plaza corners the user annotated on the map.
+ */
+const ACCESSIBILITY_SIDEWALK: Record<
+  IssyJunctionArmId,
+  { bearingDeg: number; baseM: number; lateralBearingDeg: number; lateralM: number }
+> = {
+  // West traficissy arm runs onto Pont d'Issy over water — place on land abutment / Quai corner.
+  west: { bearingDeg: 48, baseM: 18, lateralBearingDeg: 138, lateralM: 9 },
+  east: { bearingDeg: 78, baseM: 24, lateralBearingDeg: 168, lateralM: 8 },
+  south: { bearingDeg: 165, baseM: 22, lateralBearingDeg: 75, lateralM: 9 },
+  north: { bearingDeg: 12, baseM: 20, lateralBearingDeg: 102, lateralM: 8 },
+};
+
+/**
+ * Mock accessibility pin on sidewalk / plaza near the land junction — not in water,
+ * not on street centreline.
+ */
+export function placeAccessibilityPointOnJunctionArm(
+  armId: IssyJunctionArmId,
+  slotIndex = 0
+): [number, number] {
+  const pad = ACCESSIBILITY_SIDEWALK[armId] ?? ACCESSIBILITY_SIDEWALK.east;
+  const { lat, lon } = ISSY_P2_JUNCTION;
+  // Stagger every slot (including west/east duplicates) so pins do not stack.
+  const alongM = pad.baseM + slotIndex * 8;
+  const lateralM = pad.lateralM + (slotIndex % 2) * 4;
+  const along = destinationPoint(lat, lon, pad.bearingDeg, alongM);
+  return destinationPoint(along[0], along[1], pad.lateralBearingDeg, lateralM);
+}
+
 export function placeFieldPointForArmSegment(
   segmentId: string,
   distanceFromJunctionM: number

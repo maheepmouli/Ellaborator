@@ -10,30 +10,68 @@ interface SafetyPressureChartProps {
 }
 
 export function SafetyPressureChart({ payload, compact }: SafetyPressureChartProps) {
-  const speed = payload.kpiValue ?? 0;
+  const speed = payload.kpiValue ?? 42;
   const congestionPct = Math.round((payload.segmentGradient ?? 0.5) * 100);
-  const categories = payload.likert ?? [];
+  const linkedCategories = payload.likert ?? [];
+  const isMockCategories = linkedCategories.length === 0;
+  const categories = isMockCategories
+    ? [
+        { label: "Near-miss", value: 28 },
+        { label: "Conflict", value: 22 },
+        { label: "Speeding", value: 18 },
+        { label: "Yield failure", value: 14 },
+        { label: "Other", value: 10 },
+      ]
+    : linkedCategories;
   const maxCat = Math.max(1, ...categories.map((c) => c.value));
   const [activeLabel, setActiveLabel] = useState<string | null>(null);
-  const isHelsinkiHazard = payload.kpiId === "kpi2.1" && categories.length > 0;
+  const isHelsinkiHazard =
+    payload.kpiId === "kpi2.1" &&
+    !payload.amatSegmentSpeed &&
+    !(payload.speedDiagram && payload.statCards?.length);
   const isMilanAmatSpeed =
     payload.kpiId === "kpi2.1" && payload.amatSegmentSpeed && (payload.statCards?.length ?? 0) > 0;
   const isMilanSegmentDetail =
     isMilanAmatSpeed && payload.statCards?.some((card) => card.label === "Avg speed");
+  const isConflictPressureCards =
+    isMilanAmatSpeed &&
+    payload.statCards?.some((card) => /conflict pressure/i.test(card.label));
+  const isZaragozaSpeed =
+    isMilanAmatSpeed &&
+    (payload.sourceLabel?.toLowerCase().includes("zaragoza") ||
+      payload.sourceLabel?.toLowerCase().includes("comparativa") ||
+      payload.sourceLabel?.toLowerCase().includes("ayzg") ||
+      payload.sourceLabel?.toLowerCase().includes("romareda") ||
+      payload.sourceLabel?.toLowerCase().includes("school") ||
+      payload.sourceLabel?.toLowerCase().includes("hospital") ||
+      isConflictPressureCards);
 
   return (
     <div className={obsGlassCardClass(compact)} style={obsGlassCardStyle()}>
-      <p className="text-[11px] font-semibold text-white/70 mb-3">
-        {isHelsinkiHazard
-          ? "Hazard-type pressure (interactive)"
-          : isMilanAmatSpeed
-            ? isMilanSegmentDetail
-              ? "AMAT segment speeds"
-              : "AMAT speed network"
-            : payload.kpiId === "kpi4.2"
-              ? "DSS accessibility"
-              : "Safety / flow pressure"}
-      </p>
+      <div className="flex items-center justify-between gap-2 mb-3">
+        <p className="text-[11px] font-semibold text-white/70">
+          {isHelsinkiHazard && !isMilanAmatSpeed
+            ? "Hazard-type pressure (interactive)"
+            : isMilanAmatSpeed
+              ? isZaragozaSpeed
+                ? isConflictPressureCards
+                  ? "School corridor conflict"
+                  : isMilanSegmentDetail
+                    ? "Corridor speeds"
+                    : "Corridor speed network"
+                : isMilanSegmentDetail
+                  ? "AMAT segment speeds"
+                  : "AMAT speed network"
+              : payload.kpiId === "kpi4.2"
+                ? "DSS accessibility"
+                : "Safety / flow pressure"}
+        </p>
+        {isMockCategories && !isMilanAmatSpeed ? (
+          <span className="rounded px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-violet-100 bg-violet-500/30 border border-violet-300/35">
+            Mock plot
+          </span>
+        ) : null}
+      </div>
 
       {isMilanAmatSpeed && payload.statCards ? (
         <>
@@ -49,11 +87,24 @@ export function SafetyPressureChart({ payload, compact }: SafetyPressureChartPro
             ))}
           </div>
           <p className="text-[9px] text-white/45 leading-relaxed">
-            Observed speeds from AMAT Maggio 2025 metric DBF joined to network.shp by segment ID (BS_Id).
-            Values are partner measurements — not a derived congestion or speed proxy.
+            {isZaragozaSpeed
+              ? "Corridor speed / conflict pressure from Zaragoza Comparativa KPIs, school monitoring, and manual counts. Green delta = calmer after."
+              : "Observed speeds from AMAT Maggio 2025 metric DBF joined to network.shp by segment ID (BS_Id). Values are partner measurements — not a derived congestion or speed proxy."}
           </p>
         </>
-      ) : categories.length > 0 ? (
+      ) : payload.kpiId === "kpi4.2" && payload.statCards?.length ? (
+        <div className={`grid grid-cols-2 gap-2 ${compact ? "mb-2" : "mb-3"}`}>
+          {payload.statCards.slice(0, 4).map((card) => (
+            <div key={card.label} className="rounded-lg border p-2" style={{ borderColor: OBS_C.border }}>
+              <p className="text-[9px] uppercase tracking-wide text-white/45 truncate">{card.label}</p>
+              <p className="text-lg font-bold" style={{ color: card.color ?? OBS_C.cyan }}>
+                {card.value}
+              </p>
+              {card.note ? <p className="text-[9px] text-white/40 mt-0.5">{card.note}</p> : null}
+            </div>
+          ))}
+        </div>
+      ) : (
         <div className={`space-y-2 ${compact ? "mb-2" : "mb-3"}`}>
           {categories.slice(0, compact ? 5 : 8).map((row) => {
             const isActive = activeLabel === row.label;
@@ -93,59 +144,32 @@ export function SafetyPressureChart({ payload, compact }: SafetyPressureChartPro
               Selected: {activeLabel} · relative intensity vs top hazard type
             </p>
           ) : null}
-        </div>
-      ) : payload.kpiId === "kpi4.2" && payload.statCards?.length ? (
-        <div className={`grid grid-cols-2 gap-2 ${compact ? "mb-2" : "mb-3"}`}>
-          {payload.statCards.slice(0, 4).map((card) => (
-            <div key={card.label} className="rounded-lg border p-2" style={{ borderColor: OBS_C.border }}>
-              <p className="text-[9px] uppercase tracking-wide text-white/45 truncate">{card.label}</p>
-              <p className="text-lg font-bold" style={{ color: card.color ?? OBS_C.cyan }}>
-                {card.value}
-              </p>
-              {card.note ? <p className="text-[9px] text-white/40 mt-0.5">{card.note}</p> : null}
-            </div>
-          ))}
-        </div>
-      ) : payload.kpiId === "kpi4.2" ? (
-        <p className="text-[10px] text-white/50 leading-relaxed py-2">
-          Accessibility is barrier-category based (equal / slight / heavy). Speed and congestion are not
-          used for this KPI.
-        </p>
-      ) : (
-        <>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="rounded-lg border p-2" style={{ borderColor: OBS_C.border }}>
-              <div className="flex items-center gap-1.5 text-[10px] text-white/50 mb-1">
-                <Gauge className="h-3 w-3" /> Speed proxy
+          {!isHelsinkiHazard && isMockCategories ? (
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <div className="rounded-lg border p-2" style={{ borderColor: OBS_C.border }}>
+                <div className="flex items-center gap-1.5 text-[10px] text-white/50 mb-1">
+                  <Gauge className="h-3 w-3" /> Speed proxy
+                </div>
+                <p className="text-lg font-bold" style={{ color: OBS_C.cyan }}>
+                  {Number(speed || 42).toFixed(1)}
+                </p>
+                <p className="text-[9px] text-white/40">km/h equivalent</p>
               </div>
-              <p className="text-lg font-bold" style={{ color: OBS_C.cyan }}>
-                {speed.toFixed(1)}
-              </p>
-              <p className="text-[9px] text-white/40">km/h equivalent</p>
-            </div>
-            <div className="rounded-lg border p-2" style={{ borderColor: OBS_C.border }}>
-              <div className="flex items-center gap-1.5 text-[10px] text-white/50 mb-1">
-                <Activity className="h-3 w-3" /> Congestion
+              <div className="rounded-lg border p-2" style={{ borderColor: OBS_C.border }}>
+                <div className="flex items-center gap-1.5 text-[10px] text-white/50 mb-1">
+                  <Activity className="h-3 w-3" /> Congestion
+                </div>
+                <p className="text-lg font-bold" style={{ color: OBS_C.amber }}>
+                  {congestionPct}%
+                </p>
+                <p className="text-[9px] text-white/40">pressure index</p>
               </div>
-              <p className="text-lg font-bold" style={{ color: OBS_C.amber }}>
-                {congestionPct}%
-              </p>
-              <p className="text-[9px] text-white/40">pressure index</p>
             </div>
-          </div>
-          <div className="mt-3 h-2 rounded-full overflow-hidden" style={{ background: OBS_C.border }}>
-            <div
-              className="h-full rounded-full"
-              style={{
-                width: `${Math.min(100, congestionPct)}%`,
-                background: `linear-gradient(90deg, ${OBS_C.violet}, ${OBS_C.amber})`,
-              }}
-            />
-          </div>
-        </>
+          ) : null}
+        </div>
       )}
 
-      {isHelsinkiHazard && payload.statCards?.length ? (
+      {isHelsinkiHazard && !isMilanAmatSpeed && payload.statCards?.length ? (
         <div className="mt-2 grid grid-cols-2 gap-1.5">
           {payload.statCards.slice(0, 4).map((card) => (
             <div

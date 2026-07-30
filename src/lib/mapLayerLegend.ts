@@ -140,25 +140,23 @@ export function resolveMapLegend(
             return {
               marker: "point",
               items: [
-                { label: "≥50% sustainable", color: "#22c55e" },
-                { label: "40–50%", color: "#84cc16" },
-                { label: "30–40%", color: "#f59e0b" },
-                { label: "<30%", color: "#ef4444" },
+                { label: "Hub ripple · ≥35% sustainable", color: "#38bdf8" },
+                { label: "Hub ripple · <35% sustainable", color: "#ef4444" },
               ],
-              hint: "Pilot 2 city scale — sustainable mobility % at ISSY1 OD zone centroids (observed CSV). Dot size ≈ zone activity.",
+              hint: "Pilot 2 — Copenhagen-style ripple hubs at ISSY1 OD zone centroids (no camera FOV). Blue = healthier sustainable share, red = lower.",
             };
           }
           return {
             marker: "point",
             items: [
               { label: "Aggregated hub (ripple)", color: "#ef4444" },
-              { label: "Camera FOV", color: "#96C2EF" },
+              { label: "Outbound / healthier hub", color: "#38bdf8" },
               { label: "Camera / junction hub", color: "#00ffff" },
             ],
             hint:
               kpiId === "kpi1.2"
-                ? "Mode share uses ripple hubs only (same as Copenhagen) — no street segments on the map."
-                : "Road safety uses the same hub aggregation as Copenhagen (no flow spokes). Corridor detail stays in the observatory.",
+                ? "Mode share uses Copenhagen-style ripple hubs only — no camera FOV wedges, no street segments."
+                : "Road safety uses the same hub ripple aggregation (no FOV, no flow spokes). Corridor detail stays in the observatory.",
           };
         }
         if (spatial === "flows") {
@@ -264,10 +262,12 @@ export function resolveMapLegend(
     return {
       marker: "point",
       items: [
-        { label: "MOCK accessibility (mode-share site)", color: "#22d3ee" },
+        { label: "Hub (blue point + ripple)", color: "#38bdf8" },
+        { label: "Crossing vector", color: "#00ffff" },
+        { label: "Sample pin (A / W / P)", color: "#22c55e" },
         { label: "Pilot area (inferred)", color: "rgba(255,255,255,0.35)" },
       ],
-      hint: "MOCK — accessibility/security pins reuse KPI 1.2 OTC / mode-share corridor sites. Survey-style placeholder, not EN 17210.",
+      hint: "Issy-style blue hub + CSS ripple + cyan dashed crossing vector. 3 baseline / 4 intervention sample pins along the corridor.",
     };
   }
 
@@ -402,15 +402,47 @@ export function resolveMapLegend(
   }
 
   if (isZaragoza) {
-    return {
-      marker: "polygon",
-      items: [
-        { label: "Active pilot area", color: "#2ecc71" },
-        { label: "Context intervention area", color: "#64748b" },
-      ],
-      hint: "Intervention polygons from Zaragoza GeoJSON; active pilot highlighted and non-active areas shown as contextual outlines.",
-    };
-  }
+        if (kpiId === "kpi1.2") {
+          return {
+            marker: "point",
+            items: [
+              { label: "Sustainable mode pulse", color: "#38bdf8" },
+              { label: "Motor mode pulse", color: "#f97316" },
+              { label: "Active pilot area", color: "#2ecc71" },
+            ],
+            hint: "One pulse hub per observed site (school monitoring / manual counts / Romareda survey) — not invented sensor density.",
+          };
+        }
+        if (kpiId === "kpi2.1") {
+          return {
+            marker: "point",
+            items: [
+              { label: "Safety hub (calmer / lower pressure)", color: "#38bdf8" },
+              { label: "Safety hub (hotter / higher pressure)", color: "#ef4444" },
+              { label: "Active pilot area", color: "#2ecc71" },
+            ],
+            hint: "Road-user safety ripples at school monitoring / hospital corridor sites (no FOV). Pilot 3 uses mock hospital speeds until traffic-study feeds arrive.",
+          };
+        }
+        if (kpiId === "kpi3.2") {
+          return {
+            marker: "point",
+            items: [
+              { label: "Air quality sensor pulse", color: "#34d399" },
+              { label: "Active pilot area", color: "#2ecc71" },
+            ],
+            hint: "Nanoenvi EQ locations — hover/click opens the climate observatory (Copenhagen-style).",
+          };
+        }
+        return {
+          marker: "polygon",
+          items: [
+            { label: "Active pilot area", color: "#2ecc71" },
+            { label: "Context intervention area", color: "#64748b" },
+          ],
+          hint: "Intervention polygons from Zaragoza GeoJSON; active pilot highlighted and non-active areas shown as contextual outlines.",
+        };
+      }
 
   if (isIssy && spatial) {
     switch (spatial) {
@@ -590,13 +622,20 @@ export function resolveMapLegend(
           hint: "Mock satisfaction — coloured dots mark SMY · DEH · GiSeMi. No P+R user survey is linked yet.",
         };
       }
+      if (pilotId === "tri-p4") {
+        return {
+          marker: "point",
+          items: [{ label: "Satisfaction survey site", color: "#22c55e" }],
+          hint: "Pilot 4 · SMARTA2 satisfaction — plain green points (no icon badges).",
+        };
+      }
       return {
         marker: "polygonRamp",
         items: SATISFACTION_FIELD_ITEMS,
         hint:
           pilotId === "tri-p1"
-            ? "Green satisfaction halo at the Military School smart crossing; survey Likert (condition, maintenance, accessibility) in the observatory."
-            : "Green satisfaction halos at partner map sites; P icons = Park & Ride hub polygons (SMY, DEH, GiSeMi on Pilot 2).",
+            ? "Blue hub at the Military School smart crossing; survey Likert in the observatory."
+            : "Green satisfaction points at partner map sites.",
       };
     }
     if (kpiId === "kpi3.1") {
@@ -626,12 +665,8 @@ export function resolveMapLegend(
       if (pilotId === "tri-p2") {
         return {
           marker: "point",
-          items: [
-            { label: "Park & Ride hub (bike uptake)", color: "#00ffff" },
-            { label: "Bike / docking station", color: "#2ecc71" },
-            { label: "P+R site polygon", color: "#2ecc71" },
-          ],
-          hint: "KPI 1.2 · bike uptake from park-and-ride facilities (Intervention Evaluation Plan). SMY · DEH · GiSeMi hubs only — municipal car parks omitted; partner occupancy survey pending.",
+          items: [{ label: "Mode-share hub (ripple)", color: "#38bdf8" }],
+          hint: "KPI 1.2 · Issy/Copenhagen-style blue hub + CSS ripple at SMY · DEH · GiSeMi P+R (no icon badges).",
         };
       }
       if (pilotId === "tri-p4") {
@@ -672,7 +707,7 @@ export function resolveMapLegend(
                 ],
           hint:
             kpiId === "kpi2.1"
-              ? "Pilot 3 LoRa bike-lane sensors — icon tint = occupancy stress; mock speed derived from FREE/BUSY. Toggle Baseline vs Intervention to see constructed pre-redesign offset."
+              ? "Pilot 3 LoRa bike-lane sensors — plain coloured points (orange = high occupancy stress, green = lower). No per-sensor ripples."
               : "Pilot 3 KPI 4.2 — map pins are bike-lane sensor locations; scores come from the online bike-safety survey (baseline + post SharePoint xlsx), not LoRa availability.",
         };
       }
@@ -682,14 +717,21 @@ export function resolveMapLegend(
           items:
             kpiId === "kpi4.2"
               ? [{ label: "Smart crossing (accessibility)", color: "#22c55e" }]
-              : [
-                  { label: "Smart crossing / safety", color: "#7f5af0" },
-                  { label: "Crossing vector", color: "#00ffff" },
-                ],
+              : kpiId === "kpi4.1"
+                ? [
+                    { label: "Smart crossing hub", color: "#38bdf8" },
+                    { label: "Crossing vector", color: "#00ffff" },
+                  ]
+                : [
+                    { label: "Hub (blue point + ripple)", color: "#38bdf8" },
+                    { label: "Crossing vector", color: "#00ffff" },
+                  ],
           hint:
             kpiId === "kpi4.2"
               ? "Accessibility badge at the Military School smart crossing — survey Likert in the observatory."
-              : "Safety / crossing icon at Military School; dashed cyan line = smart crossing vector. Survey dimensions in the observatory.",
+              : kpiId === "kpi4.1"
+                ? "Blue hub point at Military School (no ripple); dashed cyan line = smart crossing vector."
+                : "Issy-style blue hub + animated CSS ripple; dashed cyan line = smart crossing vector.",
         };
       }
       return {

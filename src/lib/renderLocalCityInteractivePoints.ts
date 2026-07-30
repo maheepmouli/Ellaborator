@@ -16,6 +16,30 @@ import {
 } from "@/lib/wireMapSegmentInteraction";
 import { getQuantile, getSegmentHighlight } from "@/lib/segmentHighlight";
 
+/** Satisfaction / survey score → readable before/after colour (not one flat sky-blue band). */
+export function satisfactionScoreColor(scorePct: number): string {
+  if (!Number.isFinite(scorePct)) return "#38bdf8";
+  if (scorePct >= 80) return "#10B981";
+  if (scorePct >= 70) return "#34D399";
+  // Split 60–70 so baseline (~62) vs intervention (~64) are not the same sky-blue.
+  if (scorePct >= 64) return "#2DD4BF";
+  if (scorePct >= 60) return "#38BDF8";
+  if (scorePct >= 55) return "#60A5FA";
+  if (scorePct >= 50) return "#A78BFA";
+  if (scorePct >= 40) return "#FBBF24";
+  return "#F87171";
+}
+
+/** Comparison delta (pp) for satisfaction pins. */
+export function satisfactionDeltaColor(deltaPp: number): string {
+  if (!Number.isFinite(deltaPp)) return "#94a3b8";
+  if (deltaPp >= 2) return "#10B981";
+  if (deltaPp > 0) return "#34D399";
+  if (deltaPp === 0) return "#94a3b8";
+  if (deltaPp > -2) return "#FBBF24";
+  return "#F87171";
+}
+
 /** Milan KPI 4.2 DSS barrier categories — must match mapLayerLegend swatches. */
 export function milanAccessibilityCategoryColor(
   category: unknown,
@@ -173,7 +197,7 @@ export function renderLocalCityInteractivePoints(
   if (!filtered.length) return 0;
 
   const valueLabel =
-    selectedKpi === "kpi1.2" || selectedKpi === "kpi4.2"
+    selectedKpi === "kpi1.2" || selectedKpi === "kpi4.2" || selectedKpi === "kpi4.1"
       ? "%"
       : selectedKpi === "kpi3.1"
         ? " units"
@@ -183,7 +207,10 @@ export function renderLocalCityInteractivePoints(
   const allValues = filtered.map((row) => row.displayValue);
   const minV = Math.min(...allValues);
   const maxV = Math.max(...allValues);
-  const span = Math.max(1, maxV - minV);
+  // Satisfaction scores often sit in a tight band (e.g. 62–64) — use absolute 0–100
+  // so radius/colour still change between baseline and intervention.
+  const satisfactionAbsolute = selectedKpi === "kpi4.1";
+  const span = satisfactionAbsolute ? 100 : Math.max(1, maxV - minV);
 
   const spreadMap = spreadOverlaps
     ? spreadOverlappingPositions(
@@ -211,7 +238,9 @@ export function renderLocalCityInteractivePoints(
     const spread = spreadMap.get(pointId);
     const lat = spread?.[0] ?? point.lat;
     const lon = spread?.[1] ?? point.lon;
-    const normalizedValue = (displayValue - minV) / span;
+    const normalizedValue = satisfactionAbsolute
+      ? Math.max(0, Math.min(1, displayValue / 100))
+      : (displayValue - minV) / span;
     const iconSpec = resolveMapPointIconSpec({
       facilityCategory: props.facilityCategory ?? props.category,
       category: props.category,
@@ -221,10 +250,15 @@ export function renderLocalCityInteractivePoints(
     });
     const valueColor =
       selectedKpi === "kpi1.2" ||
+      selectedKpi === "kpi4.1" ||
       selectedKpi === "kpi4.2" ||
       selectedKpi === "kpi3.2" ||
       selectedKpi === "kpi2.1"
-        ? getValueColor(displayValue, selectedKpi === "kpi2.1")
+        ? selectedKpi === "kpi4.1"
+          ? scenario === "comparison"
+            ? satisfactionDeltaColor(displayValue)
+            : satisfactionScoreColor(displayValue)
+          : getValueColor(displayValue, selectedKpi === "kpi2.1")
         : undefined;
     const segId = resolveInteractivePointSegmentId(cityName, point);
     const segName = `${iconSpec.label} · ${String(
@@ -269,18 +303,32 @@ export function renderLocalCityInteractivePoints(
             )
           : null;
       const fillColor = climateColor ?? a11yColor ?? valueColor ?? "#38bdf8";
-      const radius = Math.max(6, Math.min(11, 6 + normalizedValue * 4));
+      // Satisfaction: larger dots + score chip so before/after is obvious when toggling scenario.
+      const radius =
+        selectedKpi === "kpi4.1"
+          ? Math.max(8, Math.min(14, 7 + normalizedValue * 7))
+          : Math.max(6, Math.min(11, 6 + normalizedValue * 4));
       const circle = L.circleMarker([lat, lon], {
         radius,
-        color: "#0b1220",
-        weight: 1.25,
+        color: selectedKpi === "kpi4.1" ? "#ffffff" : "#0b1220",
+        weight: selectedKpi === "kpi4.1" ? 2 : 1.25,
         fillColor,
-        fillOpacity: 0.9,
+        fillOpacity: 0.92,
         opacity: 0.95,
         interactive: Boolean(handlers),
       }).addTo(map);
       if (popupContent) circle.bindPopup(popupContent);
-      if (segName) circle.bindTooltip(segName, { sticky: true, direction: "top", opacity: 0.9 });
+      if (segName) {
+        const tip =
+          selectedKpi === "kpi4.1"
+            ? `${segName} · ${
+                scenario === "comparison"
+                  ? `${displayValue >= 0 ? "+" : ""}${displayValue.toFixed(1)} pp`
+                  : `${displayValue.toFixed(0)}%`
+              }`
+            : segName;
+        circle.bindTooltip(tip, { sticky: true, direction: "top", opacity: 0.95 });
+      }
       if (handlers) {
         wireCircleMarkerSegment(circle, detail, handlers, {
           selectedSegmentId,

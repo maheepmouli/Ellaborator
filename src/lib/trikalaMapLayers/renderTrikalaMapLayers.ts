@@ -2,7 +2,7 @@ import L from "leaflet";
 import type { LocalCityPoint } from "@/services/localCityData";
 import type { TrikalaSegmentInsight } from "@/services/trikalaSurveyParser";
 import type { SegmentInteractionHandlers } from "@/lib/wireMapSegmentInteraction";
-import { wirePolylineSegment, wireMarkerSegment } from "@/lib/wireMapSegmentInteraction";
+import { wirePolylineSegment, wireCircleMarkerSegment } from "@/lib/wireMapSegmentInteraction";
 import {
   buildSmartCrossingPolyline,
   jitterSurveyPosition,
@@ -22,7 +22,6 @@ import { renderTrikalaInfrastructureLayers } from "./renderTrikalaInfrastructure
 import { renderTrikalaModeShareRadar } from "./renderTrikalaModeShareRadar";
 // Pilot 2 no longer uses CV-camera FOV radar — P+R polygons + bike-hub markers only.
 import { resolveTrikalaSurveyIconSpec } from "./trikalaPointIcons";
-import { createMapPointDivIcon } from "@/lib/mapPointIcons";
 
 export interface RenderTrikalaMapLayersOptions {
   map: L.Map;
@@ -171,7 +170,9 @@ function shouldHideAggregateSurveyMarkers(
   modeShareRadarActive: boolean
 ): boolean {
   if (modeShareRadarActive) return true;
-  // Pilot 3 always shows survey pins alongside sensor nodes (different KPI semantics).
+  // Pilot 3 · KPI 2.1 — LoRa sensor hubs only (no duplicate survey icon pins).
+  if (selectedPilotId === "tri-p3" && selectedKpi === "kpi2.1") return true;
+  // Pilot 3 KPI 4.2 still shows survey pins alongside sensor geography when needed.
   if (selectedPilotId === "tri-p3") return false;
   if (selectedPilotId !== "tri-p1") return false;
   if (selectedKpi !== "kpi2.1" && selectedKpi !== "kpi4.1" && selectedKpi !== "kpi4.2") return false;
@@ -226,15 +227,26 @@ function renderSurveyMarkers(
     const segName = resolveTrikalaSubSegmentLabel(segmentId, props);
     const iconSpec = resolveTrikalaSurveyIconSpec(segmentId, selectedKpi, props);
     const metricLabel = String(props.likertLabel ?? props.streetName ?? "Survey metric");
+    const fill =
+      selectedKpi === "kpi4.1"
+        ? "#22c55e"
+        : selectedKpi === "kpi4.2"
+          ? "#22c55e"
+          : accentColor || iconSpec.accent;
 
-    const marker = L.marker([lat, lon], {
-      icon: createMapPointDivIcon(iconSpec, `${iconSpec.label} · ${segName}`),
-      zIndexOffset: isSelected ? 1200 : 1000 + index,
+    // Plain coloured points — no icon badges (Issy / peer hub style).
+    const circle = L.circleMarker([lat, lon], {
+      radius: isSelected ? 10 : 8,
+      fillColor: fill,
+      color: "#ffffff",
+      weight: 2,
+      fillOpacity: 0.95,
+      opacity: 1,
       interactive: true,
     }).addTo(map);
-    marker.bindPopup(buildSurveyPopupHtml(point));
-    marker.bindTooltip(
-      `<span class="tri-segment-tooltip-inner" style="color:${accentColor}">${segName}</span><span class="tri-segment-tooltip-metric">${metricLabel}</span>`,
+    circle.bindPopup(buildSurveyPopupHtml(point));
+    circle.bindTooltip(
+      `<span class="tri-segment-tooltip-inner" style="color:${fill}">${segName}</span><span class="tri-segment-tooltip-metric">${metricLabel}</span>`,
       {
         direction: "top",
         offset: [0, -10],
@@ -243,18 +255,42 @@ function renderSurveyMarkers(
       }
     );
 
-    wireMarkerSegment(
-      marker,
-      {
-        segmentId,
-        segmentName: `${iconSpec.label} · ${segName}`,
-        speed: null,
-        congestion: point.value / 100,
-      },
-      segmentHandlers
-    );
+    const detail = {
+      segmentId,
+      segmentName: `${iconSpec.label} · ${segName}`,
+      speed: null as null,
+      congestion: point.value / 100,
+    };
 
-    markersOut.push(marker);
+    if (wireCircleMarker) {
+      wireCircleMarker(circle, detail, segmentHandlers, {
+        baseRadius: 8,
+        highlightRadius: 12,
+        selectedSegmentId,
+        baseStyle: {
+          fillColor: fill,
+          color: "#ffffff",
+          weight: 2,
+          fillOpacity: 0.95,
+          opacity: 1,
+        },
+      });
+    } else {
+      wireCircleMarkerSegment(circle, detail, segmentHandlers, {
+        baseRadius: 8,
+        highlightRadius: 12,
+        selectedSegmentId,
+        baseStyle: {
+          fillColor: fill,
+          color: "#ffffff",
+          weight: 2,
+          fillOpacity: 0.95,
+          opacity: 1,
+        },
+      });
+    }
+
+    circlesOut.push(circle);
   });
 }
 

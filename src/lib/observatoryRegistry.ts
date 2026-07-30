@@ -1,5 +1,3 @@
-import { KPI_READINESS_MATRIX } from "@/data/kpiReadinessMatrix";
-
 export type ObservatoryTabId =
   | "overview"
   | "pressure"
@@ -98,7 +96,7 @@ const DEFAULT_OBSERVATORY_TABS: ObservatoryTab[] = [
 export function getObservatoryConfig(
   kpiId: string,
   city: string,
-  pilotId?: string | null
+  _pilotId?: string | null
 ): ObservatoryConfig {
   const kpiBase = KPI_OBSERVATORY[kpiId] ?? KPI_OBSERVATORY["kpi2.1"];
   const base = {
@@ -111,19 +109,9 @@ export function getObservatoryConfig(
           ? "Directional counts for the selected camera corridor."
           : "Intervention-first observatory shell with explicit trust, data readiness, and methodology context.",
   };
-  const readiness = KPI_READINESS_MATRIX.find((c) => c.city === city && c.kpiId === kpiId);
-
-  let emptyState: string | undefined;
-  if (readiness?.readiness === "missing") {
-    emptyState = `No observed dataset linked for ${city} · ${kpiId}. ${readiness.notes}`;
-  } else if (readiness?.readiness === "partial") {
-    emptyState = `Partial coverage for this KPI. ${readiness.notes}${pilotId ? ` (pilot ${pilotId})` : ""}`;
-  }
-
   return {
     kpiId,
     ...base,
-    emptyState,
   };
 }
 

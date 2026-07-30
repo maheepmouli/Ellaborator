@@ -150,27 +150,41 @@ export function ClimateComparisonChart({
   showSegmentMap = false,
 }: ClimateComparisonChartProps) {
   const cards = payload.statCards ?? [];
-  const co2Card = cards.find(
+  const linkedShareRows = payload.modeShare ?? [];
+  const mockCards = [
+    { label: "CO₂ reduction", value: "−12%", color: OBS_C.lime },
+    { label: "Baseline", value: "100", color: undefined as string | undefined },
+    { label: "Pressure", value: "38%", color: OBS_C.amber },
+  ];
+  const mockShareRows = [
+    { mode: "Positive climate", before: 28, after: 36 },
+    { mode: "Neutral", before: 34, after: 32 },
+    { mode: "Negative climate", before: 38, after: 32 },
+  ];
+  const effectiveCards = cards.length ? cards : mockCards;
+  const shareRows = linkedShareRows.length ? linkedShareRows : mockShareRows;
+  const co2Card = effectiveCards.find(
     (c) =>
       c.label.toLowerCase().includes("co₂") ||
       c.label.toLowerCase().includes("co2") ||
       c.label.toLowerCase().includes("positive climate") ||
-      c.label.toLowerCase().includes("modelled")
+      c.label.toLowerCase().includes("modelled") ||
+      c.label.toLowerCase().includes("reduction")
   );
-  const baselineCard = cards.find((c) => c.label === "Baseline" || c.label.toLowerCase().includes("baseline"));
-  const congestionCard = cards.find(
+  const baselineCard = effectiveCards.find((c) => c.label === "Baseline" || c.label.toLowerCase().includes("baseline"));
+  const congestionCard = effectiveCards.find(
     (c) =>
       c.label === "Congestion" ||
       c.label === "Pressure" ||
       c.label.toLowerCase().includes("reduction") ||
       c.label.toLowerCase().includes("pressure")
   );
-  const negativeCard = cards.find((c) => c.label.toLowerCase().includes("negative"));
-  const shareRows = payload.modeShare ?? [];
+  const negativeCard = effectiveCards.find((c) => c.label.toLowerCase().includes("negative"));
   const maxShare = Math.max(1, ...shareRows.flatMap((r) => [r.before, r.after]));
   const [activeMode, setActiveMode] = useState<string | null>(null);
   const [hoverMode, setHoverMode] = useState<string | null>(null);
   const hasSegmentMap = showSegmentMap && (payload.emissionDirections?.length ?? 0) > 0;
+  const showMockBadge = linkedShareRows.length === 0 && cards.length === 0;
 
   // Header: segment map only. Overview: Intervention / Baseline / Pressure + climate share mix.
   if (hasSegmentMap) {
@@ -195,9 +209,16 @@ export function ClimateComparisonChart({
       className={`${obsGlassCardClass(compact)} relative z-10 pointer-events-auto`}
       style={obsGlassCardStyle()}
     >
-      <p className="text-[11px] font-semibold text-white/70 mb-3 flex items-center gap-1.5">
-        <Leaf className="h-3.5 w-3.5" /> Environmental comparison
-      </p>
+      <div className="flex items-center justify-between gap-2 mb-3">
+        <p className="text-[11px] font-semibold text-white/70 flex items-center gap-1.5">
+          <Leaf className="h-3.5 w-3.5" /> Environmental comparison
+        </p>
+        {showMockBadge ? (
+          <span className="rounded px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-violet-100 bg-violet-500/30 border border-violet-300/35">
+            Mock plot
+          </span>
+        ) : null}
+      </div>
       <div className="grid grid-cols-3 gap-2 text-center">
         {co2Card && (
           <div className="rounded-lg border p-2" style={{ borderColor: OBS_C.border }}>

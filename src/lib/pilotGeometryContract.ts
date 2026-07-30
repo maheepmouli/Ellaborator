@@ -154,14 +154,23 @@ export const PILOT_GEOMETRY_REGISTRY: Record<string, PilotGeometryRecord> = {
   "zar-p1": {
     pilotId: "zar-p1",
     regime: "area",
-    geometryTruth: { status: "derived", source: "gis", spatialReliability: 0.6 },
-    renderEligibility: "render_with_uncertainty",
-    geometryReduction: {
-      from: "polygon",
-      to: "centroid",
-      reason: "UI simplification / KPI alignment",
-    },
-    focus: pilotFocus("Zaragoza", "zar-p1", 14),
+    geometryTruth: { status: "exact", source: "gis", spatialReliability: 0.82 },
+    renderEligibility: "render_safe",
+    focus: pilotFocus("Zaragoza", "zar-p1", 16),
+  },
+  "zar-p2": {
+    pilotId: "zar-p2",
+    regime: "area",
+    geometryTruth: { status: "exact", source: "gis", spatialReliability: 0.8 },
+    renderEligibility: "render_safe",
+    focus: pilotFocus("Zaragoza", "zar-p2", 16),
+  },
+  "zar-p3": {
+    pilotId: "zar-p3",
+    regime: "area",
+    geometryTruth: { status: "exact", source: "gis", spatialReliability: 0.78 },
+    renderEligibility: "render_safe",
+    focus: pilotFocus("Zaragoza", "zar-p3", 16),
   },
   "tri-p1": {
     pilotId: "tri-p1",

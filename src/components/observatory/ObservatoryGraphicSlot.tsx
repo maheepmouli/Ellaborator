@@ -14,7 +14,7 @@ import {
 } from "@/lib/milanMapLayers";
 import { useLocalCityData } from "@/hooks/use-local-city-data";
 import { getKpiMissingDataNotice } from "@/lib/kpiMissingDataMessage";
-import { dataClassLabel } from "@/lib/observatoryCityContent";
+import { DataProvenanceBadge } from "@/components/DataProvenanceBadge";
 import {
   buildObservatoryGraphicPayload,
   getCityCenter,
@@ -173,10 +173,14 @@ function renderGraphic(
       return <SentimentGaugeChart payload={payload} compact={compact} />;
     case "dssBars":
     case "accessibilityBars":
-      return payload.likert?.length && payload.kpiId === "kpi4.2" ? (
-        <LikertDistributionChart payload={payload} compact={compact} />
-      ) : (
-        <StatCardsChart payload={payload} compact={compact} />
+      // Equal access / Baseline / Change cards (+ category bars when present) — Milan/Issy pattern.
+      return (
+        <div className="space-y-3">
+          <StatCardsChart payload={payload} compact={compact} />
+          {(payload.likert?.length ?? 0) > 0 ? (
+            <FacilityCategoryChart payload={payload} compact={compact} />
+          ) : null}
+        </div>
       );
     default:
       return <StatCardsChart payload={payload} compact={compact} />;
@@ -364,20 +368,8 @@ export function ObservatoryGraphicSlot({
 
   if (!spec || !payload) return null;
 
-  if (spec.emptyState && payload.dataClass === "mock" && zone !== "header") {
-    return (
-      <div className="space-y-2 mb-3">
-        <div className={obsGlassCardClass()} style={obsGlassCardStyle()}>
-          <p className="text-[11px] text-white/70 leading-relaxed">{spec.emptyState}</p>
-          {missingNotice && (
-            <p className="text-[10px] text-amber-100/85 mt-2">{missingNotice}</p>
-          )}
-        </div>
-        <SourceTag label={payload.sourceLabel} />
-      </div>
-    );
-  }
-
+  // Always render a mock plot when observed series are missing — keep provenance
+  // notices below the chart rather than replacing the graphic with empty-state text.
   const graphic = renderGraphic(spec.graphicId, payload, compact, zone, onSelectDirectionId);
 
   if (headerMode) {
@@ -421,8 +413,8 @@ export function ObservatoryGraphicSlot({
     <div className="space-y-2 mb-3">
       {graphic}
       <div className="flex flex-wrap items-center gap-2">
+        <DataProvenanceBadge type={payload.dataClass} />
         <SourceTag label={payload.sourceLabel} />
-        <span className="text-[9px] text-white/40">{dataClassLabel(payload.dataClass)}</span>
       </div>
       {zone === "overview" && (
         <div

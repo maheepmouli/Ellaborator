@@ -653,7 +653,7 @@ const InsightPanel = ({
         (p) => p.properties?.datasetKind === "parking"
       );
       if (facilities.length) {
-        return aggregateMilanFacilitySiteKpi(facilities);
+        return aggregateMilanFacilitySiteKpi(facilities, scenario);
       }
     }
     return null;
@@ -666,6 +666,7 @@ const InsightPanel = ({
     milanIllustrativeAccessibilityKpi,
     milanIllustrativeSatisfactionKpi,
     milanLocalPoints,
+    scenario,
   ]);
   const copenhagenCenter = cityData ? { lat: cityData.lat, lon: cityData.lon } : null;
   const shouldUseCopenhagenObserved =
@@ -695,6 +696,25 @@ const InsightPanel = ({
     isHelsinkiCity ? helsinkiCenter : null,
     selectedPilotId || null,
     scenario
+  );
+  const isZaragozaCity = selectedCity === "Zaragoza";
+  const zaragozaCenter = cityData ? { lat: cityData.lat, lon: cityData.lon } : null;
+  const { data: zaragozaLocalPoints } = useLocalCityData(
+    "Zaragoza",
+    selectedKpi,
+    isZaragozaCity ? zaragozaCenter : null,
+    selectedPilotId || null,
+    scenario
+  );
+  const zaragozaHasLocalDataset = Boolean(
+    zaragozaLocalPoints?.some(
+      (p) =>
+        p.properties?.dataOrigin === "local-city-dataset" ||
+        p.properties?.dataOrigin === "mock" ||
+        p.properties?.type === "observed" ||
+        p.properties?.type === "derived" ||
+        p.properties?.type === "mock"
+    )
   );
   const helsinkiObservedKpi = useMemo(() => {
     if (!isHelsinkiCity || !helsinkiLocalPoints?.length) return null;
@@ -806,6 +826,7 @@ const InsightPanel = ({
       copenhagenLocalPoints?.some((p) => p.properties?.dataOrigin === "local-city-dataset") ||
         helsinkiLocalPoints?.some((p) => p.properties?.dataOrigin === "local-city-dataset") ||
         milanLocalPoints?.some((p) => p.properties?.dataOrigin === "local-city-dataset") ||
+        zaragozaHasLocalDataset ||
         (milanSpeedDataset?.records?.length ?? 0) > 0 ||
         (milanEnvDataset?.records?.length ?? 0) > 0 ||
         dataQualitySummary?.provenanceType === "observed" ||
@@ -843,6 +864,8 @@ const InsightPanel = ({
     selectedPilotId,
     copenhagenLocalPoints,
     helsinkiLocalPoints,
+    zaragozaLocalPoints,
+    zaragozaHasLocalDataset,
     dataQualitySummary,
     manifestAvailable,
     usingIssyObservedModeShare,
@@ -1008,16 +1031,16 @@ const InsightPanel = ({
   };
 
   useEffect(() => {
-    // Always keep a catalog KPI that this pilot supports — unknown ids (e.g. kpi1.1
-    // before it was registered) would otherwise make this panel return null and hide
-    // the pilot / KPI selectors.
+    // Always keep a catalog KPI that this pilot supports — and that has city kpiData.
+    // Otherwise InsightPanel returns null and hides the pilot / KPI selectors
+    // (e.g. zar-p3 defaulted to kpi1.1 before Zaragoza had a kpi1.1 stub).
     if (!availableKpis.length) return;
     const selectedIsAvailable = availableKpis.some((kpi) => kpi.id === selectedKpi);
-    if (!selectedIsAvailable || !kpiDef || !kpiValue) {
-      const fallbackKpi = availableKpis[0]?.id;
-      if (fallbackKpi && fallbackKpi !== selectedKpi) onKpiChange(fallbackKpi);
-    }
-  }, [kpiDef, kpiValue, selectedKpi, availableKpis, onKpiChange]);
+    if (selectedIsAvailable && kpiDef && kpiValue) return;
+    const fallbackKpi =
+      availableKpis.find((kpi) => cityData?.kpiData?.[kpi.id])?.id ?? availableKpis[0]?.id;
+    if (fallbackKpi && fallbackKpi !== selectedKpi) onKpiChange(fallbackKpi);
+  }, [kpiDef, kpiValue, selectedKpi, availableKpis, onKpiChange, cityData?.kpiData]);
 
   const missingDataNotice = useMemo(() => provenance.missingNotice, [provenance]);
 
@@ -1206,6 +1229,11 @@ const InsightPanel = ({
             : milanSegmentHeadline
               ? {
                   mainValue: milanSegmentHeadline.baselineMain,
+                  breakdown:
+                    "breakdownBaseline" in milanSegmentHeadline
+                      ? (milanSegmentHeadline as { breakdownBaseline?: Record<string, number> })
+                          .breakdownBaseline
+                      : undefined,
                   change: 0,
                 }
           : baselineKpiSlice(kpiValue);
@@ -1246,6 +1274,12 @@ const InsightPanel = ({
             : milanSegmentHeadline
               ? {
                   mainValue: milanSegmentHeadline.interventionMain,
+                  breakdown:
+                    "breakdownIntervention" in milanSegmentHeadline
+                      ? (milanSegmentHeadline as {
+                          breakdownIntervention?: Record<string, number>;
+                        }).breakdownIntervention
+                      : undefined,
                   change: milanSegmentHeadline.change,
                 }
           : interventionKpiSlice(kpiValue);
@@ -1314,6 +1348,17 @@ const InsightPanel = ({
     milanSegmentHeadline?.change ??
     kpiValue.change;
   const currentMainValue = scenario === "baseline" ? baselineMainValue : interventionMainValue;
+  /** Copenhagen satisfaction/accessibility: integer + % on the figure (e.g. 61%). */
+  const formatHeadlineFigure = (value: number) => {
+    if (
+      isCopenhagenCity &&
+      (selectedKpi === "kpi4.1" || selectedKpi === "kpi4.2") &&
+      Number.isFinite(value)
+    ) {
+      return `${Math.round(value)}%`;
+    }
+    return formatKpiFigure(value);
+  };
   const baselineBreakdown =
     "breakdown" in baselineKvSlice ? baselineKvSlice.breakdown : undefined;
   const interventionBreakdown =
@@ -1511,12 +1556,12 @@ const InsightPanel = ({
             <div className="mt-4 space-y-2">
               <div className="flex items-baseline gap-2">
                 <span className="text-intel-meta text-white/80 w-14 shrink-0">Before</span>
-                <span className="text-3xl font-bold text-white tabular-nums">{formatKpiFigure(baselineMainValue)}</span>
+                <span className="text-3xl font-bold text-white tabular-nums">{formatHeadlineFigure(baselineMainValue)}</span>
                 <span className="text-intel-kpi-label font-semibold text-cyan-200">{displayUnit}</span>
               </div>
               <div className="flex items-baseline gap-2">
                 <span className="text-intel-meta text-white/80 w-14 shrink-0">After</span>
-                <span className="text-3xl font-bold text-white tabular-nums">{formatKpiFigure(interventionMainValue)}</span>
+                <span className="text-3xl font-bold text-white tabular-nums">{formatHeadlineFigure(interventionMainValue)}</span>
                 <span className="text-intel-kpi-label font-semibold text-cyan-200">{displayUnit}</span>
                 {showTrendPill && (
                   <div
@@ -1535,7 +1580,7 @@ const InsightPanel = ({
           ) : (
             <div className="mt-4 flex items-baseline gap-2 flex-wrap">
               <span className="text-4xl font-bold text-white tabular-nums tracking-tight">
-                {formatKpiFigure(currentMainValue)}
+                {formatHeadlineFigure(currentMainValue)}
               </span>
               {displayUnit && (
                 <span className="text-2xl font-bold text-cyan-200 leading-none">{displayUnit}</span>
@@ -1559,17 +1604,7 @@ const InsightPanel = ({
           )}
 
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <DataProvenanceBadge
-              type={
-                provenance.headlineSource === "observed"
-                  ? "observed"
-                  : provenance.headlineSource === "modelled"
-                    ? "modelled"
-                    : provenance.headlineSource === "derived"
-                      ? "derived"
-                      : "mock"
-              }
-            />
+            <DataProvenanceBadge type={provenance.trustClass ?? provenance.headlineSource} />
             <span className="text-intel-meta font-semibold text-white/88">{confidenceLine}</span>
           </div>
           {provenance.degradedBanner && (

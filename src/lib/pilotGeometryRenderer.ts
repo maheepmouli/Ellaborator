@@ -66,9 +66,6 @@ function boundsFromFocus(
 
 function reductionCaption(pilot: PilotGeometryRecord): string | undefined {
   if (!pilot.geometryReduction) return undefined;
-  if (pilot.pilotId === "zar-p1") {
-    return "Aggregated representation of 4 intervention zones";
-  }
   return `Reduced from ${pilot.geometryReduction.from} to ${pilot.geometryReduction.to}: ${pilot.geometryReduction.reason}`;
 }
 
@@ -108,16 +105,22 @@ function segmentRenderer(pilot: PilotGeometryRecord): PilotGeometryRenderSpec {
 }
 
 function areaRenderer(pilot: PilotGeometryRecord): PilotGeometryRenderSpec {
-  const bounds = boundsFromFocus(pilot, 14);
+  const exactGisPolygon =
+    pilot.geometryTruth.status === "exact" &&
+    pilot.geometryTruth.source === "gis" &&
+    !pilot.geometryReduction;
+  const bounds = boundsFromFocus(pilot, exactGisPolygon ? 16 : 14);
   return {
     bounds,
     visualizationMode: "generic-points",
     interactionModel: "area",
     flyToAllowed: true,
-    maxZoom: 15,
-    labelStyle: "aggregate",
-    uncertaintyLevel: "low",
-    legendHint: "Intervention area centroids (polygon geometry reduced for map).",
+    maxZoom: exactGisPolygon ? 18 : 15,
+    labelStyle: exactGisPolygon ? "precise" : "aggregate",
+    uncertaintyLevel: exactGisPolygon ? "none" : "low",
+    legendHint: exactGisPolygon
+      ? "Intervention polygons from partner GIS; active pilot highlighted."
+      : "Intervention area centroids (polygon geometry reduced for map).",
     reductionCaption: reductionCaption(pilot),
   };
 }
@@ -241,10 +244,13 @@ export function resolvePilotGeometryRender(input: {
 
   let spec = regimeBaseSpec(pilot);
 
-  if (
-    pilot.geometryTruth.status === "inferred" ||
-    runtimeLinkage === "inferred"
-  ) {
+  // Exact GIS pilots keep street-level zoom even when KPI points are pilot-anchored
+  // (runtimeLinkage "inferred") — same class of bug that locked Helsinki at maxZoom 12.
+  const exactGis =
+    pilot.geometryTruth.status === "exact" && pilot.geometryTruth.source === "gis";
+  if (pilot.geometryTruth.status === "inferred") {
+    spec = applyInferredHardRule(spec);
+  } else if (runtimeLinkage === "inferred" && !exactGis) {
     spec = applyInferredHardRule(spec);
   } else {
     spec = applyUncertaintyEligibility(spec, pilot);

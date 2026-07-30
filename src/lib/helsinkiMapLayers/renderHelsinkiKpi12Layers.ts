@@ -26,6 +26,7 @@ import {
 import { buildHelsinkiTelraamModeShareFlows } from "@/lib/helsinkiMapLayers/helsinkiModeShareFlows";
 import {
   clusterHelsinkiPointHubs,
+  finalizeHelsinkiFvh1ModeShareHubs,
   type HelsinkiHazardHub,
 } from "@/lib/helsinkiMapLayers/helsinkiHazardHubs";
 import { fitHelsinkiKpiView } from "@/lib/helsinkiMapLayers/helsinkiKpiMapFit";
@@ -91,6 +92,7 @@ function drawModeShareRippleHub(options: {
   isPrimary: boolean;
   hazardCount?: number;
   totalHazards?: number;
+  hubCategories?: Array<{ label: string; count: number }>;
   clusterKind?: "hazard" | "parking";
   scenario: "baseline" | "intervention" | "comparison";
   activeMapSegmentId?: string | null;
@@ -116,6 +118,7 @@ function drawModeShareRippleHub(options: {
     isPrimary,
     hazardCount,
     totalHazards,
+    hubCategories,
     clusterKind = "hazard",
     scenario,
     activeMapSegmentId,
@@ -197,6 +200,13 @@ function drawModeShareRippleHub(options: {
     segmentName: label,
     speed: null as null,
     congestion: null as null,
+    properties: {
+      lat: hubLat,
+      lon: hubLon,
+      observationCount: hazardCount ?? undefined,
+      hazardCategories: hubCategories,
+      datasetKind: "dangerous-location",
+    },
   };
 
   const centerMarker = L.marker([hubLat, hubLon], {
@@ -247,30 +257,11 @@ function drawModeShareRippleHub(options: {
 
 function ensurePrimaryNearAnchor(
   hubs: HelsinkiHazardHub[],
-  anchor: { lat: number; lng: number },
+  _anchor: { lat: number; lng: number },
   primaryId: string,
   primaryLabel: string
 ): HelsinkiHazardHub[] {
-  if (!hubs.length) {
-    return [
-      {
-        id: primaryId,
-        lat: anchor.lat,
-        lon: anchor.lng,
-        count: 0,
-        label: primaryLabel,
-      },
-    ];
-  }
-
-  // Prefer densest cluster as primary; keep presentation count.
-  const ranked = [...hubs].sort((a, b) => b.count - a.count);
-  const primary = { ...ranked[0], id: primaryId, label: primaryLabel };
-  const rest = ranked.slice(1).map((hub, index) => ({
-    ...hub,
-    id: `${primaryId}-cluster-${index + 2}`,
-  }));
-  return [primary, ...rest];
+  return finalizeHelsinkiFvh1ModeShareHubs(hubs, primaryId, primaryLabel);
 }
 
 
@@ -618,6 +609,7 @@ export function renderHelsinkiKpi12Layers(
           limit: HELSINKI_MODE_SHARE_HUB_LIMIT,
           idPrefix: "hel-hazard-hub",
           labelPrefix: "Hazard density cluster",
+          categoryProperty: "locationType",
         }),
         HELSINKI_FVH1_SURVEY_HUB,
         "hel-dangerous-locations",
@@ -639,6 +631,7 @@ export function renderHelsinkiKpi12Layers(
           sustainablePct: null,
           isPrimary,
           hazardCount: hub.count || undefined,
+          hubCategories: hub.categories,
           totalHazards,
           scenario,
           activeMapSegmentId,

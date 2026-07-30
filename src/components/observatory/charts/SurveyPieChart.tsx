@@ -21,6 +21,15 @@ function colorFor(score: number | undefined, index: number): string {
 export function SurveyPieChart({ payload, compact }: SurveyPieChartProps) {
   const [period, setPeriod] = useState<"after" | "before">("after");
   const dist = payload.surveyDistribution;
+  const mockSlices: Slice[] = [
+    { label: "1", value: 6, score: 1, fill: colorFor(1, 0) },
+    { label: "2", value: 9, score: 2, fill: colorFor(2, 1) },
+    { label: "3", value: 14, score: 3, fill: colorFor(3, 2) },
+    { label: "4", value: 18, score: 4, fill: colorFor(4, 3) },
+    { label: "5", value: 22, score: 5, fill: colorFor(5, 4) },
+    { label: "6", value: 19, score: 6, fill: colorFor(6, 5) },
+    { label: "7", value: 12, score: 7, fill: colorFor(7, 6) },
+  ];
   const fallback = (payload.likert ?? []).map((r, i) => ({
     label: r.label,
     value: Number(r.value) || 0,
@@ -37,28 +46,27 @@ export function SurveyPieChart({ payload, compact }: SurveyPieChartProps) {
     fill: colorFor(r.score, i),
   }));
 
-  const active = (period === "before" ? before : after).filter((s) => s.value > 0);
+  const linkedActive = (period === "before" ? before : after).filter((s) => s.value > 0);
+  const isMock = linkedActive.length === 0;
+  const active = isMock ? mockSlices : linkedActive;
   const title =
-    payload.kpiId === "kpi4.1" ? "Acceptability distribution (Likert 1–7)" : "Survey distribution";
-
-  if (!active.length) {
-    // Hide empty Acceptability / survey placeholder (e.g. CPH MOCK satisfaction without Likert workbook).
-    if (payload.dataClass === "mock") return null;
-    return (
-      <div className={obsGlassCardClass(compact)} style={obsGlassCardStyle()}>
-        <p className="text-[11px] font-semibold text-white/70 mb-2">{title}</p>
-        <p className="text-[10px] text-white/45 leading-relaxed">
-          {payload.spec.emptyState || "No survey distribution linked for this pilot."}
-        </p>
-      </div>
-    );
-  }
+    payload.kpiId === "kpi4.1"
+      ? "Acceptability distribution (Likert 1–7)"
+      : payload.kpiId === "kpi4.2"
+        ? "Accessibility distribution (Likert 1–7)"
+        : "Survey distribution";
 
   return (
     <div className={obsGlassCardClass(compact)} style={obsGlassCardStyle()}>
       <div className="flex items-center justify-between gap-2 mb-2">
         <p className="text-[11px] font-semibold text-white/70">{title}</p>
-        {(before.length > 0 || after.length > 0) && (
+        <div className="flex items-center gap-2">
+          {isMock ? (
+            <span className="rounded px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-violet-100 bg-violet-500/30 border border-violet-300/35">
+              Mock plot
+            </span>
+          ) : null}
+          {(before.length > 0 || after.length > 0) && (
           <div className="flex rounded-md overflow-hidden border border-white/15 text-[10px]">
             <button
               type="button"
@@ -75,7 +83,8 @@ export function SurveyPieChart({ payload, compact }: SurveyPieChartProps) {
               After
             </button>
           </div>
-        )}
+          )}
+        </div>
       </div>
       <div className={compact ? "h-[200px]" : "h-[240px]"}>
         <ResponsiveContainer width="100%" height="100%">

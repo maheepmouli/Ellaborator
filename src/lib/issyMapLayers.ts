@@ -38,9 +38,9 @@ import { ISSY_SENTIMENT_MOCK_DISCLAIMER } from "@/data/issySentimentMock";
 import { dataSourceTrustLabel } from "@/lib/issyDataTransparency";
 import { provenanceBadgesHtml } from "@/lib/dataProvenance";
 import {
-  issyZoneSustainablePctColor,
   type IssyZoneModeSharePoint,
 } from "@/lib/issyFlowAggregates";
+import { renderHubRipplePulseOverlay } from "@/lib/copenhagenMapLayers/copenhagenTrafficPulse";
 
 /** Neon tokens for KPI 3.1 dark-map styling */
 const FACILITY_LINE_GLOW = "#2ecc71";
@@ -322,7 +322,15 @@ export function renderIssyCityClimateReading(
           color: delta < 0 ? COMPARISON_FAVOURABLE_COLOR : COMPARISON_OTHER_COLOR,
           weight: 2,
         }
-      : climateHexStyle(displayIntensity);
+      : scenario === "intervention"
+        ? {
+            // Match observatory Intervention bar / legend "Medium" — not residual-intensity red.
+            fillColor: "#FBBF24",
+            fillOpacity: 0.3,
+            color: "#FBBF24",
+            weight: 1.5,
+          }
+        : climateHexStyle(displayIntensity);
 
   const usesClasseur = !!options.classeur;
   const detail: SegmentInteractionDetail = {
@@ -956,7 +964,7 @@ export function renderIssyMovementNodes(
   return n;
 }
 
-/** Issy Pilot 2 — city-wide sustainable mobility % at OD zone centroids. */
+/** Issy Pilot 2 — city-wide sustainable mobility hubs (Copenhagen ripple style, no FOV). */
 export function renderIssyCityModeShareZones(
   map: L.Map,
   zonePoints: IssyZoneModeSharePoint[],
@@ -969,12 +977,6 @@ export function renderIssyCityModeShareZones(
   } = {}
 ): void {
   const scenario = options.scenario ?? "intervention";
-  const maxVolume = Math.max(
-    1,
-    ...zonePoints.map((z) =>
-      scenario === "baseline" ? z.baselineVolume : z.interventionVolume
-    )
-  );
 
   zonePoints.forEach((zone) => {
     const displayPct =
@@ -990,73 +992,48 @@ export function renderIssyCityModeShareZones(
       if (comparePct < lo || comparePct > hi) return;
     }
 
-    const fill =
-      scenario === "comparison"
-        ? zone.deltaPp >= 0
-          ? "#22c55e"
-          : "#ef4444"
-        : issyZoneSustainablePctColor(
-            scenario === "baseline" ? zone.baselineSustainablePct : zone.interventionSustainablePct
-          );
-    const volumeShare =
-      (scenario === "baseline" ? zone.baselineVolume : zone.interventionVolume) / maxVolume;
-    const radius = Math.max(9, Math.min(22, 9 + volumeShare * 12 + displayPct * 0.06));
+    const sustainablePct =
+      scenario === "baseline" ? zone.baselineSustainablePct : zone.interventionSustainablePct;
+    // Match Copenhagen hub palette: red = pressured / low sustainable, blue = healthier share.
+    const isLowSustainable = sustainablePct < 35;
     const segmentId = `issy-zone-${zone.zone}`;
-    const isSelected = options.selectedSegmentId === segmentId;
+    const segmentName = `${zone.label} · ${
+      scenario === "comparison"
+        ? `${zone.deltaPp >= 0 ? "+" : ""}${zone.deltaPp.toFixed(1)} pp`
+        : `${displayPct.toFixed(1)}% sustainable`
+    }`;
 
-    const pin = L.circleMarker([zone.lat, zone.lon], {
-      radius: isSelected ? radius + 3 : radius,
-      fillColor: fill,
-      color: "#ffffff",
-      weight: isSelected ? 3 : 2,
-      fillOpacity: 0.92,
-      opacity: 1,
-      className: "issy-city-mode-share-zone",
-      bubblingMouseEvents: false,
-    }).addTo(map);
-    const el = pin.getElement();
-    if (el) el.style.cursor = "pointer";
-
-    pin.bindTooltip(
-      `${zone.label} · ${
-        scenario === "comparison"
-          ? `${zone.deltaPp >= 0 ? "+" : ""}${zone.deltaPp.toFixed(1)} pp`
-          : `${displayPct.toFixed(1)}% sustainable`
-      }`,
-      { direction: "top", opacity: 1, className: "tri-segment-tooltip" }
+    renderHubRipplePulseOverlay(
+      map,
+      zone.lat,
+      zone.lon,
+      isLowSustainable,
+      refs.markers,
+      refs.circles as L.CircleMarker[],
+      {
+        showAnchorDot: true,
+        ringScale: 0.65,
+        minZoom: 11,
+        interaction: options.segmentHandlers
+          ? {
+              segmentId,
+              segmentName,
+              segmentHandlers: options.segmentHandlers,
+              selectedSegmentId: options.selectedSegmentId,
+              wireCircleMarker: wireCircleMarkerSegment,
+            }
+          : undefined,
+      }
     );
 
-    const detail = {
-      segmentId,
-      segmentName: `${zone.label} · sustainable mobility`,
-      speed: null as number | null,
-      congestion: null as number | null,
-      properties: {
-        datasetKind: "issy-zone-mode-share",
-        zone: zone.zone,
-        baselineSustainablePct: zone.baselineSustainablePct,
-        interventionSustainablePct: zone.interventionSustainablePct,
-        deltaPp: zone.deltaPp,
-      },
-    };
-    if (options.segmentHandlers) {
-      wireCircleMarkerSegment(pin, detail, options.segmentHandlers, {
-        baseRadius: radius,
-        highlightRadius: radius + 4,
-        selectedSegmentId: options.selectedSegmentId,
-        baseStyle: {
-          fillColor: fill,
-          color: "#ffffff",
-          weight: 2,
-          fillOpacity: 0.92,
-        },
-        highlightStyle: {
-          weight: 3,
-          fillOpacity: 1,
-          color: "#E0F2FE",
-        },
+    // Tooltip on the hub center just added (last circle in refs).
+    const hub = refs.circles[refs.circles.length - 1];
+    if (hub && "bindTooltip" in hub) {
+      hub.bindTooltip(segmentName, {
+        direction: "top",
+        opacity: 1,
+        className: "tri-segment-tooltip",
       });
     }
-    refs.circles.push(pin);
   });
 }

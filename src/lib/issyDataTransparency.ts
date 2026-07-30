@@ -43,17 +43,17 @@ export function kpiPrimaryIssySource(kpiId: string): IssyDataSourceKind {
 export function dataSourceTrustLabel(kind: IssyDataSourceKind): string {
   switch (kind) {
     case "traficissy-segment":
-      return "Observed segment data";
+      return "OBSERVED";
     case "od-csv":
-      return "Observed OD flow data";
+      return "OBSERVED";
     case "bike-api":
-      return "Observed counter data";
+      return "OBSERVED";
     case "infra-api":
-      return "Observed infrastructure data";
+      return "OBSERVED";
     case "derived-proxy":
-      return "Derived proxy";
+      return "DERIVED";
     case "mock":
-      return "Mock / demo";
+      return "MOCK";
   }
 }
 

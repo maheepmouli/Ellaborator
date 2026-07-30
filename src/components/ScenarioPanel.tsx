@@ -9,6 +9,7 @@ import { isCopenhagenCameraKpi } from "@/data/copenhagenCameraSites";
 import { useCopenhagenEmissions } from "@/hooks/use-copenhagen-emissions";
 import { resolveKpiProvenance, provenanceConfidenceLine } from "@/lib/kpiProvenance";
 import { formatConfidenceLine } from "@/lib/kpiMissingDataMessage";
+import { DataProvenanceBadge } from "@/components/DataProvenanceBadge";
 import { getLocalCityDiagnostics } from "@/services/localCityData";
 import { aggregateHelsinkiObservedKpi } from "@/lib/helsinkiKpiDisplay";
 import type { PilotGeometryRenderSpec } from "@/lib/pilotGeometryRenderer";
@@ -204,11 +205,7 @@ const ScenarioPanel = ({
           <span className="px-2 py-0.5 rounded-full bg-white/10 border border-white/20">Method: {isHelsinkiObservedBeforeAfter ? "derived proxy" : isCopenhagenObservedBeforeAfter ? "Observed counts by camera direction and movement category" : methodLabel}</span>
           <span className="px-2 py-0.5 rounded-full bg-white/10 border border-white/20">Temporal: {temporalLabel}</span>
           <span className="px-2 py-0.5 rounded-full bg-white/10 border border-white/20">Source: {isHelsinkiObservedBeforeAfter ? "Local" : isCopenhagenObservedBeforeAfter ? "OpenTrafficCam Excel" : provenance.sourceLabel}</span>
-          {provenance.headlineSource === "mock" && (
-            <span className="px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-400/30 text-amber-100">
-              Illustrative
-            </span>
-          )}
+          <DataProvenanceBadge type={provenance.trustClass ?? provenance.headlineSource} />
         </div>
 
         {provenance.degradedBanner && (
@@ -259,7 +256,7 @@ const ScenarioPanel = ({
           <div className="bg-white/[0.05] backdrop-blur-2xl rounded-xl border border-white/25 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.22)]">
             <p className="text-xs font-bold text-white mb-3">Data Transparency</p>
             <div className="grid grid-cols-2 gap-3 text-[11px] text-white/80">
-              <p><span className="text-white font-semibold">Data Type:</span> {isHelsinkiObservedBeforeAfter ? (selectedKpi === "kpi2.1" ? "derived" : "observed") : isCopenhagenObservedBeforeAfter ? "observed" : provenance.dataLabel}</p>
+              <p><span className="text-white font-semibold">Data Type:</span> {isHelsinkiObservedBeforeAfter ? (selectedKpi === "kpi2.1" ? "DERIVED" : "OBSERVED") : isCopenhagenObservedBeforeAfter ? "OBSERVED" : provenance.dataLabel}</p>
               <p><span className="text-white font-semibold">Source:</span> {isHelsinkiObservedBeforeAfter ? "Telraam" : isCopenhagenObservedBeforeAfter ? "OpenTrafficCam Excel" : provenance.sourceLabel}</p>
               <p><span className="text-white font-semibold">Confidence:</span> {provenanceConfidenceLine(provenance, formatConfidenceLine)}</p>
               <p><span className="text-white font-semibold">Spatial:</span> {spatialLabel}</p>

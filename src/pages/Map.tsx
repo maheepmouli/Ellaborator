@@ -32,6 +32,7 @@ import { buildTrikalaObservatoryView } from "@/lib/trikalaObservatoryView";
 import { loadTrikalaLocationsBundle } from "@/data/trikalaLocationRegistry";
 import { buildCopenhagenObservatoryView, filterCopenhagenObservatoryPoints } from "@/lib/copenhagenObservatoryView";
 import { buildMilanObservatoryView } from "@/lib/milanObservatoryView";
+import { buildZaragozaObservatoryView } from "@/lib/zaragozaObservatoryView";
 import { useLocalCityData } from "@/hooks/use-local-city-data";
 import { isIssyCity } from "@/lib/issyMapRouting";
 import { getIssyPilotProfile } from "@/data/issyPilotProfiles";
@@ -44,12 +45,14 @@ import {
 } from "@/lib/issyClimateHexObservatory";
 import { useIssyWorkbooks } from "@/hooks/use-issy-workbooks";
 import { canOpenObservatory } from "@/lib/observatoryAccess";
+import { isHelsinkiMapDrivenSelectionId, isHelsinkiSelectionCompatibleWithPilot } from "@/lib/helsinkiObservatoryView";
 import {
   isCopenhagenObservatoryContext,
   copenhagenSiteSegmentId,
   parseCopenhagenMapSelection,
 } from "@/lib/copenhagenMapSelection";
 import { getCopenhagenPilotLatLngBounds } from "@/data/copenhagenCameraSites";
+import { getZaragozaPilotLatLngBounds } from "@/data/zaragozaPilotProfiles";
 import type { MapSelectionState } from "@/types/mapSelection";
 import { useMilanEnvironmentSegments, useMilanSpeedSegments } from "@/hooks/use-milan-segment-data";
 import {
@@ -376,6 +379,9 @@ const MapContent = () => {
     if (!selectedPilot) return;
     if (selectedPilot.id.startsWith("issy-p")) return;
     if (selectedPilot.id.startsWith("hel-")) return;
+    // Milan HeroMap layers own viewport (once-fit). Re-flying on every KPI /
+    // runtimeLinkage change fights wheel zoom the same way Helsinki used to.
+    if (selectedPilot.id.startsWith("mil-")) return;
     if (selectedPilot.id === "tri-p2") {
       requestPilotMapBounds(getTrikalaPilot2FitBounds(selectedKpi), 17);
       return;
@@ -386,6 +392,13 @@ const MapContent = () => {
         const maxZoom =
           selectedPilot.id === "cph-p2" ? 18 : selectedPilot.id === "cph-p3" ? 17 : 16;
         requestPilotMapBounds(bounds, maxZoom);
+        return;
+      }
+    }
+    if (selectedPilot.id.startsWith("zar-")) {
+      const bounds = getZaragozaPilotLatLngBounds(selectedPilot.id);
+      if (bounds) {
+        requestPilotMapBounds(bounds, 17);
         return;
       }
     }
@@ -751,6 +764,17 @@ const MapContent = () => {
 
     const segmentIds = observatorySegments.map((s) => s.id);
     if (segmentIds.length > 0) {
+      // Preserve Helsinki hub / sample / sensor clicks that are not aggregate observatory rows.
+      // Resetting them to segmentIds[0] made Pilot 1 KPI interactions appear dead.
+      if (
+        selectedCity === "Helsinki" &&
+        selectedJunctionSegmentId &&
+        isHelsinkiMapDrivenSelectionId(selectedJunctionSegmentId) &&
+        isHelsinkiSelectionCompatibleWithPilot(selectedJunctionSegmentId, selectedPilot?.id) &&
+        !segmentIds.includes(selectedJunctionSegmentId)
+      ) {
+        return;
+      }
       // Preserve map click/hover selection when it is still a valid observatory target.
       // Always resetting to segmentIds[0] made Milan accessibility/climate clicks appear dead.
       const nextId = pickDefaultSegmentId(segmentIds, selectedJunctionSegmentId);
@@ -809,6 +833,9 @@ const MapContent = () => {
       if (hoverId.startsWith("loc:") || hoverId.startsWith("site:")) return selectedDirectionId;
       return hoverId;
     }
+    if (selectedCity === "Zaragoza" && hoverId) {
+      return hoverId;
+    }
     if (selectedCity === "Milan" && selectedKpi === "kpi1.2" && hoverId) {
       return hoverId;
     }
@@ -841,6 +868,22 @@ const MapContent = () => {
           pilotLabel: label,
           selectionId,
           selectedModeTypes,
+          segmentName: mapContext?.segmentName ?? null,
+        }
+      );
+    }
+
+    if (selectedCity === "Zaragoza") {
+      const selectionId = hoveredSegmentId ?? selectedJunctionSegmentId;
+      return buildZaragozaObservatoryView(
+        junctionConfig,
+        selectedPilot.id,
+        selectedKpi,
+        scenario,
+        scopedObservatoryPoints,
+        {
+          pilotLabel: label,
+          selectionId,
           segmentName: mapContext?.segmentName ?? null,
         }
       );
@@ -894,6 +937,41 @@ const MapContent = () => {
           envDataset: milanEnvForObservatory ?? null,
           pilotLabel: label,
         }
+      );
+    }
+
+    if (selectedCity === "Helsinki" && junctionConfig && selectedPilot?.id) {
+      const selectionId = hoveredSegmentId ?? selectedJunctionSegmentId;
+      if (selectionId) {
+        const matchedSeg = observatorySegments.find((s) => s.id === selectionId);
+        return buildSegmentScopedObservatoryView(
+          junctionConfig,
+          selectedCity,
+          selectedPilot.id,
+          selectedKpi,
+          scenario,
+          scopedObservatoryPoints,
+          {
+            segmentId: selectionId,
+            segmentName:
+              mapContext?.segmentName ??
+              String(matchedSeg?.segment ?? "Helsinki intervention site"),
+            speed: mapContext?.speed ?? matchedSeg?.vitesse_km_h ?? null,
+            congestion: mapContext?.congestion ?? matchedSeg?.indice_de_congestion ?? null,
+            properties: mapContext?.properties,
+          },
+          intensity,
+          selectedModeTypes
+        );
+      }
+      return buildCityObservatoryView(
+        junctionConfig,
+        selectedCity,
+        selectedPilot.id,
+        selectedKpi,
+        scenario,
+        scopedObservatoryPoints,
+        intensity
       );
     }
 
@@ -1166,10 +1244,15 @@ const MapContent = () => {
             speed: null,
             congestion: null,
           });
+        } else {
+          setSelectedJunctionSegmentId(null);
+          setHoveredSegmentId(null);
+          setMapContext(null);
+          patchSelection({ segmentId: null });
         }
       }
     },
-    [resolveCityLabelFromPilot, setIntelCity, resolvePilotDefaultKpi, selectedKpi, setIntelKpiId, patchSelection]
+    [resolveCityLabelFromPilot, setIntelCity, resolvePilotDefaultKpi, selectedKpi, setIntelKpiId, patchSelection, setSelectedJunctionSegmentId]
   );
 
   const handleSegmentHover = useCallback(
@@ -1250,7 +1333,12 @@ const MapContent = () => {
       });
       setMapSelection({ segmentId: siteId, city: selectedCity, pilotId, kpi: nextKpi });
     } else {
-      setMapSelection((prev) => ({ ...prev, pilotId, kpi: nextKpi }));
+      // Drop stale cross-pilot map selection immediately (e.g. Telraam id on hel-p1).
+      setSelectedJunctionSegmentId(null);
+      setHoveredSegmentId(null);
+      setMapContext(null);
+      patchSelection({ segmentId: null });
+      setMapSelection((prev) => ({ ...prev, segmentId: null, pilotId, kpi: nextKpi }));
     }
   };
 

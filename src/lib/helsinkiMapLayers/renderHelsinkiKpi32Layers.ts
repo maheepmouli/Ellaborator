@@ -121,6 +121,7 @@ function drawClimatePoint(options: {
         segmentName: point.label,
         speed: null,
         congestion: score,
+        properties: { lat: point.lat, lon: point.lon, datasetKind: "safety-attitude-survey" },
       },
       segmentHandlers,
       {

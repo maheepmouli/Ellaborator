@@ -3,7 +3,7 @@ import {
   ISSY_P2_JUNCTION,
   type IssyJunctionArmId,
 } from "@/lib/issyPilot2Junction";
-import { placeFieldPointOnJunctionArm } from "@/lib/issyJunctionArmPlacement";
+import { placeAccessibilityPointOnJunctionArm } from "@/lib/issyJunctionArmPlacement";
 import type { IssyPilotId } from "@/data/issyPilotProfiles";
 import type { LocalCityPoint } from "@/services/localCityData";
 import type { ScenarioType } from "@/types/normalized-city-data";
@@ -50,14 +50,6 @@ export interface IssyAccessibilityPilotMock {
   methodology: string;
 }
 
-/** Distances along carriageway stubs — keep markers on the road near the junction. */
-const ARM_FIELD_DISTANCE_M: Record<IssyJunctionArmId, number> = {
-  west: 32,
-  east: 36,
-  north: 40,
-  south: 34,
-};
-
 /** Which junction arms get a mock asset — only on KPI 1.2 corridor segments. */
 const PILOT_ARM_SLOTS: Record<IssyPilotId, IssyJunctionArmId[]> = {
   "issy-p1": ["west", "east", "south", "west", "east"],
@@ -91,9 +83,8 @@ function placeFeaturesOnJunctionArms(pilotId: IssyPilotId): IssyAccessibilityFea
     const arm = getArm(armId);
     const category = SLOT_CATEGORIES[index % SLOT_CATEGORIES.length];
     const u = seededUnit(pilotId, index);
-    // Stagger along the arm so west/east duplicates don't stack; stay within ~80 m of hub.
-    const distanceM = ARM_FIELD_DISTANCE_M[armId] + index * 12 + u * 6;
-    const [lat, lon] = placeFieldPointOnJunctionArm(armId, distanceM);
+    // Land sidewalk / plaza near hub — not Pont d'Issy bridge over the Seine, not carriageway.
+    const [lat, lon] = placeAccessibilityPointOnJunctionArm(armId, index);
     const qualityScore = Math.round(62 + u * 28);
     const baselineScore = Math.max(32, Math.round(qualityScore - 10 - (index % 4) * 3));
     // Deterministic mix so every pilot always has map points + a visible before→after delta.
@@ -243,7 +234,7 @@ export function issyAccessibilityToLocalPoints(
         pilotId: profile.pilotId,
         parserStatus: "mock",
         spatialQuality: "matched",
-        locationMethod: "junction_arm_placement",
+        locationMethod: "junction_sidewalk_placement",
         spatialNote: profile.disclaimer,
         baselineValue,
         interventionValue,
@@ -276,4 +267,32 @@ export function issyAccessibilityKpiHeadline(
     breakdown: { ...profile.breakdown },
     baselineBreakdown: { ...profile.baselineBreakdown },
   };
+}
+
+/** Equal access / Baseline / Change cards — same pattern as Milan DSS observatory. */
+export function issyAccessibilityStatCards(
+  profile: IssyAccessibilityPilotMock,
+  _scenario: ScenarioType = "intervention"
+): Array<{ label: string; value: string; color?: string; note?: string }> {
+  const post = profile.compositeIndex;
+  const baseline = profile.baselineIndex;
+  const delta = post - baseline;
+  return [
+    {
+      label: "Equal access (post)",
+      value: `${post.toFixed(1)}%`,
+      color: "#63ccff",
+      note: "Issy mock accessibility inventory",
+    },
+    {
+      label: "Baseline",
+      value: `${baseline.toFixed(1)}%`,
+      note: `${profile.baselineFeatureCount} category row${profile.baselineFeatureCount === 1 ? "" : "s"}`,
+    },
+    {
+      label: "Change",
+      value: `${delta >= 0 ? "+" : ""}${delta.toFixed(1)} pp`,
+      note: "Derived · pilot-scoped",
+    },
+  ];
 }

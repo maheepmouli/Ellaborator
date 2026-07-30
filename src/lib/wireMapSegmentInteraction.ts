@@ -14,6 +14,7 @@ export type SegmentInteractionHandlers = {
     segmentName: string;
     speed: number | null;
     congestion: number | null;
+    properties?: Record<string, unknown>;
   }) => void;
   onJunctionSegmentClick?: (detail: SegmentInteractionDetail) => void;
 };
@@ -28,6 +29,7 @@ function emitFocus(
     segmentName: detail.segmentName,
     speed: detail.speed ?? null,
     congestion: detail.congestion ?? null,
+    properties: detail.properties,
   });
 }
 

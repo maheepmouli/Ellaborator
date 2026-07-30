@@ -1,6 +1,6 @@
 import type { CityPilotProfile } from "@/data/cityPilotProfiles";
 
-export type ZaragozaPilotId = "zar-p1" | "zar-p2" | "zar-p3" | "zar-p4";
+export type ZaragozaPilotId = "zar-p1" | "zar-p2" | "zar-p3";
 
 export const ZARAGOZA_PILOT_PROFILES: Record<ZaragozaPilotId, CityPilotProfile> = {
   "zar-p1": {
@@ -8,19 +8,20 @@ export const ZARAGOZA_PILOT_PROFILES: Record<ZaragozaPilotId, CityPilotProfile> 
     city: "Zaragoza",
     title: "AYZG1 Tactical urbanism around schools",
     interventionSummary:
-      "Tactical urbanism intervention around schools at Calle Asin y Palacios / Condes de Aragon.",
+      "Kiss&Go tactical urbanism around Margarita Salas / Doctor Azúa schools (Calle Asín y Palacios & Condes de Aragón).",
     objectives: [
       "Improve active mobility and safety near school corridors.",
-      "Track intervention-level KPI performance with explicit readiness messaging.",
+      "Repurpose school-front parking into recreational space and organised drop-off.",
     ],
     expectedImpacts: [
-      "Improved school-area safety and active mobility context.",
-      "Clear next-data requirements per KPI and pilot.",
+      "Safer school-peak pedestrian and cycle conditions.",
+      "Lower motor conflict intensity at drop-off windows.",
     ],
     geometryType: "polygon",
-    dataAvailability: "Initial pilot indicators available; further spatial detail continues in phased ingestion.",
+    dataAvailability:
+      "Baseline ready: school monitoring (Oct 2025), June 2025 manual motor counts, Nanoenvi air quality. Post-implementation folder still empty.",
     methodologyNotes:
-      "Use intervention-area representation with explicit notices for pending geometry-linked datasets.",
+      "Area observatory with manualCountBars / motorPressure / proxyDelta. Ped/bike in June manual sheet marked pending autumn recount — Oct school sheets supply peak ped/bike.",
     observatoryType: "area",
   },
   "zar-p2": {
@@ -28,19 +29,20 @@ export const ZARAGOZA_PILOT_PROFILES: Record<ZaragozaPilotId, CityPilotProfile> 
     city: "Zaragoza",
     title: "AYZG2 Pedestrian areas around La Romareda",
     interventionSummary:
-      "Pedestrian-priority intervention around La Romareda; final coordinate refinement scheduled for Phase B.",
+      "Pedestrian-priority redesign around La Romareda stadium (Calle Jerusalén & Eduardo Ibarra), coordinated with stadium refurbishment to 2028.",
     objectives: [
-      "Improve pedestrian access and safety in the La Romareda intervention area.",
-      "Track walking-focused KPI changes with phased geometry enrichment.",
+      "Improve pedestrian access and safety around the stadium neighbourhood.",
+      "Feed co-creation feedback into the parallel street redevelopment project.",
     ],
     expectedImpacts: [
-      "Improved pedestrian-priority conditions around intervention links.",
-      "Progressive KPI readiness as Phase B geometry is finalized.",
+      "Stronger walking priority and safer crossings.",
+      "Survey-derived accessibility and satisfaction baselines for before/after.",
     ],
     geometryType: "polygon",
-    dataAvailability: "Pilot indicators available; final WGS84 coordinates pending Phase B.",
+    dataAvailability:
+      "Baseline ready: Romareda traffic Comparativa, road-safety citizen survey, barriers/expectations survey, reformado design GIS. Post-implementation empty.",
     methodologyNotes:
-      "Use area-level representation until Phase B bbox-derived coordinates are finalized.",
+      "Use AYZGZ2 polygon + optional Romareda reformado overlay. Survey x/y points drive KPI 4.2 map pins.",
     observatoryType: "area",
   },
   "zar-p3": {
@@ -48,39 +50,58 @@ export const ZARAGOZA_PILOT_PROFILES: Record<ZaragozaPilotId, CityPilotProfile> 
     city: "Zaragoza",
     title: "AYZG3 Traffic management — Miguel Servet Hospital",
     interventionSummary:
-      "Traffic-management intervention near Miguel Servet Hospital; final coordinate refinement scheduled for Phase B.",
+      "Traffic-management measures around Miguel Servet Hospital based on a prior traffic study; tram-stop warning signals discussed as expansion.",
     objectives: [
-      "Improve operational safety around hospital access routes.",
-      "Track safety and accessibility indicators under traffic-management measures.",
+      "Reduce operational conflicts on hospital access routes.",
+      "Improve safety and accessibility for patients and staff.",
     ],
     expectedImpacts: [
-      "Reduced operational conflicts in hospital-adjacent circulation.",
-      "Clearer KPI monitoring once Phase B geometry is linked.",
+      "Clearer access routing and fewer peak conflicts.",
+      "Expansion narrative via tram illuminated/audible signals (OneToOne KPI 1.1 note).",
     ],
     geometryType: "polygon",
-    dataAvailability: "Pilot indicators available; final WGS84 coordinates pending Phase B.",
+    dataAvailability:
+      "Quantitative baseline thin — hospital themes appear in citizen/barrier surveys; no hospital speed/count sensors yet. Post-implementation empty. In-scope KPIs: 2.1 + 4.2 only (Evaluation Plan May 2025).",
     methodologyNotes:
-      "Use area-level representation until Phase B bbox-derived coordinates are finalized.",
-    observatoryType: "area",
-  },
-  "zar-p4": {
-    id: "zar-p4",
-    city: "Zaragoza",
-    title: "AYZG4 Safe shared bike/VMP parking",
-    interventionSummary:
-      "Shared bike/VMP parking safety intervention; final coordinate refinement scheduled for Phase B.",
-    objectives: [
-      "Improve parking safety and reduce obstruction from shared bikes/VMPs.",
-      "Track access and satisfaction indicators for shared micromobility parking.",
-    ],
-    expectedImpacts: [
-      "Safer shared micromobility parking behavior.",
-      "Clear KPI progression once Phase B geometry is linked.",
-    ],
-    geometryType: "polygon",
-    dataAvailability: "Pilot indicators available; final WGS84 coordinates pending Phase B.",
-    methodologyNotes:
-      "Use area-level representation until Phase B bbox-derived coordinates are finalized.",
+      "Area schematic + mock/derived quantitative series until partner sensors/counts arrive. Keep survey-derived qualitative provenance for hospital access (4.2).",
     observatoryType: "area",
   },
 };
+
+/** WGS84 centroids from AYZGZ* intervention polygons (Romareda CAD stem excluded — bad CRS). */
+export const ZARAGOZA_PILOT_COORDS: Record<ZaragozaPilotId, { lat: number; lng: number }> = {
+  "zar-p1": { lat: 41.63636, lng: -0.90574 },
+  "zar-p2": { lat: 41.63744, lng: -0.90305 },
+  "zar-p3": { lat: 41.63301, lng: -0.90181 },
+};
+
+/** SW/NE corners from valid WGS84 AYZGZ polygons (projected Romareda CAD stem excluded). */
+export const ZARAGOZA_PILOT_BOUNDS: Record<
+  ZaragozaPilotId,
+  [[number, number], [number, number]]
+> = {
+  "zar-p1": [
+    [41.63496, -0.90674],
+    [41.63766, -0.90479],
+  ],
+  "zar-p2": [
+    [41.63616, -0.90432],
+    [41.63922, -0.90116],
+  ],
+  "zar-p3": [
+    [41.63133, -0.90359],
+    [41.63493, -0.89964],
+  ],
+};
+
+export function getZaragozaPilotLatLngBounds(
+  pilotId: string | null | undefined
+): [[number, number], [number, number]] | null {
+  if (!pilotId || !(pilotId in ZARAGOZA_PILOT_BOUNDS)) return null;
+  return ZARAGOZA_PILOT_BOUNDS[pilotId as ZaragozaPilotId];
+}
+
+/** AYZG4 bike/VMP parking was cancelled — never expose as a selectable Zaragoza pilot. */
+export function isZaragozaPilotRemoved(pilotId: string | null | undefined): boolean {
+  return pilotId === "zar-p4";
+}

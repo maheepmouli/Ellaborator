@@ -104,12 +104,12 @@ export interface ObservatoryGraphicPayload extends ObservatoryGraphicMeta {
     before: Array<{ label: string; value: number; score?: number }>;
     after: Array<{ label: string; value: number; score?: number }>;
   };
-  statCards?: Array<{ label: string; value: string; note?: string; color?: string }>;
+  statCards?: Array<{ label: string; value: string; note?: string; color?: string; icon?: string }>;
   markers?: Array<{ id: string; x: number; y: number; label?: string; tone?: string; count?: number }>;
   segmentGradient?: number;
   /** Milan KPI 2.1 — render AMAT Maggio speed cards instead of generic speed proxy / congestion */
   amatSegmentSpeed?: boolean;
-  /** Milan KPI 2.1 header diagram — observed speeds vs limit */
+  /** Milan KPI 2.1 header diagram — observed speeds vs limit (also Zaragoza safety/speed). */
   speedDiagram?: {
     avgKmh: number;
     p85Kmh?: number;
@@ -117,6 +117,11 @@ export interface ObservatoryGraphicPayload extends ObservatoryGraphicMeta {
     baselineKmh?: number;
     interventionKmh?: number;
     streetName?: string;
+    /** Defaults to "AMAT segment speed" */
+    title?: string;
+    /** Defaults to "km/h" */
+    unitLabel?: string;
+    caption?: string;
   };
   streetNS?: string;
   streetEW?: string;

@@ -13,6 +13,7 @@ import { renderInfluenceField } from "@/lib/renderInfluenceField";
 import { getCopenhagenPilotZoneAnchor } from "@/data/copenhagenCameraSites";
 import {
   buildFovWedgePolygon,
+  destinationLatLng,
   hubForWorkbook,
   workbookHubBearing,
 } from "./copenhagenFlowGeometry";
@@ -20,9 +21,10 @@ import {
   resolveCopenhagenIntensityColor,
 } from "./copenhagenFlowStyles";
 import type { SegmentInteractionHandlers } from "@/lib/wireMapSegmentInteraction";
-import { wireMarkerSegment } from "@/lib/wireMapSegmentInteraction";
+import { wireMarkerSegment, wirePolylineSegment } from "@/lib/wireMapSegmentInteraction";
 import { spreadOverlappingPositions } from "@/lib/copenhagenMarkerLayout";
 import { resolveMapPointIconSpec } from "@/lib/mapPointIconTaxonomy";
+import { addNeonPointMarker } from "@/lib/mapPointIcons";
 import {
   buildParkingPopupHtml,
   parkingSegmentDetailFromProps,
@@ -31,7 +33,10 @@ import {
 } from "./copenhagenParkingLayerStyles";
 import { renderCopenhagenRadarFlowLayout } from "./copenhagenRadarFlowLayout";
 import { bindCopenhagenMapTooltip } from "./copenhagenMapTooltips";
-import { renderCopenhagenTrafficPulseOverlay } from "./copenhagenTrafficPulse";
+import {
+  renderCopenhagenTrafficPulseOverlay,
+  renderHubRipplePulseOverlay,
+} from "./copenhagenTrafficPulse";
 import {
   emissionsIntensityToColor,
   co2GPerHourToKpiIntensity,
@@ -390,6 +395,99 @@ const KPI_ICON_DATASET_KINDS: Record<string, string[]> = {
   "kpi2.1": ["irap", "near_encounter", "tube"],
 };
 
+/** Trikala-style smart-crossing half-length along the corridor (meters). */
+const CPH_A11Y_CROSSING_HALF_M = 52;
+const CPH_A11Y_CROSSING_COLOR = "#00ffff";
+
+/**
+ * KPI 4.2 — Issy-style blue hub point + CSS ripple + cyan dashed crossing vector.
+ * Sample dimension pins stay as satellites via renderCopenhagenIconPoints.
+ */
+function renderCopenhagenAccessibilitySafetyCorridor(options: {
+  map: L.Map;
+  pilotId: string | null | undefined;
+  observedPoints: CopenhagenObservedPoint[];
+  selectedSegmentId?: string | null;
+  segmentHandlers: SegmentInteractionHandlers;
+  markersOut: L.Marker[];
+  circlesOut: L.CircleMarker[];
+  polylinesOut: L.Polyline[];
+}): void {
+  const {
+    map,
+    pilotId,
+    observedPoints,
+    selectedSegmentId,
+    segmentHandlers,
+    markersOut,
+    circlesOut,
+    polylinesOut,
+  } = options;
+
+  const a11yPoints = observedPoints.filter(
+    (p) => String(p.properties?.datasetKind ?? "") === "accessibility"
+  );
+  if (!a11yPoints.length) return;
+
+  const hubLat = a11yPoints.reduce((s, p) => s + p.lat, 0) / a11yPoints.length;
+  const hubLon = a11yPoints.reduce((s, p) => s + p.lon, 0) / a11yPoints.length;
+
+  const streetHint = String(a11yPoints[0]?.properties?.streetName ?? "");
+  const workbookKey =
+    inferOtcWorkbookKey(streetHint) ||
+    (pilotId === "cph-p2" ? "vandkunsten" : pilotId === "cph-p1" ? "gammeltorv" : "stormgade");
+  const bearing = workbookHubBearing(workbookKey);
+
+  const west = destinationLatLng(hubLat, hubLon, bearing + 180, CPH_A11Y_CROSSING_HALF_M);
+  const east = destinationLatLng(hubLat, hubLon, bearing, CPH_A11Y_CROSSING_HALF_M);
+  const vectorCoords: [number, number][] = [west, [hubLat, hubLon], east];
+
+  const hubSegmentId = "cph-a11y-crossing-hub";
+  const hubName = "Accessibility corridor · smart crossing";
+  const hubDetail = {
+    segmentId: hubSegmentId,
+    segmentName: hubName,
+    speed: null as null,
+    congestion: null as null,
+  };
+
+  const core = L.polyline(vectorCoords, {
+    color: CPH_A11Y_CROSSING_COLOR,
+    weight: 1.5,
+    opacity: 0.85,
+    dashArray: "8 8",
+    className: "tri-crossing-dash-animated",
+    lineCap: "round",
+  }).addTo(map);
+  core.bindPopup(
+    `<div style="font-family:'DM Sans',sans-serif;padding:8px;min-width:200px;">
+      <p style="font-size:11px;color:#8578C3;margin:0 0 2px;text-transform:uppercase;">Crossing vector</p>
+      <p style="font-size:10px;color:#96C2EF;margin:2px 0;">${hubName}</p>
+      <p style="font-size:9px;color:#FBBF24;margin-top:6px;line-height:1.35;">MOCK — corridor vector on mode-share site geometry.</p>
+    </div>`
+  );
+  wirePolylineSegment(core, hubDetail, segmentHandlers, {
+    baseStyle: { color: CPH_A11Y_CROSSING_COLOR, weight: 1.5, opacity: 0.85 },
+    highlightStyle: { weight: 3, opacity: 1, color: "#ffffff" },
+    selectedSegmentId,
+  });
+  polylinesOut.push(core);
+
+  // Issy-style: animated CSS ripple + solid blue hub point (no icon badge).
+  renderHubRipplePulseOverlay(map, hubLat, hubLon, false, markersOut, circlesOut, {
+    showAnchorDot: true,
+    ringColor: "#38bdf8",
+    ringScale: 1.15,
+    minZoom: 12,
+    interaction: {
+      segmentId: hubSegmentId,
+      segmentName: hubName,
+      segmentHandlers,
+      selectedSegmentId,
+    },
+  });
+}
+
 function buildEmissionsPopup(point: CopenhagenObservedPoint): string {
   const props = point.properties ?? {};
   const preG = Number(props.preCo2GPerHour ?? 0);
@@ -623,6 +721,7 @@ function renderCopenhagenIconPoints(options: {
   segmentHandlers: SegmentInteractionHandlers;
   getValueColor: (value: number, safetyKpi: boolean) => string;
   markersOut: L.Marker[];
+  circlesOut: L.CircleMarker[];
 }): void {
   const {
     map,
@@ -634,6 +733,7 @@ function renderCopenhagenIconPoints(options: {
     segmentHandlers,
     getValueColor,
     markersOut,
+    circlesOut,
   } = options;
 
   let points = observedPoints.filter((p) =>
@@ -688,15 +788,41 @@ function renderCopenhagenIconPoints(options: {
       ? emissionsIntensityToColor(displayValue)
       : datasetKind === "survey"
         ? "#7f5af0"
-        : datasetKind === "accessibility" &&
-            (props.mockLabel === "MOCK" || props.dataOrigin === "mock")
-          ? "#22d3ee"
         : getValueColor(displayValue, selectedKpi === "kpi2.1");
+    const selected = selectedSegmentId === segmentId;
+
+    // Accessibility / security pins — icon badges (not plain dots).
+    if (datasetKind === "accessibility") {
+      const a11ySpec = resolveMapPointIconSpec({
+        facilityCategory: props.facilityCategory ?? props.category,
+        category: props.category,
+        datasetKind: props.datasetKind,
+        type: props.type,
+      });
+      const { visual, hit } = addNeonPointMarker(
+        map,
+        markerLat,
+        markerLon,
+        a11ySpec,
+        { segmentId, segmentName, speed: null, congestion: null },
+        segmentHandlers,
+        {
+          title: String(props.likertLabel ?? segmentName),
+          hitRadius: selected ? 20 : 16,
+          selectedSegmentId,
+          tooltip: `${props.mockLabel === "MOCK" || props.dataOrigin === "mock" ? "[MOCK] " : ""}${String(props.likertLabel ?? segmentName)}`,
+          popupHtml: buildSurveyPopup(point),
+        }
+      );
+      markersOut.push(visual);
+      circlesOut.push(hit);
+      return;
+    }
+
     const strokeColor =
-      emissionsSites || datasetKind === "survey" || datasetKind === "accessibility"
+      emissionsSites || datasetKind === "survey"
         ? "#ffffff"
         : iconSpec.accent;
-    const selected = selectedSegmentId === segmentId;
 
     const dot = addCopenhagenMapDot({
       map,
@@ -709,7 +835,7 @@ function renderCopenhagenIconPoints(options: {
       segmentHandlers,
       detail: { segmentId, segmentName, speed: null, congestion: null },
       tooltip:
-        datasetKind === "survey" || datasetKind === "accessibility"
+        datasetKind === "survey"
           ? `${props.mockLabel === "MOCK" || props.dataOrigin === "mock" ? "[MOCK] " : ""}${String(props.likertLabel ?? segmentName)}`
           : segmentName,
       selected,
@@ -721,7 +847,7 @@ function renderCopenhagenIconPoints(options: {
         maxWidth: 280,
         closeButton: false,
       });
-    } else if (datasetKind === "survey" || datasetKind === "accessibility") {
+    } else if (datasetKind === "survey") {
       dot.bindPopup(buildSurveyPopup(point), {
         className: "cph-survey-popup",
         maxWidth: 280,
@@ -920,6 +1046,21 @@ export function renderCopenhagenMapLayers(options: RenderCopenhagenMapLayersOpti
       segmentHandlers,
       getValueColor,
       markersOut,
+      circlesOut,
+    });
+  }
+
+  // KPI 4.2 — Trikala-style ripple hub + cyan crossing vector over sample pins.
+  if (selectedKpi === "kpi4.2") {
+    renderCopenhagenAccessibilitySafetyCorridor({
+      map,
+      pilotId,
+      observedPoints,
+      selectedSegmentId,
+      segmentHandlers,
+      markersOut,
+      circlesOut,
+      polylinesOut,
     });
   }
 

@@ -18,6 +18,61 @@ function shortLabel(label: string, max = 28): string {
   return label.length > max ? `${label.slice(0, max - 1)}…` : label;
 }
 
+/**
+ * Map hub / sample / sensor IDs that are not always present as aggregate observatory rows.
+ * Preserve these in Map selection effects so clicks are not reset to segmentIds[0].
+ */
+export function isHelsinkiMapDrivenSelectionId(selectionId: string | null | undefined): boolean {
+  if (!selectionId) return false;
+  return (
+    selectionId.startsWith("hel-safety") ||
+    selectionId.startsWith("hel-hazard") ||
+    selectionId.startsWith("hel-dangerous") ||
+    selectionId.startsWith("hel-conflict") ||
+    selectionId.startsWith("hel-climate") ||
+    selectionId.startsWith("hel-escooter") ||
+    selectionId.startsWith("hel-viikki") ||
+    selectionId.startsWith("hel-mobilysis") ||
+    selectionId.startsWith("hel-area:") ||
+    selectionId.startsWith("hel-hsl") ||
+    selectionId.startsWith("hel-innotrafik") ||
+    selectionId.includes("mode-share") ||
+    selectionId.includes("cluster") ||
+    selectionId.includes("attitude") ||
+    selectionId.includes("9000007091") ||
+    (/telraam/i.test(selectionId) && !/mobilysis/i.test(selectionId)) ||
+    (selectionId.includes("mobilysis") && !selectionId.includes("telraam"))
+  );
+}
+
+/** True when a map-driven Helsinki selection belongs to the active pilot (not a stale cross-pilot id). */
+export function isHelsinkiSelectionCompatibleWithPilot(
+  selectionId: string | null | undefined,
+  pilotId: string | null | undefined
+): boolean {
+  if (!selectionId || !pilotId) return false;
+  if (!isHelsinkiMapDrivenSelectionId(selectionId)) return false;
+  const isP3Sensor =
+    selectionId.includes("9000007091") ||
+    /telraam|mobilysis|viikki/i.test(selectionId) ||
+    selectionId.startsWith("hel-viikki") ||
+    selectionId.startsWith("hel-mobilysis");
+  const isP2Escooter =
+    selectionId.startsWith("hel-escooter") || selectionId.includes("escooter");
+  const isP1Hazard =
+    selectionId.startsWith("hel-safety") ||
+    selectionId.startsWith("hel-hazard") ||
+    selectionId.startsWith("hel-dangerous") ||
+    selectionId.startsWith("hel-conflict") ||
+    selectionId.startsWith("hel-climate") ||
+    selectionId.includes("cluster") ||
+    selectionId.includes("attitude");
+  if (pilotId === "hel-p1") return isP1Hazard && !isP3Sensor && !isP2Escooter;
+  if (pilotId === "hel-p2") return isP2Escooter;
+  if (pilotId === "hel-p3") return isP3Sensor || selectionId.startsWith("hel-area:");
+  return true;
+}
+
 export function filterHelsinkiObservatoryPoints(
   points: LocalCityPoint[],
   selectionId: string
@@ -169,6 +224,105 @@ export function helsinkiHazardCategoryModeShare(points: LocalCityPoint[]): ModeS
       after: pct,
     };
   });
+}
+
+/**
+ * KPI 1.2 mobility evidence for FVH1 — travel mode among near-miss / conflict reporters
+ * (no Telraam on this pilot; not hazard-type categories).
+ * Prefer linked point payloads; fall back to whole-pilot survey totals from the GPKG.
+ * Labels are normalized to the standard mobility mode-share vocabulary.
+ */
+const HELSINKI_FVH1_WHOLE_CONFLICT_TRAVEL_MODES: Array<{ label: string; count: number }> = [
+  { label: "Walking", count: 1490 },
+  { label: "Cycling (incl. e-bikes)", count: 1101 },
+  { label: "By car", count: 479 },
+  { label: "Other", count: 76 },
+  { label: "Public transport", count: 30 },
+  { label: "E-scooter or other light electric vehicle", count: 18 },
+  { label: "Moped or motorcycle", count: 8 },
+];
+
+function normalizeHelsinkiConflictTravelMode(label: string): string {
+  const lower = label.toLowerCase();
+  // Check moped/motorcycle before "cycl" — "motorcycle" contains the substring "cycl".
+  if (lower.includes("moped") || lower.includes("motorcycle") || /\bptw\b/.test(lower)) {
+    return "PTW";
+  }
+  if (lower.includes("walk") || lower.includes("pedestrian")) return "Pedestrian";
+  if (lower.includes("cycl") || lower.includes("bike")) return "Cycle";
+  if (lower.includes("public") || lower.includes("tram") || lower.includes("bus")) {
+    return "Public Transport";
+  }
+  if (lower.includes("car") || lower.includes("motor vehicle")) return "Private Car";
+  if (lower.includes("scooter") || lower.includes("light electric")) return "E-scooter";
+  if (lower.includes("other")) return "Other";
+  return shortLabel(label, 26);
+}
+
+function modeShareFromConflictModeRows(
+  modes: Array<{ label: string; count: number }>,
+  totalHint?: number
+): ModeShareRow[] {
+  const grouped = new Map<string, number>();
+  modes.forEach((m) => {
+    const key = normalizeHelsinkiConflictTravelMode(m.label);
+    grouped.set(key, (grouped.get(key) || 0) + m.count);
+  });
+  const rows = [...grouped.entries()].map(([mode, count]) => ({ mode, count }));
+  const total = totalHint || rows.reduce((sum, m) => sum + m.count, 0);
+  if (!rows.length || total <= 0) return [];
+  const order = ["Pedestrian", "Cycle", "Public Transport", "Private Car", "E-scooter", "PTW", "Other"];
+  rows.sort((a, b) => {
+    const ai = order.indexOf(a.mode);
+    const bi = order.indexOf(b.mode);
+    if (ai === -1 && bi === -1) return b.count - a.count;
+    if (ai === -1) return 1;
+    if (bi === -1) return -1;
+    return ai - bi;
+  });
+  return rows.slice(0, 7).map((m) => {
+    const pct = Number(((m.count / total) * 100).toFixed(1));
+    return {
+      mode: m.mode,
+      before: pct,
+      after: pct,
+    };
+  });
+}
+
+export function helsinkiConflictTravelModeShare(
+  points: LocalCityPoint[],
+  options: { wholePilot?: boolean } = {}
+): ModeShareRow[] {
+  // KPI 1.2 citywide mobility: always use full Conflicts_hki travel-mode totals
+  // (hub conflictModes are density-cluster subsets and skew Pedestrian/Cycle shares).
+  if (options.wholePilot) {
+    return modeShareFromConflictModeRows(HELSINKI_FVH1_WHOLE_CONFLICT_TRAVEL_MODES);
+  }
+  // Prefer citywide conflict aggregate over first hub with conflictModes.
+  const citywide = points.find(
+    (p) =>
+      p.properties?.datasetKind === "conflict" &&
+      Array.isArray(p.properties?.conflictModes) &&
+      (p.properties?.conflictModes as Array<{ label: string; count: number }>).length > 0
+  );
+  const withModes =
+    citywide ??
+    points.find(
+      (p) =>
+        Array.isArray(p.properties?.conflictModes) &&
+        (p.properties?.conflictModes as Array<{ label: string; count: number }>).length > 0
+    );
+  const modes = (withModes?.properties?.conflictModes as
+    | Array<{ label: string; count: number }>
+    | undefined) ?? [];
+  const total =
+    modes.reduce((sum, m) => sum + m.count, 0) ||
+    Number(withModes?.properties?.observationCount) ||
+    0;
+  return modes.length && total > 0
+    ? modeShareFromConflictModeRows(modes, total)
+    : modeShareFromConflictModeRows(HELSINKI_FVH1_WHOLE_CONFLICT_TRAVEL_MODES);
 }
 
 /** KPI 3.2 — citywide safety-attitude climate shares (positive / negative / neutral). */

@@ -14,7 +14,7 @@
 | **Copenhagen** | Unified (was `CityObservatoryPanel`) | High for KPI 1.2 directional counts | Yes for KPI 1.2 / 2.1 / 3.2; KPI 4.2 explicit gap |
 | **Helsinki** | Unified | Medium–High (Telraam + GeoJSON layers) | Partial — Telraam lacks export coordinates |
 | **Milan** | Unified | Medium (segment parsers; SharePoint mirror external to June drop) | Partial — depends on hosted Milan tree |
-| **Zaragoza** | Unified | Low–Medium (manual counts; KPI workbooks templated) | Partial — before/after KPI 1.2 placeholders |
+| **Zaragoza** | Unified | Medium (school mon, AQ, surveys; KPI1.2 templates empty; post empty; p4 cancelled) | Partial — baseline observed; post missing |
 | **Trikala** | Unified | Low–Medium (survey aggregates at pilot anchor) | Partial — no intervention geometry in drop |
 
 **Unification status (2026-06-25):** All cities now route through a single observatory shell (`SegmentIntelligencePanel`) with identical tab structure: Overview · Data · Before/After · KPI Analysis · Methodology. City-specific content is supplied via registry + `CityObservatoryTabContent` (non-Issy) or Issy junction analytics (Issy).
@@ -101,17 +101,17 @@
 
 | Dimension | Status | Notes |
 |-----------|--------|-------|
-| **Intervention geometry** | Partial | 5 intervention area centroids from shapefile; polygons not rendered in observatory |
-| **Monitoring locations** | Partial | 3 manual count locations (June 2025); KPI 1.2 workbooks contain `(value)` placeholders |
-| **Baseline availability** | Active | Manual counting baseline (motor vehicles only; ped/bike marked pending) |
-| **Post availability** | Missing | KPI 1.2 after workbooks unfilled; no post manual count in drop |
-| **KPI readiness** | KPI 1.2/2.1/3.2 partial | Parser uses manual counts when workbook empty |
-| **Observatory readiness** | Ready (shell) | Unified shell; inferred geometry at intervention centroids |
-| **Confidence** | **Low–Medium** | Observed motor counts; sustainable mode share incomplete |
-| **Partner dependencies** | Partner to fill KPI 1.2 hourly slots; second manual count (Sep 2025); post-intervention shapefiles |
+| **Intervention geometry** | Ready | AYZGZ1–4 polygons in `/data/zaragoza_intervention_areas.geojson`; Romareda reformado overlay for zar-p2 |
+| **Monitoring locations** | Partial–Ready | School monitoring (Azua / M Salas), June manual motor counts, Nanoenvi AQ (2 sites), Romareda surveys |
+| **Baseline availability** | Active | Full lighthouse baseline package extracted; KPI 1.2 WP7 templates still placeholders |
+| **Post availability** | Missing | `2. POST IMPLEMENTATION DATA` folder empty |
+| **KPI readiness** | zar-p1: 1.2/2.1/3.2 ready; zar-p2: 1.2/2.1/4.1/4.2 ready; zar-p3 thin; zar-p4 cancelled | Parsers in `zaragozaParsers.ts` |
+| **Observatory readiness** | Ready | Area observatory + pilot graphic overrides for all four pilots |
+| **Confidence** | **Medium** | Observed baseline; intervention BA uses mock/derived deltas |
+| **Partner dependencies** | Fill KPI 1.2 hourly slots; post-implementation package; confirm AYZG4 cancellation |
 
 **Observatory type:** Area Observatory  
-**Pilot:** zar-p1 active mobility corridor
+**Pilots:** zar-p1 schools, zar-p2 Romareda, zar-p3 Miguel Servet, zar-p4 cancelled bike/VMP parking
 
 ---
 
@@ -158,7 +158,7 @@ Each pilot must expose: title, summary, objectives, expected impacts, trust (dat
 | Copenhagen | 3 | `copenhagenPilotProfiles` | Yes | Yes | Yes | Yes |
 | Helsinki | 3 | `helsinkiPilotProfiles` | Yes | Yes | Yes | Yes |
 | Milan | 3 | `milanPilotProfiles` | Yes | Yes | Yes | Yes |
-| Zaragoza | 1 | `zaragozaPilotProfiles` | Yes | Yes | Yes | Yes |
+| Zaragoza | 4 | `zaragozaPilotProfiles` | Yes | Yes | Yes | Yes |
 | Trikala | 1 | `trikalaPilotProfiles` | Yes | Yes | Yes | Yes |
 
 **Result:** Pass — all pilots have required profile fields in city pilot registries.
@@ -246,9 +246,10 @@ Each pilot must expose: title, summary, objectives, expected impacts, trust (dat
 - Segment join quality varies by pilot.
 
 ### Zaragoza
-- KPI 1.2 workbook cells are placeholders — motor-only manual counts used.
-- Post-intervention data not in drop.
-- Intervention polygons not rendered (centroids only).
+- KPI 1.2 WP7 workbook cells are placeholders — school monitoring + manual counts used instead.
+- Post-intervention folder empty — BA charts use mock/derived deltas with Mock plot badge.
+- AYZG4 cancelled (OneToOne March 2026) — mock facility UI only.
+- Romareda reformado GPKG simplified to `/data/zaragoza/romareda_reformado_*.geojson`.
 
 ### Trikala
 - No intervention geometry — survey KPIs at pilot anchor; full zip integrated (8 xlsx, 13 images, 26 docs).
@@ -287,7 +288,7 @@ Derived from `kpiReadinessMatrix.ts` + dataset registry (2026-06-25):
 | Copenhagen | 1 | 2 | 3 |
 | Helsinki | 0 | 4 | 2 |
 | Milan | 0 | 5 | 1 |
-| Zaragoza | 1 | 3 | 2 |
+| Zaragoza | Medium | High (baseline wired; post empty; p4 cancelled) | Medium |
 | Trikala | 0 | 4 | 2 |
 
 *Exact counts per KPI available in Data Catalogue → KPI readiness matrix.*

@@ -37,7 +37,16 @@ import {
   loadHelsinkiDangerousLocationsGeoJson,
   loadHelsinkiEscooterObservationsGeoJson,
 } from "@/services/staticGeoData";
-import { clusterHelsinkiPointHubs } from "@/lib/helsinkiMapLayers/helsinkiHazardHubs";
+import {
+  clusterHelsinkiPointHubs,
+  finalizeHelsinkiFvh1ModeShareHubs,
+  finalizeHelsinkiFvh1SafetyHubs,
+} from "@/lib/helsinkiMapLayers/helsinkiHazardHubs";
+import {
+  parseZaragozaSupplementalRecords,
+  inferZaragozaPilot as inferZaragozaPilotShared,
+} from "@/services/zaragozaParsers";
+import { ZARAGOZA_PILOT_COORDS } from "@/data/zaragozaPilotProfiles";
 
 export interface LocalCityPoint {
   lat: number;
@@ -61,7 +70,7 @@ const COPENHAGEN_CAMERA_FILES = [
 
 const COPENHAGEN_JSON_FALLBACK = "/data/copenhagen/otc-directional-observed.json";
 
-const ZARAGOSA_KPI12_CODES = ["AYZG1", "AYZG2", "AYZG3", "AYZG4"] as const;
+const ZARAGOSA_KPI12_CODES = ["AYZG1", "AYZG2", "AYZG3"] as const;
 const ZARAGOSA_KPI12_DIR =
   "/sharepoint-data/Zaragoza/3. Mobility (KPI1.2) assessment";
 const ZARAGOSA_MANUAL_COUNTING =
@@ -155,12 +164,7 @@ function isPlaceholderCell(value: unknown): boolean {
 }
 
 function inferZaragozaPilot(code: string): string {
-  const normalized = code.replace(/[^a-z0-9]/gi, "").toUpperCase();
-  if (normalized.includes("AYZG1")) return "zar-p1";
-  if (normalized.includes("AYZG2") || normalized.includes("ROMAREDA")) return "zar-p2";
-  if (normalized.includes("AYZG3")) return "zar-p3";
-  if (normalized.includes("AYZG4")) return "zar-p4";
-  return "zar-p1";
+  return inferZaragozaPilotShared(code);
 }
 
 function likertToPercent(value: unknown, maxScale = 4): number {
@@ -220,15 +224,17 @@ function resolveZaragozaCoords(
   const match =
     centroids.find((c) => c.id.toUpperCase().includes(normalized)) ||
     centroids.find((c) => normalized.includes(c.id.toUpperCase().replace(/[^A-Z0-9]/g, "")));
-  if (match) {
+  if (match && Number.isFinite(match.lat) && Math.abs(match.lat) <= 90) {
     return { lat: match.lat, lng: match.lng, linkage: "matched" };
   }
+  const pilotId = inferZaragozaPilot(areaCode || locationLabel);
+  const anchor = ZARAGOZA_PILOT_COORDS[pilotId as keyof typeof ZARAGOZA_PILOT_COORDS] ?? ZARAGOSA_PILOT_ANCHOR;
   const hash = hashString(`${areaCode}-${locationLabel}-${index}`);
   const angle = (hash % 360) * (Math.PI / 180);
-  const radius = 0.002 + (index % 5) * 0.0004;
+  const radius = 0.0012 + (index % 5) * 0.00035;
   return {
-    lat: ZARAGOSA_PILOT_ANCHOR.lat + Math.cos(angle) * radius,
-    lng: ZARAGOSA_PILOT_ANCHOR.lng + Math.sin(angle) * radius * 1.2,
+    lat: anchor.lat + Math.cos(angle) * radius,
+    lng: anchor.lng + Math.sin(angle) * radius * 1.2,
     linkage: "inferred",
   };
 }
@@ -703,7 +709,7 @@ async function parseCopenhagenRecords(kpiId: string): Promise<NormalizedCityReco
 }
 
 async function parseHelsinkiRecords(kpiId: string): Promise<NormalizedCityRecord[]> {
-  const cacheKey = `helsinki-${kpiId}-v3`;
+  const cacheKey = `helsinki-${kpiId}-v6`;
   const cached = normalizedRecordCache.get(cacheKey);
   if (cached) return cached;
 
@@ -883,8 +889,8 @@ async function parseHelsinkiRecords(kpiId: string): Promise<NormalizedCityRecord
     }
   }
 
-  // FVH1 survey aggregates belong to road-user safety evidence, not mobility mode-share.
-  if (kpiId === "kpi2.1") {
+  // FVH1 survey aggregates — KPI 2.1 safety + KPI 1.2 mode-share context (no Telraam on FVH1).
+  if (kpiId === "kpi2.1" || kpiId === "kpi1.2") {
     const [dangerous, conflicts] = await Promise.all([
       loadHelsinkiDangerousLocationsGeoJson(),
       loadHelsinkiConflictsGeoJson(),
@@ -901,35 +907,92 @@ async function parseHelsinkiRecords(kpiId: string): Promise<NormalizedCityRecord
         .slice(0, 8)
         .map(([label, count]) => ({ label, count }));
 
-      records.push({
-        id: `helsinki-${kpiId}-dangerous-locations`,
-        city: "Helsinki",
-        cityId: "helsinki",
-        interventionId: "hel-p1",
-        kpiId,
-        sourceFile: "Helsinki/DangerousLocationsSurvey_ENG_EPSG3067.gpkg (DangerousLocations_hki layer)",
-        datasetKind: "dangerous-location",
-        geometryType: "point",
-        lat: 60.1699,
-        lng: 24.9384,
-        geometry: [[60.1699, 24.9384]],
-        value: clampPercent(dangerous.features.length / 30),
-        baselineValue: clampPercent(dangerous.features.length / 30),
-        interventionValue: clampPercent(dangerous.features.length / 30),
-        comparisonValue: 0,
-        source: "Citizen dangerous-locations survey (GPKG)",
-        method: `${dangerous.features.length} citizen-reported dangerous-location submissions citywide.`,
-        type: "observed",
-        spatialQuality: "exact",
-        geometryLinkage: "exact",
-        temporalCoverage: "single-period",
-        locationMethod: "coordinates",
-        segmentId: "hel-dangerous-locations",
-        streetName: "Dangerous locations survey (citywide)",
-        spatialNote: "Exact GPKG points; map shows sampled cloud + multi-hub density ripples.",
-        observationCount: dangerous.features.length,
-        hazardCategories,
-        parserStatus: "ready",
+      // Per-hub rows match map hub IDs so observatory charts update on cluster click.
+      const clustered = clusterHelsinkiPointHubs(dangerous.features, {
+        cellDeg: 0.01,
+        limit: 8,
+        idPrefix: kpiId === "kpi1.2" ? "hel-hazard-hub" : "hel-safety-hub",
+        labelPrefix: kpiId === "kpi1.2" ? "Hazard density cluster" : "Road-safety pressure cluster",
+        categoryProperty: "locationType",
+      });
+      const hubs =
+        kpiId === "kpi1.2"
+          ? finalizeHelsinkiFvh1ModeShareHubs(
+              clustered,
+              "hel-dangerous-locations",
+              "FVH1 densest hazard cluster"
+            )
+          : finalizeHelsinkiFvh1SafetyHubs(clustered);
+
+      hubs.forEach((hub, index) => {
+        const categories = hub.categories?.length ? hub.categories : hazardCategories;
+        const hubTotal =
+          categories.reduce((sum, c) => sum + c.count, 0) || hub.count || dangerous.features.length;
+
+        // KPI 1.2 mobility: travel-mode mix from conflicts near this hub (fallback citywide).
+        let hubConflictModes: Array<{ label: string; count: number }> | undefined;
+        if (kpiId === "kpi1.2" && conflicts.features.length) {
+          const modeCounts = new Map<string, number>();
+          conflicts.features.forEach((feature) => {
+            const coords = feature.geometry?.coordinates;
+            if (!Array.isArray(coords) || coords.length < 2) return;
+            const lon = Number(coords[0]);
+            const lat = Number(coords[1]);
+            if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+            if (Math.hypot(lat - hub.lat, lon - hub.lon) > 0.012) return;
+            const mode = String(feature.properties?.travelMode || "Other").trim() || "Other";
+            modeCounts.set(mode, (modeCounts.get(mode) || 0) + 1);
+          });
+          hubConflictModes = [...modeCounts.entries()]
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 6)
+            .map(([label, count]) => ({ label, count }));
+          if (!hubConflictModes.reduce((sum, m) => sum + m.count, 0)) {
+            // Sparse cell — use citywide conflict travel-mode mix so mobility plot still has data.
+            const cityModes = new Map<string, number>();
+            conflicts.features.forEach((feature) => {
+              const mode = String(feature.properties?.travelMode || "Other").trim() || "Other";
+              cityModes.set(mode, (cityModes.get(mode) || 0) + 1);
+            });
+            hubConflictModes = [...cityModes.entries()]
+              .sort((a, b) => b[1] - a[1])
+              .slice(0, 6)
+              .map(([label, count]) => ({ label, count }));
+          }
+        }
+
+        records.push({
+          id: `helsinki-${kpiId}-hazard-hub-${index + 1}`,
+          city: "Helsinki",
+          cityId: "helsinki",
+          interventionId: "hel-p1",
+          kpiId,
+          sourceFile:
+            "Helsinki/DangerousLocationsSurvey_ENG_EPSG3067.gpkg (DangerousLocations_hki layer)",
+          datasetKind: "dangerous-location",
+          geometryType: "point",
+          lat: hub.lat,
+          lng: hub.lon,
+          geometry: [[hub.lat, hub.lon]],
+          value: clampPercent(hub.count / 8),
+          baselineValue: clampPercent(hub.count / 8),
+          interventionValue: clampPercent(hub.count / 8),
+          comparisonValue: 0,
+          source: "Citizen dangerous-locations survey (GPKG)",
+          method: `${hub.count} dangerous-location reports in this density cluster (${dangerous.features.length} citywide).`,
+          type: "observed",
+          spatialQuality: "exact",
+          geometryLinkage: "exact",
+          temporalCoverage: "single-period",
+          locationMethod: "coordinates",
+          segmentId: hub.id,
+          streetName: hub.label,
+          spatialNote: "Map hub cluster — click peers to refresh observatory category mix.",
+          observationCount: hubTotal,
+          hazardCategories: categories,
+          conflictModes: hubConflictModes,
+          parserStatus: "ready",
+        });
       });
     }
 
@@ -2018,6 +2081,7 @@ async function parseZaragozaRecords(kpiId: string): Promise<NormalizedCityRecord
   const records: NormalizedCityRecord[] = [];
   const centroids = await loadZaragozaCentroids();
 
+  // Prefer filled KPI1.2 workbooks when partners supply numeric hourly slots.
   for (const code of ZARAGOSA_KPI12_CODES) {
     const coords = resolveZaragozaCoords(code, code, centroids, records.length);
     for (const phase of ["before", "after"] as const) {
@@ -2034,77 +2098,20 @@ async function parseZaragozaRecords(kpiId: string): Promise<NormalizedCityRecord
     }
   }
 
-  if (records.length === 0 && (kpiId === "kpi1.2" || kpiId === "kpi2.1" || kpiId === "kpi3.2")) {
-    try {
-      const response = await fetch(encodeURI(ZARAGOSA_MANUAL_COUNTING));
-      if (response.ok) {
-        const workbook = XLSX.read(await response.arrayBuffer(), { type: "array" });
-        const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(
-          workbook.Sheets[workbook.SheetNames[0]],
-          { defval: null }
-        );
-        rows.forEach((row, index) => {
-          const area = String(row["Intervention Area"] || row["Location"] || "").trim();
-          const location = String(row.Location || "").trim();
-          if (!area || area.toLowerCase().includes("second manual")) return;
-          const cars = parseNumber(row["Cars/Vans"]);
-          const motorcycles = parseNumber(row.Motocycles ?? row.Motorcycles);
-          const buses = parseNumber(row.Buses);
-          const motorized = cars + motorcycles + buses;
-          const total = parseNumber(row.Totals) || motorized;
-          if (total <= 0) return;
-          const coords = resolveZaragozaCoords(area, location, centroids, index);
-          const agg: CphFlowAgg = {
-            flow: location || area,
-            total,
-            bike: 0,
-            pedestrian: 0,
-            motorized,
-            ptw: motorcycles,
-          };
-          const value = cphSiteMetric(agg, kpiId);
-          records.push({
-            id: `zaragoza-${kpiId}-manual-${index}`,
-            city: "Zaragoza",
-            cityId: "zaragoza",
-            interventionId: inferZaragozaPilot(area),
-            kpiId,
-            sourceFile: ZARAGOSA_MANUAL_COUNTING,
-            geometryType: "point",
-            lat: coords.lat,
-            lng: coords.lng,
-            geometry: [[coords.lat, coords.lng]],
-            value,
-            baselineValue: value,
-            interventionValue: value,
-            comparisonValue: 0,
-            source: "Zaragoza manual counting (June 2025 baseline)",
-            method:
-              "Manual count sessions aggregated per intervention location; pedestrian/cycle counts pending second survey.",
-            type: kpiId === "kpi1.2" ? "derived" : "observed",
-            spatialQuality: coords.linkage === "matched" ? "matched" : "inferred",
-            geometryLinkage: coords.linkage,
-            temporalCoverage: "single-period",
-            locationMethod: coords.linkage === "matched" ? "coordinates" : "pilot_area_inference",
-            segmentId: area,
-            streetName: location || area,
-            spatialNote: `${location || area} · baseline manual count`,
-            parserStatus: "partial",
-            datasetKind: "manual-count",
-            modeBreakdown: {
-              pre: { bike: 0, pedestrian: 0, motorised: motorized, ptw: motorcycles, total },
-              post: { bike: 0, pedestrian: 0, motorised: motorized, ptw: motorcycles, total },
-            },
-          });
-        });
-      }
-    } catch {
-      // manual counting unavailable
-    }
-  }
+  // Supplemental SharePoint baseline parsers (school mon, AQ, surveys, Comparativa, manual).
+  const supplemental = await parseZaragozaSupplementalRecords(kpiId);
+  records.push(...supplemental);
 
-  normalizedRecordCache.set(cacheKey, records);
-  return records;
+  // Deduplicate by id
+  const seen = new Set<string>();
+  const unique = records.filter((r) => {
+    if (seen.has(r.id)) return false;
+    seen.add(r.id);
+    return true;
+  });
+
+  normalizedRecordCache.set(cacheKey, unique);
+  return unique;
 }
 
 async function parseTrikalaRecords(kpiId: string): Promise<NormalizedCityRecord[]> {
@@ -2187,12 +2194,13 @@ export async function loadLocalCityPoints(
     );
     const profile = getCopenhagenAccessibilityMock(selectedPilotId);
     if (profile?.samples.length) {
+      const points = copenhagenAccessibilityToLocalPoints(profile, scenario);
       const diagnosticsKey = localCityDiagnosticsKey(cityName, kpiId, selectedPilotId);
       localCityDiagnosticsCache.set(diagnosticsKey, {
         reason: "mock",
-        message: `MOCK accessibility on mode-share sites for ${selectedPilotId} (${profile.samples.length} pins).`,
+        message: `MOCK accessibility on mode-share sites for ${selectedPilotId} (${points.length} pins · ${scenario}).`,
       });
-      return copenhagenAccessibilityToLocalPoints(profile, scenario);
+      return points;
     }
   }
 
@@ -2355,6 +2363,9 @@ export async function loadLocalCityPoints(
           category: record.category,
           likertLabel: record.likertLabel,
           facilityCategory: record.facilityCategory,
+          featureStatus: (record as { featureStatus?: string; status?: string }).featureStatus
+            ?? (record as { status?: string }).status,
+          status: (record as { status?: string }).status,
           surveyDistributionBefore: (record as { surveyDistributionBefore?: unknown }).surveyDistributionBefore,
           surveyDistributionAfter: (record as { surveyDistributionAfter?: unknown }).surveyDistributionAfter,
           sampleBefore: (record as { sampleBefore?: number }).sampleBefore,

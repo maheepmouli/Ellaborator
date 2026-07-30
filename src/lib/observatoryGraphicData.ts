@@ -35,10 +35,12 @@ import {
 import {
   getCopenhagenAccessibilityMock,
   copenhagenAccessibilityKpiHeadline,
+  copenhagenAccessibilityStatCards,
 } from "@/data/copenhagenAccessibilityMock";
 import {
   getIssyAccessibilityMock,
   issyAccessibilityKpiHeadline,
+  issyAccessibilityStatCards,
 } from "@/data/issyAccessibilityMock";
 import { workbookHubBearing, knownDirectionalFlowKeys, normalizeOtcFlowKey } from "@/lib/copenhagenMapLayers/copenhagenFlowGeometry";
 import {
@@ -68,6 +70,7 @@ import {
   helsinkiEscooterParkingModeShare,
   helsinkiHazardCategoryLikert,
   helsinkiHazardCategoryModeShare,
+  helsinkiConflictTravelModeShare,
   helsinkiHazardDirectionRows,
   helsinkiObservatoryMarkers,
   helsinkiTelraamStatCards,
@@ -78,7 +81,20 @@ import {
 } from "@/lib/helsinkiObservatoryView";
 import {
   filterZaragozaObservatoryPoints,
+  zaragozaAccessibilityModeShare,
+  zaragozaAccessibilityStatCards,
+  zaragozaAqIntensityDiagram,
+  zaragozaClimateModeShare,
   zaragozaCountStatCards,
+  zaragozaEmissionDirections,
+  zaragozaEnvStatCards,
+  zaragozaExpansionModeShare,
+  zaragozaExpansionPlanStatCards,
+  zaragozaHazardModeShare,
+  zaragozaLikertFromPoints,
+  zaragozaModeShareRows,
+  zaragozaSafetySpeedCards,
+  zaragozaSurveyDistribution,
 } from "@/lib/zaragozaObservatoryView";
 import {
   filterMilanObservatoryPoints,
@@ -274,6 +290,186 @@ function milanCameraDirectionRows(
       : undefined;
     return bearing != null ? { ...row, bearingDeg: bearing } : row;
   });
+}
+
+/** Zaragoza mode-share sites as Copenhagen-style one-way / approach links. */
+function zaragozaModeShareDirectionRows(
+  points: LocalCityPoint[],
+  selectedModeTypes: string[]
+): CameraDirectionRow[] {
+  const sitePool = points.filter(
+    (p) =>
+      p.properties?.datasetKind === "school-monitoring" ||
+      p.properties?.datasetKind === "manual-count" ||
+      p.properties?.datasetKind === "comparativa" ||
+      p.properties?.modeBreakdown ||
+      (p.properties?.datasetKind === "survey" && p.properties?.modeBreakdown)
+  );
+  const pool = sitePool.length ? sitePool : points;
+  const byKey = new Map<string, LocalCityPoint>();
+  pool.forEach((p) => {
+    const key = String(p.properties?.segmentId ?? p.properties?.streetName ?? p.id);
+    if (!byKey.has(key)) byKey.set(key, p);
+  });
+  let sites = [...byKey.values()].slice(0, 4);
+
+  // Sparse baseline: synthesise N/E/S arms from aggregated mode share so the schematic still reads.
+  if (sites.length < 2) {
+    const seed = sites[0] ?? points[0];
+    if (!seed) return [];
+    const mb = seed.properties?.modeBreakdown as ModeBreakdown | undefined;
+    const pre = mb?.pre;
+    const total =
+      (Number(pre?.bike) || 0) +
+      (Number(pre?.pedestrian) || 0) +
+      (Number(pre?.motorised) || 0) +
+      (Number(pre?.ptw) || 0);
+    const arms: Array<{ direction: string; bearingDeg: number; active: number; all: number }> = [
+      {
+        direction: "Northbound",
+        bearingDeg: 0,
+        active: Number(pre?.pedestrian) || 0,
+        all: total || 1,
+      },
+      {
+        direction: "Eastbound",
+        bearingDeg: 90,
+        active: Number(pre?.bike) || 0,
+        all: total || 1,
+      },
+      {
+        direction: "Southbound",
+        bearingDeg: 180,
+        active: Number(pre?.motorised) || 0,
+        all: total || 1,
+      },
+    ];
+    const site = String(seed.properties?.streetName ?? "Zaragoza intervention");
+    return arms.map((arm) => {
+      const baselinePct = Math.max(5, Math.min(95, pct(arm.active, arm.all) || Number(seed.value) || 20));
+      const interventionPct = Math.min(100, baselinePct * (arm.direction === "Southbound" ? 0.9 : 1.1));
+      return {
+        id: `${String(seed.properties?.segmentId ?? seed.id)}-${arm.direction.toLowerCase()}`,
+        site,
+        direction: arm.direction,
+        baselinePct,
+        interventionPct,
+        delta: interventionPct - baselinePct,
+        bearingDeg: arm.bearingDeg,
+        source: String(seed.properties?.source ?? "Zaragoza mode-share baseline"),
+        trend: [
+          { t: "Pre", v: baselinePct },
+          { t: "Mid", v: (baselinePct + interventionPct) / 2 },
+          { t: "Post", v: interventionPct },
+        ],
+      };
+    });
+  }
+
+  const bearings = [0, 90, 180, 270];
+  const cardinals = ["Northbound", "Eastbound", "Southbound", "Westbound"];
+  return sites.map((p, i) => {
+    const mb = p.properties?.modeBreakdown as ModeBreakdown | undefined;
+    let baselinePct = Number(p.properties?.baselineValue ?? p.value ?? 0);
+    let interventionPct = Number(p.properties?.interventionValue ?? p.value ?? baselinePct);
+    if (mb) {
+      const preTotal =
+        Number(mb.pre.bike ?? 0) +
+        Number(mb.pre.pedestrian ?? 0) +
+        Number(mb.pre.motorised ?? 0) +
+        Number(mb.pre.ptw ?? 0);
+      const preActive = selectedCount(mb.pre, selectedModeTypes);
+      baselinePct = Math.max(0, Math.min(100, pct(preActive, preTotal || 1)));
+      interventionPct = Math.min(100, baselinePct * 1.08);
+    }
+    const street = String(p.properties?.streetName ?? p.properties?.segmentId ?? "Site");
+    return {
+      id: String(p.properties?.segmentId ?? p.id),
+      site: street,
+      direction: /north|south|east|west/i.test(street) ? street : cardinals[i] ?? street,
+      baselinePct,
+      interventionPct,
+      delta: interventionPct - baselinePct,
+      bearingDeg: bearings[i] ?? i * 90,
+      source: String(p.properties?.source ?? "Zaragoza mode-share baseline"),
+      trend: [
+        { t: "Pre", v: baselinePct },
+        { t: "Mid", v: (baselinePct + interventionPct) / 2 },
+        { t: "Post", v: interventionPct },
+      ],
+    };
+  });
+}
+
+function zaragozaSafetySpeedDiagram(
+  points: LocalCityPoint[],
+  view: JunctionStudyView
+): ObservatoryGraphicPayload["speedDiagram"] {
+  const comparativa = points.find((p) => p.properties?.datasetKind === "comparativa");
+  const school = points.find((p) => p.properties?.datasetKind === "school-monitoring");
+  const manual = points.find((p) => p.properties?.datasetKind === "manual-count");
+  const anchor = comparativa ?? school ?? manual ?? points[0];
+  if (!anchor) {
+    const avg = Number(view.intervention.avgSpeedKmh || view.kpiValue || 28);
+    return {
+      avgKmh: avg,
+      p85Kmh: avg * 1.35,
+      limitKmh: 50,
+      baselineKmh: Number(view.baseline.avgSpeedKmh || avg * 1.08),
+      interventionKmh: avg,
+      streetName: view.name || "Zaragoza corridor",
+      title: "Corridor safety / speed",
+      unitLabel: "km/h",
+      caption:
+        "Zaragoza baseline corridor reading · green = calmer than limit; orange = near/over limit.",
+    };
+  }
+
+  if (comparativa) {
+    const method = String(comparativa.properties?.method ?? "");
+    const spdMatch = method.match(/([\d.]+)\s*km\/h/i);
+    const avg = spdMatch ? Number(spdMatch[1]) : Number(comparativa.value) || 28;
+    const baseline = Number(comparativa.properties?.baselineValue ?? avg);
+    const intervention = Number(comparativa.properties?.interventionValue ?? avg * 0.97);
+    const street = String(comparativa.properties?.streetName ?? "Corridor");
+    const isHospital =
+      /hospital|servet|césar|cesar|mock-p3|AYZG3/i.test(
+        `${street} ${comparativa.id ?? ""} ${comparativa.properties?.source ?? ""}`
+      );
+    return {
+      avgKmh: avg,
+      p85Kmh: avg * 1.28,
+      limitKmh: 50,
+      baselineKmh: baseline > 5 && baseline < 80 ? baseline : avg * 1.05,
+      interventionKmh: intervention > 5 && intervention < 80 ? intervention : avg * 0.97,
+      streetName: street,
+      title: isHospital ? "Hospital corridor speed" : "Romareda corridor speed",
+      unitLabel: "km/h",
+      caption: isHospital
+        ? "Mock hospital access speeds until AYZG3 traffic-study feeds arrive · limit 50 km/h."
+        : "Comparativa KPIs baseline mean speed · limit 50 km/h. Green = well below limit; orange = near/over limit.",
+    };
+  }
+
+  // School / manual — conflict pressure index on the same speed-bar layout.
+  const pressure = Math.min(100, Number(anchor.properties?.value ?? anchor.value ?? 40));
+  const baseline = Math.min(100, Number(anchor.properties?.baselineValue ?? pressure));
+  const intervention = Math.min(
+    100,
+    Number(anchor.properties?.interventionValue ?? pressure * 0.9)
+  );
+  return {
+    avgKmh: pressure,
+    p85Kmh: Math.min(100, pressure * 1.25),
+    limitKmh: 100,
+    baselineKmh: baseline,
+    interventionKmh: intervention,
+    streetName: String(anchor.properties?.streetName ?? view.name ?? "School corridor"),
+    title: "School corridor conflict pressure",
+    unitLabel: "idx",
+    caption:
+      "Peak conflict / motor pressure index from school monitoring & manual counts (0–100). Lower after = safer drop-off window.",
+  };
 }
 
 /** Issy Pont d'Issy hub — three monitored arms as Copenhagen-style directional links. */
@@ -793,6 +989,7 @@ export function buildObservatoryGraphicPayload(
       (cityName === "Milan" &&
         (p.properties?.parserStatus === "illustrative" || p.properties?.dataOrigin === "mock") &&
         (selectedKpi === "kpi1.2" ||
+          selectedKpi === "kpi3.1" ||
           selectedKpi === "kpi3.2" ||
           selectedKpi === "kpi4.2"))
   );
@@ -878,7 +1075,9 @@ export function buildObservatoryGraphicPayload(
               ? milanCameraDirectionRows(activeObserved, selectedModeTypes)
               : cityName === "Helsinki" && selectedKpi === "kpi2.1"
                 ? helsinkiHazardDirectionRows(activeObserved)
-                : [];
+                : cityName === "Zaragoza" && selectedKpi === "kpi1.2"
+                  ? zaragozaModeShareDirectionRows(activeObserved, selectedModeTypes)
+                  : [];
   const activeDirectionId =
     selectedDirectionId ?? cameraDirections[0]?.id ?? null;
 
@@ -896,7 +1095,9 @@ export function buildObservatoryGraphicPayload(
           const dirs = primary?.properties?.emissionDirections;
           return Array.isArray(dirs) ? dirs : [];
         })()
-      : undefined;
+      : cityName === "Zaragoza" && selectedKpi === "kpi3.2"
+        ? zaragozaEmissionDirections(activeObserved)
+        : undefined;
 
   const profileMarkers =
     profile?.interventionMarkers?.map((m, i) => ({
@@ -956,21 +1157,58 @@ export function buildObservatoryGraphicPayload(
     if (manualShare.length) modeShare = manualShare;
   }
   if (cityName === "Zaragoza" && spec.graphicId === "manualCountBars") {
-    const zarShare = modeShareFromCopenhagenPoints(activeObserved);
-    if (zarShare.some((r) => r.before > 0 || r.after > 0)) modeShare = zarShare;
+    const zarShare = zaragozaModeShareRows(activeObserved);
+    if (zarShare.length) modeShare = zarShare;
+    else {
+      const fallback = modeShareFromCopenhagenPoints(activeObserved);
+      if (fallback.some((r) => r.before > 0 || r.after > 0)) modeShare = fallback;
+    }
   }
-  if (cityName === "Helsinki" && selectedKpi === "kpi1.2" && activeObserved.length > 0) {
-    const fromEscooter = helsinkiEscooterParkingModeShare(activeObserved);
-    if (fromEscooter.length) {
-      modeShare = fromEscooter;
-    } else {
-      const fromTelraam = modeShareFromTelraamPoints(activeObserved);
-      if (fromTelraam.length) {
-        modeShare = fromTelraam;
+  if (cityName === "Zaragoza" && selectedKpi === "kpi2.1") {
+    const hazard = zaragozaHazardModeShare(activeObserved);
+    if (hazard.length) modeShare = hazard;
+  }
+  if (cityName === "Zaragoza" && selectedKpi === "kpi3.2") {
+    const climateShare = zaragozaClimateModeShare(activeObserved);
+    if (climateShare.length) modeShare = climateShare;
+  }
+  if (cityName === "Zaragoza" && selectedKpi === "kpi1.1") {
+    const expansionShare = zaragozaExpansionModeShare(pilotId);
+    if (expansionShare.length) modeShare = expansionShare;
+  }
+  if (cityName === "Zaragoza" && selectedKpi === "kpi4.2") {
+    const a11yShare = zaragozaAccessibilityModeShare(activeObserved);
+    if (a11yShare.length) modeShare = a11yShare;
+  }
+  if (cityName === "Zaragoza" && (selectedKpi === "kpi1.2" || spec.graphicId === "modeShareBars")) {
+    if (!modeShare.some((r) => r.before > 0 || r.after > 0)) {
+      const zarShare = zaragozaModeShareRows(activeObserved);
+      if (zarShare.length) modeShare = zarShare;
+    }
+  }
+  if (cityName === "Helsinki" && selectedKpi === "kpi1.2") {
+    if (pilotId === "hel-p1") {
+      // FVH1 mobility = whole-pilot conflict travel modes (hub click focuses map/header only).
+      // Do not require activeObserved — a stale Telraam selection can empty the filter and
+      // previously fell through to mock 28/12/32 bars.
+      const fromConflictModes = helsinkiConflictTravelModeShare(
+        observedPoints.length ? observedPoints : activeObserved,
+        { wholePilot: true }
+      );
+      if (fromConflictModes.length) modeShare = fromConflictModes;
+    } else if (activeObserved.length > 0) {
+      const fromEscooter = helsinkiEscooterParkingModeShare(activeObserved);
+      if (fromEscooter.length) {
+        modeShare = fromEscooter;
       } else {
-        const fromShare = modeShareFromModeBreakdownPoints(activeObserved, false);
-        if (fromShare.some((r) => r.before > 0 || r.after > 0)) {
-          modeShare = fromShare;
+        const fromTelraam = modeShareFromTelraamPoints(activeObserved);
+        if (fromTelraam.length) {
+          modeShare = fromTelraam;
+        } else {
+          const fromShare = modeShareFromModeBreakdownPoints(activeObserved, false);
+          if (fromShare.some((r) => r.before > 0 || r.after > 0)) {
+            modeShare = fromShare;
+          }
         }
       }
     }
@@ -1129,15 +1367,26 @@ export function buildObservatoryGraphicPayload(
         before: b.before,
         after: b.after,
       }));
-    } else if (pilotId === "cph-p1" || pilotId === "cph-p3") {
-      accessibilityEmptySpec = {
-        ...spec,
-        emptyState:
-          "Accessibility audit data pending for this pilot. Linked observed datasets: " +
-          (pilotId === "cph-p1"
-            ? "OpenTrafficCam, Telraam, manual counts, Platomo flow cameras, acceptability survey."
-            : "iRAP counts, OTC flows, safety perception survey."),
-      };
+    } else {
+      const profile = getCopenhagenAccessibilityMock(pilotId);
+      if (profile) {
+        const headline = copenhagenAccessibilityKpiHeadline(profile, scenario);
+        accessibilityLikert = Object.keys(headline.breakdown).map((label) => ({
+          label,
+          value: Number(headline.breakdown[label] ?? 0),
+          before: Number(headline.baselineBreakdown[label] ?? 0),
+          after: Number(headline.breakdown[label] ?? 0),
+        }));
+      } else if (pilotId === "cph-p1" || pilotId === "cph-p3") {
+        accessibilityEmptySpec = {
+          ...spec,
+          emptyState:
+            "Accessibility audit data pending for this pilot. Linked observed datasets: " +
+            (pilotId === "cph-p1"
+              ? "OpenTrafficCam, Telraam, manual counts, Platomo flow cameras, acceptability survey."
+              : "iRAP counts, OTC flows, safety perception survey."),
+        };
+      }
     }
   }
 
@@ -1219,8 +1468,7 @@ export function buildObservatoryGraphicPayload(
   }
 
   const helsinkiHazardLikert =
-    cityName === "Helsinki" &&
-    (selectedKpi === "kpi2.1" || (selectedKpi === "kpi1.2" && pilotId === "hel-p1"))
+    cityName === "Helsinki" && selectedKpi === "kpi2.1"
       ? helsinkiHazardCategoryLikert(activeObserved)
       : [];
   const helsinkiClimateLikert =
@@ -1328,14 +1576,18 @@ export function buildObservatoryGraphicPayload(
               );
             // Segment focus is often a camera hub — fall back to pilot-wide parking inventory.
             const scoped = parkingOf(activeObserved);
+            const pilotWide = parkingOf(observedPoints);
             const pool =
-              scoped.length > 0
-                ? cityName === "Milan" && selectedKpi === "kpi3.1"
-                  ? filterMilanFacilityPointsForScenario(scoped, scenario)
-                  : scoped
-                : cityName === "Copenhagen"
-                  ? parkingOf(observedPoints)
-                  : scoped;
+              cityName === "Milan" && selectedKpi === "kpi3.1"
+                ? filterMilanFacilityPointsForScenario(
+                    scoped.length ? scoped : pilotWide,
+                    scenario
+                  )
+                : scoped.length > 0
+                  ? scoped
+                  : cityName === "Copenhagen"
+                    ? parkingOf(observedPoints)
+                    : scoped;
             const byType = new Map<string, number>();
             for (const p of pool) {
               const raw = String(
@@ -1347,6 +1599,20 @@ export function buildObservatoryGraphicPayload(
                   ? 1
                   : Number(p.properties?.observationCount ?? p.value ?? 0);
               byType.set(t, (byType.get(t) || 0) + (Number.isFinite(count) ? count : 0));
+            }
+            // Guaranteed mock category bars for Milan KPI 3.1 when points are still loading.
+            if (
+              cityName === "Milan" &&
+              selectedKpi === "kpi3.1" &&
+              ![...byType.values()].some((v) => v > 0)
+            ) {
+              return [
+                { label: "Cycle Parking", value: 2 },
+                { label: "Charging", value: 1 },
+                { label: "Shared Mobility", value: 1 },
+                { label: "Pedestrian", value: 1 },
+                { label: "Parking", value: 1 },
+              ];
             }
             return [...byType.entries()]
               .map(([label, value]) => ({ label, value }))
@@ -1413,7 +1679,34 @@ export function buildObservatoryGraphicPayload(
         })()
       : null;
   const zaragozaCards =
-    cityName === "Zaragoza" ? zaragozaCountStatCards(activeObserved) : null;
+    cityName === "Zaragoza"
+      ? selectedKpi === "kpi1.1"
+        ? zaragozaExpansionPlanStatCards(pilotId)
+        : selectedKpi === "kpi4.2"
+          ? zaragozaAccessibilityStatCards(activeObserved, scenario) ??
+            zaragozaCountStatCards(activeObserved)
+          : selectedKpi === "kpi2.1" &&
+              (spec.graphicId === "speedProfile" || spec.graphicId === "streetSegmentSchematic")
+            ? zaragozaSafetySpeedCards(activeObserved, view.name || view.shortName) ??
+              zaragozaCountStatCards(activeObserved)
+            : selectedKpi === "kpi3.2"
+              ? zaragozaEnvStatCards(activeObserved) ?? zaragozaCountStatCards(activeObserved)
+              : zaragozaCountStatCards(activeObserved)
+      : null;
+  const issyA11yCards =
+    cityName === "Issy-les-Moulineaux" && selectedKpi === "kpi4.2"
+      ? (() => {
+          const profile = getIssyAccessibilityMock(pilotId);
+          return profile ? issyAccessibilityStatCards(profile, scenario) : null;
+        })()
+      : null;
+  const copenhagenA11yCards =
+    cityName === "Copenhagen" && selectedKpi === "kpi4.2"
+      ? (() => {
+          const profile = getCopenhagenAccessibilityMock(pilotId);
+          return profile ? copenhagenAccessibilityStatCards(profile, scenario) : null;
+        })()
+      : null;
   const milanA11yCards =
     cityName === "Milan" && selectedKpi === "kpi4.2"
       ? milanAccessibilityStatCards(activeObserved)
@@ -1468,6 +1761,8 @@ export function buildObservatoryGraphicPayload(
           ];
         })()
       : trikalaA11yCards ??
+        issyA11yCards ??
+        copenhagenA11yCards ??
         milanSatisfactionCards ??
         milanExpansionCards ??
         milanClimateCards ??
@@ -1514,6 +1809,8 @@ export function buildObservatoryGraphicPayload(
         )
         ? "Illustrative junction accessibility · KPI 2.1 network anchors"
         : "Milan DSS accessibility workbook · SharePoint"
+      : issyA11yCards
+        ? "Issy mock accessibility inventory · Pont d'Issy corridor"
       : milanCountCards
         ? "Milan AMAT road user counts · SharePoint"
         : milanSpeedCards
@@ -1534,9 +1831,11 @@ export function buildObservatoryGraphicPayload(
                       ? activeObserved.some((p) => p.properties?.datasetKind === "ux-survey")
                         ? "Helsinki Viikki UX safety survey (on-site, n=50) · SharePoint"
                         : "Helsinki dangerous-locations / conflicts · SharePoint"
-                      : "Helsinki Telraam + Viikki lighthouse package · SharePoint"
+                      : selectedKpi === "kpi1.2" && pilotId === "hel-p1"
+                        ? "Helsinki conflict survey travel modes (citywide, n=3,202) · FVH1 SharePoint GPKG"
+                        : "Helsinki Telraam + Viikki lighthouse package · SharePoint"
             : zaragozaCards
-              ? "Zaragoza mobility workbooks & manual counts · SharePoint"
+              ? "Zaragoza SharePoint baseline · school mon / surveys / counts / AQ"
               : cityName === "Trikala" && pilotId === "tri-p2" && selectedKpi === "kpi1.2"
                 ? "Bike uptake from park-and-ride facilities · illustrative (partner survey pending)"
                 : cityName === "Trikala" && pilotId === "tri-p2" && selectedKpi === "kpi3.1"
@@ -1550,6 +1849,7 @@ export function buildObservatoryGraphicPayload(
       : cityName === "Trikala" && pilotId === "tri-p2" && selectedKpi === "kpi4.1"
         ? "mock"
       : trikalaA11yCards ||
+          issyA11yCards ||
           milanSatisfactionCards ||
           milanClimateCards ||
           milanA11yCards ||
@@ -1559,7 +1859,7 @@ export function buildObservatoryGraphicPayload(
           zaragozaCards
       ? activeObserved.some(
           (p) => p.properties?.parserStatus === "illustrative" || p.properties?.dataOrigin === "mock"
-        )
+        ) || Boolean(issyA11yCards)
         ? "mock"
         : "observed"
       : cityName === "Trikala" &&
@@ -1590,13 +1890,18 @@ export function buildObservatoryGraphicPayload(
         : dataClass;
 
   const surveyDistribution =
-    (cityName === "Copenhagen" || cityName === "Milan") &&
-    selectedKpi === "kpi4.1" &&
+    (cityName === "Copenhagen" || cityName === "Milan" || cityName === "Zaragoza") &&
+    (selectedKpi === "kpi4.1" || selectedKpi === "kpi4.2") &&
     (spec.graphicId === "surveyPie" ||
       spec.graphicId === "surveyLikert" ||
       spec.graphicId === "sentimentGauge" ||
-      spec.graphicId === "likertRadar")
+      spec.graphicId === "likertRadar" ||
+      spec.graphicId === "accessibilityBars" ||
+      spec.graphicId === "accessLikert")
       ? (() => {
+          if (cityName === "Zaragoza") {
+            return zaragozaSurveyDistribution(activeObserved, selectedKpi);
+          }
           const surveyPt =
             activeObserved.find((p) => p.properties?.datasetKind === "survey") ||
             observedPoints.find((p) => p.properties?.datasetKind === "survey");
@@ -1710,9 +2015,37 @@ export function buildObservatoryGraphicPayload(
     cameraDirections,
     activeDirectionId,
     emissionDirections,
-    likert: surveyDistribution?.after?.length
-      ? surveyDistribution.after.map((s) => ({ label: s.label, value: s.value }))
-      : facilityLikert,
+    likert: (() => {
+      if (cityName === "Zaragoza" && selectedKpi === "kpi4.1") {
+        const zarLikert = zaragozaLikertFromPoints(activeObserved);
+        if (zarLikert.length) return zarLikert;
+      }
+      // KPI 4.2: never feed band likert — accessibility uses feature count cards / icons.
+      if (cityName === "Zaragoza" && selectedKpi === "kpi4.2") {
+        return [];
+      }
+      // Trikala Pilot 3 road safety — occupancy / mock-speed rows for SafetyPressureChart.
+      if (
+        cityName === "Trikala" &&
+        pilotId === "tri-p3" &&
+        selectedKpi === "kpi2.1" &&
+        (spec.graphicId === "speedProfile" ||
+          spec.graphicId === "prePostTrend" ||
+          spec.graphicId === "safetyDensity")
+      ) {
+        const fromMode = modeShare
+          .filter((r) => r.after > 0 || r.before > 0)
+          .map((r) => ({
+            label: r.mode,
+            value: scenario === "baseline" ? r.before : r.after,
+          }));
+        if (fromMode.length) return fromMode;
+      }
+      if (surveyDistribution?.after?.length) {
+        return surveyDistribution.after.map((s) => ({ label: s.label, value: s.value }));
+      }
+      return facilityLikert;
+    })(),
     surveyDistribution,
     statCards: surveyStatCards,
     markers,
@@ -1721,7 +2054,10 @@ export function buildObservatoryGraphicPayload(
         ? undefined
         : view.intervention.peakCongestion,
     amatSegmentSpeed:
-      cityName === "Milan" && selectedKpi === "kpi2.1" && Boolean(milanSpeedCards?.length),
+      (cityName === "Milan" && selectedKpi === "kpi2.1" && Boolean(milanSpeedCards?.length)) ||
+      (cityName === "Zaragoza" &&
+        selectedKpi === "kpi2.1" &&
+        (spec.graphicId === "speedProfile" || spec.graphicId === "streetSegmentSchematic")),
     speedDiagram:
       cityName === "Milan" && selectedKpi === "kpi2.1"
         ? (() => {
@@ -1745,7 +2081,11 @@ export function buildObservatoryGraphicPayload(
               ),
             };
           })()
-        : undefined,
+        : cityName === "Zaragoza" && selectedKpi === "kpi2.1"
+          ? zaragozaSafetySpeedDiagram(activeObserved, view)
+          : cityName === "Zaragoza" && selectedKpi === "kpi3.2"
+            ? zaragozaAqIntensityDiagram(activeObserved, view.name || view.shortName) ?? undefined
+            : undefined,
     streetNS:
       cityName === "Helsinki"
         ? pilotId === "hel-p2" && selectedKpi === "kpi4.2"

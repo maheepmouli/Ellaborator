@@ -8,7 +8,9 @@ interface SentimentGaugeChartProps {
 }
 
 export function SentimentGaugeChart({ payload, compact }: SentimentGaugeChartProps) {
-  const afterPct = Math.max(0, Math.min(100, Number(payload.kpiValue ?? 0)));
+  const rawAfter = Number(payload.kpiValue ?? 0);
+  const isMockValue = !Number.isFinite(rawAfter) || rawAfter <= 0;
+  const afterPct = Math.max(0, Math.min(100, isMockValue ? 62 : rawAfter));
   const beforeFromTrend = payload.trend?.find((t) => /before|baseline/i.test(t.t))?.v;
   const beforePct =
     beforeFromTrend != null && Number.isFinite(beforeFromTrend)
@@ -22,7 +24,7 @@ export function SentimentGaugeChart({ payload, compact }: SentimentGaugeChartPro
     { name: "score", value: afterPct, fill },
     { name: "rest", value: rest, fill: "rgba(101,125,245,0.15)" },
   ];
-  const isMock = payload.dataClass === "mock";
+  const isMock = payload.dataClass === "mock" || isMockValue;
   const label =
     payload.kpiId === "kpi4.2"
       ? "Access index"

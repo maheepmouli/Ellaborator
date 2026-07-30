@@ -342,22 +342,48 @@ export function milanZeroEmissionFacilityCount(scopePilotId: string): number {
 }
 
 /** Site counts for KPI 3.1 headline — matches visible map points, not summed deployment units. */
-export function aggregateMilanFacilitySiteKpi(points: LocalCityPoint[]): {
+export function aggregateMilanFacilitySiteKpi(
+  points: LocalCityPoint[],
+  scenario: ScenarioType = "intervention"
+): {
   baselineMain: number;
   interventionMain: number;
   change: number;
+  breakdownBaseline: Record<string, number>;
+  breakdownIntervention: Record<string, number>;
 } {
   const facilities = points.filter((p) => p.properties?.datasetKind === "parking");
-  const baselineMain = facilities.filter(
-    (p) => Number(p.properties?.baselineValue ?? 0) > 0
-  ).length;
-  const interventionMain = facilities.filter(
+  const categoryOf = (p: LocalCityPoint) => {
+    const raw = String(p.properties?.facilityCategory ?? p.properties?.category ?? "Facility");
+    return raw.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  };
+  const countByCategory = (rows: LocalCityPoint[]) => {
+    const byType = new Map<string, number>();
+    for (const p of rows) {
+      const t = categoryOf(p);
+      byType.set(t, (byType.get(t) || 0) + 1);
+    }
+    return Object.fromEntries(byType.entries());
+  };
+  const baselineRows = facilities.filter((p) => Number(p.properties?.baselineValue ?? 0) > 0);
+  const interventionRows = facilities.filter(
     (p) => Number(p.properties?.interventionValue ?? 0) > 0
-  ).length;
+  );
+  // Scenario-visible rows drive the left-panel bar chart (mock plot).
+  const visible =
+    scenario === "baseline"
+      ? baselineRows
+      : scenario === "comparison"
+        ? facilities
+        : interventionRows;
   return {
-    baselineMain,
-    interventionMain,
-    change: interventionMain - baselineMain,
+    baselineMain: baselineRows.length,
+    interventionMain: interventionRows.length,
+    change: interventionRows.length - baselineRows.length,
+    breakdownBaseline: countByCategory(baselineRows),
+    breakdownIntervention: countByCategory(
+      scenario === "baseline" ? baselineRows : visible.length ? visible : interventionRows
+    ),
   };
 }
 

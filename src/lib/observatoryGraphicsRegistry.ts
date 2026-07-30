@@ -53,6 +53,7 @@ export const OBSERVATORY_GRAPHIC_MATRIX: ObservatoryGraphicMatrix = {
   area: {
     "kpi1.2": "manualCountBars",
     "kpi2.1": "motorPressure",
+    "kpi3.1": "facilityInventory",
     "kpi3.2": "proxyDelta",
     "kpi4.1": "likertRadar",
     "kpi4.2": "accessLikert",
@@ -144,9 +145,9 @@ const PILOT_GRAPHIC_OVERRIDES: Record<string, PilotGraphicOverride> = {
   },
   "hel-p1": {
     header: {
-      "kpi1.2": "junctionSchematic",
-      "kpi2.1": "junctionSchematic",
-      "kpi3.2": "junctionSchematic",
+      "kpi1.2": "modeShareBars",
+      "kpi2.1": "modeShareBars",
+      "kpi3.2": "climateComparison",
     },
     overview: {
       "kpi1.2": "modeShareBars",
@@ -285,13 +286,86 @@ const PILOT_GRAPHIC_OVERRIDES: Record<string, PilotGraphicOverride> = {
       "kpi4.2": "accessibilityBars",
     },
   },
-  "zar-p1": { header: { "kpi1.2": "areaPolygonSchematic" } },
-  "tri-p1": {
+  "zar-p1": {
     header: {
-      "kpi2.1": "junctionSchematic",
-      "kpi4.1": "junctionSchematic",
-      "kpi4.2": "junctionSchematic",
+      "kpi1.2": "cameraCorridorSchematic",
+      "kpi2.1": "streetSegmentSchematic",
+      "kpi3.2": "streetSegmentSchematic",
+      "kpi4.1": "sentimentGauge",
+      "kpi4.2": "accessibilityBars",
     },
+    overview: {
+      "kpi1.2": "manualCountBars",
+      "kpi2.1": "speedProfile",
+      "kpi3.2": "climateComparison",
+      "kpi4.1": "surveyPie",
+      "kpi4.2": "accessibilityBars",
+    },
+    beforeAfter: {
+      "kpi1.2": "manualCountBars",
+      "kpi2.1": "speedProfile",
+      "kpi3.2": "climateComparison",
+      "kpi4.1": "surveyPie",
+      "kpi4.2": "accessibilityBars",
+    },
+    kpiAnalysis: {
+      "kpi1.2": "manualCountBars",
+      "kpi2.1": "speedProfile",
+      "kpi3.2": "climateComparison",
+      "kpi4.1": "surveyPie",
+      "kpi4.2": "accessibilityBars",
+    },
+  },
+  "zar-p2": {
+    header: {
+      "kpi1.2": "cameraCorridorSchematic",
+      "kpi2.1": "streetSegmentSchematic",
+      "kpi3.2": "streetSegmentSchematic",
+      "kpi4.1": "sentimentGauge",
+      "kpi4.2": "accessibilityBars",
+    },
+    overview: {
+      "kpi1.2": "manualCountBars",
+      "kpi2.1": "speedProfile",
+      "kpi3.2": "climateComparison",
+      "kpi4.1": "surveyPie",
+      "kpi4.2": "accessibilityBars",
+    },
+    beforeAfter: {
+      "kpi1.2": "manualCountBars",
+      "kpi2.1": "speedProfile",
+      "kpi3.2": "climateComparison",
+      "kpi4.1": "surveyPie",
+      "kpi4.2": "accessibilityBars",
+    },
+    kpiAnalysis: {
+      "kpi1.2": "manualCountBars",
+      "kpi2.1": "speedProfile",
+      "kpi3.2": "climateComparison",
+      "kpi4.1": "surveyPie",
+      "kpi4.2": "accessibilityBars",
+    },
+  },
+  "zar-p3": {
+    header: {
+      "kpi2.1": "streetSegmentSchematic",
+      "kpi4.2": "accessibilityBars",
+    },
+    overview: {
+      "kpi2.1": "speedProfile",
+      "kpi4.2": "accessibilityBars",
+    },
+    beforeAfter: {
+      "kpi2.1": "speedProfile",
+      "kpi4.2": "accessibilityBars",
+    },
+    kpiAnalysis: {
+      "kpi2.1": "speedProfile",
+      "kpi4.2": "accessibilityBars",
+    },
+  },
+  "tri-p1": {
+    // No header junction schematic — map already shows the smart-crossing hub.
     overview: {
       "kpi2.1": "modeShareBars",
       "kpi4.1": "modeShareBars",
@@ -314,7 +388,12 @@ const PILOT_GRAPHIC_OVERRIDES: Record<string, PilotGraphicOverride> = {
       "kpi1.2": "cameraCorridorSchematic",
       "kpi2.1": "cameraCorridorSchematic",
     },
-    overview: { "kpi1.2": "modeShareBars", "kpi2.1": "prePostTrend" },
+    overview: {
+      "kpi1.2": "modeShareBars",
+      "kpi2.1": "prePostTrend",
+      "kpi4.2": "accessibilityBars",
+    },
+    beforeAfter: { "kpi4.2": "accessibilityBars" },
     kpiAnalysis: { "kpi4.1": "likertRadar", "kpi4.2": "accessibilityBars" },
   },
   "issy-p1": {
@@ -322,14 +401,26 @@ const PILOT_GRAPHIC_OVERRIDES: Record<string, PilotGraphicOverride> = {
       "kpi1.2": "cameraCorridorSchematic",
       "kpi2.1": "cameraCorridorSchematic",
     },
-    overview: { "kpi1.2": "modeShareBars", "kpi2.1": "prePostTrend" },
+    overview: {
+      "kpi1.2": "modeShareBars",
+      "kpi2.1": "prePostTrend",
+      "kpi4.2": "accessibilityBars",
+    },
+    beforeAfter: { "kpi4.2": "accessibilityBars" },
+    kpiAnalysis: { "kpi4.2": "accessibilityBars" },
   },
   "issy-p2": {
     header: {
       "kpi1.2": "cameraCorridorSchematic",
       "kpi2.1": "cameraCorridorSchematic",
     },
-    overview: { "kpi1.2": "modeShareBars", "kpi2.1": "prePostTrend" },
+    overview: {
+      "kpi1.2": "modeShareBars",
+      "kpi2.1": "prePostTrend",
+      "kpi4.2": "accessibilityBars",
+    },
+    beforeAfter: { "kpi4.2": "accessibilityBars" },
+    kpiAnalysis: { "kpi4.2": "accessibilityBars" },
   },
   "tri-p2": {
     header: {
@@ -354,17 +445,14 @@ const PILOT_GRAPHIC_OVERRIDES: Record<string, PilotGraphicOverride> = {
     },
   },
   "tri-p3": {
-    header: { "kpi2.1": "areaPolygonSchematic", "kpi4.2": "areaPolygonSchematic" },
-    overview: { "kpi2.1": "modeShareBars", "kpi4.2": "likertRadar" },
+    // Road-safety charts (occupancy stress / mock speed) — not area schematic / radar.
+    header: { "kpi2.1": "modeShareBars", "kpi4.2": "accessibilityBars" },
+    overview: { "kpi2.1": "prePostTrend", "kpi4.2": "likertRadar" },
     beforeAfter: { "kpi2.1": "modeShareBars", "kpi4.2": "accessibilityBars" },
-    kpiAnalysis: { "kpi2.1": "likertRadar", "kpi4.2": "accessibilityBars" },
+    kpiAnalysis: { "kpi2.1": "speedProfile", "kpi4.2": "accessibilityBars" },
   },
   "tri-p4": {
-    header: {
-      "kpi1.2": "cameraCorridorSchematic",
-      "kpi3.2": "interventionPointsSchematic",
-      "kpi4.1": "sentimentGauge",
-    },
+    // No header schematic — map already shows zero-emission / SMARTA2 geography.
     overview: {
       "kpi1.2": "modeShareBars",
       "kpi3.2": "climateComparison",
@@ -582,11 +670,17 @@ export function resolveObservatoryGraphic(
       return { graphicId: "cameraCorridorSchematic", kind: "schematic", variant: "compact" };
     }
     if (pilotId === "tri-p3") {
+      if (kpiId === "kpi2.1") {
+        return { graphicId: "modeShareBars", kind: "chart", variant: "compact" };
+      }
+      if (kpiId === "kpi4.2") {
+        return { graphicId: "accessibilityBars", kind: "chart", variant: "compact" };
+      }
       return { graphicId: "streetSegmentSchematic", kind: "schematic", variant: "compact" };
     }
-    // Pilot 1 smart-crossing KPIs are survey-led — keep junction schematic, not speed-segment shell.
+    // Pilot 1 — map already shows the smart-crossing hub; skip duplicate junction schematic in header.
     if (pilotId === "tri-p1" && ["kpi2.1", "kpi4.1", "kpi4.2"].includes(kpiId)) {
-      return { graphicId: "junctionSchematic", kind: "schematic", variant: "compact" };
+      return null;
     }
     if (["kpi4.1", "kpi2.1", "kpi4.2", "kpi3.2"].includes(kpiId)) {
       return { graphicId: "streetSegmentSchematic", kind: "schematic", variant: "compact" };
@@ -595,6 +689,9 @@ export function resolveObservatoryGraphic(
 
   if (trikalaSegmentHover && zone === "kpiAnalysis") {
     if (kpiId === "kpi4.1" || kpiId === "kpi2.1") {
+      if (pilotId === "tri-p3" && kpiId === "kpi2.1") {
+        return { graphicId: "speedProfile", kind: "chart", variant: "expanded" };
+      }
       return { graphicId: "likertRadar", kind: "chart", variant: "expanded" };
     }
     if (kpiId === "kpi4.2") {
@@ -616,8 +713,17 @@ export function resolveObservatoryGraphic(
     if (kpi === "kpi3.1" && (pilotId?.startsWith("cph-") || pilotOverride === "facilityInventory")) {
       return null;
     }
-    // Milan KPI 4.2 — accessibility is point inventory; skip useless corridor intensity schematic.
-    if (kpi === "kpi4.2" && pilotId?.startsWith("mil-")) {
+    // Trikala Pilot 1 / Pilot 4 — no schematic above tabs (map is enough).
+    if (pilotId === "tri-p1" || pilotId === "tri-p4") {
+      return null;
+    }
+    // Milan / Issy / Copenhagen KPI 4.2 — accessibility inventory (not camera corridor).
+    if (
+      kpi === "kpi4.2" &&
+      (pilotId?.startsWith("mil-") ||
+        pilotId?.startsWith("issy-") ||
+        pilotId?.startsWith("cph-"))
+    ) {
       return null;
     }
     // CPH 4.1 MOCK satisfaction — compact satisfaction gauge (not empty Acceptability pie).
@@ -692,10 +798,17 @@ export function kpiStatusCaption(
     };
   }
   if (city === "Helsinki" && pilotId === "hel-p1") {
+    if (kpiId === "kpi1.2") {
+      return {
+        primary: "Mobility context from conflict travel modes",
+        secondary: sourceLabel || "Near-miss / conflict survey · citywide travel mode of reporters",
+        tertiary: "Whole-pilot mix (n=3,202) — no Telraam on FVH1",
+      };
+    }
     return {
       primary: "Accident & near-miss survey evidence",
       secondary: sourceLabel || "Dangerous-location / conflict citizen submissions",
-      tertiary: "No pilot-scoped mode-share sensor in this data drop",
+      tertiary: "Click a density hub to refresh the category mix for that cluster",
     };
   }
   // Helsinki FVH3 Viikki UX survey — never use generic "monitored corridor" / Kallio copy.

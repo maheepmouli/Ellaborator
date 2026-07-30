@@ -4,7 +4,6 @@ import type { Layer } from "@deck.gl/core";
 import { useQuery } from "@tanstack/react-query";
 import "leaflet/dist/leaflet.css";
 import { CITY_DATA, ELABORATOR_KPIS, generateHexbinData } from "@/data/kpiDefinitions";
-import { getReadinessForCity } from "@/data/kpiReadinessMatrix";
 import { useLatestTrafficData } from "@/hooks/use-traffic-data";
 import { trafficSegmentsToSegments, type MapSegment } from "@/services/trafficApi";
 import { useLatestBicycleCounting } from "@/hooks/use-bicycle-counting";
@@ -70,7 +69,7 @@ import {
   resolveRenderIntent,
   resolveSpatialRenderPlan,
 } from "@/lib/spatialLayerRegistry";
-import { provenanceBadgesHtml } from "@/lib/dataProvenance";
+import { formatDataTypeLabel, provenanceBadgesHtml, resolveCityOverviewTrust, trustChipHtml } from "@/lib/dataProvenance";
 import { resolveMapPointIconSpec } from "@/lib/mapPointIconTaxonomy";
 import { createMapPointDivIcon, addNeonPointMarker } from "@/lib/mapPointIcons";
 import {
@@ -99,6 +98,14 @@ import {
   loadCopenhagenCountSitesGeoJson,
   loadZaragozaInterventionAreasGeoJson,
 } from "@/services/staticGeoData";
+import {
+  filterValidZaragozaAreaFeatures,
+  loadZaragozaReformadoOverlay,
+  renderZaragozaKpi12Layers,
+  renderZaragozaKpi21Layers,
+  renderZaragozaKpi32Layers,
+  renderZaragozaKpi42Layers,
+} from "@/lib/zaragozaMapLayers";
 import { isMilanCityName, milanMapZoom, MILAN_PILOT_ANCHORS } from "@/lib/milanMapConfig";
 import { buildMilanKpi12MapPoints } from "@/lib/milanModeBreakdown";
 import {
@@ -209,9 +216,8 @@ interface HeroMapProps {
 }
 
 /**
- * Pilot overview uses large HTML markers; raw coordinates can sit close enough that cards overlap at z13–14.
- * Spread positions around their centroid while preserving direction so cards stay readable (display-only).
- * Keep the ring tight enough that 3 cards still fit in a city zoom frame with side panels.
+ * Pilot overview uses large HTML markers (≈280×200px). Spread only enough that
+ * cards do not stack — keep them inside the city, not across a country.
  */
 function spreadPilotOverviewPositions(
   coords: ReadonlyArray<{ lat: number; lng: number }>,
@@ -229,9 +235,22 @@ function spreadPilotOverviewPositions(
   meanLat /= n;
   meanLng /= n;
 
-  // 280px-wide cards need ~0.16–0.20° separation at city overview zoom (z10–11).
-  const radiusDeg =
-    n <= 2 ? 0.1 : n === 3 ? 0.17 : Math.min(0.14, Math.max(0.08, 0.022 * n + 0.05));
+  let maxDist = 0;
+  for (const c of coords) {
+    maxDist = Math.max(maxDist, Math.hypot(c.lat - meanLat, c.lng - meanLng));
+  }
+
+  // Already geographically separated enough for 280px cards (e.g. Milan) — keep real sites.
+  // Helsinki FVH sites span ~0.05° and still overlap at overview zoom — force a readable ring.
+  const CARD_CLEAR_DEG = 0.1;
+  if (maxDist >= CARD_CLEAR_DEG) {
+    return coords.map((c) => [c.lat, c.lng] as [number, number]);
+  }
+
+  // Dense / mid cluster (Copenhagen medieval, Helsinki FVH): ring around the city.
+  // ~0.16° ≈ 18 km for 3 pilots — clears card overlap at z11 without leaving metro area.
+  const radiusDeg = n <= 2 ? 0.1 : n === 3 ? 0.16 : Math.min(0.2, 0.07 * n + 0.05);
+  const lngScale = 1.2;
 
   const indexed = coords.map((c, i) => {
     const dx = c.lng - meanLng;
@@ -248,10 +267,16 @@ function spreadPilotOverviewPositions(
 
   const result: Array<[number, number]> = new Array(n);
   indexed.forEach(({ i }, slot) => {
-    const ringAngle = (2 * Math.PI * slot) / n - Math.PI / 2;
+    // 3 pilots: south / NW / NE — keeps Helsinki Pilot 3 (Viikki) readable in the NE.
+    const ringAngle =
+      n === 3
+        ? [-Math.PI / 2, (Math.PI * 5) / 6, Math.PI / 6][slot]!
+        : n === 4
+          ? [-Math.PI * 0.75, -Math.PI * 0.25, Math.PI * 0.25, Math.PI * 0.75][slot]!
+          : (2 * Math.PI * slot) / n - Math.PI / 2;
     result[i] = [
       meanLat + Math.sin(ringAngle) * radiusDeg,
-      meanLng + Math.cos(ringAngle) * radiusDeg,
+      meanLng + Math.cos(ringAngle) * radiusDeg * lngScale,
     ];
   });
 
@@ -265,26 +290,40 @@ function fitMapToPilotOverviewCards(
   options?: { cityName?: string }
 ): void {
   if (!positions.length) return;
-  const isMilan = (options?.cityName ?? "").toLowerCase().includes("milan");
+  const city = (options?.cityName ?? "").toLowerCase();
+  const isMilan = city.includes("milan");
+  const isCopenhagen = city.includes("copenhagen");
+  const isHelsinki = city.includes("helsinki");
   const multiPilot = positions.length >= 3;
-  const overviewZoom = isMilan || multiPilot ? 10 : 13;
+  // Dense city centres need a closer frame so cards stay on the metro map and readable.
+  const overviewZoom = isCopenhagen || isHelsinki ? 11 : multiPilot ? 10 : isMilan ? 11 : 12;
   if (positions.length === 1) {
     map.flyTo(positions[0], overviewZoom, { duration: 0.55 });
     return;
   }
   let bounds = L.latLngBounds(positions.map(([lat, lng]) => L.latLng(lat, lng)));
   if (!bounds.isValid()) return;
-  // Expand beyond marker anchors so 280×220 HTML cards aren't clipped at the edge.
-  bounds = bounds.pad(isMilan || multiPilot ? 1.6 : 0.95);
+  bounds = bounds.pad(multiPilot ? 0.4 : 0.55);
   map.fitBounds(bounds, {
     // Left InsightPanel (~380) + right gap + half card (~140) horizontally;
     // header/legend + half card (~110) vertically.
-    paddingTopLeft: L.point(420, 190),
-    paddingBottomRight: L.point(110, 190),
+    paddingTopLeft: L.point(420, 180),
+    paddingBottomRight: L.point(110, 180),
     maxZoom: overviewZoom,
     animate: true,
     duration: 0.55,
   });
+}
+
+const PILOT_CARD_ICON_SIZE: [number, number] = [280, 210];
+const PILOT_CARD_ICON_ANCHOR: [number, number] = [140, 105];
+
+function escapePilotCardHtml(value: string): string {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 /** Copenhagen extended datasets are pilot-scoped in loadLocalCityData — not OTC workbook keys. */
@@ -650,9 +689,11 @@ const HeroMap = ({
       currentCity?.toLowerCase().includes("copenhagen") && selectedPilotId?.startsWith("cph-");
     const isMilanCity = currentCity?.toLowerCase().includes("milan");
     const isHelsinkiCity = currentCity?.toLowerCase().includes("helsinki");
+    const isZaragozaCity = currentCity?.toLowerCase().includes("zaragoza");
     // Milan: AMAT shapefile segments / count points define geography — no synthetic buffer disc.
     // Helsinki: KPI renderers draw peer-style influence fields — skip duplicate purple buffer + GeoSample.
-    if (!isCopenhagenPilot && !isMilanCity && !isHelsinkiCity) {
+    // Zaragoza: partner GIS intervention polygons define geography — skip synthetic buffer disc.
+    if (!isCopenhagenPilot && !isMilanCity && !isHelsinkiCity && !isZaragozaCity) {
       const interventionBoundary = L.circle([focusLat, focusLng], {
         radius: focusRadiusM,
         color: "#a78bfa",
@@ -762,37 +803,41 @@ const HeroMap = ({
     }
   };
 
-  const getPilotCardHtml = (cityLabel: string, pilot: SelectedPilot) => `
+  const getPilotCardHtml = (cityLabel: string, pilot: SelectedPilot) => {
+    const city = escapePilotCardHtml(cityLabel.toUpperCase());
+    const name = escapePilotCardHtml(pilot.name);
+    const title = escapePilotCardHtml(pilot.title);
+    const description = escapePilotCardHtml(pilot.description);
+    return `
     <div style="
-      width: 280px;
-      max-height: 220px;
+      width: 268px;
       box-sizing: border-box;
       padding: 10px 12px;
       border-radius: 10px;
-      color: white;
+      color: #F8F7FF;
       font-family: 'DM Sans', sans-serif;
-      border: 1px solid rgba(172, 183, 255, 0.45);
-      box-shadow: 0 10px 24px rgba(10, 8, 36, 0.45), inset 0 1px 0 rgba(255,255,255,0.16);
+      border: 1px solid rgba(172, 183, 255, 0.5);
+      box-shadow: 0 12px 28px rgba(10, 8, 36, 0.5), inset 0 1px 0 rgba(255,255,255,0.18);
       backdrop-filter: blur(18px);
-      background: linear-gradient(165deg, rgba(60, 37, 142, 0.92) 0%, rgba(48, 28, 116, 0.95) 100%);
-      cursor: pointer;
-      overflow: hidden;">
+      background: linear-gradient(165deg, rgba(60, 37, 142, 0.94) 0%, rgba(42, 24, 108, 0.96) 100%);
+      cursor: pointer;">
       <div style="display: flex; align-items: flex-start; gap: 8px;">
-        <svg width="16" height="18" viewBox="0 0 24 24" fill="none" style="opacity: 0.95; flex-shrink: 0; margin-top: 2px;">
+        <svg width="14" height="16" viewBox="0 0 24 24" fill="none" style="opacity: 0.95; flex-shrink: 0; margin-top: 2px;">
           <path d="M12 22s7-6.2 7-13a7 7 0 1 0-14 0c0 6.8 7 13 7 13z" fill="#A78BFA"/>
           <circle cx="12" cy="9" r="2.6" fill="#EDE9FE"/>
         </svg>
         <div style="flex: 1; min-width: 0;">
-          <p style="font-size: 14px; font-weight: 800; margin: 0; line-height: 1.1; letter-spacing: 0.6px;">${cityLabel.toUpperCase()}</p>
-          <p style="font-size: 24px; font-weight: 800; margin: 2px 0 0 0; line-height: 1;">${pilot.name}</p>
-          <p style="font-size: 11px; font-weight: 700; margin: 6px 0 0 0; opacity: 0.98; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${pilot.title}</p>
+          <p style="font-size: 11px; font-weight: 800; margin: 0; line-height: 1.15; letter-spacing: 0.55px; color: #EEF0FF;">${city}</p>
+          <p style="font-size: 20px; font-weight: 800; margin: 3px 0 0 0; line-height: 1.05; color: #FFFFFF;">${name}</p>
+          <p style="font-size: 12px; font-weight: 600; margin: 5px 0 0 0; color: rgba(255,255,255,0.95); line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${title}</p>
         </div>
       </div>
-      <div style="margin-top: 8px; border: 1.5px solid rgba(173, 236, 255, 0.75); border-radius: 8px; padding: 8px 10px;">
-        <p style="font-size: 10px; opacity: 0.95; margin: 0; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 8; -webkit-box-orient: vertical; overflow: hidden;">${pilot.description}</p>
+      <div style="margin-top: 8px; border: 1.5px solid rgba(173, 236, 255, 0.7); border-radius: 8px; padding: 8px 10px; background: rgba(12, 10, 40, 0.28);">
+        <p style="font-size: 11px; color: rgba(248,247,255,0.92); margin: 0; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">${description}</p>
       </div>
     </div>
   `;
+  };
 
   const addHexbinData = useCallback(
     (cityName: string, modeTypes?: string[]) => {
@@ -861,22 +906,24 @@ const HeroMap = ({
         }
       };
 
-      const fitMilanKpi12Once = (
+      // One auto-fit per pilot×KPI×scenario — re-renders (hover/selection/data refresh)
+      // must not fight the user's wheel zoom.
+      const fitMilanOnce = (
         coords: Array<[number, number]>,
         opts?: { pilotScoped?: boolean; hubPulse?: boolean }
       ) => {
         const fitKey = `${milanPilotId}:${selectedKpi}:${scenario}`;
-        if (milanKpi12FitKeyRef.current === fitKey) return;
+        if (milanPointFitKeyRef.current === fitKey) return;
+        milanPointFitKeyRef.current = fitKey;
         milanKpi12FitKeyRef.current = fitKey;
         fitMapToLatLngs(coords, opts);
       };
 
-      const fitMilanPointsOnce = (coords: Array<[number, number]>) => {
-        const fitKey = `${milanPilotId}:${selectedKpi}:${scenario}:points`;
-        if (milanPointFitKeyRef.current === fitKey) return;
-        milanPointFitKeyRef.current = fitKey;
-        fitMapToLatLngs(coords, { pilotScoped: true });
-      };
+      const fitMilanKpi12Once = fitMilanOnce;
+      const fitMilanPointsOnce = (
+        coords: Array<[number, number]>,
+        opts?: { pilotScoped?: boolean; hubPulse?: boolean }
+      ) => fitMilanOnce(coords, { pilotScoped: true, ...opts });
 
       const attachPilotStoryPins = () => {
         if (!mapRef.current || !selectedPilotId) return;
@@ -1447,7 +1494,7 @@ const HeroMap = ({
         });
         scheduleLeafletLayerRepaint(mapRef.current, markersRef.current);
         // Fit to full network.shp extent (not circular pilot buffer) — sticky #05 / #17.
-        fitMapToLatLngs(fitCoords);
+        fitMilanOnce(fitCoords);
         const joinPct = milanSpeedSegments.stats.cameraJoinRatePct;
         setMilanLayerQa({
           layer: "safety",
@@ -1515,7 +1562,7 @@ const HeroMap = ({
             ),
           ];
           // Fit the corridor network + facilities (same for Pilot 1 and Pilot 2).
-          fitMapToLatLngs(fitCoords);
+          fitMilanOnce(fitCoords);
           const siteKpi = aggregateMilanFacilitySiteKpi(placedZemPoints);
           setMilanLayerQa({
             layer: "zero-emission",
@@ -1630,7 +1677,7 @@ const HeroMap = ({
           segment.coordinates.forEach((coord) => fitCoords.push(coord));
         });
         scheduleLeafletLayerRepaint(mapRef.current, markersRef.current);
-        fitMapToLatLngs(fitCoords);
+        fitMilanOnce(fitCoords);
         setMilanLayerQa({
           layer: "environment",
           parsed: milanEnvironmentSegments!.stats.parsedSegments,
@@ -1682,7 +1729,7 @@ const HeroMap = ({
             ),
           ];
           // Sticky #19: fit corridor climate proxies (not empty pilot disc).
-          fitMapToLatLngs(fitCoords);
+          fitMilanOnce(fitCoords);
           setMilanLayerQa({
             layer: "environment",
             parsed: climateMockPoints.length,
@@ -1716,7 +1763,7 @@ const HeroMap = ({
           segmentHandlers,
           circlesOut: circlesRef.current,
           markersOut: markersRef.current,
-          fitMap: (coords) => fitMapToLatLngs(coords, { pilotScoped: true }),
+          fitMap: (coords) => fitMilanOnce(coords, { pilotScoped: true }),
         });
         if (rendered > 0) {
           addInterventionLayer(cityData, showInterventionLayer);
@@ -1824,10 +1871,7 @@ const HeroMap = ({
       // Milan KPI 4.1 — satisfaction survey (SharePoint folder 7, or CDM3 Activity 5 mock when empty).
       if (isMilanCity && selectedKpi === "kpi4.1" && mapRef.current) {
         const surveyPoints = filterMilanLocalPoints(localCityPoints ?? [], milanPilotId).filter(
-          (p) =>
-            p.properties?.datasetKind === "survey" ||
-            p.properties?.dataOrigin === "mock" ||
-            p.properties?.mockLabel === "MOCK"
+          (p) => p.properties?.datasetKind === "survey"
         );
         if (surveyPoints.length) {
           const usingMock = surveyPoints.every(
@@ -2011,7 +2055,7 @@ const HeroMap = ({
               ${props.indice_de_congestion ? `<p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Congestion index: ${props.indice_de_congestion.toFixed(2)}</p>` : ''}
               ${props.distance_metres ? `<p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Observed length: ${(props.distance_metres / 1000).toFixed(2)} km</p>` : ''}
               <p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Band: ${highlight.band}</p>
-              <p style="font-size: 9px; color: #96C2EF; margin-top: 6px;">${kpiDefinition?.dataLabel || "Observed"} data</p>
+              <p style="font-size: 9px; color: #96C2EF; margin-top: 6px;">${formatDataTypeLabel(kpiDefinition?.dataLabel || "Observed")} data</p>
             </div>
           `;
           
@@ -2416,9 +2460,14 @@ const HeroMap = ({
       }
 
       if (cityName.toLowerCase().includes("zaragoza")) {
+        // Partner GIS polygons are exact — keep street-level wheel zoom available.
+        mapRef.current?.setMaxZoom?.(18);
+        mapRef.current?.setMinZoom?.(4);
         void loadZaragozaInterventionAreasGeoJson().then((geojson) => {
           if (!mapRef.current) return;
-          const layer = L.geoJSON(geojson as GeoJSON.GeoJsonObject, {
+          const features = filterValidZaragozaAreaFeatures(geojson.features ?? []);
+          const filtered = { ...geojson, features };
+          const layer = L.geoJSON(filtered as GeoJSON.GeoJsonObject, {
             style: (feature) => {
               const pilotId = String(feature?.properties?.pilotId ?? "");
               const isActive = !!selectedPilotId && pilotId === selectedPilotId;
@@ -2437,7 +2486,9 @@ const HeroMap = ({
                 <div style="font-family:'DM Sans',sans-serif;padding:8px;min-width:170px;">
                   <p style="font-size:10px;color:#8578C3;margin:0 0 4px 0;text-transform:uppercase;">Zaragoza intervention area</p>
                   <p style="font-size:14px;font-weight:700;color:#2F1B6D;margin:0 0 6px 0;">${pilotId.toUpperCase()}</p>
-                  <p style="font-size:10px;color:#96C2EF;margin:0;">${isActive ? "Active pilot highlight" : "Contextual outline"}</p>
+                  <p style="font-size:10px;color:#96C2EF;margin:0;">${
+                    isActive ? "Active pilot highlight" : "Contextual outline"
+                  }</p>
                 </div>
               `);
               if (layerItem instanceof L.Polygon) {
@@ -2453,10 +2504,10 @@ const HeroMap = ({
                     segmentHandlers,
                     {
                       baseStyle: {
-                        color: isActive ? "#2ecc71" : "#64748b",
+                        color: cancelled ? "#a78bfa" : isActive ? "#2ecc71" : "#64748b",
                         weight: isActive ? 4 : 1.8,
                         opacity: isActive ? 0.98 : 0.72,
-                        fillColor: isActive ? "#22c55e" : "#334155",
+                        fillColor: cancelled ? "#6d28d9" : isActive ? "#22c55e" : "#334155",
                         fillOpacity: isActive ? 0.24 : 0.08,
                       },
                       highlightStyle: {
@@ -2479,6 +2530,15 @@ const HeroMap = ({
               }
             });
           }
+          if (mapRef.current) {
+            // Reformado GPKG CAD overlay disabled (street line clutter).
+            void loadZaragozaReformadoOverlay(
+              mapRef.current,
+              L,
+              selectedPilotId,
+              polygonsRef.current as unknown as L.Layer[]
+            );
+          }
         });
         addInterventionLayer(cityData, showInterventionLayer);
       }
@@ -2490,6 +2550,33 @@ const HeroMap = ({
         !isCopenhagenCity &&
         (renderIntent === "point" || (issySafetySegmentDataMissing && !isIssy))
       ) {
+        // Zaragoza — dedicated safety hubs (school conflict / hospital mock speeds).
+        if (cityName.toLowerCase().includes("zaragoza") && mapRef.current) {
+          const zarSafetySource =
+            localCityPoints && localCityPoints.length > 0 ? localCityPoints : [];
+          const scopedSafety = filterPointsInPilotZone(
+            zarSafetySource,
+            cityName,
+            selectedPilotId
+          );
+          const rendered = renderZaragozaKpi21Layers({
+            map: mapRef.current,
+            points: scopedSafety.length ? scopedSafety : zarSafetySource,
+            selectedPilotId,
+            activeMapSegmentId,
+            scenario,
+            segmentInteractionEnabled,
+            segmentHandlers,
+            markersOut: markersRef.current,
+            circlesOut: circlesRef.current,
+            wireCircleMarker: wireCircleMarkerSegment,
+          });
+          if (rendered > 0) {
+            addInterventionLayer(cityData, showInterventionLayer);
+            return;
+          }
+        }
+
         let safetyPoints =
           (localCityPoints && localCityPoints.length > 0)
             ? localCityPoints.slice(0, 320)
@@ -2658,8 +2745,88 @@ const HeroMap = ({
         }
 
         const cityKeyLower = cityName.toLowerCase();
+        if (cityKeyLower.includes("zaragoza") && selectedKpi === "kpi1.2" && mapRef.current) {
+          const scopedLocal = filterPointsInPilotZone(
+            localCityPoints && localCityPoints.length > 0
+              ? localCityPoints
+              : (points as LocalCityPoint[]),
+            cityName,
+            selectedPilotId
+          );
+          const pulsePoints =
+            scopedLocal.length > 0
+              ? scopedLocal
+              : ((localCityPoints ?? points) as LocalCityPoint[]);
+          if (pulsePoints.length) {
+            renderZaragozaKpi12Layers({
+              map: mapRef.current,
+              points: pulsePoints,
+              selectedPilotId,
+              activeMapSegmentId,
+              scenario,
+              segmentInteractionEnabled,
+              segmentHandlers,
+              markersOut: markersRef.current,
+              circlesOut: circlesRef.current,
+              wireCircleMarker: wireCircleMarkerSegment,
+            });
+            addInterventionLayer(cityData, showInterventionLayer);
+            return;
+          }
+        }
+
+        if (
+          cityKeyLower.includes("zaragoza") &&
+          (selectedKpi === "kpi3.2" || selectedKpi === "kpi4.1") &&
+          mapRef.current
+        ) {
+          const aqSource =
+            localCityPoints && localCityPoints.length > 0
+              ? localCityPoints
+              : (points as LocalCityPoint[]);
+          const scopedAq = filterPointsInPilotZone(aqSource, cityName, selectedPilotId);
+          const rendered = renderZaragozaKpi32Layers({
+            map: mapRef.current,
+            points: scopedAq.length ? scopedAq : aqSource,
+            selectedKpi,
+            selectedPilotId,
+            activeMapSegmentId,
+            segmentInteractionEnabled,
+            segmentHandlers,
+            markersOut: markersRef.current,
+            circlesOut: circlesRef.current,
+          });
+          if (rendered > 0) {
+            addInterventionLayer(cityData, showInterventionLayer);
+            return;
+          }
+        }
+
+        if (cityKeyLower.includes("zaragoza") && selectedKpi === "kpi4.2" && mapRef.current) {
+          const a11ySource =
+            localCityPoints && localCityPoints.length > 0
+              ? localCityPoints
+              : (points as LocalCityPoint[]);
+          const scopedA11y = filterPointsInPilotZone(a11ySource, cityName, selectedPilotId);
+          const rendered = renderZaragozaKpi42Layers({
+            map: mapRef.current,
+            points: scopedA11y.length ? scopedA11y : a11ySource,
+            scenario,
+            selectedPilotId,
+            activeMapSegmentId,
+            segmentInteractionEnabled,
+            segmentHandlers,
+            markersOut: markersRef.current,
+            circlesOut: circlesRef.current,
+          });
+          if (rendered > 0) {
+            addInterventionLayer(cityData, showInterventionLayer);
+            return;
+          }
+        }
+
         const lighthouseLocalPoints =
-          (cityKeyLower.includes("helsinki") || cityKeyLower.includes("zaragoza")) &&
+          cityKeyLower.includes("helsinki") &&
           localCityPoints &&
           localCityPoints.length > 0;
         if (lighthouseLocalPoints && selectedKpi === "kpi1.2") {
@@ -2920,6 +3087,49 @@ const HeroMap = ({
       // AREAS VISUALIZATION (Polygons) - for accessibility/catchment/coverage/emissions
       else if (isAreaVisualization(selectedKpi)) {
         const cityKeyLower = cityName.toLowerCase();
+        if (
+          cityKeyLower.includes("zaragoza") &&
+          (selectedKpi === "kpi3.2" || selectedKpi === "kpi4.1") &&
+          mapRef.current
+        ) {
+          const aqSource =
+            localCityPoints && localCityPoints.length > 0
+              ? localCityPoints
+              : [];
+          const scopedAq = filterPointsInPilotZone(aqSource, cityName, selectedPilotId);
+          const rendered = renderZaragozaKpi32Layers({
+            map: mapRef.current,
+            points: scopedAq.length ? scopedAq : aqSource,
+            selectedKpi,
+            selectedPilotId,
+            activeMapSegmentId,
+            segmentInteractionEnabled,
+            segmentHandlers,
+            markersOut: markersRef.current,
+            circlesOut: circlesRef.current,
+          });
+          addInterventionLayer(cityData, showInterventionLayer);
+          if (rendered > 0) return;
+        }
+
+        if (cityKeyLower.includes("zaragoza") && selectedKpi === "kpi4.2" && mapRef.current) {
+          const a11ySource =
+            localCityPoints && localCityPoints.length > 0 ? localCityPoints : [];
+          const scopedA11y = filterPointsInPilotZone(a11ySource, cityName, selectedPilotId);
+          const rendered = renderZaragozaKpi42Layers({
+            map: mapRef.current,
+            points: scopedA11y.length ? scopedA11y : a11ySource,
+            scenario,
+            selectedPilotId,
+            activeMapSegmentId,
+            segmentInteractionEnabled,
+            segmentHandlers,
+            markersOut: markersRef.current,
+            circlesOut: circlesRef.current,
+          });
+          addInterventionLayer(cityData, showInterventionLayer);
+          if (rendered > 0) return;
+        }
         const lighthouseAreaLocal =
           (cityKeyLower.includes("helsinki") ||
             cityKeyLower.includes("milan") ||
@@ -3196,9 +3406,13 @@ const HeroMap = ({
   useEffect(() => {
     if (!mapRef.current || pilotGeometrySpec?.maxZoom == null) return;
     const isHelsinki = currentCity?.toLowerCase().includes("helsinki");
-    // Helsinki GPKG surveys are exact — never inherit the inferred maxZoom=12 lock.
-    mapRef.current.setMaxZoom(isHelsinki ? 18 : pilotGeometrySpec.maxZoom);
-    if (pilotGeometrySpec.minZoom != null && !isHelsinki) {
+    const isZaragoza = currentCity?.toLowerCase().includes("zaragoza");
+    const isMilan = currentCity?.toLowerCase().includes("milan");
+    // Exact GIS / AMAT corridor cities — never inherit the inferred maxZoom=12 lock.
+    const unlockedMaxZoom =
+      isHelsinki || isZaragoza || isMilan ? 18 : pilotGeometrySpec.maxZoom;
+    mapRef.current.setMaxZoom(unlockedMaxZoom);
+    if (pilotGeometrySpec.minZoom != null && !isHelsinki && !isZaragoza && !isMilan) {
       mapRef.current.setMinZoom(pilotGeometrySpec.minZoom);
     } else {
       mapRef.current.setMinZoom(4);
@@ -3615,6 +3829,96 @@ const HeroMap = ({
       });
       return;
     }
+    if (currentCity.toLowerCase().includes("zaragoza")) {
+      const points = localCityPoints ?? [];
+      const isMockPoint = (p: (typeof points)[number]) => {
+        const type = String(p.properties?.type ?? "").toLowerCase();
+        const origin = String(p.properties?.dataOrigin ?? "").toLowerCase();
+        return (
+          type === "mock" ||
+          origin === "mock" ||
+          p.properties?.mockLabel === "MOCK" ||
+          String(p.properties?.sourceFile ?? "").startsWith("mock://")
+        );
+      };
+      const isObservedPoint = (p: (typeof points)[number]) => {
+        if (isMockPoint(p)) return false;
+        const type = String(p.properties?.type ?? "").toLowerCase();
+        const origin = String(p.properties?.dataOrigin ?? "").toLowerCase();
+        return type === "observed" || origin === "local-city-dataset";
+      };
+      const isDerivedPoint = (p: (typeof points)[number]) => {
+        if (isMockPoint(p) || isObservedPoint(p)) return false;
+        const type = String(p.properties?.type ?? "").toLowerCase();
+        return type === "derived" || type === "modelled" || type === "modeled";
+      };
+      const mockCount = points.filter(isMockPoint).length;
+      const observedCount = points.filter(isObservedPoint).length;
+      const derivedCount = points.filter(isDerivedPoint).length;
+      const linkage = points.some((p) => p.properties?.geometryLinkage === "matched")
+        ? "matched"
+        : points.length > 0
+          ? "inferred"
+          : "inferred";
+      const kinds = [
+        ...new Set(
+          points
+            .map((p) => String(p.properties?.datasetKind ?? "").trim())
+            .filter(Boolean)
+        ),
+      ];
+      const kindHint = kinds.length ? kinds.slice(0, 3).join(" · ") : "local points";
+      let provenanceType: "observed" | "derived" | "mock" = "mock";
+      let dataType = "illustrative placeholder";
+      let confidence: "High" | "Medium" | "Low" = "Low";
+      if (observedCount > 0 && observedCount >= mockCount) {
+        provenanceType = "observed";
+        dataType = `observed ${kindHint}`;
+        confidence = observedCount >= 2 ? "Medium" : "Low";
+      } else if (observedCount > 0) {
+        // Mixed observed + mock pins for this KPI — trust map evidence as observed.
+        provenanceType = "observed";
+        dataType = `observed + mock mix · ${kindHint}`;
+        confidence = "Low";
+      } else if (derivedCount > 0 && derivedCount >= mockCount) {
+        provenanceType = "derived";
+        dataType = `derived ${kindHint}`;
+        confidence = "Low";
+      } else if (mockCount > 0) {
+        provenanceType = "mock";
+        dataType =
+          selectedKpi === "kpi4.1"
+            ? "mock satisfaction at AQ / corridor sites"
+            : selectedKpi === "kpi4.2"
+              ? "mock accessibility features"
+              : selectedKpi === "kpi3.2"
+                ? "mock climate / env intensity pins"
+                : selectedKpi === "kpi2.1"
+                  ? "mock road-safety speeds"
+                  : "mock placeholder pins";
+        confidence = "Low";
+      } else {
+        // Intervention GIS only — no KPI point series for this selection.
+        provenanceType = "derived";
+        dataType = "intervention GIS only (no KPI point series)";
+        confidence = "Low";
+      }
+      onDataQualitySummaryChange({
+        recordsLabel: points.length
+          ? `${points.length.toLocaleString()} point${points.length === 1 ? "" : "s"} · ${kindHint}`
+          : "Intervention area GIS · no KPI point series",
+        spatialQuality:
+          (linkage === "matched" ? "matched site coordinates" : "inferred pilot placement") +
+          aggregateLabel,
+        dataType,
+        temporalCoverage: points.length > 0 ? "before-after where available" : "unavailable",
+        confidence,
+        provenanceType,
+        geometryLinkage: linkage,
+        spatialSystemHint: spatialPlan.legendHint,
+      });
+      return;
+    }
     if (currentCity.toLowerCase().includes("trikala")) {
       const total = localCityPoints?.length || 0;
       const infraCount = trikalaInfrastructureLocations.length;
@@ -3707,29 +4011,20 @@ const HeroMap = ({
       const marker = L.marker([city.lat, city.lon], { icon: cityIcon }).addTo(mapRef.current!);
       markersRef.current.push(marker);
 
-      // Build KPI list HTML - text only, no icons
-      const kpiListHtml = ELABORATOR_KPIS.map(kpi => {
-        const kpiData = city.kpiData[kpi.id];
-        const readiness = getReadinessForCity(city.city).find((c) => c.kpiId === kpi.id);
-        const value = kpiData?.mainValue || 0;
-        const unit = kpiData?.unit || kpi.unit;
-        const valueHtml =
-          readiness?.readiness === "missing"
-            ? `<span style="font-size: 10px; color: rgba(251,191,36,0.95); font-weight: 600;">No data</span>`
-            : readiness?.readiness === "partial"
-              ? `<span style="font-size: 10px; color: rgba(251,191,36,0.95); font-weight: 600;">Partial</span>`
-              : `<span style="font-size: 11px; color: #FFFFFF; font-weight: 700; text-shadow: 0 0 8px rgba(255,255,255,0.25);">${value}${unit === "%" ? "%" : ""}</span>`;
+      // Build KPI list HTML — trust class instead of stub numbers / Partial
+      const kpiListHtml = ELABORATOR_KPIS.map((kpi) => {
+        const trust = resolveCityOverviewTrust(city.city, kpi.id);
         return `
-          <div style="display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid rgba(101, 125, 245, 0.1);">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid rgba(101, 125, 245, 0.1);">
             <span style="font-size: 10px; color: #657DF5; font-weight: 500; text-transform: uppercase;">${kpi.shortName}</span>
-            ${valueHtml}
+            ${trustChipHtml(trust)}
           </div>
         `;
-      }).join('');
+      }).join("");
 
       // Popup with more transparency
       marker.bindPopup(`
-        <div style="font-family: 'DM Sans', sans-serif; min-width: 200px; max-width: 240px; padding: 12px;">
+        <div style="font-family: 'DM Sans', sans-serif; min-width: 220px; max-width: 280px; padding: 12px;">
           <p style="font-weight: 700; color: #7C6CFF; margin: 0 0 10px 0; font-size: 14px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.22); padding-bottom: 8px; text-shadow: 0 0 10px rgba(124,108,255,0.45);">${city.city}</p>
           <div style="background: linear-gradient(165deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.08) 45%, rgba(255,255,255,0.04) 100%); border-radius: 8px; padding: 8px; border: 1px solid rgba(255,255,255,0.22); box-shadow: inset 0 1px 0 rgba(255,255,255,0.25);">
             ${kpiListHtml}
@@ -3752,7 +4047,15 @@ const HeroMap = ({
         setViewLevel("CITY_INTERVENTIONS");
         onCitySelect?.(city.city);
         const map = mapRef.current!;
-        map.flyTo([city.lat, city.lon], city.city.toLowerCase().includes("milan") ? 10 : 13, {
+        map.flyTo(
+          [city.lat, city.lon],
+          getPilotsByCity(city.city).length >= 3
+            ? city.city.toLowerCase().includes("copenhagen") ||
+              city.city.toLowerCase().includes("helsinki")
+              ? 11
+              : 10
+            : 12,
+          {
           duration: 1.2,
         });
         whenLeafletMapSettled(map, () => {
@@ -3765,8 +4068,8 @@ const HeroMap = ({
             const icon = L.divIcon({
               className: "pilot-card-marker",
               html: getPilotCardHtml(city.city, pilot),
-              iconSize: [280, 220],
-              iconAnchor: [140, 110],
+              iconSize: PILOT_CARD_ICON_SIZE,
+              iconAnchor: PILOT_CARD_ICON_ANCHOR,
             });
 
             const pilotMarker = L.marker(spreadPts[pi], { icon }).addTo(mapRef.current);
@@ -3816,10 +4119,11 @@ const HeroMap = ({
     ) {
       return;
     }
-    // Helsinki / Milan KPI layers own their viewport (auto-fit fights user zoom).
+    // Helsinki / Milan / Zaragoza KPI layers own their viewport (auto-fit fights user zoom).
     if (
       currentCity?.toLowerCase().includes("helsinki") ||
-      currentCity?.toLowerCase().includes("milan")
+      currentCity?.toLowerCase().includes("milan") ||
+      currentCity?.toLowerCase().includes("zaragoza")
     ) {
       return;
     }
@@ -3954,7 +4258,12 @@ const HeroMap = ({
           const map = mapRef.current;
           map.flyTo(
             [cityData.lat, cityData.lon],
-            isMilanCityName(selectedCity) ? 10 : 13,
+            getPilotsByCity(selectedCity).length >= 3
+              ? selectedCity.toLowerCase().includes("copenhagen") ||
+                selectedCity.toLowerCase().includes("helsinki")
+                ? 11
+                : 10
+              : 12,
             { duration: 1.2 }
           );
           whenLeafletMapSettled(map, () => {
@@ -3969,8 +4278,8 @@ const HeroMap = ({
               const icon = L.divIcon({
                 className: "pilot-card-marker",
                 html: getPilotCardHtml(selectedCity, pilot),
-                iconSize: [280, 220],
-                iconAnchor: [140, 110],
+                iconSize: PILOT_CARD_ICON_SIZE,
+                iconAnchor: PILOT_CARD_ICON_ANCHOR,
               });
               const pilotMarker = L.marker(spreadPts[pi], { icon }).addTo(mapRef.current);
               markersRef.current.push(pilotMarker);
