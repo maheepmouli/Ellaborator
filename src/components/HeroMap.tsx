@@ -618,7 +618,8 @@ const HeroMap = ({
   }, [trikalaLocationsBundle?.locations, selectedKpi, selectedPilotId]);
   const { data: issyFlows } = useIssyFlowData(
     issyFlowDayCategory,
-    !!currentCity && isIssyCity(currentCity) && selectedKpi === "kpi1.2"
+    // Prefetch for any Issy pilot so P2/P3 mode share never races on empty flows.
+    !!currentCity && isIssyCity(currentCity)
   );
   const issyWorkbooksEnabled = !!currentCity && isIssyCity(currentCity);
   const { classeur: issyClasseurQuery, wintics: issyWinticsQuery } = useIssyWorkbooks(
@@ -1208,22 +1209,20 @@ const HeroMap = ({
         }
 
         if (selectedKpi === "kpi1.2" || selectedKpi === "kpi2.1") {
-          // Pilot 2 + Pilot 3: city-wide observatory — zone sustainable-% dots from ISSY1 OD CSV.
-          if (
-            selectedKpi === "kpi1.2" &&
-            isIssyCityWideModeSharePilot(selectedPilotId) &&
-            issyFlows?.length
-          ) {
-            const zonePoints = buildIssyZoneSustainableModeSharePoints(
-              issyFlows,
-              getIssyZoneCentroids()
-            );
-            renderIssyCityModeShareZones(mapRef.current!, zonePoints, issyLayerRefs, {
-              scenario,
-              segmentHandlers,
-              selectedSegmentId: selectedJunctionSegmentId,
-              filterRange,
-            });
+          // Pilot 2 + Pilot 3: city-wide OD zone hubs — never fall back to Pont d'Issy P1 hub.
+          if (selectedKpi === "kpi1.2" && isIssyCityWideModeSharePilot(selectedPilotId)) {
+            if (issyFlows?.length) {
+              const zonePoints = buildIssyZoneSustainableModeSharePoints(
+                issyFlows,
+                getIssyZoneCentroids()
+              );
+              renderIssyCityModeShareZones(mapRef.current!, zonePoints, issyLayerRefs, {
+                scenario,
+                segmentHandlers,
+                selectedSegmentId: selectedJunctionSegmentId,
+                filterRange,
+              });
+            }
             addInterventionLayer(cityData, showInterventionLayer, true);
             return;
           }

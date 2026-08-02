@@ -210,7 +210,7 @@ const MapContent = () => {
   const [issyFlowDayCategory, setIssyFlowDayCategory] = useState<"all" | "weekday" | "weekend">("all");
   const { data: issyFlowFeatures = [] } = useIssyFlowData(
     issyFlowDayCategory,
-    isIssyCity(selectedCity) && selectedKpi === "kpi1.2"
+    isIssyCity(selectedCity)
   );
   /** Sidebar chart drills → animate map viewport to pilot anchors. */
   const pilotFlyNonceRef = useRef(0);

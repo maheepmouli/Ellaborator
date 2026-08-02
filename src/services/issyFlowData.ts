@@ -38,16 +38,16 @@ export interface IssyZoneCentroid {
   layoutApproximation: boolean;
 }
 
-/** Bundled for Vercel/demo. June 2026 SharePoint mirror is the canonical drop path when extracted locally. */
+/** Bundled CSV first — Vercel SPA rewrite returns index.html (200) for missing /sharepoint-data paths. */
 const ISSY_BASELINE_URLS = [
-  "/sharepoint-data/Issy-20260625T113904Z-3-001/Issy/1. BASELINE DATA from Issy/ISSY1 - detailed traffic data/ISSY1_baseline_traffic_data_november_2024.csv",
   "/data/issy/ISSY1_baseline_traffic_data_november_2024.csv",
+  "/sharepoint-data/Issy-20260625T113904Z-3-001/Issy/1. BASELINE DATA from Issy/ISSY1 - detailed traffic data/ISSY1_baseline_traffic_data_november_2024.csv",
   "/sharepoint-data/Issy-20260427T130625Z-3-001/Issy/1. BASELINE DATA from Issy/ISSY1 - detailed traffic data/ISSY1_baseline_traffic_data_november_2024.csv",
 ];
 
 const ISSY_POST_URLS = [
-  "/sharepoint-data/Issy-20260625T113904Z-3-001/Issy/2. POST IMPLEMENTATION DATA from Issy/ISSY1 - detailed traffic_data/ISSY1_post_intervention_traffic_data_november_2025.csv",
   "/data/issy/ISSY1_post_intervention_traffic_data_november_2025.csv",
+  "/sharepoint-data/Issy-20260625T113904Z-3-001/Issy/2. POST IMPLEMENTATION DATA from Issy/ISSY1 - detailed traffic_data/ISSY1_post_intervention_traffic_data_november_2025.csv",
   "/sharepoint-data/Issy-20260427T130625Z-3-001/Issy/2. POST IMPLEMENTATION DATA from Issy/ISSY1 - detailed traffic_data/ISSY1_post_intervention_traffic_data_november_2025.csv",
 ];
 
@@ -70,7 +70,13 @@ async function fetchFirstOk(urls: readonly string[]): Promise<Response | null> {
   for (const url of urls) {
     try {
       const response = await fetch(encodeURI(url));
-      if (response.ok) return response;
+      if (!response.ok) continue;
+      // Vercel SPA rewrite serves index.html with 200 for missing paths — reject HTML.
+      const contentType = (response.headers.get("content-type") || "").toLowerCase();
+      if (contentType.includes("text/html")) continue;
+      const peek = (await response.clone().text()).slice(0, 80).trimStart().toLowerCase();
+      if (peek.startsWith("<!doctype") || peek.startsWith("<html")) continue;
+      return response;
     } catch {
       /* try next */
     }
