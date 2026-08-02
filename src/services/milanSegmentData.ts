@@ -57,9 +57,33 @@ const environmentCache = new Map<string, MilanSegmentDataset>();
 const cameraCache = new Map<string, Record<string, unknown>[]>();
 
 const MILAN_SPEED_JSON_FALLBACK = "/data/milan/speed-segments.json";
+const MILAN_ENV_JSON_FALLBACK = "/data/milan/environment-segments.json";
 
 interface MilanSpeedJsonBundle {
   pilots?: Record<string, MilanSegmentDataset>;
+}
+
+interface MilanEnvJsonBundle {
+  windows?: Record<
+    string,
+    Partial<Record<"mil-p1" | "mil-p2", MilanSegmentDataset>>
+  >;
+}
+
+/** Vercel SPA rewrite serves index.html with HTTP 200 for missing paths — reject that as data. */
+async function fetchJsonIfNotSpaHtml(url: string): Promise<unknown | null> {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) return null;
+    const contentType = (response.headers.get("content-type") || "").toLowerCase();
+    if (contentType.includes("text/html")) return null;
+    const text = await response.text();
+    const trimmed = text.trimStart();
+    if (!trimmed || trimmed.startsWith("<")) return null;
+    return JSON.parse(trimmed) as unknown;
+  } catch {
+    return null;
+  }
 }
 
 function cameraRowsFromFeatures(features: GeoFeature[]): Record<string, unknown>[] {
@@ -267,23 +291,82 @@ function withCameraJoinStats(dataset: MilanSegmentDataset): MilanSegmentDataset 
 async function loadMilanSpeedFromJsonFallback(
   pilotId: "mil-p1" | "mil-p2"
 ): Promise<MilanSegmentDataset | null> {
-  try {
-    const response = await fetch(MILAN_SPEED_JSON_FALLBACK);
-    if (!response.ok) return null;
-    const bundle = (await response.json()) as MilanSpeedJsonBundle;
-    const pilotBundle = bundle.pilots?.[pilotId];
-    if (!pilotBundle?.records?.length) return null;
-    return withCameraJoinStats({
-      ...pilotBundle,
-      dataConfidence: pilotBundle.dataConfidence || "proxy",
-      renderMode: "segment",
+  const raw = await fetchJsonIfNotSpaHtml(MILAN_SPEED_JSON_FALLBACK);
+  if (!raw || typeof raw !== "object") return null;
+  const bundle = raw as MilanSpeedJsonBundle;
+  const pilotBundle = bundle.pilots?.[pilotId];
+  if (!pilotBundle?.records?.length) return null;
+  return withCameraJoinStats({
+    ...pilotBundle,
+    dataConfidence: pilotBundle.dataConfidence || "proxy",
+    renderMode: "segment",
+    statusMessage:
+      pilotBundle.statusMessage ||
+      `Bundled AMAT network.shp segments for ${pilotId} (SharePoint shapefiles unavailable on this host).`,
+  });
+}
+
+function emptyMilanSegmentDataset(message: string): MilanSegmentDataset {
+  return {
+    records: [],
+    stats: {
+      parsedSegments: 0,
+      invalidGeometries: 0,
+      missingMetricJoins: 0,
+      avgMetricValue: 0,
+    },
+    dataConfidence: "unavailable",
+    renderMode: "segment",
+    statusMessage: message,
+  };
+}
+
+async function loadMilanEnvironmentFromJsonFallback(
+  window: "08-09" | "18-19",
+  pilotId?: "mil-p1" | "mil-p2" | "mil-p3" | null
+): Promise<MilanSegmentDataset | null> {
+  const raw = await fetchJsonIfNotSpaHtml(MILAN_ENV_JSON_FALLBACK);
+  if (!raw || typeof raw !== "object") return null;
+  const bundle = raw as MilanEnvJsonBundle;
+  const windowBundle = bundle.windows?.[window];
+  if (!windowBundle) return null;
+
+  const p1 = windowBundle["mil-p1"];
+  const p2 = windowBundle["mil-p2"];
+
+  if (pilotId === "mil-p3" || !pilotId) {
+    if (!p1?.records?.length && !p2?.records?.length) return null;
+    if (pilotId === "mil-p3") {
+      return mergeMilanSegmentDatasets(
+        p1 ?? emptyMilanSegmentDataset("mil-p1 env missing"),
+        p2 ?? emptyMilanSegmentDataset("mil-p2 env missing"),
+        "mil-p3"
+      );
+    }
+    // City-wide view: union of pilot-scoped bundles (full RETE is too large to ship).
+    const merged = mergeMilanSegmentDatasets(
+      p1 ?? emptyMilanSegmentDataset("mil-p1 env missing"),
+      p2 ?? emptyMilanSegmentDataset("mil-p2 env missing"),
+      "mil-p3"
+    );
+    return {
+      ...merged,
       statusMessage:
-        pilotBundle.statusMessage ||
-        `Bundled AMAT network.shp segments for ${pilotId} (SharePoint shapefiles unavailable on this host).`,
-    });
-  } catch {
-    return null;
+        merged.statusMessage?.replace("mil-p3", "city") ||
+        `Bundled RETE segments for Milan (${merged.records.length} links).`,
+    };
   }
+
+  const pilotBundle = windowBundle[pilotId];
+  if (!pilotBundle?.records?.length) return null;
+  return withCameraJoinStats({
+    ...pilotBundle,
+    dataConfidence: pilotBundle.dataConfidence || "proxy",
+    renderMode: "segment",
+    statusMessage:
+      pilotBundle.statusMessage ||
+      `Bundled RETE segments for ${pilotId} (SharePoint shapefiles unavailable on this host).`,
+  });
 }
 
 function unavailableMilanSpeedDataset(message: string): MilanSegmentDataset {
@@ -618,63 +701,83 @@ export async function loadMilanEnvironmentSegments(
   const cached = environmentCache.get(cacheKey);
   if (cached) return cached;
 
-  const source = ENVIRONMENT_SOURCES[window];
-  if (!cameraCache.has("milan-cameras")) {
-    const cameraFeatures = await readShapefileWithFallback([
-      MILAN_CAMERA_NETWORK,
-      MILAN_CAMERA_NETWORK_LEGACY,
-    ]);
-    const rows = cameraRowsFromFeatures(cameraFeatures);
-    cameraCache.set("milan-cameras", rows);
-  }
-  let dataset = await parseMilanSegmentShapefile({
-    file: { shp: source.shp, dbf: source.dbf },
-    metricType: "co2",
-    sourceLabel: source.label,
-    timeWindow: window,
-  });
-  if (dataset.records.length === 0) {
-    const legacy = MILAN_ENVIRONMENT_SOURCES_LEGACY[window];
-    dataset = await parseMilanSegmentShapefile({
-      file: { shp: legacy.shp, dbf: legacy.dbf },
+  const applyFallback = async (): Promise<MilanSegmentDataset> => {
+    const fallback = await loadMilanEnvironmentFromJsonFallback(window, pilotId);
+    if (fallback) {
+      environmentCache.set(cacheKey, fallback);
+      return fallback;
+    }
+    const unavailable = emptyMilanSegmentDataset(
+      "Milan RETE environment shapefiles are not hosted on this deployment. Add /sharepoint-data/Milan/ or use the bundled environment-segments.json fallback."
+    );
+    environmentCache.set(cacheKey, unavailable);
+    return unavailable;
+  };
+
+  try {
+    const source = ENVIRONMENT_SOURCES[window];
+    if (!cameraCache.has("milan-cameras")) {
+      const cameraFeatures = await readShapefileWithFallback([
+        MILAN_CAMERA_NETWORK,
+        MILAN_CAMERA_NETWORK_LEGACY,
+      ]);
+      const rows = cameraRowsFromFeatures(cameraFeatures);
+      cameraCache.set("milan-cameras", rows);
+    }
+    let dataset = await parseMilanSegmentShapefile({
+      file: { shp: source.shp, dbf: source.dbf },
       metricType: "co2",
-      sourceLabel: legacy.label,
+      sourceLabel: source.label,
       timeWindow: window,
     });
+    if (dataset.records.length === 0) {
+      const legacy = MILAN_ENVIRONMENT_SOURCES_LEGACY[window];
+      dataset = await parseMilanSegmentShapefile({
+        file: { shp: legacy.shp, dbf: legacy.dbf },
+        metricType: "co2",
+        sourceLabel: legacy.label,
+        timeWindow: window,
+      });
+    }
+    if (dataset.records.length === 0) {
+      return applyFallback();
+    }
+    let scoped = dataset;
+    if (pilotId) {
+      const filtered = filterMilanSegmentsNearPilot(dataset.records, pilotId);
+      // Cap dense RETE extracts so Leaflet stays responsive (keep highest-pressure links).
+      const MAP_RETE_CAP = 2800;
+      const capped =
+        filtered.length > MAP_RETE_CAP
+          ? [...filtered]
+              .sort((a, b) => Number(b.value ?? 0) - Number(a.value ?? 0))
+              .slice(0, MAP_RETE_CAP)
+          : filtered;
+      scoped = {
+        ...dataset,
+        records: capped,
+        stats: {
+          ...dataset.stats,
+          parsedSegments: capped.length,
+          pilotScoped: true,
+        },
+        statusMessage:
+          pilotId === "mil-p3"
+            ? `RETE segments clipped to Pilot 1 + Pilot 2 buffers (~${capped.length} of ${filtered.length} links). Environmental proxy from traffic composition.`
+            : `RETE segments clipped to ${pilotId} buffer (~${capped.length}${
+                filtered.length > capped.length ? ` of ${filtered.length}` : ""
+              } links). Environmental proxy from traffic composition.`,
+      };
+    } else {
+      scoped.statusMessage =
+        "Derived environmental pressure proxy from traffic composition fields, linked with camera network by segment ID or nearest geometry.";
+    }
+    scoped.dataConfidence = "proxy";
+    scoped.renderMode = "segment";
+    const finalDataset = withCameraJoinStats(scoped);
+    environmentCache.set(cacheKey, finalDataset);
+    return finalDataset;
+  } catch {
+    return applyFallback();
   }
-  let scoped = dataset;
-  if (pilotId) {
-    const filtered = filterMilanSegmentsNearPilot(dataset.records, pilotId);
-    // Cap dense RETE extracts so Leaflet stays responsive (keep highest-pressure links).
-    const MAP_RETE_CAP = 2800;
-    const capped =
-      filtered.length > MAP_RETE_CAP
-        ? [...filtered]
-            .sort((a, b) => Number(b.value ?? 0) - Number(a.value ?? 0))
-            .slice(0, MAP_RETE_CAP)
-        : filtered;
-    scoped = {
-      ...dataset,
-      records: capped,
-      stats: {
-        ...dataset.stats,
-        parsedSegments: capped.length,
-        pilotScoped: true,
-      },
-      statusMessage:
-        pilotId === "mil-p3"
-          ? `RETE segments clipped to Pilot 1 + Pilot 2 buffers (~${capped.length} of ${filtered.length} links). Environmental proxy from traffic composition.`
-          : `RETE segments clipped to ${pilotId} buffer (~${capped.length}${
-              filtered.length > capped.length ? ` of ${filtered.length}` : ""
-            } links). Environmental proxy from traffic composition.`,
-    };
-  } else {
-    scoped.statusMessage =
-      "Derived environmental pressure proxy from traffic composition fields, linked with camera network by segment ID or nearest geometry.";
-  }
-  scoped.dataConfidence = "proxy";
-  scoped.renderMode = "segment";
-  const finalDataset = withCameraJoinStats(scoped);
-  environmentCache.set(cacheKey, finalDataset);
-  return finalDataset;
 }

@@ -935,7 +935,7 @@ export const DATASET_REGISTRY: DatasetMetadata[] = [
     updateStatus: "static",
     responsiblePartner: "AMAT / Milan",
     notes:
-      "Milano-20260709 zip: 14 baseline sites in mode-share-counts.json (7 mil-p1, 7 mil-p2); mil-p2 tactical evaluation workbooks in zip; observed map points when camera-linked.",
+      "Milano-20260709 zip: 18 site-phase rows in mode-share-counts.json (7 mil-p1, 8 unique mil-p2); mil-p2 tactical evaluation workbooks in zip; observed map points when camera-linked.",
   },
   {
     id: "mil-speed-shapefiles",

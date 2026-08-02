@@ -1779,7 +1779,11 @@ async function parseMilanKpi12Records(): Promise<NormalizedCityRecord[]> {
   try {
     const response = await fetch(MILAN_MODE_SHARE_JSON);
     if (!response.ok) return [];
-    const bundle = (await response.json()) as { sites?: MilanModeShareSite[] };
+    const contentType = (response.headers.get("content-type") || "").toLowerCase();
+    if (contentType.includes("text/html")) return [];
+    const text = await response.text();
+    if (text.trimStart().startsWith("<")) return [];
+    const bundle = JSON.parse(text) as { sites?: MilanModeShareSite[] };
     const sites = bundle.sites || [];
     const bySiteFlow = new Map<
       string,

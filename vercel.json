@@ -1,13 +1,13 @@
-{
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "devCommand": "npm run dev",
-  "installCommand": "git lfs pull 2>/dev/null || true && npm install",
-  "framework": "vite",
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ]
-}
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "devCommand": "npm run dev",
+  "installCommand": "git lfs pull 2>/dev/null || true && npm install",
+  "framework": "vite",
+  "rewrites": [
+    {
+      "source": "/((?!api/|data/|assets/|sharepoint-data/).*)",
+      "destination": "/index.html"
+    }
+  ]
+}
