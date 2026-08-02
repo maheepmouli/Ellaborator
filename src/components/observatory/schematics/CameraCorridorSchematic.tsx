@@ -116,6 +116,7 @@ export function CameraCorridorSchematic({
   const interactive = typeof onSelectDirection === "function";
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const isZoneHub = directions.some((d) => d.id.startsWith("issy-zone-"));
+  const isTelraamModeArms = directions.some((d) => d.id.startsWith("telraam-"));
 
   const angleCounts = new Map<number, number>();
   const angleIndex = new Map<string, number>();
@@ -134,9 +135,11 @@ export function CameraCorridorSchematic({
       height={size}
       className="relative z-10 pointer-events-auto select-none"
       aria-label={
-        isZoneHub
-          ? "Zone OD destination links — hover or click to focus"
-          : "Directional traffic flow links — hover or click to focus"
+        isTelraamModeArms
+          ? "Telraam mode-share arms — hover or click to focus"
+          : isZoneHub
+            ? "Zone OD destination links — hover or click to focus"
+            : "Directional traffic flow links — hover or click to focus"
       }
       role="group"
     >
@@ -394,7 +397,12 @@ export function CameraCorridorSchematic({
         fontFamily="sans-serif"
         pointerEvents="none"
       >
-        {payload.pilotTitle || (isZoneHub ? "Zone hub · OD links" : "Camera hub · directional links")}
+        {payload.pilotTitle ||
+          (isTelraamModeArms
+            ? "Telraam · mode arms"
+            : isZoneHub
+              ? "Zone hub · OD links"
+              : "Camera hub · directional links")}
       </text>
       <text
         x={size / 2}
@@ -407,13 +415,19 @@ export function CameraCorridorSchematic({
       >
         {directions.length
           ? interactive
-            ? isZoneHub
-              ? `${directions.length} OD destination${directions.length === 1 ? "" : "s"} — hover / click to focus`
-              : `${directions.length} one-way link${directions.length === 1 ? "" : "s"} — hover / click to focus`
-            : isZoneHub
-              ? `${directions.length} OD destination${directions.length === 1 ? "" : "s"} from this zone`
-              : `${directions.length} one-way link${directions.length === 1 ? "" : "s"} at this camera hub`
-          : "Select a camera hub to show its directional links"}
+            ? isTelraamModeArms
+              ? `${directions.length} mode arm${directions.length === 1 ? "" : "s"} — hover / click to focus`
+              : isZoneHub
+                ? `${directions.length} OD destination${directions.length === 1 ? "" : "s"} — hover / click to focus`
+                : `${directions.length} one-way link${directions.length === 1 ? "" : "s"} — hover / click to focus`
+            : isTelraamModeArms
+              ? `${directions.length} mode arm${directions.length === 1 ? "" : "s"} at this Telraam counter`
+              : isZoneHub
+                ? `${directions.length} OD destination${directions.length === 1 ? "" : "s"} from this zone`
+                : `${directions.length} one-way link${directions.length === 1 ? "" : "s"} at this camera hub`
+          : isTelraamModeArms
+            ? "Select a Telraam counter to show mode arms"
+            : "Select a camera hub to show its directional links"}
       </text>
     </svg>
   );

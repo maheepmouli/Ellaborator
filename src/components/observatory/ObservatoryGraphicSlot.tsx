@@ -86,7 +86,7 @@ function renderGraphic(
   payload: ReturnType<typeof buildObservatoryGraphicPayload>,
   compact: boolean,
   zone: ObservatoryGraphicZone,
-  onSelectDirectionId?: (id: string) => void
+  onSelectDirectionId?: (id: string | null) => void
 ) {
   if (!payload) return null;
   const expanded = !compact;
@@ -118,6 +118,20 @@ function renderGraphic(
           payload={payload}
           compact={compact}
           onSelectMode={(mode) => {
+            if (!mode) {
+              onSelectDirectionId?.(null);
+              return;
+            }
+            const match = payload.cameraDirections?.find(
+              (d) => d.direction === mode || d.direction.startsWith(mode.slice(0, 12))
+            );
+            if (match) onSelectDirectionId?.(match.id);
+          }}
+          onHoverMode={(mode) => {
+            if (!mode) {
+              onSelectDirectionId?.(null);
+              return;
+            }
             const match = payload.cameraDirections?.find(
               (d) => d.direction === mode || d.direction.startsWith(mode.slice(0, 12))
             );
@@ -196,7 +210,7 @@ export interface ObservatoryGraphicSlotProps {
   scenario: MapScenario;
   selectedModeTypes?: string[];
   selectedDirectionId?: string | null;
-  onSelectDirectionId?: (id: string) => void;
+  onSelectDirectionId?: (id: string | null) => void;
   selectedSegmentId?: string | null;
   /** Force a specific graphic (e.g. overview before/after for every KPI). */
   graphicOverride?: ObservatoryGraphicId;

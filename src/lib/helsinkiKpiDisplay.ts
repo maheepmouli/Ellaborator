@@ -94,10 +94,17 @@ function pickPrimaryObservedPoints(points: LocalCityPoint[], kpiId: string): Loc
   if (!pool.length) return [];
 
   if (kpiId === "kpi1.2") {
-    const escooter = pool.filter((p) => p.properties?.datasetKind === "escooter-parking");
-    if (escooter.length) return escooter;
+    // Parking observations feed KPI 3.1 / 4.2 — not mobility mode share.
     const telraam = pool.filter((p) => p.properties?.datasetKind === "telraam");
     if (telraam.length) return telraam;
+    const modePoints = pool.filter(
+      (p) =>
+        p.properties?.modeBreakdown ||
+        p.properties?.datasetKind === "manual-count" ||
+        p.properties?.datasetKind === "otc"
+    );
+    if (modePoints.length) return modePoints;
+    return [];
   }
   if (kpiId === "kpi4.1") {
     const ux = pool.filter((p) => p.properties?.datasetKind === "ux-survey");
@@ -217,37 +224,6 @@ function shortBreakdownLabel(label: string, max = 28): string {
   const cleaned = label.replace(/\s+/g, " ").trim();
   if (cleaned.length <= max) return cleaned;
   return `${cleaned.slice(0, max - 1)}…`;
-}
-
-function escooterParkingSliceFromPoints(points: LocalCityPoint[]): HelsinkiObservedKpiSlice | null {
-  const hub =
-    points.find((p) => Array.isArray(p.properties?.parkingCategories)) ?? points[0];
-  const categories = hub?.properties?.parkingCategories as
-    | Array<{ label: string; count: number }>
-    | undefined;
-  if (!categories?.length) return null;
-
-  const breakdown: Record<string, number> = {};
-  let total = 0;
-  categories.forEach((row) => {
-    total += Number(row.count || 0);
-  });
-  categories.forEach((row) => {
-    breakdown[row.label] = total
-      ? Number(((Number(row.count || 0) / total) * 100).toFixed(1))
-      : 0;
-  });
-  const main = Number(hub?.value ?? hub?.properties?.baselineValue ?? 0);
-  return {
-    baselineMain: main,
-    interventionMain: main,
-    change: 0,
-    breakdownBaseline: breakdown,
-    breakdownIntervention: breakdown,
-    unit: "% in designated bays",
-    sourceLabel: String(hub?.properties?.source ?? "Kallio e-scooter parking observation study"),
-    hasSelectedRecords: true,
-  };
 }
 
 /** KPI 3.1 — parking observation counts by category (single-period field study). */
@@ -440,7 +416,7 @@ export function resolveHelsinkiKpiDisplayUnit(kpiId: string): string {
     case "kpi4.1":
       return "% satisfied";
     case "kpi4.2":
-      return "%";
+      return "Index";
     default:
       return "units";
   }
@@ -460,9 +436,6 @@ export function aggregateHelsinkiObservedKpi(
   if (!scoped.length) return null;
 
   if (kpiId === "kpi1.2") {
-    if (scoped.some((p) => p.properties?.datasetKind === "escooter-parking")) {
-      return escooterParkingSliceFromPoints(scoped);
-    }
     return modeShareFromPoints(scoped, selectedModeTypes);
   }
   if (kpiId === "kpi3.1") {

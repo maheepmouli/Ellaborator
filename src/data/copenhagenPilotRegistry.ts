@@ -191,6 +191,10 @@ export const COPENHAGEN_PILOT_REGISTRY: Record<CopenhagenPilotId, CopenhagenPilo
       "wb-norreport",
       "wb-vandkunsten",
       "wb-stormgade",
+      "telraam-vestergade-5",
+      "telraam-vognmagergade-8",
+      "telraam-rosenborggade-15",
+      "telraam-studiestraede-47b",
     ],
     objective: {
       primary: "Improve traffic flow and reduce unsafe near encounters in the Medieval City.",
@@ -209,6 +213,7 @@ export const COPENHAGEN_PILOT_REGISTRY: Record<CopenhagenPilotId, CopenhagenPilo
         "iRAP Star Rating",
         "Speed measurements",
         "Conflict analysis",
+        "Telraam counters",
       ],
       datasets: [
         "cph-otc-counts",
@@ -217,6 +222,7 @@ export const COPENHAGEN_PILOT_REGISTRY: Record<CopenhagenPilotId, CopenhagenPilo
         "cph-speed-measurements",
         "cph-conflict-analysis",
         "cph-manual-counts",
+        "cph-telraam",
       ],
       caveats: [
         "Dashboard emphasis is safety, not mobility mode-share reduction.",
@@ -233,6 +239,7 @@ export const COPENHAGEN_PILOT_REGISTRY: Record<CopenhagenPilotId, CopenhagenPilo
       "cph-speed-measurements",
       "cph-conflict-analysis",
       "cph-manual-counts",
+      "cph-telraam",
       "cph-bike-parking-inventory",
     ],
     geometryRegime: "camera_directional",

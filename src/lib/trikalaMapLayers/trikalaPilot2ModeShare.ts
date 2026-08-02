@@ -8,7 +8,7 @@ export const TRI_P2_PARK_RIDE_HUB_IDS = [
   "tri-loc-gisemi",
 ] as const;
 
-/** Illustrative bike-uptake mix per P+R hub — pending partner occupancy survey (Evaluation Plan KPI 1.2). */
+/** MOCK bike-uptake mix per P+R hub — pending partner occupancy survey (Evaluation Plan KPI 1.2). */
 const PARK_RIDE_MODE_SHARE: Record<string, ModeShareRow[]> = {
   "tri-loc-smy": [
     { mode: "Pedestrian", before: 26.5, after: 29.0 },

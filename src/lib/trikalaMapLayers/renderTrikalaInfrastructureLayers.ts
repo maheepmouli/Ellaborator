@@ -150,7 +150,7 @@ function renderTrikalaPilot2ModeShareRipples(
         infrastructurePopupHtml(
           hub.name,
           "park_and_ride",
-          "Pilot 2 · KPI 1.2 bike uptake from P+R"
+          "MOCK · Pilot 2 mode share (partner survey pending)"
         )
       );
       hubDot.bindTooltip(hub.name, {

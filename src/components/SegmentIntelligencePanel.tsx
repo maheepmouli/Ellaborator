@@ -74,6 +74,7 @@ import {
 } from "@/lib/observatoryCityContent";
 import { DataProvenanceBadge } from "@/components/DataProvenanceBadge";
 import { isIssyCity } from "@/lib/issyMapRouting";
+import { isIssyCityWideModeSharePilot } from "@/data/issyPilotProfiles";
 import { ObservatoryGraphicSlot } from "@/components/observatory/ObservatoryGraphicSlot";
 import type { ObservatoryGraphicZone } from "@/lib/observatoryGraphicTypes";
 import { intelAccentValue, intelPanelHeader, intelSectionLabel } from "@/styles/intelPanels";
@@ -1142,7 +1143,7 @@ function ObservatoryTabContent({
   scenario?: MapScenario;
   selectedModeTypes?: string[];
   selectedDirectionId?: string | null;
-  onSelectDirectionId?: (id: string) => void;
+  onSelectDirectionId?: (id: string | null) => void;
   selectedSegmentId?: string | null;
 }) {
   const resolvedCity = cityName || "Issy-les-Moulineaux";
@@ -1535,7 +1536,7 @@ interface SegmentIntelligencePanelProps {
   streetLabels?: { streetNS: string; streetEW: string };
   selectedModeTypes?: string[];
   selectedDirectionId?: string | null;
-  onSelectDirectionId?: (id: string) => void;
+  onSelectDirectionId?: (id: string | null) => void;
   pilotGeometrySpec?: PilotGeometryRenderSpec | null;
 }
 
@@ -1603,6 +1604,12 @@ export default function SegmentIntelligencePanel({
     view?.dataClass ??
     (view?.dataSource === "mock" ? "mock" : view?.dataSource === "observed" ? "observed" : "derived");
   const corridorLabel = observatoryCorridorLabel(resolvedCity, pilotId);
+  const isCopenhagenTelraamFocus =
+    resolvedCity === "Copenhagen" &&
+    !!selectedSegmentId?.startsWith("loc:telraam-");
+  const headerCorridorLabel = isCopenhagenTelraamFocus
+    ? "Telraam continuous counter"
+    : corridorLabel;
   const isTrikalaSegmentFocus =
     pilotId?.startsWith("tri-") &&
     !!selectedSegmentId &&
@@ -1615,12 +1622,19 @@ export default function SegmentIntelligencePanel({
       selectedKpi === "kpi3.1" ||
       selectedKpi === "kpi1.2");
   const isIssyZoneFocus =
-    pilotId === "issy-p2" &&
+    isIssyCityWideModeSharePilot(pilotId) &&
     selectedKpi === "kpi1.2" &&
     !!selectedSegmentId?.startsWith("issy-zone-");
   const isHelsinkiEscooterPointFocus =
     resolvedCity === "Helsinki" &&
     !!selectedSegmentId?.startsWith("hel-escooter-obs");
+  const isHelsinkiModeShareHubFocus =
+    resolvedCity === "Helsinki" &&
+    selectedKpi === "kpi1.2" &&
+    !!selectedSegmentId &&
+    (selectedSegmentId.startsWith("hel-escooter-hub") ||
+      selectedSegmentId === "hel-kallio-mode-share" ||
+      selectedSegmentId.includes("mode-share"));
   const isHelsinkiHubPointFocus =
     resolvedCity === "Helsinki" &&
     !!selectedSegmentId &&
@@ -1636,18 +1650,28 @@ export default function SegmentIntelligencePanel({
     isMilanPointFocus ||
     isIssyZoneFocus ||
     isHelsinkiEscooterPointFocus ||
-    isHelsinkiHubPointFocus;
-  const headerTitle = useSegmentFocusHeader ? view?.name ?? corridorLabel : corridorLabel;
+    isHelsinkiModeShareHubFocus ||
+    isHelsinkiHubPointFocus ||
+    isCopenhagenTelraamFocus;
+  const headerTitle = useSegmentFocusHeader
+    ? isCopenhagenTelraamFocus
+      ? headerCorridorLabel
+      : view?.name ?? headerCorridorLabel
+    : headerCorridorLabel;
   const headerSubtitle = useSegmentFocusHeader
-    ? isIssyZoneFocus
+    ? isCopenhagenTelraamFocus
+      ? view?.name ?? "Mode-share arms · relative change only"
+      : isIssyZoneFocus
       ? "City OD zone · sustainable mobility"
-      : isHelsinkiEscooterPointFocus
-        ? view?.coordinates
-          ? `${view.coordinates[0].toFixed(5)}, ${view.coordinates[1].toFixed(5)}`
-          : "Field observation"
-        : isHelsinkiHubPointFocus
-          ? "FVH1 survey evidence · click map hubs to focus"
-          : corridorLabel
+      : isHelsinkiModeShareHubFocus
+        ? "Mock mode-share hub · hover chart rows for mode detail"
+        : isHelsinkiEscooterPointFocus
+          ? view?.coordinates
+            ? `${view.coordinates[0].toFixed(5)}, ${view.coordinates[1].toFixed(5)}`
+            : "Field observation"
+          : isHelsinkiHubPointFocus
+            ? "FVH1 survey evidence · click map hubs to focus"
+            : headerCorridorLabel
     : view?.name ?? "";
 
   useEffect(() => {
@@ -1785,11 +1809,15 @@ export default function SegmentIntelligencePanel({
 
             {/* ── Default observatory map (hub schematic above tabs) ──────── */}
             {!(resolvedCity === "Copenhagen" && selectedKpi === "kpi3.1") &&
+            !(resolvedCity === "Copenhagen" && selectedKpi === "kpi4.1") &&
+            !(resolvedCity === "Milan" && selectedKpi === "kpi3.1") &&
+            !(resolvedCity === "Milan" && selectedKpi === "kpi3.2") &&
             !(resolvedCity === "Milan" && selectedKpi === "kpi4.2") &&
             !(resolvedCity === "Issy-les-Moulineaux" && selectedKpi === "kpi4.2") &&
             pilotId !== "tri-p1" &&
             pilotId !== "tri-p4" &&
-            pilotId !== "hel-p1" ? (
+            pilotId !== "hel-p1" &&
+            !(pilotId === "hel-p2" && selectedKpi === "kpi1.2") ? (
             <div
               className="flex-shrink-0 px-5 py-4"
               style={{ borderBottom: `1px solid ${C.border}`, background: "rgba(255,255,255,0.025)" }}

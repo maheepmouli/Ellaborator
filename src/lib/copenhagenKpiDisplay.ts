@@ -30,7 +30,7 @@ export function resolveCopenhagenKpiDisplayUnit(kpiId: string): string {
     case "kpi4.1":
       return "Satisfaction";
     case "kpi4.2":
-      return "Parking bays";
+      return "Index";
     default:
       return "units";
   }

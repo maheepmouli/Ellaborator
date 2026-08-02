@@ -229,7 +229,7 @@ export function filterCopenhagenObservatoryPoints(
     });
   }
 
-  if (selectionId.startsWith("emissions-") || selectionId.startsWith("cph-survey-")) {
+  if (selectionId.startsWith("emissions-") || selectionId.startsWith("cph-survey-") || selectionId.startsWith("cph-mock-sat-")) {
     return points.filter((p) => String(p.properties?.segmentId ?? p.id) === selectionId);
   }
 
@@ -277,6 +277,12 @@ export function filterCopenhagenObservatoryPoints(
   );
 }
 
+/** True when the map selection is a Medieval City Telraam counter (not an OTC hub). */
+export function isCopenhagenTelraamSelection(selectionId: string | null | undefined): boolean {
+  const loc = getCopenhagenLocationFromSelection(selectionId);
+  return loc?.kind === "telraam_counter";
+}
+
 /** Resolve which OTC workbook a selection / site label belongs to. */
 export function resolveCopenhagenWorkbookFocus(
   selectionId: string | null | undefined,
@@ -287,6 +293,8 @@ export function resolveCopenhagenWorkbookFocus(
     if (parsed.kind === "site" && parsed.workbookKey) return parsed.workbookKey;
     if (parsed.kind === "location") {
       const loc = getCopenhagenLocationFromSelection(selectionId);
+      // Telraam counters are not OTC workbook hubs — never inherit a nearby workbook.
+      if (loc?.kind === "telraam_counter") return null;
       const fromLoc =
         loc?.otcWorkbookKey ?? (loc?.name ? inferOtcWorkbookKey(loc.name) : null);
       if (fromLoc) return fromLoc;
@@ -296,6 +304,7 @@ export function resolveCopenhagenWorkbookFocus(
   }
   for (const hint of [hints.segmentName, hints.segmentApiId, hints.streetName]) {
     if (!hint) continue;
+    if (/telraam/i.test(hint)) continue;
     const key = inferOtcWorkbookKey(hint);
     if (key) return key;
   }
@@ -682,10 +691,19 @@ export function buildCopenhagenObservatoryView(
     dataConfidence: 0.88,
     baseline: baselinePeriod,
     intervention: interventionPeriod,
-    dataSource: emissionsPoints.length && selectedKpi === "kpi3.2" ? "modelled" : "observed",
+    dataSource:
+      emissionsPoints.length && selectedKpi === "kpi3.2"
+        ? "modelled"
+        : selectedKpi === "kpi2.1" &&
+            (scenario === "intervention" || scenario === "comparison")
+          ? "mock"
+          : "observed",
     dataClass:
       emissionsPoints.length && selectedKpi === "kpi3.2"
         ? "derived"
+        : selectedKpi === "kpi2.1" &&
+            (scenario === "intervention" || scenario === "comparison")
+          ? "mock"
         : (surveyPoints.length &&
             selectedKpi === "kpi4.1" &&
             surveyPoints.some(
@@ -707,10 +725,17 @@ export function buildCopenhagenObservatoryView(
     sourceLabel:
       emissionsPoints.length && selectedKpi === "kpi3.2"
         ? `${String(emissionsPoints[0]?.properties?.source ?? "COPERT-lite emissions model")} · ${pilotRecord?.code ?? "CPH"}`
+        : selectedKpi === "kpi2.1" &&
+            (scenario === "intervention" || scenario === "comparison")
+          ? `MOCK post/comparison (OTC motor-mix / iRAP) · ${pilotRecord?.code ?? "CPH"}`
+          : selectedKpi === "kpi2.1"
+            ? `Road safety OTC motor-mix / iRAP (baseline) · ${pilotRecord?.code ?? "CPH"}`
         : surveyPoints.length && selectedKpi === "kpi4.1"
           ? `${String(surveyPoints[0]?.properties?.source ?? "Citizen survey")} · ${pilotRecord?.code ?? "CPH"}`
           : accessibilityPoints.length && selectedKpi === "kpi4.2"
             ? `${String(accessibilityPoints[0]?.properties?.source ?? "Accessibility")} · ${pilotRecord?.code ?? "CPH"}`
+          : infraPoints.length && selectedKpi === "kpi3.1"
+            ? `${String(infraPoints[0]?.properties?.source ?? "I100275 parking inventory")} · ${pilotRecord?.code ?? "CPH"}`
           : methodologyRule
             ? `OpenTrafficCam (methodology filtered) · ${pilotRecord?.code ?? "CPH"}`
             : `OpenTrafficCam directional counts · ${pilotRecord?.code ?? "CPH"}`,

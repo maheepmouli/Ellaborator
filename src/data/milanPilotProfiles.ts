@@ -57,13 +57,13 @@ export const MILAN_PILOT_PROFILES: Record<MilanPilotId, CityPilotProfile> = {
     expectedImpacts: [
       "KPI 1.1 — plans to expand interventions beyond the living lab.",
       "KPI 4.1 — user satisfaction for interventions.",
-      "KPI 4.2 — increase in accessibility and security (DSS barrier routing).",
+      "KPI 4.2 — accessibility DSS using combined Pilot 1 + Pilot 2 civic-address inventory.",
     ],
     geometryType: "line",
     dataAvailability:
-      "Milan Intervention Evaluation Plan · CDM3: expansion readiness (1.1), satisfaction survey (4.1), accessibility DSS (4.2).",
+      "Milan Intervention Evaluation Plan · CDM3: expansion readiness (1.1), satisfaction survey (4.1), accessibility DSS (4.2 = Pilot 1 ∪ Pilot 2).",
     methodologyNotes:
-      "CDM3 Decision Support System scope only — KPIs 1.2 / 2.1 / 3.1 / 3.2 are CDM1–CDM2 per the evaluation plan matrix.",
+      "CDM3 Decision Support System scope — KPI 4.2 map combines CDM1 + CDM2 DSS civic-address points. KPIs 1.2 / 2.1 / 3.1 / 3.2 remain CDM1–CDM2 per the evaluation plan matrix.",
     observatoryType: "street-segment",
   },
 };

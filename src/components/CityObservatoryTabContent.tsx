@@ -56,7 +56,7 @@ function GraphicSlot({
   scenario: MapScenario;
   selectedModeTypes?: string[];
   selectedDirectionId?: string | null;
-  onSelectDirectionId?: (id: string) => void;
+  onSelectDirectionId?: (id: string | null) => void;
   selectedSegmentId?: string | null;
   graphicOverride?: "prePostTrend" | "modeShareBars" | "sentimentGauge" | "accessibilityBars" | "climateComparison" | "facilityInventory";
 }) {
@@ -145,7 +145,7 @@ interface CityObservatoryTabContentProps {
   config: ObservatoryConfig;
   selectedModeTypes?: string[];
   selectedDirectionId?: string | null;
-  onSelectDirectionId?: (id: string) => void;
+  onSelectDirectionId?: (id: string | null) => void;
   selectedSegmentId?: string | null;
 }
 

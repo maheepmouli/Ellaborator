@@ -4,7 +4,9 @@ import {
   type IssyJunctionArmId,
 } from "@/lib/issyPilot2Junction";
 import { placeAccessibilityPointOnJunctionArm } from "@/lib/issyJunctionArmPlacement";
-import type { IssyPilotId } from "@/data/issyPilotProfiles";
+import { isIssyCityWideModeSharePilot, type IssyPilotId } from "@/data/issyPilotProfiles";
+import { getIssyZoneCentroids } from "@/services/issyFlowData";
+import { issyZoneSegmentId } from "@/lib/issyFlowAggregates";
 import type { LocalCityPoint } from "@/services/localCityData";
 import type { ScenarioType } from "@/types/normalized-city-data";
 
@@ -50,12 +52,8 @@ export interface IssyAccessibilityPilotMock {
   methodology: string;
 }
 
-/** Which junction arms get a mock asset — only on KPI 1.2 corridor segments. */
-const PILOT_ARM_SLOTS: Record<IssyPilotId, IssyJunctionArmId[]> = {
-  "issy-p1": ["west", "east", "south", "west", "east"],
-  "issy-p2": ["west", "east", "south", "west", "east"],
-  "issy-p3": ["west", "east", "south"],
-};
+/** Pont d'Issy flagship — junction-arm slots only. */
+const PILOT1_ARM_SLOTS: IssyJunctionArmId[] = ["west", "east", "south", "west", "east"];
 
 const SLOT_CATEGORIES: IssyAccessibilityCategory[] = [
   "Tactile Paving",
@@ -63,6 +61,7 @@ const SLOT_CATEGORIES: IssyAccessibilityCategory[] = [
   "Audio Signals",
   "Dropped Kerbs",
   "Contrasting strips",
+  "Rest Areas",
 ];
 
 function seededUnit(seed: string, index: number): number {
@@ -76,25 +75,25 @@ function getArm(armId: IssyJunctionArmId) {
   return ISSY_JUNCTION_ARMS.find((a) => a.id === armId)!;
 }
 
+function featureStatus(
+  index: number,
+  total: number
+): IssyAccessibilityFeatureMock["status"] {
+  if (index === 0 || (total > 3 && index === 1)) return "existing";
+  if (index === total - 1 && total > 2) return "planned";
+  return "post-intervention";
+}
+
 function placeFeaturesOnJunctionArms(pilotId: IssyPilotId): IssyAccessibilityFeatureMock[] {
-  const slots = PILOT_ARM_SLOTS[pilotId];
+  const slots = PILOT1_ARM_SLOTS;
 
   return slots.map((armId, index) => {
     const arm = getArm(armId);
     const category = SLOT_CATEGORIES[index % SLOT_CATEGORIES.length];
     const u = seededUnit(pilotId, index);
-    // Land sidewalk / plaza near hub — not Pont d'Issy bridge over the Seine, not carriageway.
     const [lat, lon] = placeAccessibilityPointOnJunctionArm(armId, index);
     const qualityScore = Math.round(62 + u * 28);
     const baselineScore = Math.max(32, Math.round(qualityScore - 10 - (index % 4) * 3));
-    // Deterministic mix so every pilot always has map points + a visible before→after delta.
-    // Seed-based status previously marked all issy-p1 slots "planned" → 0 map features.
-    const status: IssyAccessibilityFeatureMock["status"] =
-      index === 0 || (slots.length > 3 && index === 1)
-        ? "existing"
-        : index === slots.length - 1 && slots.length > 2
-          ? "planned"
-          : "post-intervention";
 
     return {
       id: `${pilotId}-a11y-${armId}-${index + 1}`,
@@ -106,9 +105,56 @@ function placeFeaturesOnJunctionArms(pilotId: IssyPilotId): IssyAccessibilityFea
       armLabel: arm.mapLabel,
       qualityScore,
       baselineScore,
-      status,
+      status: featureStatus(index, slots.length),
     };
   });
+}
+
+/**
+ * Pilot 2 / Pilot 3 — one mock accessibility asset near each ISSY1 mode-share OD zone hub
+ * (same six points as KPI 1.2 city view), with a small sidewalk offset so pins don't stack.
+ */
+function placeFeaturesNearModeShareZones(pilotId: IssyPilotId): IssyAccessibilityFeatureMock[] {
+  const zones = getIssyZoneCentroids();
+  // Slight N/E/S/W offsets (~40–70 m) so accessibility sits beside the ripple hub.
+  const offsets: Array<[number, number]> = [
+    [0.00042, 0.00018],
+    [-0.00028, 0.00045],
+    [0.00035, -0.00038],
+    [-0.00045, -0.00022],
+    [0.00018, 0.00052],
+    [-0.00038, 0.00012],
+  ];
+
+  return zones.map((zone, index) => {
+    const category = SLOT_CATEGORIES[index % SLOT_CATEGORIES.length];
+    const u = seededUnit(pilotId, index);
+    const [dLat, dLon] = offsets[index % offsets.length];
+    const lat = zone.lat + dLat;
+    const lon = zone.lon + dLon;
+    const qualityScore = Math.round(62 + u * 28);
+    const baselineScore = Math.max(32, Math.round(qualityScore - 10 - (index % 4) * 3));
+
+    return {
+      id: `${pilotId}-a11y-zone-${zone.zone}`,
+      segmentId: issyZoneSegmentId(zone.zone),
+      lat,
+      lon,
+      category,
+      label: `${category} · ${zone.label}`,
+      armLabel: zone.label,
+      qualityScore,
+      baselineScore,
+      status: featureStatus(index, zones.length),
+    };
+  });
+}
+
+function placeFeaturesForPilot(pilotId: IssyPilotId): IssyAccessibilityFeatureMock[] {
+  if (isIssyCityWideModeSharePilot(pilotId)) {
+    return placeFeaturesNearModeShareZones(pilotId);
+  }
+  return placeFeaturesOnJunctionArms(pilotId);
 }
 
 function scoreBreakdown(
@@ -143,12 +189,16 @@ function buildProfile(
     methodology: string;
   }
 ): IssyAccessibilityPilotMock {
-  const features = placeFeaturesOnJunctionArms(pilotId);
+  const features = placeFeaturesForPilot(pilotId);
   const interventionFeatures = features.filter((f) => f.status !== "planned");
   const baselineFeatures = features.filter((f) => f.status === "existing");
+  const cityWide = isIssyCityWideModeSharePilot(pilotId);
+  const core = getIssyZoneCentroids().find((z) => z.zone === 3);
   return {
     pilotId,
-    anchor: { lat: ISSY_P2_JUNCTION.lat, lon: ISSY_P2_JUNCTION.lon },
+    anchor: cityWide
+      ? { lat: core?.lat ?? ISSY_P2_JUNCTION.lat, lon: core?.lon ?? ISSY_P2_JUNCTION.lon }
+      : { lat: ISSY_P2_JUNCTION.lat, lon: ISSY_P2_JUNCTION.lon },
     totalFeatures: interventionFeatures.length,
     baselineFeatureCount: Math.max(1, baselineFeatures.length),
     breakdown: scoreBreakdown(features, "intervention"),
@@ -170,22 +220,22 @@ const ISSY_ACCESSIBILITY_BY_PILOT: Record<IssyPilotId, IssyAccessibilityPilotMoc
       "Five mock assets on ISSY1 mode-share corridor arms only (traficissy segments at Pont d'Issy). Not a certified audit.",
   }),
   "issy-p2": buildProfile("issy-p2", {
-    title: "Observatory corridor — mock accessibility (5 arms)",
+    title: "City OD hubs — mock accessibility (6 zones)",
     reachScore: 69,
     compositeIndex: 68,
     baselineIndex: 55,
     confidencePct: 58,
     methodology:
-      "Five mock assets placed on the same three junction arms used for KPI 1.2 mode-share context — city inventory proxy, not field survey.",
+      "Six mock assets placed beside the ISSY1 mode-share OD zone hubs (same city footprint as KPI 1.2) — inventory proxy, not field survey.",
   }),
   "issy-p3": buildProfile("issy-p3", {
-    title: "GecoAir corridor — mock accessibility (3 arms)",
-    reachScore: 61,
-    compositeIndex: 59,
-    baselineIndex: 48,
-    confidencePct: 54,
+    title: "City OD hubs — mock accessibility (6 zones)",
+    reachScore: 69,
+    compositeIndex: 68,
+    baselineIndex: 55,
+    confidencePct: 58,
     methodology:
-      "Three mock walkability assets on west / east / south corridor arms where mode-share segments are monitored.",
+      "Six mock walkability assets beside the same ISSY1 mode-share OD zone hubs as Pilot 2 — matched city scale, not a certified audit.",
   }),
 };
 
@@ -234,7 +284,9 @@ export function issyAccessibilityToLocalPoints(
         pilotId: profile.pilotId,
         parserStatus: "mock",
         spatialQuality: "matched",
-        locationMethod: "junction_sidewalk_placement",
+        locationMethod: feature.segmentId.startsWith("issy-zone-")
+          ? "mode_share_zone_hub"
+          : "junction_sidewalk_placement",
         spatialNote: profile.disclaimer,
         baselineValue,
         interventionValue,
@@ -262,7 +314,7 @@ export function issyAccessibilityKpiHeadline(
   const useBaseline = scenario === "baseline";
   return {
     mainValue: useBaseline ? profile.baselineFeatureCount : profile.totalFeatures,
-    unit: "features (mock)",
+    unit: "Index",
     change: profile.totalFeatures - profile.baselineFeatureCount,
     breakdown: { ...profile.breakdown },
     baselineBreakdown: { ...profile.baselineBreakdown },

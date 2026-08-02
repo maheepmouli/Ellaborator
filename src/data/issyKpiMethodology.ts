@@ -208,7 +208,7 @@ Map:
           "Climate hex grid at junction: allocate Classeur ASIF baseline CO₂ (~1,911 g/h for 50 m corridor) across hex cells when snapshot is loaded.",
           "Intervention / comparison scenarios scale modelled CO₂ using KPI 3.2 chart-year anchor or headline reduction %.",
           "Fallback when Classeur snapshot unavailable: derive environmental pressure from synthetic hex intensity (congestion-style proxy).",
-          "Sidebar chart: use CITY_DATA time series (2020–2024) for headline % reduction and year selector.",
+          "Sidebar chart: use CITY_DATA time series for available Issy slots (Nov 2024 baseline → Nov 2025) and period selector.",
           "Pilot 3 (GecoAir): narrative references citizen air-quality app — no direct GecoAir feed in map layers yet.",
         ],
         formulas: `ASIF model (Classeur.xlsx, when loaded):

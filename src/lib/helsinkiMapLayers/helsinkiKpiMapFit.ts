@@ -30,6 +30,19 @@ const HELSINKI_KPI_FIT: Record<
   "safety-viikki": { maxZoom: 15, pad: 0.35, fallbackZoom: 14 },
 };
 
+/** One auto-fit per pilot+KPI cycle — selection/hover re-renders must not yank the viewport. */
+let helsinkiFitCycleKey: string | null = null;
+let helsinkiFittedThisCycle = false;
+
+/** Call at the start of each Helsinki map render so fit runs once per pilot/KPI. */
+export function beginHelsinkiMapFitCycle(pilotId: string | null | undefined, kpiId: string): void {
+  const key = `${pilotId ?? "hel-p1"}|${kpiId}`;
+  if (helsinkiFitCycleKey !== key) {
+    helsinkiFitCycleKey = key;
+    helsinkiFittedThisCycle = false;
+  }
+}
+
 /** Resolve fit kind from Helsinki pilot + KPI. */
 export function helsinkiKpiFitKind(
   kpiId: string,
@@ -60,12 +73,17 @@ function fallbackAnchor(kind: HelsinkiKpiFitKind): { lat: number; lng: number } 
  * Fit Helsinki map to KPI geometry. Prefer this over HeroMap autoFit —
  * influence circles would otherwise yank the viewport out.
  * Always allows street-level zoom afterward (map maxZoom is set by HeroMap).
+ * Skips repeat fits within the same pilot+KPI cycle so wheel zoom stays usable.
  */
 export function fitHelsinkiKpiView(
   map: L.Map,
   points: Array<{ lat: number; lon?: number; lng?: number }>,
-  kind: HelsinkiKpiFitKind
+  kind: HelsinkiKpiFitKind,
+  options?: { force?: boolean }
 ): void {
+  if (helsinkiFittedThisCycle && !options?.force) return;
+  helsinkiFittedThisCycle = true;
+
   const cfg = HELSINKI_KPI_FIT[kind];
   const coords = points
     .map((p) => {

@@ -136,15 +136,12 @@ function mockBreakdownForKpi(kpiId: string, data: KPIValue): Record<string, numb
   }
 }
 
-function mockTimeSeries(data: KPIValue): Array<{ year: number; value: number }> {
+function mockTimeSeries(data: KPIValue): Array<{ year: number; value: number; label?: string }> {
   const reduction = Math.abs(Number(data.mainValue) || 17);
   const end = Math.max(55, Math.min(95, 100 - reduction));
   return [
-    { year: 2020, value: 100 },
-    { year: 2021, value: 94 },
-    { year: 2022, value: 88 },
-    { year: 2023, value: 85 },
-    { year: 2024, value: end },
+    { year: 1, label: "Baseline", value: 100 },
+    { year: 2, label: "Latest", value: end },
   ];
 }
 
@@ -653,7 +650,11 @@ export const EmissionsLineChart = ({
   const rawSeries = data.timeSeries || [];
   const isMock = rawSeries.length === 0;
   const timeSeries = isMock ? mockTimeSeries(data) : rawSeries;
-  const chartData = timeSeries.map((t) => ({ year: String(t.year), intensity: Number(t.value) }));
+  const chartData = timeSeries.map((t) => {
+    const period = (t.label?.trim() || String(t.year));
+    return { year: period, intensity: Number(t.value) };
+  });
+  const longLabels = chartData.some((d) => d.year.length > 5);
 
   const minY = chartData.length ? Math.min(...chartData.map((d) => d.intensity)) * 0.95 : 60;
   const maxY = chartData.length ? Math.max(...chartData.map((d) => d.intensity)) * 1.05 : 105;
@@ -673,11 +674,19 @@ export const EmissionsLineChart = ({
     <ResponsiveContainer width="100%" height={200}>
       <LineChart
         data={chartData}
-        margin={{ top: 10, right: 8, left: 0, bottom: 4 }}
+        margin={{ top: 10, right: 8, left: 0, bottom: longLabels ? 12 : 4 }}
         style={{ cursor: onChartDrill ? "pointer" : undefined }}
         onClick={onChartDrill ? handleLinePlotClick : undefined}
       >
-        <XAxis dataKey="year" tick={{ fill: TICK, fontSize: 10, fontWeight: 600 }} stroke={GRID} />
+        <XAxis
+          dataKey="year"
+          tick={{ fill: TICK, fontSize: 10, fontWeight: 600 }}
+          stroke={GRID}
+          interval={0}
+          angle={longLabels ? -20 : 0}
+          textAnchor={longLabels ? "end" : "middle"}
+          height={longLabels ? 42 : 28}
+        />
         <YAxis domain={[Math.floor(minY), Math.ceil(maxY)]} tick={{ fill: TICK, fontSize: 10 }} tickFormatter={(v) => `${v}%`} stroke={GRID} />
         <Tooltip
           formatter={(v: number) => [`${v.toFixed(1)}% intensity`, `Reduction ~${(100 - v).toFixed(1)}%`]}

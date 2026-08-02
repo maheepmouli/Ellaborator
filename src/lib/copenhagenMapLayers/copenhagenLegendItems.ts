@@ -4,6 +4,17 @@ import {
   CPH_OUTBOUND_COLOR,
 } from "./copenhagenFlowGeometry";
 
+/** Shared by KPI 1.2 mode share and KPI 2.1 road safety (all Copenhagen pilots). */
+export const CPH_HUB_RIPPLE_ITEMS: MapLegendItem[] = [
+  { label: "OTC hub — inbound-dominant (ripple)", color: "#ef4444" },
+  { label: "OTC hub — outbound-dominant (ripple)", color: "#38bdf8" },
+  { label: "Telraam counter (ripple)", color: "#38BDF8" },
+  { label: "Camera field of view", color: "#96C2EF" },
+];
+
+export const CPH_HUB_RIPPLE_HINT =
+  "OTC workbook hubs and Telraam counters both use pulse rings. Hub colour follows inbound (red) vs outbound (cyan) dominance. Mode share = observed OTC counts. Road safety = derived motor-pressure proxy (not direct crash counts).";
+
 /** Radar corridor colours shared by KPI 1.2 and 2.1. */
 export const CPH_RADAR_CORRIDOR_ITEMS: MapLegendItem[] = [
   { label: "Lower flow rate", color: "#6EE7B7" },

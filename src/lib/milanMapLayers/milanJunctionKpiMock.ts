@@ -1,7 +1,7 @@
 import type { LocalCityPoint } from "@/services/localCityData";
 import type { MilanSegmentDataset, MilanSegmentRecord } from "@/services/milanSegmentData";
 import { sampleInterventionNetworkSites } from "@/data/milanZeroEmissionMock";
-import { filterMilanLocalPoints } from "@/lib/interventionZone";
+import { filterMilanLocalPoints, filterMilanAccessibilityPoints } from "@/lib/interventionZone";
 import type { MilanJunctionAnchor } from "./milanJunctionAnchors";
 import { pickJunctionsForModeSharePresentation } from "./milanJunctionModeShareMock";
 import { getQuantile, getSegmentHighlight } from "@/lib/segmentHighlight";
@@ -34,12 +34,11 @@ export function milanHasObservedAccessibilityData(
       p.properties?.dataOrigin !== "mock" &&
       p.properties?.parserStatus !== "illustrative"
   );
-  const scoped = filterMilanLocalPoints(observed, pilotId);
-  if (!scoped.length) return false;
-  const avg =
-    scoped.reduce((sum, p) => sum + Number(p.properties?.interventionValue ?? p.value ?? 0), 0) /
-    scoped.length;
-  return avg > 0;
+  // Pilot 3 = combined Pilot 1 + Pilot 2 DSS civic-address inventory.
+  const scoped = filterMilanAccessibilityPoints(observed, pilotId).filter(
+    (p) => p.properties?.datasetKind === "accessibility"
+  );
+  return scoped.length > 0;
 }
 
 export function milanHasObservedModeShareData(

@@ -843,11 +843,12 @@ export function buildZaragozaObservatoryView(
       "Post folder empty",
       interventionValue
     );
-    monitoringPeriod = `Road safety · ${pool.length} record${pool.length === 1 ? "" : "s"}`;
-    if (active.some((p) => String(p.id).includes("mock-p3") || p.properties?.type === "mock")) {
-      dataClass = "mock";
-      dataSource = "mock";
-    }
+    const postMock = scenario === "intervention" || scenario === "comparison";
+    monitoringPeriod = postMock
+      ? `Road safety · ${pool.length} record${pool.length === 1 ? "" : "s"} · post/comparison MOCK`
+      : `Road safety · ${pool.length} record${pool.length === 1 ? "" : "s"}`;
+    dataClass = postMock ? "mock" : "observed";
+    dataSource = postMock ? "mock" : "observed";
   } else if (selectedKpi === "kpi4.2") {
     const a11y = active.filter((p) => p.properties?.datasetKind === "accessibility");
     const existing = a11y.filter((p) => {
@@ -948,8 +949,11 @@ export function buildZaragozaObservatoryView(
     sourceLabel:
       selectedKpi === "kpi3.2"
         ? "Nanoenvi EQ air quality (AYZGZ1)"
-        : selectedKpi === "kpi2.1" && active.some((p) => String(p.id).includes("mock-p3"))
-          ? "Mock hospital corridor speeds · AYZG3"
+        : selectedKpi === "kpi2.1" &&
+            (scenario === "intervention" || scenario === "comparison")
+          ? "MOCK post/comparison — hospital / school corridor (baseline observed)"
+          : selectedKpi === "kpi2.1"
+            ? "Zaragoza corridor speeds / pressure (baseline observed)"
           : "Zaragoza SharePoint baseline · school mon / surveys / counts / AQ",
   };
 }

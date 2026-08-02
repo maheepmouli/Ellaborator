@@ -14,7 +14,7 @@ export interface SelectedPilot {
   supportedKpis: string[];
   datasets: string[];
   dataCompleteness?: "complete" | "partial" | "limited";
-  datasetType?: "observed" | "derived" | "modelled";
+  datasetType?: "observed" | "derived" | "modelled" | "mock";
 }
 
 export const CITY_PILOTS: Record<string, SelectedPilot[]> = {
@@ -136,7 +136,7 @@ export const CITY_PILOTS: Record<string, SelectedPilot[]> = {
       lng: 9.155,
       // Milan Intervention Evaluation Plan · CDM3 (Decision Support System) only.
       supportedKpis: ["kpi1.1", "kpi4.1", "kpi4.2"],
-      datasets: ["Expansion plan readiness", "Satisfaction survey", "Accessibility DSS"],
+      datasets: ["Expansion plan readiness", "Satisfaction survey", "Accessibility DSS (Pilot 1 ∪ Pilot 2)"],
       dataCompleteness: "partial",
       datasetType: "observed",
     },
@@ -268,7 +268,8 @@ export const CITY_PILOTS: Record<string, SelectedPilot[]> = {
       cityId: "zaragoza",
       name: "Pilot 1",
       title: "AYZG1 Tactical urbanism around schools",
-      description: "Tactical urbanism around schools at Calle Asin y Palacios / Condes de Aragon.",
+      description:
+        "Pedestrianisation of the section of Pedro III El Grande Street, Creation of a new stay and play area, A new cycle crossing, Associated traffic reorganisation",
       interventionType: "Tactical urbanism",
       goal: "Improve safety and active mobility around school-adjacent corridors.",
       scale: "district",
@@ -288,7 +289,8 @@ export const CITY_PILOTS: Record<string, SelectedPilot[]> = {
       cityId: "zaragoza",
       name: "Pilot 2",
       title: "AYZG2 Pedestrian areas around La Romareda",
-      description: "Pedestrian-priority interventions around La Romareda stadium area.",
+      description:
+        "Temporary street interventions around the stadium redevelopment area to inform the design of a long-term street regeneration project through co-creation.",
       interventionType: "Pedestrian priority area",
       goal: "Improve walking access and safety around stadium-adjacent public space.",
       scale: "district",
@@ -309,7 +311,8 @@ export const CITY_PILOTS: Record<string, SelectedPilot[]> = {
       cityId: "zaragoza",
       name: "Pilot 3",
       title: "AYZG3 Traffic management — Miguel Servet Hospital",
-      description: "Traffic-management measures near Miguel Servet Hospital.",
+      description:
+        "Testing proposed traffic safety improvements around the hospital based on a previous traffic study.",
       interventionType: "Traffic management",
       goal: "Reduce conflict and improve operational safety around hospital access routes.",
       scale: "district",
@@ -396,7 +399,7 @@ export const CITY_PILOTS: Record<string, SelectedPilot[]> = {
       supportedKpis: ["kpi1.2", "kpi3.2", "kpi4.1"],
       datasets: ["SMARTA app survey", "Smart Citizen Kit fleet"],
       dataCompleteness: "partial",
-      datasetType: "observed",
+      datasetType: "derived",
     },
   ],
 };

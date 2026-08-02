@@ -184,7 +184,8 @@ export function ClimateComparisonChart({
   const [activeMode, setActiveMode] = useState<string | null>(null);
   const [hoverMode, setHoverMode] = useState<string | null>(null);
   const hasSegmentMap = showSegmentMap && (payload.emissionDirections?.length ?? 0) > 0;
-  const showMockBadge = linkedShareRows.length === 0 && cards.length === 0;
+  const showMockBadge =
+    payload.dataClass === "mock" || (linkedShareRows.length === 0 && cards.length === 0);
 
   // Header: segment map only. Overview: Intervention / Baseline / Pressure + climate share mix.
   if (hasSegmentMap) {
@@ -197,9 +198,11 @@ export function ClimateComparisonChart({
           <Leaf className="h-3.5 w-3.5" /> Sensor segment map
         </p>
         <EmissionsSegmentMap payload={payload} />
-        {payload.dataClass !== "observed" && (
+        {payload.dataClass === "mock" ? (
+          <p className="text-[9px] text-amber-200/80 mt-2">Mock climate proxy — not measured emissions.</p>
+        ) : payload.dataClass !== "observed" ? (
           <p className="text-[9px] text-amber-200/80 mt-2">Derived proxy — not measured emissions.</p>
-        )}
+        ) : null}
       </div>
     );
   }
@@ -211,7 +214,8 @@ export function ClimateComparisonChart({
     >
       <div className="flex items-center justify-between gap-2 mb-3">
         <p className="text-[11px] font-semibold text-white/70 flex items-center gap-1.5">
-          <Leaf className="h-3.5 w-3.5" /> Environmental comparison
+          <Leaf className="h-3.5 w-3.5" />{" "}
+          {payload.dataClass === "mock" ? "Climate comparison — mock" : "Environmental comparison"}
         </p>
         {showMockBadge ? (
           <span className="rounded px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-violet-100 bg-violet-500/30 border border-violet-300/35">

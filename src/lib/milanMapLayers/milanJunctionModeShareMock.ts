@@ -143,6 +143,7 @@ export function buildMilanJunctionModeShareMockPoints(
         value: interventionValue,
         properties: {
           dataOrigin: "mock",
+          mockLabel: "MOCK",
           datasetKind: "amat-count",
           type: "mock",
           parserStatus: "illustrative",

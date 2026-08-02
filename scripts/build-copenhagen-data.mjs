@@ -826,7 +826,7 @@ function buildTelraamJson() {
       street: sheetName,
       lat: loc.lat,
       lon: loc.lon,
-      pilotId: "cph-p1",
+      pilotIds: ["cph-p1", "cph-p3"],
       ...modes,
       period: "Weekdays 07:00–19:00, Mar–Jun 2024 vs Mar–Jun 2025",
       source: "Telraam summary workbook",

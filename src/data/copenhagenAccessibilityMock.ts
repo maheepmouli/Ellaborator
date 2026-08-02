@@ -245,7 +245,7 @@ export function copenhagenAccessibilityKpiHeadline(
   return {
     mainValue: useBaseline ? profile.baselineAccessPct : profile.accessPct,
     baselineMain: profile.baselineAccessPct,
-    unit: "accessible",
+    unit: "Index",
     change: profile.accessPct - profile.baselineAccessPct,
     breakdown: { ...profile.breakdown },
     baselineBreakdown: { ...profile.baselineBreakdown },

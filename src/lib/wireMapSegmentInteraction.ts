@@ -126,10 +126,15 @@ export function wirePolygonSegment(
 
   if (dim < 1) applyBase();
 
+  const polyEl = layer.getElement();
+  if (polyEl) polyEl.style.cursor = "pointer";
+
   layer.on("mouseover", () => {
     layer.setStyle({ ...base, ...highlight });
     layer.bringToFront();
     layer.getElement()?.classList.add(hoverClass);
+    const el = layer.getElement();
+    if (el) el.style.cursor = "pointer";
     emitHover(detail, handlers);
   });
   layer.on("mouseout", () => {
@@ -147,8 +152,13 @@ export function wireMarkerSegment(
   detail: SegmentInteractionDetail,
   handlers: SegmentInteractionHandlers
 ) {
+  const el = marker.getElement();
+  if (el) el.style.cursor = "pointer";
+
   marker.on("mouseover", () => {
     marker.getElement()?.querySelector(".map-point-icon-badge")?.classList.add("map-point-icon-badge--hover");
+    const node = marker.getElement();
+    if (node) node.style.cursor = "pointer";
     emitHover(detail, handlers);
   });
   marker.on("mouseout", () => {
@@ -198,9 +208,14 @@ export function wireCircleMarkerSegment(
     ...baseStyle,
   });
 
+  const pathEl = layer.getElement();
+  if (pathEl) pathEl.style.cursor = "pointer";
+
   layer.on("mouseover", () => {
     layer.setRadius(getHighlightRadius());
     layer.setStyle({ ...restoredStyle(), ...highlightStyle });
+    const el = layer.getElement();
+    if (el) el.style.cursor = "pointer";
     emitHover(detail, handlers);
   });
   layer.on("mouseout", () => {

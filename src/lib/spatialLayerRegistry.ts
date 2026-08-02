@@ -149,7 +149,11 @@ function resolveRendererForRegimeAndKpi(
   baseVisualization: SpatialRendererId
 ): SpatialRendererId {
   if (regime === "segment") {
-    if (pilotId === "mil-p3") return "milan-environment-segments";
+    // Pilot 3 accessibility is combined P1+P2 DSS points — not environment segments.
+    if (pilotId === "mil-p3" && kpiId === "kpi4.2") return "generic-points";
+    if (pilotId === "mil-p3" && kpiId !== "kpi4.2" && kpiId !== "kpi4.1" && kpiId !== "kpi1.1") {
+      return "milan-environment-segments";
+    }
     if (kpiId === "kpi3.2") return "milan-environment-segments";
     if (kpiId === "kpi2.1") return "milan-speed-segments";
     if (kpiId === "kpi1.2") return "milan-mode-share-deck";

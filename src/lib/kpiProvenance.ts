@@ -3,7 +3,7 @@ import { getKpiDefinition } from "@/config/kpiDefinitions";
 import { getCityKpiMethodology } from "@/data/cityKpiMethodology";
 import { DATASET_REGISTRY } from "@/data/datasetMetadata";
 import { getReadinessForCity } from "@/data/kpiReadinessMatrix";
-import type { PilotDefinition } from "@/data/pilotDefinitions";
+import type { SelectedPilot as PilotDefinition } from "@/data/pilotDefinitions";
 import { getKpiMissingDataNotice } from "@/lib/kpiMissingDataMessage";
 import { kpiPrimaryIssySource, dataSourceTrustLabel } from "@/lib/issyDataTransparency";
 import { isIssyCity } from "@/lib/issyMapRouting";
@@ -30,6 +30,8 @@ export type KpiProvenanceInput = {
   /** Map layer uses live local-city dataset. */
   mapUsesLocalDataset?: boolean;
   copenhagenEmissionsActive?: boolean;
+  /** Baseline vs post — used for road safety (kpi2.1) trust split. */
+  scenario?: "baseline" | "intervention" | "comparison";
 };
 
 export type KpiProvenance = {
@@ -66,8 +68,49 @@ function resolveSourceLabel(
   diagnostics?: LocalCityDiagnostics | null,
   pilot?: PilotDefinition | null
 ): string {
+  // Pilot 4: mode share + climate MOCK; user satisfaction OBSERVED (SMARTA2 survey).
+  if (isPilotFour(pilot)) {
+    if (kpiId === "kpi4.1") return "SMARTA2 user satisfaction survey (Pilot 4 · observed)";
+    if (kpiId === "kpi1.2") return "MOCK mode share — Pilot 4 SMARTA2 / survey proxy";
+    if (kpiId === "kpi3.2") return "MOCK climate — Pilot 4 Smart Citizen Kit fleet proxy";
+    return "MOCK — Pilot 4 illustrative / proxy data";
+  }
+  // KPI 2.1: baseline observed; post & comparison MOCK.
+  if (kpiId === "kpi2.1") {
+    if (city === "Copenhagen") {
+      return "Road safety — OTC motor-mix / iRAP · baseline observed; post/comparison MOCK";
+    }
+    if (city === "Trikala" && pilot?.id === "tri-p3") {
+      return "Road safety — LoRa occupancy / speed · baseline observed; post/comparison MOCK";
+    }
+    if (city === "Zaragoza" && pilot?.id === "zar-p3") {
+      return "Hospital corridor speeds — baseline observed; post/comparison MOCK";
+    }
+    if (city === "Milan") {
+      return "Road safety — AMAT speed / risk · baseline observed; post/comparison MOCK";
+    }
+    if (city === "Helsinki") {
+      return "Road safety — survey / conflict density · baseline observed; post/comparison MOCK";
+    }
+    if (isIssyCity(city)) {
+      return "Road safety — junction pressure · baseline observed; post/comparison MOCK";
+    }
+    return "Road safety — baseline observed; post/comparison MOCK";
+  }
   if (city === "Copenhagen" && kpiId === "kpi4.1") {
     return "MOCK satisfaction (mode-share sites)";
+  }
+  if (city === "Milan" && kpiId === "kpi1.2") {
+    return "Mode share hubs (CPH ripples) — baseline AMAT; post/comparison MOCK";
+  }
+  if (city === "Copenhagen" && kpiId === "kpi3.1") {
+    return "I100275 bicycle parking / zero-emission facility inventory";
+  }
+  if (city === "Copenhagen" && kpiId === "kpi3.2") {
+    return "COPERT-lite emissions model (OTC hub proxy)";
+  }
+  if (city === "Trikala" && pilot?.id === "tri-p2" && kpiId === "kpi1.2") {
+    return "MOCK mode share — P+R bike uptake (partner occupancy survey pending)";
   }
   if (city === "Trikala" && kpiId === "kpi4.1" && pilot?.id === "tri-p2") {
     return "MOCK satisfaction — no P+R user survey linked";
@@ -86,9 +129,6 @@ function resolveSourceLabel(
   if (city === "Zaragoza" && kpiId === "kpi3.2" && pilot?.id === "zar-p2") {
     return "MOCK Romareda climate pins (no Nanoenvi rows)";
   }
-  if (city === "Zaragoza" && kpiId === "kpi2.1" && pilot?.id === "zar-p3") {
-    return "MOCK hospital corridor speeds";
-  }
   if (diagnostics?.reason === "mock") {
     return "Illustrative junction mode-share mock";
   }
@@ -106,6 +146,14 @@ function resolveSourceLabel(
   return getKpiDefinition(kpiId)?.dataSource ?? "City-provided dataset";
 }
 
+function isPilotFour(pilot?: PilotDefinition | null): boolean {
+  return Boolean(pilot?.id && /-p4$/i.test(pilot.id));
+}
+
+function isTrikalaPilot2MockKpi(city: string, kpiId: string, pilot?: PilotDefinition | null): boolean {
+  return city === "Trikala" && pilot?.id === "tri-p2" && (kpiId === "kpi1.2" || kpiId === "kpi4.1");
+}
+
 function resolveHeadlineSource(input: KpiProvenanceInput): HeadlineSource {
   const {
     kpiId,
@@ -117,6 +165,19 @@ function resolveHeadlineSource(input: KpiProvenanceInput): HeadlineSource {
     mapUsesLocalDataset,
     dataQualitySummary,
   } = input;
+
+  // KPI 2.1: baseline OBSERVED; intervention / comparison MOCK.
+  if (kpiId === "kpi2.1") {
+    if (input.scenario === "intervention" || input.scenario === "comparison") return "mock";
+    return "observed";
+  }
+
+  // Pilot 4: all KPIs MOCK except user satisfaction (kpi4.1) which is OBSERVED.
+  if (isPilotFour(pilot) && kpiId !== "kpi4.1") return "mock";
+  if (isPilotFour(pilot) && kpiId === "kpi4.1") return "observed";
+
+  // Known mock KPIs win over map quality summary (GIS hubs ≠ observed KPI values).
+  if (isTrikalaPilot2MockKpi(city, kpiId, pilot)) return "mock";
 
   const pq = toTrustClass(dataQualitySummary?.provenanceType);
   const pqRaw = String(dataQualitySummary?.provenanceType ?? "").toLowerCase();
@@ -132,19 +193,17 @@ function resolveHeadlineSource(input: KpiProvenanceInput): HeadlineSource {
   if (diagnostics?.reason === "mock") return "mock";
   if (city === "Copenhagen" && kpiId === "kpi4.1") return "mock";
   if (city === "Copenhagen" && kpiId === "kpi4.2") return "mock";
-  if (city === "Trikala" && kpiId === "kpi4.1" && pilot?.id === "tri-p2") return "mock";
   if (city === "Milan" && kpiId === "kpi4.1") {
     if (diagnostics?.reason === "mock" || pilot?.id === "mil-p3") {
       if (diagnostics?.reason === "ok") return "observed";
       return "mock";
     }
   }
-  if (city === "Trikala" && kpiId === "kpi2.1" && pilot?.id === "tri-p3") return "derived";
 
   if (
     panelUsesObservedSlice &&
     mapUsesLocalDataset &&
-    (kpiId === "kpi1.2" || kpiId === "kpi2.1" || kpiId === "kpi3.1") &&
+    (kpiId === "kpi1.2" || kpiId === "kpi3.1") &&
     (city === "Copenhagen" || city === "Helsinki" || city === "Milan" || city === "Zaragoza")
   ) {
     return "observed";

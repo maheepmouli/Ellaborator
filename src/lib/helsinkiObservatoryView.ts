@@ -195,6 +195,21 @@ export function helsinkiEscooterParkingModeShare(points: LocalCityPoint[]): Mode
   });
 }
 
+/**
+ * FVH2 KPI 1.2 — no Telraam / mode-share sensor. Illustrative Kallio travel mix
+ * (e-scooter featured for the parking-optimisation pilot). Parking categories stay on KPI 3.1 / 4.2.
+ */
+export function helsinkiKallioMockModeShare(): ModeShareRow[] {
+  return [
+    { mode: "Pedestrian", before: 24, after: 25 },
+    { mode: "Cycle", before: 10, after: 12 },
+    { mode: "E-scooter", before: 8, after: 14 },
+    { mode: "Public Transport", before: 24, after: 23 },
+    { mode: "Private Car", before: 30, after: 22 },
+    { mode: "PTW", before: 4, after: 4 },
+  ];
+}
+
 export function helsinkiHazardCategoryLikert(points: LocalCityPoint[]): LikertRow[] {
   const dangerous = points.find((p) => p.properties?.datasetKind === "dangerous-location");
   const categories = dangerous?.properties?.hazardCategories as
@@ -629,7 +644,7 @@ export function helsinkiObservatoryMarkers(
       markers.push({
         id: String(telraam.properties?.segmentId ?? "hel-telraam"),
         x: 78,
-        y: 72,
+        y: 28,
         label: telSelected ? "Telraam · selected" : "Telraam",
         tone: telSelected ? "telraam-selected" : "telraam",
         count: Number(telraam.properties?.observationCount) || undefined,

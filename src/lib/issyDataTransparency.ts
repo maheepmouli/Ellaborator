@@ -95,7 +95,7 @@ export function getIssyPilotInterventionCopy(pilotId: string | null | undefined)
 /** Popup / tooltip labels for junction arms (traficissy). */
 export function junctionArmMetricTitle(kpiId: string): string {
   if (kpiId === "kpi1.2") return "Traffic context (observed segment)";
-  if (kpiId === "kpi2.1") return "Safety pressure (derived proxy)";
+  if (kpiId === "kpi2.1") return "Road safety (pressure proxy)";
   if (kpiId === "kpi3.2") return "Environmental pressure (derived proxy)";
   return "Segment indicator";
 }
@@ -105,7 +105,7 @@ export function junctionArmValueCaption(kpiId: string): string {
     return "Observed traffic segment context from traficissy API (speed, congestion). No direct mode-share measurement on contextual streets.";
   }
   if (kpiId === "kpi2.1") {
-    return "Derived proxy: 100 − (speed / 60 km/h reference) × 100. Not an official safety rating.";
+    return "Road safety proxy: 100 − (speed / 60 km/h reference) × 100. Baseline observed; post/comparison MOCK. Not crash evidence.";
   }
   if (kpiId === "kpi3.2") {
     return "Derived environmental pressure from congestion index — not measured CO₂.";

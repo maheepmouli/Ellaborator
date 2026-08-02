@@ -19,20 +19,20 @@ export const HELSINKI_PILOT_PROFILES: Record<HelsinkiPilotId, CityPilotProfile> 
     ],
     geometryType: "point",
     dataAvailability:
-      "2,663 dangerous-location and 3,202 near-miss/conflict citizen submissions are ingested from the SharePoint GPKG. No pilot-scoped mode-share sensor feed is present in the current data drop for FVH1; See.Sense connected-bike and ViaNova AI risk-scoring feeds are also absent.",
+      "2,663 dangerous-location and 3,202 near-miss/conflict citizen submissions are ingested from the SharePoint GPKG (KPI 2.1). KPI 1.2 mode share is mock on FVH1 — no Telraam; map shows ripple hubs only. See.Sense connected-bike and ViaNova AI risk-scoring feeds are also absent.",
     methodologyNotes:
-      "Road-user safety evidence is drawn from the dangerous-location and near-miss/conflict survey layers. The map shows the densest ~8 dangerous-location neighbourhood clusters, while full survey counts remain in the observatory. Telraam Koetilantie belongs to FVH3 and is not reused for FVH1.",
+      "KPI 1.2 is mock/illustrative (ripple hubs, no survey point cloud). KPI 2.1 uses dangerous-location and near-miss survey layers with solid safety hubs. Telraam Koetilantie belongs to FVH3 and is not reused for FVH1.",
     observatoryType: "intervention",
     interventionMarkers: [
       {
         id: "hel-p1-survey-hub",
         lat: 60.171,
         lng: 24.941,
-        title: "Dangerous-locations survey hub",
-        interventionType: "Safety monitoring intervention",
-        dataAvailability: "Multi-hub ripple clusters on map · full counts in observatory",
-        baselineStatus: "Available",
-        postStatus: "Survey snapshot",
+        title: "FVH1 mode-share hubs (mock)",
+        interventionType: "Illustrative density hubs",
+        dataAvailability: "Mock ripple hubs on map · conflict travel-mode mix in observatory",
+        baselineStatus: "Illustrative",
+        postStatus: "Empty",
       },
     ],
   },
@@ -52,9 +52,9 @@ export const HELSINKI_PILOT_PROFILES: Record<HelsinkiPilotId, CityPilotProfile> 
     ],
     geometryType: "point",
     dataAvailability:
-      "509 field observations (5 parking categories) from the Kallio summer-streets observation study; the 20 planned e-scooter parking sensors described in the Evaluation Plan were not delivered in this data drop (observation study only).",
+      "509 field observations (5 parking categories) from the Kallio summer-streets observation study power KPI 3.1 / 4.2. KPI 1.2 mode share is mock on FVH2 — no Telraam; map shows ripple hubs at Kallio density anchors with an illustrative travel mix (e-scooter featured). The 20 planned e-scooter parking sensors were not delivered.",
     methodologyNotes:
-      "Category-level counts (pavement / street / cycleway / outside-zone / bikes) and obstruction/hazard flags are aggregated from the eScooter Observations GPKG layers. KPI 3.1 map dots are field observations (not live sensors); After shows a denser sample of the same single-period study. The 20 planned parking sensors were not delivered.",
+      "KPI 1.2 is mock/illustrative (ripple hubs + Kallio travel mix). Parking-category inventory stays on KPI 3.1 (map dots) and KPI 4.2 (accessibility). After densifies the same single-period parking study for facilities — not live sensors.",
     observatoryType: "intervention",
     interventionMarkers: [
       {

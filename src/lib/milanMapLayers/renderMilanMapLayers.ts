@@ -1,10 +1,8 @@
 import L from "leaflet";
 import type { LocalCityPoint } from "@/services/localCityData";
 import type { SegmentInteractionHandlers } from "@/lib/wireMapSegmentInteraction";
-import { wireMarkerSegment } from "@/lib/wireMapSegmentInteraction";
 import { renderCopenhagenRadarFlowLayout } from "@/lib/copenhagenMapLayers/copenhagenRadarFlowLayout";
 import { renderCopenhagenTrafficPulseOverlay } from "@/lib/copenhagenMapLayers/copenhagenTrafficPulse";
-import { bindCopenhagenMapTooltip } from "@/lib/copenhagenMapLayers/copenhagenMapTooltips";
 import type { CopenhagenObservedPoint } from "@/lib/copenhagenMapLayers/renderCopenhagenMapLayers";
 import {
   milanFlowIdFromPoint,
@@ -63,6 +61,8 @@ function buildMilanFlowPopup(options: {
   modeFilterLabel: string;
   peakWindow?: string;
   illustrative?: boolean;
+  /** Post / comparison values are MOCK even when baseline counts are observed. */
+  postMock?: boolean;
 }): string {
   const {
     streetName,
@@ -73,10 +73,16 @@ function buildMilanFlowPopup(options: {
     modeFilterLabel,
     peakWindow,
     illustrative = false,
+    postMock = false,
   } = options;
+  const trustLine = illustrative
+    ? "MOCK · illustrative junction hub"
+    : postMock
+      ? "Baseline observed · post/comparison MOCK"
+      : "AMAT count · observed";
   return `
     <div style="font-family:'DM Sans',sans-serif;padding:8px;min-width:170px;">
-      <p style="font-size:10px;color:#2F1B6D;margin:0 0 3px 0;font-weight:700;">${illustrative ? "Illustrative · mock" : "AMAT count · observed"}</p>
+      <p style="font-size:10px;color:#2F1B6D;margin:0 0 3px 0;font-weight:700;">${trustLine}</p>
       <p style="font-size:11px;color:#8578C3;margin:0 0 4px 0;text-transform:uppercase;">${streetName}</p>
       <p style="font-size:13px;font-weight:700;color:#2F1B6D;margin:0 0 4px 0;">${direction}</p>
       <p style="font-size:16px;font-weight:bold;color:#2F1B6D;margin:0 0 4px 0;">${interventionValue.toFixed(1)}%</p>
@@ -84,7 +90,13 @@ function buildMilanFlowPopup(options: {
       <p style="font-size:10px;color:#96C2EF;margin:2px 0;">Baseline: ${baselineValue.toFixed(1)}%</p>
       <p style="font-size:10px;color:#96C2EF;margin:2px 0;">Comparison: ${comparisonValue >= 0 ? "+" : ""}${comparisonValue.toFixed(1)} pp</p>
       ${peakWindow ? `<p style="font-size:9px;color:#96C2EF;margin-top:4px;">Peak window: ${peakWindow}</p>` : ""}
-      <p style="font-size:9px;color:#96C2EF;margin-top:4px;">Source: ${illustrative ? "Illustrative junction mock (KPI 2.1 network)" : "AMAT road user counts (SharePoint bundle)"}</p>
+      <p style="font-size:9px;color:#96C2EF;margin-top:4px;">Source: ${
+        illustrative
+          ? "MOCK illustrative junction hub (KPI 2.1 network)"
+          : postMock
+            ? "AMAT baseline counts · post/comparison MOCK"
+            : "AMAT road user counts (SharePoint bundle)"
+      }</p>
     </div>
   `;
 }
@@ -143,20 +155,9 @@ function milanFeatureSelected(
   return false;
 }
 
-function milanHubCenterIcon(selected: boolean): L.DivIcon {
-  const size = selected ? 28 : 24;
-  const half = size / 2;
-  return L.divIcon({
-    className: "milan-hub-center-wrap",
-    html: `<button type="button" class="milan-hub-center${selected ? " milan-hub-center--selected" : ""}" aria-label="Open observatory"></button>`,
-    iconSize: [size, size],
-    iconAnchor: [half, half],
-  });
-}
-
 /**
- * Copenhagen-parity radar hub layout for Milan:
- * bigger ripples + always-visible center point (marker pane) that opens the observatory.
+ * Copenhagen-parity hub layout for Milan:
+ * CSS ripples + white-bordered circleMarker center (same as OTC / CPH hubs).
  */
 export function renderMilanMapLayers(options: RenderMilanMapLayersOptions): number {
   const {
@@ -198,7 +199,7 @@ export function renderMilanMapLayers(options: RenderMilanMapLayersOptions): numb
     const studyName = String(
       props0.junctionLabel ?? props0.streetName ?? milanSiteKeyFromPoint(props0)
     ).split(" · ")[0];
-    const hubSelected = milanFeatureSelected(selectedSegmentId, hubSegmentId, hubSegmentId);
+    const postMock = scenario === "intervention" || scenario === "comparison";
 
     renderCopenhagenRadarFlowLayout({
       map,
@@ -230,6 +231,8 @@ export function renderMilanMapLayers(options: RenderMilanMapLayersOptions): numb
           typeof props.comparisonValue === "number"
             ? Number(props.comparisonValue)
             : interventionValue - baselineValue;
+        const illustrative =
+          props.parserStatus === "illustrative" || props.dataOrigin === "mock";
         return buildMilanFlowPopup({
           streetName: studyName,
           direction,
@@ -238,13 +241,13 @@ export function renderMilanMapLayers(options: RenderMilanMapLayersOptions): numb
           comparisonValue,
           modeFilterLabel,
           peakWindow: String(props.peakWindow ?? "8:30–9:30"),
-          illustrative:
-            props.parserStatus === "illustrative" || props.dataOrigin === "mock",
+          illustrative,
+          postMock,
         });
       },
     });
 
-    // Decorative ripple only — center point is a separate top marker below.
+    // Copenhagen-parity hub: CSS ripple + solid white-bordered circleMarker (same as OTC hubs).
     renderCopenhagenTrafficPulseOverlay(
       map,
       hub.lat,
@@ -255,27 +258,14 @@ export function renderMilanMapLayers(options: RenderMilanMapLayersOptions): numb
       circlesOut,
       studyName,
       {
-        showAnchorDot: false,
+        showAnchorDot: true,
         ringScale: MILAN_HUB_RING_SCALE,
+        segmentId: hubSegmentId,
+        segmentHandlers,
+        wireCircleMarker,
+        selectedSegmentId,
       }
     );
-
-    const detail = {
-      segmentId: hubSegmentId,
-      segmentName: studyName,
-      speed: null as null,
-      congestion: null as null,
-    };
-    const centerMarker = L.marker([hub.lat, hub.lon], {
-      icon: milanHubCenterIcon(hubSelected),
-      interactive: true,
-      keyboard: true,
-      zIndexOffset: 2500,
-      title: studyName,
-    }).addTo(map);
-    bindCopenhagenMapTooltip(centerMarker, studyName);
-    wireMarkerSegment(centerMarker, detail, segmentHandlers);
-    markersOut.push(centerMarker);
 
     siteCount += 1;
   });

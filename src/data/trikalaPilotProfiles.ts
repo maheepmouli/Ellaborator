@@ -42,9 +42,9 @@ export const TRIKALA_PILOT_PROFILES: Record<TrikalaPilotId, CityPilotProfile> = 
     ],
     geometryType: "polygon",
     dataAvailability:
-      "Partner My Maps P+R polygons (SMY · DEH · GiSeMi). KPI 3.1 counts the three installed hubs (0→3).",
+      "Partner My Maps P+R polygons (SMY · DEH · GiSeMi). KPI 3.1 counts the three installed hubs (0→3). KPI 1.2 mode share and KPI 4.1 satisfaction are MOCK until partner surveys arrive.",
     methodologyNotes:
-      "Intervention Evaluation Plan: KPI 1.2 bike uptake from P+R; KPI 3.1 installed facilities = the three P+R hubs. KPI 4.1 has no P+R satisfaction survey — panel figure is mock only; map shows Park and ride dots/labels.",
+      "Intervention Evaluation Plan: KPI 1.2 bike uptake from P+R is MOCK (illustrative mix). KPI 3.1 installed facilities = the three P+R hubs (observed GIS). KPI 4.1 has no P+R satisfaction survey — MOCK only; map shows Park and ride dots/labels.",
     observatoryType: "area",
   },
   "tri-p3": {
@@ -87,9 +87,9 @@ export const TRIKALA_PILOT_PROFILES: Record<TrikalaPilotId, CityPilotProfile> = 
     ],
     geometryType: "point",
     dataAvailability:
-      "SMARTA app survey evidence where available + Smart Citizen Kit environmental metrics (partner My Maps nodes).",
+      "Pilot 4: SMARTA2 user satisfaction is observed. Mode share and climate remain MOCK until evaluation feeds are linked.",
     methodologyNotes:
-      "Digital-service intervention with citywide environmental sensor fleet for KPI 3.2 (moved from Pilot 1 smart-crossing scope).",
+      "KPI 4.1 user satisfaction = OBSERVED (SMARTA2 survey). KPI 1.2 mode share and KPI 3.2 climate = MOCK (geography only / illustrative figures).",
     observatoryType: "intervention",
   },
 };

@@ -76,14 +76,14 @@ export const PILOT_GEOMETRY_REGISTRY: Record<string, PilotGeometryRecord> = {
     regime: "corridor",
     geometryTruth: { status: "exact", source: "api", spatialReliability: 0.92 },
     renderEligibility: "render_safe",
-    focus: pilotFocus("Issy-les-Moulineaux", "issy-p2", 17),
+    focus: pilotFocus("Issy-les-Moulineaux", "issy-p2", 14),
   },
   "issy-p3": {
     pilotId: "issy-p3",
     regime: "corridor",
     geometryTruth: { status: "derived", source: "mixed", spatialReliability: 0.65 },
     renderEligibility: "render_with_uncertainty",
-    focus: pilotFocus("Issy-les-Moulineaux", "issy-p3", 16),
+    focus: pilotFocus("Issy-les-Moulineaux", "issy-p3", 14),
   },
   "cph-p1": {
     pilotId: "cph-p1",

@@ -1,18 +1,28 @@
-import type { KPIValue } from "@/data/kpiDefinitions";
+import { kpiTimeSeriesPeriodKey, type KPIValue } from "@/data/kpiDefinitions";
+
+function clampIntensity(value: number): number {
+  return Math.max(0, Math.min(120, value));
+}
 
 /**
- * Residual emission intensity (% of baseline) from the KPI 3.2 chart time series for a given year label.
+ * Residual emission intensity (% of baseline) from the KPI 3.2 chart time series
+ * for a selected period key (label or year string).
  */
 export function getKpi32TimeSeriesIntensity(
   kpiValue: KPIValue | undefined,
   selectedYearLabel: string | null | undefined
 ): number | null {
   if (!selectedYearLabel?.trim() || !kpiValue?.timeSeries?.length) return null;
-  const y = Number.parseInt(selectedYearLabel, 10);
-  if (!Number.isFinite(y)) return null;
-  const row = kpiValue.timeSeries.find((t) => t.year === y);
-  if (row === undefined) return null;
-  return Math.max(0, Math.min(120, Number(row.value)));
+  const key = selectedYearLabel.trim();
+  const byPeriod = kpiValue.timeSeries.find((t) => kpiTimeSeriesPeriodKey(t) === key);
+  if (byPeriod !== undefined) return clampIntensity(Number(byPeriod.value));
+
+  const y = Number.parseInt(key, 10);
+  if (Number.isFinite(y)) {
+    const row = kpiValue.timeSeries.find((t) => t.year === y);
+    if (row !== undefined) return clampIntensity(Number(row.value));
+  }
+  return null;
 }
 
 /** Earliest time-series intensity — city baseline residual pressure (typically ~100). */
@@ -21,7 +31,7 @@ export function getKpi32BaselineIntensity(kpiValue: KPIValue | undefined): numbe
   const sorted = [...kpiValue.timeSeries].sort((a, b) => a.year - b.year);
   const row = sorted[0];
   if (row === undefined) return null;
-  return Math.max(0, Math.min(120, Number(row.value)));
+  return clampIntensity(Number(row.value));
 }
 
 /**
@@ -32,7 +42,7 @@ export function defaultKpi32PolygonIntensity(kpiValue: KPIValue | undefined): nu
   return Math.max(0, Math.min(100, 100 - main));
 }
 
-/** Intensity for emission polygons: chart year if set, else headline-based default. */
+/** Intensity for emission polygons: chart period if set, else headline-based default. */
 export function resolveKpi32PolygonBaseIntensity(
   kpiValue: KPIValue | undefined,
   selectedYearLabel: string | null | undefined
@@ -44,7 +54,7 @@ export function resolveKpi32PolygonBaseIntensity(
 
 /**
  * Baseline vs intervention residual intensities for KPI 3.2 map colouring.
- * Baseline = earliest series year (or 100); intervention = selected year / headline.
+ * Baseline = earliest series period (or 100); intervention = selected period / headline.
  */
 export function resolveKpi32ScenarioIntensities(
   kpiValue: KPIValue | undefined,

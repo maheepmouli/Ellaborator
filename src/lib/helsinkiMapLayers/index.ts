@@ -7,6 +7,7 @@ import type {
   HelsinkiHslTram15Sample,
   HelsinkiInnotrafikAlarmSummary,
 } from "@/lib/helsinkiDataPaths";
+import { beginHelsinkiMapFitCycle } from "@/lib/helsinkiMapLayers/helsinkiKpiMapFit";
 import { renderHelsinkiInterventionUnderlay } from "@/lib/helsinkiMapLayers/renderHelsinkiInterventionUnderlay";
 import { renderHelsinkiHslTramLayer } from "@/lib/helsinkiMapLayers/renderHelsinkiHslTramLayer";
 import { renderHelsinkiInnotrafikLayer } from "@/lib/helsinkiMapLayers/renderHelsinkiInnotrafikLayer";
@@ -119,6 +120,9 @@ export async function renderHelsinkiMapLayers(
       selectedKpi = "kpi1.2";
     }
   }
+
+  // Fit once per pilot+KPI — hover/click re-renders must not reset climate / city zoom.
+  beginHelsinkiMapFitCycle(pilotId, selectedKpi);
 
   switch (selectedKpi) {
     case "kpi1.1":

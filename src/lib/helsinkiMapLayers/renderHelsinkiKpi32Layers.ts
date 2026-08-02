@@ -105,7 +105,7 @@ function drawClimatePoint(options: {
   bindCopenhagenMapTooltip(marker, point.label);
   marker.bindPopup(`
     <div style="font-family:'DM Sans',sans-serif;padding:8px;min-width:200px;">
-      <p style="font-size:10px;color:#8578C3;margin:0 0 4px 0;text-transform:uppercase;">FVH1 · KPI 3.2 climate · ${scenario}</p>
+      <p style="font-size:10px;color:#8578C3;margin:0 0 4px 0;text-transform:uppercase;">FVH1 · KPI 3.2 climate · MOCK · ${scenario}</p>
       <p style="font-size:14px;font-weight:700;color:#2F1B6D;margin:0 0 6px 0;">${point.label}</p>
       <p style="font-size:18px;font-weight:700;color:${color};margin:4px 0;">Pressure ${score.toFixed(0)}</p>
       <p style="font-size:10px;color:#96C2EF;margin:2px 0;">Baseline ${point.baselineScore.toFixed(0)} → Intervention ${point.interventionScore.toFixed(0)} (Δ ${delta >= 0 ? "+" : ""}${delta.toFixed(0)})</p>
@@ -135,7 +135,7 @@ function drawClimatePoint(options: {
 }
 
 /**
- * KPI 3.2 climate — colour-rated points (no hub ripples).
+ * KPI 3.2 climate — mock colour-rated points (no hub ripples).
  * Colours follow Baseline / Intervention / Comparison scenario.
  */
 export function renderHelsinkiKpi32Layers(
@@ -193,7 +193,7 @@ export function renderHelsinkiKpi32Layers(
         label: `Climate-proxy sample point ${index + 1}`,
         baselineScore,
         interventionScore,
-        note: `Illustrative pressure proxy from local hazard density ${density} (not ambient CO₂ and not a direct mobility sensor).`,
+        note: `Mock climate pressure from local hazard density ${density} (not ambient CO₂ and not a direct mobility sensor).`,
         radius: 3.5 + (baselineScore / 100) * 2.5,
       };
     });

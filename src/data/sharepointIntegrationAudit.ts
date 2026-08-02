@@ -531,6 +531,18 @@ export const EXTRACTED_FILE_APPENDIX: ExtractedFileRow[] = [
     parser: "localCityData.loadZaragozaCentroids",
   },
   {
+    label: "zar-bundled-observed-fallback",
+    publicPath: "/data/zaragoza/observed-records.json",
+    sourceZip: "Generated via npm run build-zaragoza-data from SharePoint mirror",
+    parser: "zaragozaParsers.loadZaragozaJsonFallback",
+  },
+  {
+    label: "zar-bundled-centroids-fallback",
+    publicPath: "/data/zaragoza/intervention-areas-centroids.geojson",
+    sourceZip: "Copy of intervention-areas-centroids.geojson for deploy",
+    parser: "localCityData.loadZaragozaCentroids",
+  },
+  {
     label: "tri-smart-crossing-survey",
     publicPath:
       "/sharepoint-data/Trikala/baseline data of the smart crossing on line survey_english.xlsx",

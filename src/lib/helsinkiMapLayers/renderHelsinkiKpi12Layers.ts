@@ -30,7 +30,6 @@ import {
   type HelsinkiHazardHub,
 } from "@/lib/helsinkiMapLayers/helsinkiHazardHubs";
 import { fitHelsinkiKpiView } from "@/lib/helsinkiMapLayers/helsinkiKpiMapFit";
-import { renderHelsinkiSurveyPointUnderlay } from "@/lib/helsinkiMapLayers/helsinkiMapHelpers";
 
 /** Match Milan hub pulse scale so ripples read at pilot / city zoom. */
 const HELSINKI_HUB_RING_SCALE = 2.4;
@@ -73,7 +72,7 @@ function helsinkiHubCenterIcon(selected: boolean): L.DivIcon {
   const half = size / 2;
   return L.divIcon({
     className: "milan-hub-center-wrap",
-    html: `<button type="button" class="milan-hub-center${selected ? " milan-hub-center--selected" : ""}" aria-label="Open observatory"></button>`,
+    html: `<button type="button" class="milan-hub-center${selected ? " milan-hub-center--selected" : ""}" aria-label="Open observatory" style="cursor:pointer;"></button>`,
     iconSize: [size, size],
     iconAnchor: [half, half],
   });
@@ -138,13 +137,16 @@ function drawModeShareRippleHub(options: {
     (telraam?.modeShare.bikePct ?? 0) + (telraam?.modeShare.pedestrianPct ?? 0);
   const carShare = telraam?.modeShare.carPct ?? 50;
   // Scenario-aware pulse: intervention leans greener (sustainable-dominant) when Telraam is single-period.
-  const sustainableDisplay = intensityScalar(
-    scenario,
-    sustainable,
-    Math.min(100, sustainable + (100 - sustainable) * 0.18),
-    Math.min(100, Math.abs((sustainable + (100 - sustainable) * 0.18) - sustainable) * 4)
-  );
-  const inboundDominant = sustainableDisplay >= carShare;
+  // FVH1 has no Telraam — keep blue “sustainable” ripples for the mock mode-share presentation.
+  const sustainableDisplay = telraam
+    ? intensityScalar(
+        scenario,
+        sustainable,
+        Math.min(100, sustainable + (100 - sustainable) * 0.18),
+        Math.min(100, Math.abs((sustainable + (100 - sustainable) * 0.18) - sustainable) * 4)
+      )
+    : intensityScalar(scenario, 58, 66, 32);
+  const inboundDominant = telraam ? sustainableDisplay >= carShare : true;
 
   if (isPrimary) {
     renderMobilityHubFovCone(map, hubLat, hubLon, flows, polygonsOut, {
@@ -241,10 +243,10 @@ function drawModeShareRippleHub(options: {
              <p style="font-size:10px;color:#96C2EF;margin:2px 0;">Bike ${telraam.modeShare.bikePct}% · Ped ${telraam.modeShare.pedestrianPct}% · Car ${telraam.modeShare.carPct}%</p>
              <p style="font-size:10px;color:#96C2EF;margin:2px 0;">${telraam.dailyAggregates.length} daily aggregates · Telraam ${telraam.street}</p>`
           : isPrimary
-            ? `<p style="font-size:10px;color:#96C2EF;margin:0;">No pilot-scoped mode-share sensor in the current data drop.</p>`
+            ? `<p style="font-size:10px;color:#96C2EF;margin:0;">Mock mode-share hub — no pilot-scoped sensor in this data drop.</p>`
             : clusterKind === "parking"
               ? `<p style="font-size:10px;color:#96C2EF;margin:6px 0 0 0;">Parking observation cluster — field study only (no live sensor feed).</p>`
-              : `<p style="font-size:10px;color:#96C2EF;margin:6px 0 0 0;">Survey cluster only — no pilot-scoped mode-share sensor linked.</p>`
+              : `<p style="font-size:10px;color:#96C2EF;margin:6px 0 0 0;">Mock mode-share hub — density proxy only (not a live mobility sensor).</p>`
       }
     </div>
   `);
@@ -541,18 +543,18 @@ export function renderHelsinkiKpi12Layers(
 
   if (pilotId === "hel-p2") {
     return loadHelsinkiEscooterObservationsGeoJson().then((escooter) => {
+      // Geometry anchors reuse Kallio observation density; presentation is mock mode-share hubs.
       const hubs = ensurePrimaryNearAnchor(
         clusterHelsinkiPointHubs(escooter.features, {
           cellDeg: 0.006,
           limit: HELSINKI_MODE_SHARE_HUB_LIMIT,
           idPrefix: "hel-escooter-hub",
-          labelPrefix: "Kallio parking cluster",
+          labelPrefix: "Mode-share hub",
         }),
         HELSINKI_KALLIO_ANCHOR,
         "hel-kallio-mode-share",
-        "Kallio parking cluster"
+        "FVH2 densest mode-share hub"
       );
-      const totalPoints = escooter.features.length;
 
       hubs.forEach((hub, index) => {
         const isPrimary = index === 0;
@@ -562,14 +564,11 @@ export function renderHelsinkiKpi12Layers(
           hubLon: hub.lon,
           segmentId: hub.id,
           label: hub.label,
-          pilotTag: "FVH2 · KPI 1.2",
+          pilotTag: "FVH2 · KPI 1.2 · MOCK",
           flows: [],
           telraam: null,
           sustainablePct: null,
           isPrimary,
-          hazardCount: hub.count || undefined,
-          totalHazards: totalPoints,
-          clusterKind: "parking",
           scenario,
           activeMapSegmentId,
           segmentInteractionEnabled,
@@ -589,31 +588,20 @@ export function renderHelsinkiKpi12Layers(
     });
   }
 
-  // hel-p1 (default for Pilot 1): survey point cloud + multi-hub ripples
+  // hel-p1: mock mode-share hubs only (no survey point cloud underlay).
   return Promise.all([loadHelsinkiDangerousLocationsGeoJson()]).then(
     ([dangerous]) => {
-      renderHelsinkiSurveyPointUnderlay({
-        map,
-        features: dangerous.features,
-        kind: "hazard",
-        maxPoints: 220,
-        circlesOut,
-        segmentInteractionEnabled,
-        segmentHandlers,
-        activeMapSegmentId,
-      });
-
       const hubs = ensurePrimaryNearAnchor(
         clusterHelsinkiPointHubs(dangerous.features, {
           cellDeg: 0.01,
           limit: HELSINKI_MODE_SHARE_HUB_LIMIT,
           idPrefix: "hel-hazard-hub",
-          labelPrefix: "Hazard density cluster",
+          labelPrefix: "Mode-share hub",
           categoryProperty: "locationType",
         }),
         HELSINKI_FVH1_SURVEY_HUB,
         "hel-dangerous-locations",
-        "FVH1 densest hazard cluster"
+        "FVH1 densest mode-share hub"
       );
       const totalHazards = dangerous.features.length;
 
@@ -625,7 +613,7 @@ export function renderHelsinkiKpi12Layers(
           hubLon: hub.lon,
           segmentId: hub.id,
           label: hub.label,
-          pilotTag: "FVH1 · KPI 1.2",
+          pilotTag: "FVH1 · KPI 1.2 · MOCK",
           flows: [],
           telraam: null,
           sustainablePct: null,

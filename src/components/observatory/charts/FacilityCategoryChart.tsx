@@ -45,7 +45,6 @@ export function FacilityCategoryChart({ payload, compact }: FacilityCategoryChar
             <div key={cat.label}>
               <div className="flex justify-between text-[10px] text-white/50 mb-0.5">
                 <span>{cat.label}</span>
-                <span>{cat.value}</span>
               </div>
               <div className="h-2 rounded-full overflow-hidden" style={{ background: OBS_C.border }}>
                 <div
@@ -63,6 +62,8 @@ export function FacilityCategoryChart({ payload, compact }: FacilityCategoryChar
     );
   }
 
+  const hideEndValues = payload.kpiId === "kpi4.1" || payload.kpiId === "kpi4.2";
+
   return (
     <div className={obsGlassCardClass(compact)} style={obsGlassCardStyle()}>
       <p className="text-[11px] font-semibold text-white/70 mb-3">{title}</p>
@@ -74,7 +75,7 @@ export function FacilityCategoryChart({ payload, compact }: FacilityCategoryChar
             <div key={cat.label}>
               <div className="flex justify-between text-[10px] text-white/50 mb-0.5">
                 <span>{cat.label}</span>
-                <span>{cat.value}</span>
+                {!hideEndValues ? <span>{cat.value}</span> : null}
               </div>
               <div className="h-2 rounded-full overflow-hidden" style={{ background: OBS_C.border }}>
                 <div

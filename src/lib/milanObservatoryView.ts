@@ -568,13 +568,19 @@ export function buildMilanObservatoryView(
     interventionPeriod = periodFromAgg(
       postAgg,
       "Post-intervention",
-      isIllustrative ? "Illustrative post-intervention proxy" : "AMAT evaluation counts",
+      "MOCK post-intervention proxy (baseline AMAT only · evaluation pending)",
       modeAgg.pre
     );
-    dataClass = isIllustrative ? "mock" : "observed";
+    // Baseline can be observed AMAT; post + comparison are always MOCK for Milan mode share.
+    dataClass =
+      isIllustrative || scenario === "intervention" || scenario === "comparison"
+        ? "mock"
+        : "observed";
     sourceLabel = isIllustrative
-      ? "Illustrative junction mode-share · KPI 2.1 safety network anchors"
-      : "AMAT road user count workbooks · Milano SharePoint";
+      ? "MOCK illustrative junction mode-share · KPI 2.1 safety network anchors"
+      : scenario === "intervention" || scenario === "comparison"
+        ? "MOCK post/comparison — AMAT baseline counts only (evaluation pending)"
+        : "AMAT road user count workbooks · Milano SharePoint";
     const hubCount = new Set(
       countPoints.map((p) => String(p.properties?.junctionId ?? p.properties?.siteKey ?? p.id))
     ).size;
@@ -582,10 +588,12 @@ export function buildMilanObservatoryView(
       !isIllustrative &&
       countPoints.some((p) => p.properties?.temporalCoverage !== "baseline-only");
     monitoringPeriod = isIllustrative
-      ? `${hubCount} illustrative junction hub${hubCount === 1 ? "" : "s"} · Copenhagen-style demo`
-      : hasEvaluation
+      ? `${hubCount} MOCK junction hub${hubCount === 1 ? "" : "s"} · Copenhagen-style ripples`
+      : hasEvaluation && scenario === "baseline"
         ? `${countPoints.length} count site${countPoints.length === 1 ? "" : "s"} · peak TMV`
-        : `${countPoints.length} baseline-only AMAT count site${countPoints.length === 1 ? "" : "s"} · evaluation pending`;
+        : scenario === "baseline"
+          ? `${countPoints.length} baseline AMAT count site${countPoints.length === 1 ? "" : "s"}`
+          : `${countPoints.length} site${countPoints.length === 1 ? "" : "s"} · post/comparison MOCK`;
     segmentApiId = String(
       countPoints[0]?.properties?.junctionId ??
         countPoints[0]?.properties?.segmentId ??
@@ -612,13 +620,17 @@ export function buildMilanObservatoryView(
     dataClass = isIllustrative ? "mock" : "observed";
     sourceLabel = isIllustrative
       ? "Illustrative junction accessibility · KPI 2.1 network anchors"
-      : "Milan DSS accessibility workbook · SharePoint";
+      : pilotId === "mil-p3"
+        ? "Milan DSS accessibility · Pilot 1 + Pilot 2 combined"
+        : "Milan DSS accessibility workbook · SharePoint";
     const hubCount = new Set(
       a11yPoints.map((p) => String(p.properties?.junctionId ?? p.properties?.siteKey ?? p.id))
     ).size;
     monitoringPeriod = isIllustrative
       ? `${hubCount} illustrative junction hub${hubCount === 1 ? "" : "s"} · equal-access proxy`
-      : `${a11yPoints.length} accessibility categor${a11yPoints.length === 1 ? "y" : "ies"}`;
+      : pilotId === "mil-p3"
+        ? `${a11yPoints.length} DSS points · Pilot 1 + Pilot 2 combined`
+        : `${a11yPoints.length} accessibility categor${a11yPoints.length === 1 ? "y" : "ies"}`;
     segmentApiId = String(
       a11yPoints[0]?.properties?.junctionId ??
         a11yPoints[0]?.properties?.segmentId ??
@@ -798,9 +810,18 @@ export function buildMilanObservatoryView(
     );
     interventionValue = avgSpeed > 0 ? avgSpeed : speedDataset.stats.avgMetricValue;
     baselineValue = interventionValue * 1.08;
-    dataClass = speedDataset.dataConfidence === "proxy" ? "derived" : "observed";
-    sourceLabel = `${String(props.sourceLabel ?? "AMAT speed shapefile")} · ${pilotId.toUpperCase()}`;
-    monitoringPeriod = `${speedDataset.stats.parsedSegments} speed segment${speedDataset.stats.parsedSegments === 1 ? "" : "s"}`;
+    const postMock = scenario === "intervention" || scenario === "comparison";
+    dataClass = postMock
+      ? "mock"
+      : speedDataset.dataConfidence === "proxy"
+        ? "derived"
+        : "observed";
+    sourceLabel = postMock
+      ? `MOCK post/comparison · ${String(props.sourceLabel ?? "AMAT speed")} baseline only`
+      : `${String(props.sourceLabel ?? "AMAT speed shapefile")} · ${pilotId.toUpperCase()}`;
+    monitoringPeriod = postMock
+      ? `${speedDataset.stats.parsedSegments} segments · baseline observed · post MOCK`
+      : `${speedDataset.stats.parsedSegments} speed segment${speedDataset.stats.parsedSegments === 1 ? "" : "s"}`;
     segmentApiId = speedSegment?.id ?? segmentApiId;
     displayName = options.segmentName || String(props.streetName ?? speedSegment?.id ?? displayName);
     baselinePeriod = { ...base.baseline, avgSpeedKmh: baselineValue };

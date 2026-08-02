@@ -136,7 +136,21 @@ export function buildCityObservatoryView(
   const base = buildMockJunctionStudyView(config, selectedKpi, scenario, kpi32IntensityScale);
   const pilot = getPilotById(city, pilotId);
   const profile = getCityPilotProfile(pilotId);
-  const dataClass = classifyDataOrigin(points, base.dataSource === "observed" ? "observed" : "mock");
+  // FVH1 / FVH2 have no mode-share sensor — hub map + travel mix are illustrative.
+  // KPI 3.2 climate points are density proxies, not measured emissions / AQ.
+  // KPI 2.1: baseline observed; post & comparison MOCK.
+  const roadSafetyPostMock =
+    selectedKpi === "kpi2.1" &&
+    (scenario === "intervention" || scenario === "comparison");
+  const forceHelsinkiMock =
+    normalizeCityKey(city).includes("helsinki") &&
+    ((pilotId === "hel-p1" && selectedKpi === "kpi1.2") ||
+      (pilotId === "hel-p2" && selectedKpi === "kpi1.2") ||
+      selectedKpi === "kpi3.2" ||
+      roadSafetyPostMock);
+  const dataClass: ObservatoryDataClass = forceHelsinkiMock
+    ? "mock"
+    : classifyDataOrigin(points, base.dataSource === "observed" ? "observed" : "mock");
   const observedValue = avgPointValue(points);
   const hasObserved = points.length > 0 && dataClass !== "mock";
   const metric = segmentMetricKindForKpi(selectedKpi);
@@ -149,10 +163,19 @@ export function buildCityObservatoryView(
       ? [pilot.lat, pilot.lng]
       : base.coordinates);
   const kpiDef = getKpiDefinition(selectedKpi);
-  const sourceLabel =
-    points[0]?.properties?.source ||
-    profile?.dataAvailability ||
-    "Pilot registry with linked dataset readiness";
+  const sourceLabel = forceHelsinkiMock
+    ? selectedKpi === "kpi2.1"
+      ? "MOCK post/comparison — survey / conflict density (baseline observed)"
+      : selectedKpi === "kpi3.2"
+      ? "Mock climate · hazard-density pressure proxy (not ambient CO₂)"
+      : pilotId === "hel-p2"
+        ? "Mock mode share · Kallio travel mix (no FVH2 Telraam)"
+        : "Mock mode share · conflict travel-mode mix (no FVH1 Telraam)"
+    : selectedKpi === "kpi2.1"
+      ? "Road safety — survey / conflict density (baseline observed)"
+      : points[0]?.properties?.source ||
+        profile?.dataAvailability ||
+        "Pilot registry with linked dataset readiness";
 
   const isCopenhagen = isCopenhagenObservatoryContext(city, pilotId);
   if (isCopenhagen) {
@@ -187,9 +210,15 @@ export function buildCityObservatoryView(
           ? Math.max(base.dataConfidence, 0.62)
           : base.dataConfidence,
     interventionType: profile?.interventionSummary || base.interventionType,
-    monitoringPeriod: hasObserved
-      ? `Linked datasets · ${points.length} monitoring point${points.length === 1 ? "" : "s"}`
-      : base.monitoringPeriod,
+    monitoringPeriod: forceHelsinkiMock
+      ? selectedKpi === "kpi3.2"
+        ? "Mock climate pressure points · density proxy"
+        : pilotId === "hel-p2"
+          ? "Mock mode-share hubs · Kallio travel mix"
+          : "Mock mode-share hubs · conflict travel-mode mix"
+      : hasObserved
+        ? `Linked datasets · ${points.length} monitoring point${points.length === 1 ? "" : "s"}`
+        : base.monitoringPeriod,
     segmentApiId: hasObserved
       ? String(points[0]?.properties?.segmentId || config.segmentApiId)
       : config.segmentApiId,

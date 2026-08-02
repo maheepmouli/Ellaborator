@@ -25,11 +25,6 @@ import {
 import { getIssyPilotProfile } from "@/data/issyPilotProfiles";
 import { ISSY_OD_CSV_DISCLAIMER } from "@/lib/issyDataTransparency";
 import {
-  formatWinticsModalShareLine,
-  ISSY_WINTICS_SITE_DISCLAIMER,
-  winticsSustainableSharePct,
-} from "@/lib/issyWinticsSite";
-import {
   baselineKpiSlice,
   interventionKpiSlice,
   computeBaselineMainValue,
@@ -364,11 +359,7 @@ const InsightPanel = ({
   const usingTrikalaBikeLaneSurvey = !!trikalaBikeLaneSurveyKpi;
   const issyFlowsQueryEnabled = isIssyCity && selectedKpi === "kpi1.2";
   const { data: issyFlowFeatures } = useIssyFlowData(issyFlowDayCategory, issyFlowsQueryEnabled);
-  const { wintics: issyWinticsQuery, classeur: issyClasseurQuery } = useIssyWorkbooks(isIssyCity);
-  const issyWinticsBaseline =
-    selectedPilot?.id === "issy-p1" && selectedKpi === "kpi1.2"
-      ? (issyWinticsQuery.data ?? null)
-      : null;
+  const { classeur: issyClasseurQuery } = useIssyWorkbooks(isIssyCity);
   const issyClasseurEmissions = selectedKpi === "kpi3.2" ? (issyClasseurQuery.data ?? null) : null;
   const { snapshot: cphEncounters } = useCopenhagenNearEncounters();
   const { snapshot: cphEmissions } = useCopenhagenEmissions();
@@ -792,10 +783,13 @@ const InsightPanel = ({
             : isMilanCity &&
                 selectedKpi === "kpi4.2" &&
                 (milanLocalPoints?.filter((p) => p.properties?.datasetKind === "accessibility").length ?? 0) > 0
-              ? {
-                  reason: "ok" as const,
-                  message: `${milanLocalPoints!.filter((p) => p.properties?.datasetKind === "accessibility").length} DSS accessibility categories loaded for ${milanPilotId}.`,
-                }
+                  ? {
+                      reason: "ok" as const,
+                      message:
+                        milanPilotId === "mil-p3"
+                          ? `${milanLocalPoints!.filter((p) => p.properties?.datasetKind === "accessibility").length} DSS accessibility points (Pilot 1 + Pilot 2 combined).`
+                          : `${milanLocalPoints!.filter((p) => p.properties?.datasetKind === "accessibility").length} DSS accessibility categories loaded for ${milanPilotId}.`,
+                    }
             : isMilanCity && selectedKpi === "kpi4.2" && usingMilanIllustrativeAccessibility
               ? {
                   reason: "mock" as const,
@@ -832,36 +826,56 @@ const InsightPanel = ({
         dataQualitySummary?.provenanceType === "observed" ||
         dataQualitySummary?.provenanceType === "mock"
     );
+    const milanPostComparisonMock =
+      isMilanCity &&
+      selectedKpi === "kpi1.2" &&
+      (scenario === "intervention" || scenario === "comparison");
+    const roadSafetyPostComparisonMock =
+      selectedKpi === "kpi2.1" &&
+      (scenario === "intervention" || scenario === "comparison");
     const panelUsesObservedSlice = Boolean(
       usingIssyObservedModeShare ||
         (usingTrikalaObservedModeShare && !usingTrikalaIllustrativeModeShare) ||
-        usingTrikalaBikeLaneSafety ||
+        (usingTrikalaBikeLaneSafety && !roadSafetyPostComparisonMock) ||
         usingTrikalaBikeLaneSurvey ||
         copenhagenObservedModeShare ||
         usingHelsinkiObservedKpi ||
-        (milanModeShareKpi && !usingMilanIllustrativeModeShare) ||
+        (milanModeShareKpi && !usingMilanIllustrativeModeShare && !milanPostComparisonMock) ||
         (milanSegmentHeadline && !usingMilanIllustrativeClimate && !usingMilanIllustrativeAccessibility) ||
         usingMilanIllustrativeClimate ||
         usingMilanIllustrativeAccessibility ||
         usingMilanIllustrativeSatisfaction ||
-        (isCopenhagenCity && selectedKpi === "kpi3.2" && cphEmissionsModel)
+        (isCopenhagenCity && selectedKpi === "kpi3.2" && cphEmissionsModel) ||
+        (selectedKpi === "kpi2.1" && !roadSafetyPostComparisonMock)
     );
     return resolveKpiProvenance({
       city: selectedCity,
       kpiId: selectedKpi,
       pilot: selectedPilot,
       diagnostics,
-      dataQualitySummary,
+      dataQualitySummary:
+        milanPostComparisonMock || roadSafetyPostComparisonMock
+          ? {
+              ...dataQualitySummary,
+              provenanceType: "mock",
+              dataType: milanPostComparisonMock
+                ? "MOCK post/comparison — AMAT baseline only"
+                : "MOCK post/comparison — road safety evaluation pending",
+              confidence: "Low",
+            }
+          : dataQualitySummary,
       manifestAvailable,
       panelUsesObservedSlice,
       mapUsesLocalDataset,
       copenhagenEmissionsActive: Boolean(cphEmissionsModel?.flows?.length),
+      scenario,
     });
   }, [
     selectedCity,
     selectedKpi,
     selectedPilot,
     selectedPilotId,
+    scenario,
     copenhagenLocalPoints,
     helsinkiLocalPoints,
     zaragozaLocalPoints,
@@ -901,7 +915,8 @@ const InsightPanel = ({
     // RETE headline is converted to % reduction; illustrative junction mock stays an index.
     if (isMilanCity && selectedKpi === "kpi3.2" && usingMilanIllustrativeClimate) return " env. idx";
     if (isMilanCity && selectedKpi === "kpi3.2" && milanSegmentHeadline) return "% reduction";
-    if (isMilanCity && selectedKpi === "kpi4.2" && usingMilanIllustrativeAccessibility) return "%";
+    if (isMilanCity && selectedKpi === "kpi4.2" && usingMilanIllustrativeAccessibility) return "Index";
+    if (isMilanCity && selectedKpi === "kpi4.2") return "Index";
     if (isMilanCity && selectedKpi === "kpi4.1" && milanSegmentHeadline) return "%";
     if (usingTrikalaBikeLaneSafety) return "km/h";
     if (usingTrikalaBikeLaneSurvey) return "%";
@@ -1701,60 +1716,6 @@ const InsightPanel = ({
               <LayerTrustStrip summary={dataQualitySummary} compact />
           </div>
         )}
-        {issyFlowsQueryEnabled && onIssyFlowDayCategoryChange && (
-          <div className="rounded-lg border border-white/15 bg-white/[0.06] px-3 py-2">
-            <p className="text-intel-meta font-bold text-white/85 mb-2">Zone-to-zone flow (observed OD CSV)</p>
-            <ToggleGroup
-              type="single"
-              value={issyFlowDayCategory}
-              onValueChange={(v) => {
-                if (v === "all" || v === "weekday" || v === "weekend") onIssyFlowDayCategoryChange(v);
-              }}
-              className="w-full"
-            >
-              <ToggleGroupItem
-                value="all"
-                className="flex-1 text-[10px] font-semibold data-[state=on]:bg-violet/25 data-[state=on]:text-violet data-[state=on]:border-violet border border-white/20 text-white/80"
-              >
-                All days
-              </ToggleGroupItem>
-              <ToggleGroupItem
-                value="weekday"
-                className="flex-1 text-[10px] font-semibold data-[state=on]:bg-violet/25 data-[state=on]:text-violet data-[state=on]:border-violet border border-white/20 text-white/80"
-              >
-                Weekday
-              </ToggleGroupItem>
-              <ToggleGroupItem
-                value="weekend"
-                className="flex-1 text-[10px] font-semibold data-[state=on]:bg-violet/25 data-[state=on]:text-violet data-[state=on]:border-violet border border-white/20 text-white/80"
-              >
-                Weekend
-              </ToggleGroupItem>
-            </ToggleGroup>
-            <p className="text-intel-meta font-medium text-white/75 mt-1.5 leading-snug">
-              Observed OD flow data (zone_in / zone_out). Map arcs show zone-to-zone movement — not measured
-              values on individual street segments.
-            </p>
-          </div>
-        )}
-        {selectedPilot?.id === "issy-p1" && selectedKpi === "kpi1.2" && issyWinticsBaseline && (
-          <div className="rounded-lg border border-cyan-400/25 bg-cyan-500/10 px-3 py-2">
-            <p className="text-intel-meta font-bold text-white/85 mb-1.5">
-              Wintics site camera (baseline · {issyWinticsBaseline.period})
-            </p>
-            <p className="text-[10px] text-white/88 leading-snug">
-              {formatWinticsModalShareLine(issyWinticsBaseline)} · sustainable modes{" "}
-              {winticsSustainableSharePct(issyWinticsBaseline)}%
-            </p>
-            <p className="text-[10px] text-white/70 mt-1.5 leading-snug">
-              Mean speed {issyWinticsBaseline.overall.meanSpeedKmh?.toFixed(1) ?? "n/a"} km/h · 85th %ile{" "}
-              {issyWinticsBaseline.overall.p85SpeedKmh?.toFixed(1) ?? "n/a"} km/h
-            </p>
-            <p className="text-intel-meta font-medium text-white/68 mt-1.5 leading-snug">
-              {ISSY_WINTICS_SITE_DISCLAIMER}
-            </p>
-          </div>
-        )}
         {isCopenhagenCity && selectedKpi === "kpi2.1" && cphEncounterSummary?.length ? (
           <div className="rounded-lg border border-rose-400/25 bg-rose-500/10 px-3 py-2">
             <p className="text-intel-meta font-bold text-white/85 mb-1.5">
@@ -1819,13 +1780,31 @@ const InsightPanel = ({
             </ToggleGroup>
           </div>
         )}
+        {isMilanCity &&
+          selectedKpi === "kpi1.2" &&
+          (scenario === "intervention" || scenario === "comparison") && (
+          <div
+            className="rounded-lg border px-3 py-2 text-[10px] text-amber-100/90 leading-relaxed"
+            style={{ borderColor: "rgba(245,158,11,0.35)", background: "rgba(245,158,11,0.08)" }}
+          >
+            MOCK post / comparison — Milan mode-share evaluation is not linked yet. Baseline may use AMAT
+            counts; intervention and comparison figures are illustrative.
+          </div>
+        )}
         {usingTrikalaIllustrativeModeShare && (
           <div
             className="rounded-lg border px-3 py-2 text-[10px] text-amber-100/90 leading-relaxed"
             style={{ borderColor: "rgba(245,158,11,0.35)", background: "rgba(245,158,11,0.08)" }}
           >
-            Illustrative intermodal proxy per P+R hub — partner occupancy survey pending (June 2026
-            drop).
+            MOCK mode share per P+R hub — partner occupancy survey pending (June 2026 drop).
+          </div>
+        )}
+        {isTrikalaCity && selectedPilotId === "tri-p2" && selectedKpi === "kpi4.1" && (
+          <div
+            className="rounded-lg border px-3 py-2 text-[10px] text-amber-100/90 leading-relaxed"
+            style={{ borderColor: "rgba(245,158,11,0.35)", background: "rgba(245,158,11,0.08)" }}
+          >
+            MOCK user satisfaction — no P+R user survey linked; map shows Park and ride station dots only.
           </div>
         )}
         {usingTrikalaBikeLaneSafety && (
@@ -1833,8 +1812,28 @@ const InsightPanel = ({
             className="rounded-lg border px-3 py-2 text-[10px] text-amber-100/90 leading-relaxed"
             style={{ borderColor: "rgba(245,158,11,0.35)", background: "rgba(245,158,11,0.08)" }}
           >
-            {trikalaBikeLaneSafetyKpi?.note ??
-              "Mock speed from bike-lane LoRa occupancy — no radar speed feed. Baseline uses a constructed pre-redesign offset so before/after differ."}
+            {scenario === "intervention" || scenario === "comparison"
+              ? "MOCK post / comparison — Trikala road-safety evaluation pending. Baseline uses observed LoRa occupancy."
+              : (trikalaBikeLaneSafetyKpi?.note ??
+                "Road safety — speed from bike-lane LoRa occupancy (no radar). Baseline observed.")}
+          </div>
+        )}
+        {selectedKpi === "kpi2.1" &&
+          !usingTrikalaBikeLaneSafety &&
+          (scenario === "intervention" || scenario === "comparison") && (
+          <div
+            className="rounded-lg border px-3 py-2 text-[10px] text-amber-100/90 leading-relaxed"
+            style={{ borderColor: "rgba(245,158,11,0.35)", background: "rgba(245,158,11,0.08)" }}
+          >
+            MOCK post / comparison — road-safety evaluation not linked yet. Baseline uses observed speed / pressure layers.
+          </div>
+        )}
+        {isTrikalaCity && selectedPilotId === "tri-p4" && selectedKpi !== "kpi4.1" && (
+          <div
+            className="rounded-lg border px-3 py-2 text-[10px] text-amber-100/90 leading-relaxed"
+            style={{ borderColor: "rgba(245,158,11,0.35)", background: "rgba(245,158,11,0.08)" }}
+          >
+            MOCK Pilot 4 — this KPI is illustrative. Only user satisfaction (KPI 4.1) is observed on Pilot 4.
           </div>
         )}
         {usingTrikalaBikeLaneSurvey && (

@@ -135,12 +135,12 @@ export function isNearIssyJunction(lat: number, lon: number, radiusM: number = I
 
 /**
  * Pilot-aware junction clip for point layers.
- * - issy-p2: bypass clip (city-wide cycling hubs)
+ * - issy-p2 / issy-p3: bypass clip (city-wide OD hubs + matched accessibility scale)
  * - issy-p1: widen to 450 m school-corridor context
- * - default / issy-p3: standard 220 m junction study radius
+ * - default: standard 220 m junction study radius
  */
 export function getIssyJunctionClipRadiusM(pilotId: string | null | undefined): number | null {
-  if (pilotId === "issy-p2") return null;
+  if (pilotId === "issy-p2" || pilotId === "issy-p3") return null;
   if (pilotId === "issy-p1") return 450;
   return ISSY_P2_JUNCTION.radiusMeters;
 }

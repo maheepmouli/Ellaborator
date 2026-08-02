@@ -126,6 +126,8 @@ export interface ObservatoryGraphicPayload extends ObservatoryGraphicMeta {
   streetNS?: string;
   streetEW?: string;
   highlightArmId?: string;
+  /** Mode / dimension row to highlight (e.g. map pin hover → chart row). */
+  highlightedMode?: string | null;
   pilotTitle?: string;
   /** Compass bearing (0 = north) for camera FOV wedge in corridor schematic */
   cameraBearingDeg?: number;

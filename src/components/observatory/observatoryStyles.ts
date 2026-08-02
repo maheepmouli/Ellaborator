@@ -15,7 +15,9 @@ export const OBS_C = {
 export const MODE_COLORS: Record<string, string> = {
   Pedestrian: OBS_C.lime,
   Cycle: OBS_C.cyan,
+  "E-scooter": OBS_C.amber,
   "Public Transport": OBS_C.violet,
+  "Private Car": OBS_C.lavender,
   Car: OBS_C.lavender,
   PTW: "#a78bfa",
   bike: OBS_C.cyan,

@@ -35,8 +35,12 @@ import { buildMilanObservatoryView } from "@/lib/milanObservatoryView";
 import { buildZaragozaObservatoryView } from "@/lib/zaragozaObservatoryView";
 import { useLocalCityData } from "@/hooks/use-local-city-data";
 import { isIssyCity } from "@/lib/issyMapRouting";
-import { getIssyPilotProfile } from "@/data/issyPilotProfiles";
+import { getIssyPilotProfile, isIssyCityWideModeSharePilot } from "@/data/issyPilotProfiles";
 import { getIssySentimentMock, issySentimentKpiHeadline } from "@/data/issySentimentMock";
+import {
+  getIssyAccessibilityMock,
+  issyAccessibilityFeaturesForScenario,
+} from "@/data/issyAccessibilityMock";
 import {
   buildIssyCityClimateStudyView,
   buildIssyClimateHexStudyView,
@@ -344,8 +348,8 @@ const MapContent = () => {
     if (profile && selectedPilot.supportedKpis.includes(profile.defaultKpi)) {
       setSelectedKpi(profile.defaultKpi);
     }
-    // Pilot 2 = city-wide observatory — fit OD zones, not Pont d'Issy corridor zoom.
-    if (selectedPilot.id === "issy-p2") {
+    // Pilot 2 + Pilot 3 = city-wide observatory — fit OD zones (same scale as each other).
+    if (isIssyCityWideModeSharePilot(selectedPilot.id)) {
       const zones = getIssyZoneCentroids();
       if (zones.length >= 2) {
         const lats = zones.map((z) => z.lat);
@@ -374,6 +378,63 @@ const MapContent = () => {
       segmentId: defaultSeg?.id ?? null,
     });
   }, [selectedPilot?.id, requestPilotMapFocus, requestPilotMapBounds, issyJunctionTraffic?.results, selectedCity, selectedPilot?.supportedKpis, patchSelection]);
+
+  // Issy P2/P3 accessibility + satisfaction — same city OD footprint as mode-share hubs.
+  useEffect(() => {
+    if (!selectedPilot?.id || !isIssyCityWideModeSharePilot(selectedPilot.id)) return;
+    if (selectedKpi !== "kpi4.2" && selectedKpi !== "kpi4.1") return;
+    const a11yProfile = getIssyAccessibilityMock(selectedPilot.id);
+    const a11yFeatures = a11yProfile
+      ? issyAccessibilityFeaturesForScenario(a11yProfile, "intervention")
+      : [];
+    const sentimentProfile = getIssySentimentMock(selectedPilot.id);
+    const sentimentPts = sentimentProfile?.samples ?? [];
+    const features =
+      selectedKpi === "kpi4.1"
+        ? sentimentPts.map((s) => ({ lat: s.lat, lon: s.lon }))
+        : a11yFeatures.map((f) => ({ lat: f.lat, lon: f.lon }));
+    if (features.length >= 2) {
+      const lats = features.map((f) => f.lat);
+      const lons = features.map((f) => f.lon);
+      requestPilotMapBounds(
+        [
+          [Math.min(...lats), Math.min(...lons)],
+          [Math.max(...lats), Math.max(...lons)],
+        ],
+        14
+      );
+    } else {
+      const zones = getIssyZoneCentroids();
+      if (zones.length >= 2) {
+        requestPilotMapBounds(
+          [
+            [Math.min(...zones.map((z) => z.lat)), Math.min(...zones.map((z) => z.lon))],
+            [Math.max(...zones.map((z) => z.lat)), Math.max(...zones.map((z) => z.lon))],
+          ],
+          14
+        );
+      } else {
+        requestPilotMapFocus(ISSY_P2_JUNCTION.lat, ISSY_P2_JUNCTION.lon, 14);
+      }
+    }
+  }, [selectedPilot?.id, selectedKpi, requestPilotMapBounds, requestPilotMapFocus]);
+
+  // Issy P2/P3 mode share — keep city OD frame when returning to KPI 1.2.
+  useEffect(() => {
+    if (!selectedPilot?.id || !isIssyCityWideModeSharePilot(selectedPilot.id)) return;
+    if (selectedKpi !== "kpi1.2") return;
+    const zones = getIssyZoneCentroids();
+    if (zones.length < 2) return;
+    const lats = zones.map((z) => z.lat);
+    const lons = zones.map((z) => z.lon);
+    requestPilotMapBounds(
+      [
+        [Math.min(...lats), Math.min(...lons)],
+        [Math.max(...lats), Math.max(...lons)],
+      ],
+      14
+    );
+  }, [selectedPilot?.id, selectedKpi, requestPilotMapBounds]);
 
   useEffect(() => {
     if (!selectedPilot) return;
@@ -1261,6 +1322,7 @@ const MapContent = () => {
       segmentName: string;
       speed?: number | null;
       congestion?: number | null;
+      properties?: Record<string, unknown>;
     } | null) => {
       if (detail === null) {
         setHoveredSegmentId(null);
@@ -1268,7 +1330,9 @@ const MapContent = () => {
           (isCopenhagenMap ||
             isIssyCity(selectedCity) ||
             isTrikalaMap ||
-            selectedCity === "Milan") &&
+            selectedCity === "Milan" ||
+            selectedCity === "Helsinki" ||
+            selectedCity === "Zaragoza") &&
           selectedJunctionSegmentId;
         if (!preserveContext) {
           setMapContext(null);
@@ -1284,13 +1348,15 @@ const MapContent = () => {
         segmentName: detail.segmentName,
         speed: detail.speed ?? null,
         congestion: detail.congestion ?? null,
+        properties: detail.properties,
       });
-      // Milan / Issy P2 zone dots: keep selection in sync on hover so the
+      // Milan / Issy P2 zone dots / Helsinki hubs: keep selection in sync on hover so the
       // observatory panel tracks the marker under the cursor.
       if (
         selectedCity === "Milan" ||
+        selectedCity === "Helsinki" ||
         (isIssyCity(selectedCity) &&
-          selectedPilot?.id === "issy-p2" &&
+          isIssyCityWideModeSharePilot(selectedPilot?.id) &&
           selectedKpi === "kpi1.2" &&
           detail.segmentId.startsWith("issy-zone-"))
       ) {
@@ -1386,7 +1452,13 @@ const MapContent = () => {
           }}
           focusMode={focusMode}
           onSegmentHover={handleSegmentHover}
-          onJunctionSegmentClick={(detail) => {
+          onJunctionSegmentClick={(detail: {
+            segmentId: string;
+            segmentName: string;
+            speed?: number | null;
+            congestion?: number | null;
+            properties?: Record<string, unknown>;
+          }) => {
             patchSelection({ segmentId: detail.segmentId });
             setHoveredSegmentId(detail.segmentId);
             setMapContext({
@@ -1396,19 +1468,26 @@ const MapContent = () => {
               properties: detail.properties,
             });
             if (selectedCity === "Helsinki") {
-              const fromPropsLat = Number(detail.properties?.lat);
-              const fromPropsLon = Number(detail.properties?.lon);
-              if (Number.isFinite(fromPropsLat) && Number.isFinite(fromPropsLon)) {
-                requestPilotMapFocus(fromPropsLat, fromPropsLon, 16);
-              } else {
-                const match = scopedObservatoryPoints.find((point) => {
-                  const segmentId = String(
-                    point.properties?.segmentId ?? point.properties?.siteId ?? point.id
-                  );
-                  return segmentId === detail.segmentId;
-                });
-                if (match) {
-                  requestPilotMapFocus(match.lat, match.lon, 16);
+              // City-wide FVH1 / climate views: update observatory only — do not yank zoom on hub click.
+              // Viikki FVH3 sensors still get a gentle focus.
+              const isViikkiSensor =
+                selectedPilot?.id === "hel-p3" ||
+                /telraam|mobilysis|viikki/i.test(detail.segmentId);
+              if (isViikkiSensor) {
+                const fromPropsLat = Number(detail.properties?.lat);
+                const fromPropsLon = Number(detail.properties?.lon);
+                if (Number.isFinite(fromPropsLat) && Number.isFinite(fromPropsLon)) {
+                  requestPilotMapFocus(fromPropsLat, fromPropsLon, 16);
+                } else {
+                  const match = scopedObservatoryPoints.find((point) => {
+                    const segmentId = String(
+                      point.properties?.segmentId ?? point.properties?.siteId ?? point.id
+                    );
+                    return segmentId === detail.segmentId;
+                  });
+                  if (match) {
+                    requestPilotMapFocus(match.lat, match.lon, 16);
+                  }
                 }
               }
             }
@@ -1675,7 +1754,11 @@ const MapContent = () => {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.4, duration: 0.5 }}
-          className="hidden lg:block"
+          className="hidden lg:block absolute top-1/2 z-30 -translate-y-1/2"
+          style={{
+            // Keep zoom controls clear of the observatory panel (same inset as legend).
+            right: mapSideInsets.right,
+          }}
         >
           <MapControls
             onZoomIn={handleZoomIn}
@@ -1730,6 +1813,17 @@ const MapContent = () => {
         selectedModeTypes={selectedModeTypes}
         selectedDirectionId={effectiveDirectionId}
         onSelectDirectionId={(id) => {
+          if (!id) {
+            setSelectedDirectionId(null);
+            setHoveredSegmentId(null);
+            return;
+          }
+          // Chart hover on MOCK satisfaction dimensions — temporary map highlight only.
+          if (id.startsWith("cph-mock-sat-")) {
+            setSelectedDirectionId(id);
+            setHoveredSegmentId(id);
+            return;
+          }
           // Zone arms navigate to another OD zone; reset direction so the new hub picks its first link.
           setSelectedDirectionId(id.startsWith("issy-zone-") ? null : id);
           patchSelection({ segmentId: id });
@@ -1749,7 +1843,10 @@ const MapContent = () => {
 
       {/* How to Use — tucked under right panel (corner, low z) */}
       {!showTour && (
-        <div className="fixed right-3 bottom-3 z-[12]">
+        <div
+          className="fixed bottom-3 z-[12]"
+          style={{ right: mapSideInsets.right }}
+        >
           <button
             type="button"
             onClick={() => setShowTour(true)}

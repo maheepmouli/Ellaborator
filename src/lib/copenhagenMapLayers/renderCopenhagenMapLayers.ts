@@ -196,12 +196,14 @@ function renderRegistryMarkers(
   map: L.Map,
   pilotId: string | null | undefined,
   markersOut: L.Marker[],
+  circlesOut: L.CircleMarker[],
   handlers: SegmentInteractionHandlers,
   selectedSegmentId: string | null | undefined,
   flowsByWorkbook: Map<string, CopenhagenObservedPoint[]>,
   scenario: "baseline" | "intervention" | "comparison",
   getValueColor: (value: number, safetyKpi: boolean) => string,
-  selectedKpi: string
+  selectedKpi: string,
+  wireCircleMarker: RenderCopenhagenMapLayersOptions["wireCircleMarker"]
 ): CopenhagenLocation[] {
   if (selectedKpi === "kpi3.2") {
     return [];
@@ -216,9 +218,13 @@ function renderRegistryMarkers(
   const aggregateHubKpi = selectedKpi === "kpi1.2" || selectedKpi === "kpi2.1";
   const locations = getLocationsForPilot(pilotId).filter((loc) => {
     if (iconOnlyKpi) return loc.kind === "otc_workbook_site";
-    // Keep intelligent cameras in the returned set for FOV cones, but we only draw workbook hubs.
+    // OTC hubs + FOV cameras + Telraam counters (Medieval City — Pilot 1 + Pilot 3).
     if (aggregateHubKpi) {
-      return loc.kind === "otc_workbook_site" || loc.kind === "intelligent_camera";
+      return (
+        loc.kind === "otc_workbook_site" ||
+        loc.kind === "intelligent_camera" ||
+        loc.kind === "telraam_counter"
+      );
     }
     if (loc.kind === "flow_camera") return selectedKpi === "kpi1.2";
     return (
@@ -235,11 +241,16 @@ function renderRegistryMarkers(
   );
 
   locations.forEach((loc) => {
-    // Aggregated hub mode: workbook sites only — intelligent cameras stay for FOV, not as dots.
-    if (aggregateHubKpi && loc.kind !== "otc_workbook_site") {
+    // Aggregated hub mode: OTC workbook hubs + Telraam dots.
+    // Intelligent cameras stay for FOV only (not drawn as hubs).
+    if (
+      aggregateHubKpi &&
+      loc.kind !== "otc_workbook_site" &&
+      loc.kind !== "telraam_counter"
+    ) {
       return;
     }
-    // Pulse overlay owns the hub marker when OTC flows exist (avoids purple + blue/red doubles).
+    // Pulse overlay owns the OTC hub marker when flows exist (avoids purple + blue/red doubles).
     if (
       aggregateHubKpi &&
       loc.kind === "otc_workbook_site" &&
@@ -277,7 +288,24 @@ function renderRegistryMarkers(
       return;
     }
 
-    if (loc.kind === "intelligent_camera" || loc.kind === "telraam_counter") {
+    if (loc.kind === "telraam_counter") {
+      // Same ripple language as OTC hubs — cyan for Telraam continuous counters.
+      renderHubRipplePulseOverlay(map, markerLat, markerLon, true, markersOut, circlesOut, {
+        ringColor: isSelected ? "#00ffff" : "#38BDF8",
+        showAnchorDot: true,
+        ringScale: 0.85,
+        interaction: {
+          segmentId,
+          segmentName: loc.name,
+          segmentHandlers: handlers,
+          selectedSegmentId,
+          wireCircleMarker,
+        },
+      });
+      return;
+    }
+
+    if (loc.kind === "intelligent_camera") {
       const workbookKey = loc.otcWorkbookKey;
       const workbookFlows = workbookKey ? flowsByWorkbook.get(workbookKey) ?? [] : [];
       const { color: accentColor } = aggregateWorkbookIntensity(
@@ -286,20 +314,18 @@ function renderRegistryMarkers(
         getValueColor,
         selectedKpi === "kpi2.1"
       );
-      const sensorColor =
-        loc.kind === "telraam_counter" && !workbookFlows.length ? "#38BDF8" : accentColor;
 
       addCopenhagenMapDot({
         map,
         lat: markerLat,
         lon: markerLon,
-        fillColor: isSelected ? "#00ffff" : sensorColor,
+        fillColor: isSelected ? "#00ffff" : accentColor,
         strokeColor: "#ffffff",
-        radius: isSelected ? 10 : loc.kind === "telraam_counter" ? 9 : 8,
+        radius: isSelected ? 10 : 8,
         markersOut,
         segmentHandlers: handlers,
         detail: { segmentId, segmentName: loc.name, speed: null, congestion: null },
-        tooltip: `${loc.name} · ${loc.kind === "telraam_counter" ? "Telraam counter" : "OpenTrafficCam camera"}`,
+        tooltip: `${loc.name} · OpenTrafficCam camera`,
         selected: isSelected,
       });
       return;
@@ -929,12 +955,14 @@ export function renderCopenhagenMapLayers(options: RenderCopenhagenMapLayersOpti
     map,
     pilotId,
     markersOut,
+    circlesOut,
     segmentHandlers,
     selectedSegmentId,
     flowsByWorkbook,
     scenario,
     getValueColor,
-    selectedKpi
+    selectedKpi,
+    wireCircleMarker
   );
 
   // Camera FOV — mode share / road safety only (not facilities, climate, survey, a11y).

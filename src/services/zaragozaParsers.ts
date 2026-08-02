@@ -12,6 +12,9 @@ import {
 
 const BASE = "/sharepoint-data/Zaragoza/1. BASELINE DATA from Zaragoza";
 
+/** Committed snapshot when SharePoint mirror is absent (production / Vercel). */
+export const ZARAGOZA_JSON_FALLBACK = "/data/zaragoza/observed-records.json";
+
 export const ZAR_PATHS = {
   manualCounting: `${BASE}/ManualCounting_June2025_AYZGZ1.xlsx`,
   airQuality: `${BASE}/AirQuality.xlsx`,
@@ -93,6 +96,52 @@ async function fetchWorkbook(path: string): Promise<XLSX.WorkBook | null> {
   } catch {
     return null;
   }
+}
+
+type ZaragozaFallbackPayload = {
+  byKpi?: Record<string, NormalizedCityRecord[]>;
+};
+
+let zaragozaFallbackCache: ZaragozaFallbackPayload | null | undefined;
+
+async function loadZaragozaJsonFallback(kpiId: string): Promise<NormalizedCityRecord[]> {
+  try {
+    if (zaragozaFallbackCache === undefined) {
+      const res = await fetch(ZARAGOZA_JSON_FALLBACK);
+      zaragozaFallbackCache = res.ok ? ((await res.json()) as ZaragozaFallbackPayload) : null;
+    }
+    if (!zaragozaFallbackCache?.byKpi) return [];
+    const rows = zaragozaFallbackCache.byKpi[kpiId] ?? [];
+    return rows.map((r) => ({
+      ...r,
+      source: r.source?.includes("bundled")
+        ? r.source
+        : `${r.source} (bundled JSON fallback)`,
+      method: r.method?.includes("bundled")
+        ? r.method
+        : `${r.method} · SharePoint mirror unavailable — bundled JSON fallback.`,
+      sourceFile: r.sourceFile?.startsWith("bundled://")
+        ? r.sourceFile
+        : ZARAGOZA_JSON_FALLBACK,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+/** True when at least one workbook-parsed observed row is present (not code-side mocks). */
+function hasSharePointDerivedCoverage(records: NormalizedCityRecord[]): boolean {
+  return records.some((r) => {
+    if (r.type === "mock") return false;
+    const src = `${r.source ?? ""} ${r.method ?? ""}`.toLowerCase();
+    if (src.includes("mock") || src.includes("illustrative")) return false;
+    const file = String(r.sourceFile ?? "");
+    return (
+      file.includes("/sharepoint-data/") ||
+      file.includes("bundled://zaragoza/") ||
+      file.includes(ZARAGOZA_JSON_FALLBACK)
+    );
+  });
 }
 
 function emptyModes() {
@@ -1238,7 +1287,27 @@ export async function parseZaragozaSupplementalRecords(
     parseZaragozaRoadSafetySurvey(kpiId),
     parseZaragozaBarriersSurvey(kpiId),
   ]);
-  const observed = batches.flat();
+  let observed = batches.flat();
+
+  // Production hosts exclude public/sharepoint-data/ — use committed JSON snapshot.
+  if (!hasSharePointDerivedCoverage(observed)) {
+    const fallback = await loadZaragozaJsonFallback(kpiId);
+    if (fallback.length) {
+      // Prefer bundled rows; keep code-side mocks only when fallback lacks that pilot/KPI coverage.
+      const fallbackKinds = new Set(
+        fallback.map((r) => `${r.interventionId}|${r.datasetKind ?? ""}|${r.id}`)
+      );
+      const keepMocks = observed.filter((r) => {
+        if (r.type !== "mock" && !String(r.source ?? "").toLowerCase().includes("mock")) {
+          return false;
+        }
+        const key = `${r.interventionId}|${r.datasetKind ?? ""}|${r.id}`;
+        return !fallbackKinds.has(key) && !fallback.some((f) => f.id === r.id);
+      });
+      observed = [...fallback, ...keepMocks];
+    }
+  }
+
   const gapMocks = parseZaragozaPilotGapMocks(kpiId);
 
   const pilotHasUsefulCoverage = (pilotId: string): boolean => {

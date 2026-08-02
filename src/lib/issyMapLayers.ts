@@ -259,7 +259,7 @@ export function renderIssyClimateHexField(
       <div style="font-family:'DM Sans',sans-serif;padding:8px;min-width:160px">
         <p style="font-size:11px;color:#8578C3;margin:0 0 4px;text-transform:uppercase">${usesClasseur ? "Modelled CO₂ (ASIF)" : "Environmental pressure"}</p>
         ${scenarioNote}
-        ${options.kpi32Year ? `<p style="font-size:10px;color:#A78BFA;margin-top:4px">Chart year ${options.kpi32Year}</p>` : ""}
+        ${options.kpi32Year ? `<p style="font-size:10px;color:#A78BFA;margin-top:4px">Chart period ${options.kpi32Year}</p>` : ""}
         <p style="font-size:10px;color:#96C2EF;margin-top:4px">Hex cell · ${usesClasseur ? "Classeur workbook" : scenario === "baseline" ? "derived baseline" : scenario === "comparison" ? "comparison" : "intervention"}</p>
         <p style="font-size:10px;color:#96C2EF;margin-top:6px;font-weight:600">Hover for observatory</p>
       </div>
@@ -379,7 +379,7 @@ export function renderIssyCityClimateReading(
       }</p>
       ${
         options.kpi32Year
-          ? `<p style="font-size:10px;color:#A78BFA;margin-top:4px">Chart year ${options.kpi32Year}</p>`
+          ? `<p style="font-size:10px;color:#A78BFA;margin-top:4px">Chart period ${options.kpi32Year}</p>`
           : ""
       }
       <p style="font-size:10px;color:#96C2EF;margin-top:4px">${
@@ -480,7 +480,7 @@ export function renderIssySentimentField(
     const color = satisfactionFieldColor(point.value);
     const hoverDetail = {
       segmentId: point.segmentId,
-      segmentName: `${point.label} (${point.value.toFixed(0)}%)`,
+      segmentName: point.label,
       speed: null as number | null,
       congestion: null as number | null,
     };
@@ -491,7 +491,7 @@ export function renderIssySentimentField(
       <div style="font-family:'DM Sans',sans-serif;padding:8px;min-width:150px">
         ${point.isMock ? `<div style="margin-bottom:6px">${mockBadge}</div>` : ""}
         <p style="font-size:10px;color:#8578C3">${point.isMock ? "Mock survey sample" : `Survey point ${i + 1}`}</p>
-        <p style="font-size:14px;font-weight:bold;color:#2F1B6D">${point.value.toFixed(0)}% satisfied</p>
+        <p style="font-size:14px;font-weight:bold;color:#2F1B6D">${point.label}</p>
         ${point.dimension ? `<p style="font-size:10px;color:#96C2EF;margin-top:4px">${point.dimension}</p>` : ""}
         ${point.armLabel ? `<p style="font-size:10px;color:#96C2EF">${point.armLabel}</p>` : ""}
         ${point.responseWindow ? `<p style="font-size:10px;color:#96C2EF">${point.responseWindow}</p>` : ""}
@@ -512,7 +512,7 @@ export function renderIssySentimentField(
           hitRadius: 10,
           selectedSegmentId: options.selectedSegmentId,
           popupHtml,
-          tooltip: `${point.label} · ${point.value.toFixed(0)}%`,
+          tooltip: point.label,
         }
       );
       refs.markers.push(layers.visual);
@@ -533,7 +533,7 @@ export function renderIssySentimentField(
       <div style="font-family:'DM Sans',sans-serif;padding:8px;min-width:170px">
         ${point.isMock ? `<div style="margin-bottom:6px">${mockBadge}</div>` : ""}
         <p style="font-size:11px;color:#8578C3;margin:0 0 4px">${point.isMock ? "Mock survey zone" : "User satisfaction zone"}</p>
-        <p style="font-size:16px;font-weight:bold;color:#2F1B6D;margin:0">${point.value.toFixed(0)}% satisfied</p>
+        <p style="font-size:16px;font-weight:bold;color:#2F1B6D;margin:0">${point.label}</p>
         ${point.dimension ? `<p style="font-size:10px;color:#96C2EF;margin-top:4px">${point.dimension}</p>` : ""}
         ${point.armLabel ? `<p style="font-size:10px;color:#96C2EF">${point.armLabel}</p>` : ""}
         ${point.responseWindow ? `<p style="font-size:10px;color:#96C2EF">${point.responseWindow}</p>` : ""}
@@ -570,7 +570,7 @@ export function renderIssySentimentField(
       <div style="font-family:'DM Sans',sans-serif;padding:8px;min-width:150px">
         ${point.isMock ? `<div style="margin-bottom:6px">${mockBadge}</div>` : ""}
         <p style="font-size:10px;color:#8578C3">${point.isMock ? "Mock survey sample" : `Survey point ${i + 1}`}</p>
-        <p style="font-size:14px;font-weight:bold;color:#2F1B6D">${point.value.toFixed(0)}% satisfied</p>
+        <p style="font-size:14px;font-weight:bold;color:#2F1B6D">${point.label}</p>
         ${point.dimension ? `<p style="font-size:10px;color:#96C2EF;margin-top:4px">${point.dimension}</p>` : ""}
         ${mockNote}
       </div>
@@ -623,7 +623,6 @@ export function renderIssyAccessibilityField(
         <p style="font-size:11px;color:#8578C3">${feature.category}</p>
         <p style="font-size:14px;font-weight:bold;color:#E8F8F5">${feature.label}</p>
         <p style="font-size:10px;color:#96C2EF">${feature.armLabel}</p>
-        <p style="font-size:10px;color:#96C2EF">Quality score: ${feature.qualityScore}/100</p>
         <p style="font-size:10px;color:#96C2EF">Status: ${feature.status.replace("-", " ")}</p>
         <p style="font-size:9px;color:#A78BFA;margin-top:6px;line-height:1.35">${ISSY_ACCESSIBILITY_MOCK_DISCLAIMER}</p>
       </div>

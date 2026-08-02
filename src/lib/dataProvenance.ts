@@ -52,6 +52,9 @@ function datasetOverviewTrust(dataset: DatasetMetadata): TrustClass {
  * Prefer partner-observed evidence when linked; otherwise DERIVED / MOCK.
  */
 export function resolveCityOverviewTrust(city: string, kpiId: string): TrustClass {
+  // Road safety overview = baseline view → OBSERVED (post/comparison MOCK only in scenario UI).
+  if (kpiId === "kpi2.1") return "observed";
+
   const override = CITY_OVERVIEW_TRUST_OVERRIDES[`${city}|${kpiId}`];
   if (override) return override;
 

@@ -8,7 +8,7 @@ export const ZARAGOZA_PILOT_PROFILES: Record<ZaragozaPilotId, CityPilotProfile> 
     city: "Zaragoza",
     title: "AYZG1 Tactical urbanism around schools",
     interventionSummary:
-      "Kiss&Go tactical urbanism around Margarita Salas / Doctor Azúa schools (Calle Asín y Palacios & Condes de Aragón).",
+      "Pedestrianisation of the section of Pedro III El Grande Street, Creation of a new stay and play area, A new cycle crossing, Associated traffic reorganisation",
     objectives: [
       "Improve active mobility and safety near school corridors.",
       "Repurpose school-front parking into recreational space and organised drop-off.",
@@ -29,7 +29,7 @@ export const ZARAGOZA_PILOT_PROFILES: Record<ZaragozaPilotId, CityPilotProfile> 
     city: "Zaragoza",
     title: "AYZG2 Pedestrian areas around La Romareda",
     interventionSummary:
-      "Pedestrian-priority redesign around La Romareda stadium (Calle Jerusalén & Eduardo Ibarra), coordinated with stadium refurbishment to 2028.",
+      "Temporary street interventions around the stadium redevelopment area to inform the design of a long-term street regeneration project through co-creation.",
     objectives: [
       "Improve pedestrian access and safety around the stadium neighbourhood.",
       "Feed co-creation feedback into the parallel street redevelopment project.",
@@ -50,7 +50,7 @@ export const ZARAGOZA_PILOT_PROFILES: Record<ZaragozaPilotId, CityPilotProfile> 
     city: "Zaragoza",
     title: "AYZG3 Traffic management — Miguel Servet Hospital",
     interventionSummary:
-      "Traffic-management measures around Miguel Servet Hospital based on a prior traffic study; tram-stop warning signals discussed as expansion.",
+      "Testing proposed traffic safety improvements around the hospital based on a previous traffic study.",
     objectives: [
       "Reduce operational conflicts on hospital access routes.",
       "Improve safety and accessibility for patients and staff.",

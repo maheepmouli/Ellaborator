@@ -167,7 +167,6 @@ const PILOT_GRAPHIC_OVERRIDES: Record<string, PilotGraphicOverride> = {
   },
   "hel-p2": {
     header: {
-      "kpi1.2": "facilityInventory",
       "kpi3.1": "facilityInventory",
       "kpi4.2": "accessibilityBars",
     },
@@ -177,7 +176,7 @@ const PILOT_GRAPHIC_OVERRIDES: Record<string, PilotGraphicOverride> = {
       "kpi4.2": "accessibilityBars",
     },
     beforeAfter: {
-      "kpi1.2": "prePostTrend",
+      "kpi1.2": "modeShareBars",
       "kpi3.1": "facilityInventory",
       "kpi4.2": "accessibilityBars",
     },
@@ -391,9 +390,10 @@ const PILOT_GRAPHIC_OVERRIDES: Record<string, PilotGraphicOverride> = {
     overview: {
       "kpi1.2": "modeShareBars",
       "kpi2.1": "prePostTrend",
+      "kpi4.1": "modeShareBars",
       "kpi4.2": "accessibilityBars",
     },
-    beforeAfter: { "kpi4.2": "accessibilityBars" },
+    beforeAfter: { "kpi4.1": "modeShareBars", "kpi4.2": "accessibilityBars" },
     kpiAnalysis: { "kpi4.1": "likertRadar", "kpi4.2": "accessibilityBars" },
   },
   "issy-p1": {
@@ -417,16 +417,17 @@ const PILOT_GRAPHIC_OVERRIDES: Record<string, PilotGraphicOverride> = {
     overview: {
       "kpi1.2": "modeShareBars",
       "kpi2.1": "prePostTrend",
+      "kpi4.1": "modeShareBars",
       "kpi4.2": "accessibilityBars",
     },
-    beforeAfter: { "kpi4.2": "accessibilityBars" },
-    kpiAnalysis: { "kpi4.2": "accessibilityBars" },
+    beforeAfter: { "kpi4.1": "modeShareBars", "kpi4.2": "accessibilityBars" },
+    kpiAnalysis: { "kpi4.1": "modeShareBars", "kpi4.2": "accessibilityBars" },
   },
   "tri-p2": {
     header: {
       "kpi1.2": "cameraCorridorSchematic",
       "kpi3.1": "areaPolygonSchematic",
-      "kpi4.1": "areaPolygonSchematic",
+      // kpi4.1 — no header schematic; map already shows P+R dots (MOCK satisfaction).
     },
     overview: {
       "kpi1.2": "modeShareBars",
@@ -663,6 +664,10 @@ export function resolveObservatoryGraphic(
     if (pilotId === "tri-p2" && kpiId === "kpi1.2") {
       return { graphicId: "cameraCorridorSchematic", kind: "schematic", variant: "compact" };
     }
+    // Pilot 2 · KPI 4.1 MOCK satisfaction — map dots only; skip duplicate area schematic.
+    if (pilotId === "tri-p2" && kpiId === "kpi4.1") {
+      return null;
+    }
     if (pilotId === "tri-p2") {
       return { graphicId: "areaPolygonSchematic", kind: "schematic", variant: "compact" };
     }
@@ -713,8 +718,16 @@ export function resolveObservatoryGraphic(
     if (kpi === "kpi3.1" && (pilotId?.startsWith("cph-") || pilotOverride === "facilityInventory")) {
       return null;
     }
+    // Helsinki FVH2 mode share — Overview bars only (no duplicate header plot).
+    if (pilotId === "hel-p2" && kpi === "kpi1.2") {
+      return null;
+    }
     // Trikala Pilot 1 / Pilot 4 — no schematic above tabs (map is enough).
     if (pilotId === "tri-p1" || pilotId === "tri-p4") {
+      return null;
+    }
+    // Trikala Pilot 2 · KPI 4.1 MOCK satisfaction — map already shows P+R dots.
+    if (pilotId === "tri-p2" && kpi === "kpi4.1") {
       return null;
     }
     // Milan / Issy / Copenhagen KPI 4.2 — accessibility inventory (not camera corridor).
@@ -726,9 +739,9 @@ export function resolveObservatoryGraphic(
     ) {
       return null;
     }
-    // CPH 4.1 MOCK satisfaction — compact satisfaction gauge (not empty Acceptability pie).
+    // CPH 4.1 MOCK satisfaction — Overview bars only (no duplicate header gauge).
     if (kpi === "kpi4.1" && pilotId?.startsWith("cph-")) {
-      return { graphicId: "sentimentGauge", kind: "chart", variant: "compact" };
+      return null;
     }
     const graphicId = pilotOverride ?? OBSERVATORY_HEADER_SCHEMATIC[observatoryType];
     return {
@@ -792,9 +805,9 @@ export function kpiStatusCaption(
   }
   if (city === "Helsinki" && pilotId === "hel-p2" && kpiId === "kpi1.2") {
     return {
-      primary: "Parking-cluster mode-share context",
-      secondary: sourceLabel || "Kallio e-scooter parking clusters (no Telraam on FVH2)",
-      tertiary: "Category mix updates when a cluster is selected",
+      primary: "Mock mode share · Kallio travel mix",
+      secondary: sourceLabel || "Illustrative mobility mix (no Telraam on FVH2)",
+      tertiary: "E-scooter featured — parking categories live under KPI 3.1 / 4.2",
     };
   }
   if (city === "Helsinki" && pilotId === "hel-p1") {
@@ -849,6 +862,36 @@ export function kpiStatusCaption(
     };
   }
 
+  // Trikala Pilot 4 — MOCK except user satisfaction (observed SMARTA2 survey).
+  if (city === "Trikala" && pilotId === "tri-p4") {
+    if (kpiId === "kpi1.2") {
+      return {
+        primary: "MOCK mode share (Pilot 4 SMARTA2)",
+        secondary: sourceLabel || "Illustrative survey / women-mobility proxy",
+        tertiary: "Map shows pilot anchor geography — figures are MOCK until evaluation feeds arrive",
+      };
+    }
+    if (kpiId === "kpi3.2") {
+      return {
+        primary: "MOCK climate (Pilot 4 Smart Citizen Kit)",
+        secondary: sourceLabel || "Sensor geography / capability proxy — not measured ambient CO₂",
+        tertiary: "Fleet nodes on the map; KPI figures labelled MOCK",
+      };
+    }
+    if (kpiId === "kpi4.1") {
+      return {
+        primary: "SMARTA2 user satisfaction (observed)",
+        secondary: sourceLabel || "SharePoint / SMARTA2 satisfaction survey",
+        tertiary: "Pilot 4 — only user satisfaction is observed; other Pilot 4 KPIs remain MOCK",
+      };
+    }
+    return {
+      primary: "MOCK Pilot 4",
+      secondary: sourceLabel || "Illustrative / proxy data",
+      tertiary: "Pilot 4 KPIs are MOCK except user satisfaction",
+    };
+  }
+
   // Trikala Pilot 1 — smart-crossing survey (not mock speed / congestion).
   if (
     city === "Trikala" &&
@@ -867,13 +910,13 @@ export function kpiStatusCaption(
     };
   }
 
-  // Trikala Pilot 2 — bike uptake from P+R (Intervention Evaluation Plan · KPI 1.2).
+  // Trikala Pilot 2 — MOCK bike uptake from P+R (partner occupancy survey pending).
   if (city === "Trikala" && pilotId === "tri-p2" && kpiId === "kpi1.2") {
     return {
-      primary: "Bike uptake from park-and-ride facilities",
+      primary: "MOCK bike uptake from park-and-ride facilities",
       secondary:
         sourceLabel ||
-        "Illustrative % change in walking / cycling / micromobility at SMY · DEH · GiSeMi",
+        "MOCK % change in walking / cycling / micromobility at SMY · DEH · GiSeMi",
       tertiary:
         "Partner occupancy survey pending — map shows P+R hubs only (no CV cameras / municipal car parks)",
     };
@@ -888,10 +931,10 @@ export function kpiStatusCaption(
     };
   }
 
-  // Trikala Pilot 2 — no P+R satisfaction survey; mock placeholder only.
+  // Trikala Pilot 2 — no P+R satisfaction survey; MOCK placeholder only.
   if (city === "Trikala" && pilotId === "tri-p2" && kpiId === "kpi4.1") {
     return {
-      primary: "Mock user satisfaction (no survey linked)",
+      primary: "MOCK user satisfaction (no survey linked)",
       secondary: sourceLabel || "CITY_DATA placeholder — partner P+R survey pending",
       tertiary: "Map shows Park and ride station dots only — not measured satisfaction fields",
     };

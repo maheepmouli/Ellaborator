@@ -8,6 +8,7 @@ import {
 import type { LocalCityPoint } from "@/services/localCityData";
 import {
   isInMilanPilotScope,
+  milanAccessibilityPointMatchesPilotScope,
   milanPointMatchesPilotScope,
   milanSourcePilotIds,
 } from "@/lib/milanPilotScope";
@@ -111,6 +112,27 @@ export function filterMilanLocalPoints(
     return points.filter((p) => isInMilanPilotScope(p.lat, p.lon, pilotId));
   }
   return filterPointsInPilotZone(points, "Milan", pilotId);
+}
+
+/**
+ * KPI 4.2 — Pilot 3 shows Pilot 1 + Pilot 2 DSS civic-address points as one combined layer.
+ */
+export function filterMilanAccessibilityPoints(
+  points: LocalCityPoint[],
+  pilotId: string | null | undefined
+): LocalCityPoint[] {
+  const a11y = points.filter(
+    (p) =>
+      p.properties?.datasetKind === "accessibility" ||
+      p.properties?.datasetKind === "accessibility-summary"
+  );
+  if (!pilotId) return a11y;
+  const byPilot = a11y.filter((p) =>
+    milanAccessibilityPointMatchesPilotScope(p.properties, pilotId)
+  );
+  if (byPilot.length) return byPilot;
+  // Fallback: geographic union of P1+P2 buffers when rows lack pilot tags.
+  return a11y.filter((p) => isInMilanPilotScope(p.lat, p.lon, pilotId === "mil-p3" ? "mil-p3" : pilotId));
 }
 
 export function filterMilanSegmentsForPilot(

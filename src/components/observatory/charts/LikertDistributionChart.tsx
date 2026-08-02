@@ -28,6 +28,8 @@ export function LikertDistributionChart({ payload, compact }: LikertDistribution
           ? "Accessibility dimensions"
           : "Survey distribution";
 
+  const hideEndValues = payload.kpiId === "kpi4.1" || payload.kpiId === "kpi4.2";
+
   return (
     <div className={obsGlassCardClass(compact)} style={obsGlassCardStyle()}>
       <div className="flex items-center justify-between gap-2 mb-3">
@@ -51,7 +53,9 @@ export function LikertDistributionChart({ payload, compact }: LikertDistribution
                 }}
               />
             </div>
-            <span className="text-[9px] text-white/45 w-8 text-right">{row.value.toFixed(0)}</span>
+            {!hideEndValues ? (
+              <span className="text-[9px] text-white/45 w-8 text-right">{row.value.toFixed(0)}</span>
+            ) : null}
           </div>
         ))}
       </div>

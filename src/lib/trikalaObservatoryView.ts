@@ -182,6 +182,8 @@ function enrichBikeLaneSensorHoverView(
           : view.interventionType;
 
   const congestion = busyPct != null ? busyPct / 100 : view.intervention.peakCongestion;
+  const postMock =
+    selectedKpi === "kpi2.1" && (scenario === "intervention" || scenario === "comparison");
 
   return {
     ...view,
@@ -192,16 +194,20 @@ function enrichBikeLaneSensorHoverView(
       selectedKpi === "kpi2.1" && mockSpeed != null
         ? mockSpeed
         : pt?.value ?? view.kpiValue,
-    dataClass: selectedKpi === "kpi2.1" ? "derived" : "observed",
-    dataSource: selectedKpi === "kpi2.1" ? "derived" : "observed",
+    dataClass: selectedKpi === "kpi2.1" ? (postMock ? "mock" : "observed") : "observed",
+    dataSource: selectedKpi === "kpi2.1" ? (postMock ? "mock" : "observed") : "observed",
     interventionType: `${metricLine}${deviceId ? ` · device ${deviceId}` : ""}`,
     monitoringPeriod: obsCount
-      ? `${Number(obsCount).toLocaleString()} LoRa FREE/BUSY readings · mock speed from occupancy`
+      ? postMock
+        ? `${Number(obsCount).toLocaleString()} LoRa readings · baseline observed · post MOCK`
+        : `${Number(obsCount).toLocaleString()} LoRa FREE/BUSY readings · speed from occupancy`
       : "Bike-lane LoRa sensor time-series",
     segmentApiId: location.id,
     sourceLabel:
       selectedKpi === "kpi2.1"
-        ? "Mock speed from bike-lane LoRa occupancy (FREE/BUSY)"
+        ? postMock
+          ? "MOCK post/comparison — LoRa occupancy baseline only"
+          : "Bike-lane LoRa occupancy (FREE/BUSY) · baseline observed"
         : "Bike-lane sensor workbook (SharePoint)",
     intervention: {
       ...view.intervention,
@@ -244,12 +250,15 @@ function enrichAirQualityHoverView(
     shortName: sensorLabel,
     coordinates: [location.lat, location.lng],
     kpiValue: monitoringIndex,
-    interventionType: `${statusLabel} · Smart Citizen monitoring index ${monitoringIndex}%`,
+    interventionType: `${statusLabel} · MOCK Smart Citizen monitoring index ${monitoringIndex}%`,
     monitoringPeriod: capabilityPct
-      ? `Capability breadth ${capabilityPct}% · PM2.5 / noise / gas sensors per workbook registry`
-      : view.monitoringPeriod,
+      ? `MOCK · Capability breadth ${capabilityPct}% · Pilot 4 illustrative climate proxy`
+      : "MOCK · Pilot 4 Smart Citizen Kit geography",
     segmentApiId: location.id,
-    sourceLabel: "Smart Citizen Kit registry",
+    sourceLabel: "MOCK climate — Pilot 4 Smart Citizen Kit fleet proxy",
+    dataClass: "mock",
+    dataSource: "mock",
+    dataConfidence: 0.35,
   };
 }
 
@@ -264,7 +273,7 @@ function enrichPilot2InfraView(
     : "kpi3.1";
   const modeShareNote =
     selectedKpi === "kpi1.2"
-      ? " · bike uptake % change scoped to this P+R hub"
+      ? " · MOCK bike uptake % change scoped to this P+R hub"
       : "";
   return {
     ...view,
@@ -281,7 +290,7 @@ function enrichPilot2InfraView(
     segmentApiId: location.id,
     sourceLabel:
       selectedKpi === "kpi1.2"
-        ? "Bike uptake from park-and-ride facilities · illustrative"
+        ? "MOCK mode share — P+R bike uptake (partner occupancy survey pending)"
         : selectedKpi === "kpi3.1"
           ? "Installed P+R hubs · Partner My Maps"
           : selectedKpi === "kpi4.1"
@@ -293,7 +302,7 @@ function enrichPilot2InfraView(
           dataClass: "observed" as const,
           dataSource: "observed" as const,
         }
-      : selectedKpi === "kpi4.1"
+      : selectedKpi === "kpi1.2" || selectedKpi === "kpi4.1"
         ? {
             dataClass: "mock" as const,
             dataSource: "mock" as const,
@@ -451,6 +460,20 @@ export function buildTrikalaObservatoryView(
     };
   }
 
+  if (pilotId === "tri-p2" && selectedKpi === "kpi1.2") {
+    return {
+      ...view,
+      name: "Park & Ride stations",
+      shortName: "P+R hubs",
+      dataClass: "mock",
+      dataSource: "mock",
+      dataConfidence: 0.35,
+      sourceLabel: "MOCK mode share — P+R bike uptake (partner occupancy survey pending)",
+      monitoringPeriod: "MOCK placeholder · partner occupancy survey pending",
+      interventionType: "Park & Ride · MOCK bike uptake / mode share",
+    };
+  }
+
   if (pilotId === "tri-p2" && selectedKpi === "kpi4.1") {
     return {
       ...view,
@@ -461,8 +484,8 @@ export function buildTrikalaObservatoryView(
       dataSource: "mock",
       dataConfidence: 0.35,
       sourceLabel: "MOCK satisfaction — no P+R user survey linked",
-      monitoringPeriod: "Mock placeholder · partner survey not delivered",
-      interventionType: "Park & Ride · mock satisfaction only",
+      monitoringPeriod: "MOCK placeholder · partner survey not delivered",
+      interventionType: "Park & Ride · MOCK satisfaction only",
     };
   }
 
@@ -487,7 +510,14 @@ export function buildTrikalaObservatoryView(
           : view.monitoringPeriod),
       segmentApiId: location.id,
       sourceLabel: location.folderPath.join(" › ") || "Partner My Maps registry",
-      dataClass: location.kind === "bike_lane_sensor" && selectedKpi === "kpi2.1" ? "derived" : view.dataClass,
+      dataClass:
+        location.kind === "bike_lane_sensor" &&
+        selectedKpi === "kpi2.1" &&
+        (scenario === "intervention" || scenario === "comparison")
+          ? "mock"
+          : location.kind === "bike_lane_sensor" && selectedKpi === "kpi2.1"
+            ? "observed"
+            : view.dataClass,
     };
   }
 

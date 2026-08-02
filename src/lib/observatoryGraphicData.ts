@@ -24,10 +24,17 @@ import type { LocalCityPoint } from "@/services/localCityData";
 import { normalizeConfidencePct } from "@/lib/observatoryCityContent";
 import {
   filterCopenhagenObservatoryPoints,
+  isCopenhagenTelraamSelection,
   resolveCopenhagenWorkbookFocus,
   scopeCopenhagenPointsToWorkbookDirections,
 } from "@/lib/copenhagenObservatoryView";
-import { inferOtcWorkbookKey } from "@/data/copenhagenLocationRegistry";
+import {
+  getTelraamOutcomeForLocation,
+  inferOtcWorkbookKey,
+} from "@/data/copenhagenLocationRegistry";
+import {
+  getCopenhagenLocationFromSelection,
+} from "@/lib/copenhagenMapSelection";
 import {
   getCopenhagenSentimentMock,
   copenhagenSentimentKpiHeadline,
@@ -67,7 +74,7 @@ import {
   helsinkiEvidenceStatCards,
   helsinkiExpansionModeShare,
   helsinkiExpansionPlanStatCards,
-  helsinkiEscooterParkingModeShare,
+  helsinkiKallioMockModeShare,
   helsinkiHazardCategoryLikert,
   helsinkiHazardCategoryModeShare,
   helsinkiConflictTravelModeShare,
@@ -619,6 +626,70 @@ function modeShareFromTelraamPoints(points: LocalCityPoint[]): ModeShareRow[] {
   ];
 }
 
+/** Telraam counter → 3 mode arms for the corridor schematic (not OTC OD dump). */
+function telraamModeDirectionRows(
+  locationId: string,
+  siteName: string,
+  points: LocalCityPoint[]
+): CameraDirectionRow[] {
+  const scopedTelraam = points.filter((p) => {
+    if (p.properties?.datasetKind !== "telraam") return false;
+    const seg = String(p.properties?.segmentId ?? p.id ?? "");
+    const locId = String(p.properties?.locationId ?? "");
+    return seg.includes(locationId) || locId === locationId;
+  });
+  const fromPoints = modeShareFromTelraamPoints(scopedTelraam.length ? scopedTelraam : points);
+  const outcome = getTelraamOutcomeForLocation(locationId);
+  const share =
+    fromPoints.length > 0
+      ? fromPoints
+      : (() => {
+          const pedDelta = outcome?.pedestrianPctChange ?? 0;
+          const bikeDelta = outcome?.bicyclePctChange ?? 0;
+          const carDelta = outcome?.motorizedPctChange ?? 0;
+          const pre = { ped: 22, bike: 38, car: 40 };
+          const postRaw = {
+            ped: Math.max(2, pre.ped + pedDelta * 0.25),
+            bike: Math.max(2, pre.bike + bikeDelta * 0.25),
+            car: Math.max(2, pre.car + carDelta * 0.25),
+          };
+          const sum = postRaw.ped + postRaw.bike + postRaw.car || 1;
+          return [
+            { mode: "Pedestrian", before: pre.ped, after: Number(((postRaw.ped / sum) * 100).toFixed(1)) },
+            { mode: "Cycle", before: pre.bike, after: Number(((postRaw.bike / sum) * 100).toFixed(1)) },
+            { mode: "Private Car", before: pre.car, after: Number(((postRaw.car / sum) * 100).toFixed(1)) },
+          ];
+        })();
+
+  const arms: Array<{ mode: string; bearingDeg: number }> = [
+    { mode: "Pedestrian", bearingDeg: 0 },
+    { mode: "Cycle", bearingDeg: 120 },
+    { mode: "Private Car", bearingDeg: 240 },
+  ];
+  return arms
+    .map(({ mode, bearingDeg }) => {
+      const row = share.find((s) => s.mode === mode);
+      if (!row) return null;
+      const baselinePct = Number(row.before);
+      const interventionPct = Number(row.after);
+      return {
+        id: `telraam-${locationId}-${mode.toLowerCase().replace(/\s+/g, "-")}`,
+        site: siteName,
+        direction: mode,
+        baselinePct,
+        interventionPct,
+        delta: Number((interventionPct - baselinePct).toFixed(1)),
+        source: outcome?.source ?? "Telraam relative mode share",
+        trend: [
+          { t: "Before", v: baselinePct },
+          { t: "After", v: interventionPct },
+        ],
+        bearingDeg,
+      } satisfies CameraDirectionRow;
+    })
+    .filter((row): row is CameraDirectionRow => row != null);
+}
+
 function modeShareFromManualPoints(points: LocalCityPoint[]): ModeShareRow[] {
   const manual = points.filter((p) => p.properties?.datasetKind === "manual" && p.properties?.modeBreakdown);
   if (!manual.length) return [];
@@ -973,10 +1044,27 @@ export function buildObservatoryGraphicPayload(
   const profile = getCityPilotProfile(pilotId);
   const kpiDef = getKpiDefinition(selectedKpi);
   const dataClass: ObservatoryDataClass =
-    view.dataClass ??
-  classifyDataOrigin(points, view.dataSource === "observed" ? "observed" : "mock");
+    cityName === "Helsinki" &&
+    ((pilotId === "hel-p1" && selectedKpi === "kpi1.2") ||
+      (pilotId === "hel-p2" && selectedKpi === "kpi1.2") ||
+      selectedKpi === "kpi3.2")
+      ? "mock"
+      : view.dataClass ??
+        classifyDataOrigin(points, view.dataSource === "observed" ? "observed" : "mock");
   const sourceLabel =
-    String(view.sourceLabel || points[0]?.properties?.source || kpiDef?.dataLabel || profile?.dataAvailability || "Linked dataset");
+    cityName === "Helsinki" && selectedKpi === "kpi3.2"
+      ? "Mock climate · hazard-density pressure proxy (not ambient CO₂)"
+      : cityName === "Helsinki" && pilotId === "hel-p2" && selectedKpi === "kpi1.2"
+        ? "Mock mode share · Kallio travel mix (no FVH2 Telraam)"
+        : cityName === "Helsinki" && pilotId === "hel-p1" && selectedKpi === "kpi1.2"
+          ? "Mock mode share · conflict travel-mode mix (no FVH1 Telraam)"
+          : String(
+              view.sourceLabel ||
+                points[0]?.properties?.source ||
+                kpiDef?.dataLabel ||
+                profile?.dataAvailability ||
+                "Linked dataset"
+            );
 
   const observedPoints = points.filter(
     (p) =>
@@ -1020,20 +1108,32 @@ export function buildObservatoryGraphicPayload(
   }
 
   // Copenhagen: one hub = 2–4 named directional links (never city-wide dump).
+  // Telraam counters get mode arms (ped / bike / car) — not OTC OD links.
+  // KPI 4.1 / 4.2 mock survey pins are not OTC workbooks — do not scope them away.
   let copenhagenWorkbookFocus: string | null = null;
+  let copenhagenTelraamLocationId: string | null = null;
   if (cityName === "Copenhagen") {
-    copenhagenWorkbookFocus =
-      resolveCopenhagenWorkbookFocus(selectedSegmentId, {
-        segmentName: view.name,
-        segmentApiId: view.segmentApiId,
-        streetName: String(activeObserved[0]?.properties?.streetName ?? ""),
-      }) ??
-      inferOtcWorkbookKey(String(view.name || view.segmentApiId || "")) ??
-      inferOtcWorkbookKey(String(activeObserved[0]?.properties?.streetName ?? ""));
-    activeObserved = scopeCopenhagenPointsToWorkbookDirections(
-      activeObserved,
-      copenhagenWorkbookFocus
-    );
+    if (selectedKpi === "kpi4.1" || selectedKpi === "kpi4.2") {
+      copenhagenWorkbookFocus = null;
+      copenhagenTelraamLocationId = null;
+    } else if (isCopenhagenTelraamSelection(selectedSegmentId)) {
+      const telLoc = getCopenhagenLocationFromSelection(selectedSegmentId);
+      copenhagenTelraamLocationId = telLoc?.id ?? null;
+      copenhagenWorkbookFocus = null;
+    } else {
+      copenhagenWorkbookFocus =
+        resolveCopenhagenWorkbookFocus(selectedSegmentId, {
+          segmentName: view.name,
+          segmentApiId: view.segmentApiId,
+          streetName: String(activeObserved[0]?.properties?.streetName ?? ""),
+        }) ??
+        inferOtcWorkbookKey(String(view.name || view.segmentApiId || "")) ??
+        inferOtcWorkbookKey(String(activeObserved[0]?.properties?.streetName ?? ""));
+      activeObserved = scopeCopenhagenPointsToWorkbookDirections(
+        activeObserved,
+        copenhagenWorkbookFocus
+      );
+    }
   }
 
   const milanAmatHubPoints =
@@ -1042,7 +1142,41 @@ export function buildObservatoryGraphicPayload(
       : [];
 
   const cameraDirections =
-    cityName === "Copenhagen"
+    cityName === "Copenhagen" && selectedKpi === "kpi4.1"
+      ? (() => {
+          // One arm per satisfaction dimension → chart hover can select a map pin.
+          const byDim = new Map<string, CameraDirectionRow>();
+          for (const p of observedPoints) {
+            if (p.properties?.datasetKind !== "survey") continue;
+            const dim = String(p.properties?.likertLabel ?? p.properties?.category ?? "").trim();
+            if (!dim || byDim.has(dim)) continue;
+            const before = Number(p.properties?.baselineValue ?? 0);
+            const after = Number(p.properties?.interventionValue ?? p.value ?? 0);
+            byDim.set(dim, {
+              id: String(p.properties?.segmentId ?? p.id),
+              site: String(p.properties?.streetName ?? "MOCK site"),
+              direction: dim,
+              baselinePct: before,
+              interventionPct: after,
+              delta: after - before,
+              source: String(p.properties?.source ?? "MOCK satisfaction"),
+              trend: [
+                { t: "Before", v: before },
+                { t: "After", v: after },
+              ],
+            });
+          }
+          return [...byDim.values()];
+        })()
+      : cityName === "Copenhagen" && copenhagenTelraamLocationId
+      ? telraamModeDirectionRows(
+          copenhagenTelraamLocationId,
+          getCopenhagenLocationFromSelection(selectedSegmentId)?.name ??
+            view.name ??
+            "Telraam counter",
+          observedPoints
+        )
+      : cityName === "Copenhagen"
       ? ensureKnownCameraDirections(
           cameraRowsFromPoints(activeObserved, selectedModeTypes),
           copenhagenWorkbookFocus
@@ -1134,6 +1268,14 @@ export function buildObservatoryGraphicPayload(
       modeShare = modeShareFromNamedBreakdown(headline.baselineBreakdown, headline.breakdown);
     }
   }
+  // CPH KPI 4.1 — always pilot mock dimensions (map pin hover highlights a row; does not collapse bars).
+  if (cityName === "Copenhagen" && selectedKpi === "kpi4.1") {
+    const sentimentProfile = getCopenhagenSentimentMock(pilotId);
+    if (sentimentProfile) {
+      const headline = copenhagenSentimentKpiHeadline(sentimentProfile, scenario);
+      modeShare = modeShareFromNamedBreakdown(headline.baselineBreakdown, headline.breakdown);
+    }
+  }
   if (cityName === "Milan" && selectedKpi === "kpi1.2") {
     const modeSharePoints =
       selectedDirectionId || (selectedSegmentId && activeObserved.length <= 1)
@@ -1196,19 +1338,17 @@ export function buildObservatoryGraphicPayload(
         { wholePilot: true }
       );
       if (fromConflictModes.length) modeShare = fromConflictModes;
+    } else if (pilotId === "hel-p2") {
+      // FVH2: no Telraam — mock travel mix (parking categories stay on KPI 3.1 / 4.2).
+      modeShare = helsinkiKallioMockModeShare();
     } else if (activeObserved.length > 0) {
-      const fromEscooter = helsinkiEscooterParkingModeShare(activeObserved);
-      if (fromEscooter.length) {
-        modeShare = fromEscooter;
+      const fromTelraam = modeShareFromTelraamPoints(activeObserved);
+      if (fromTelraam.length) {
+        modeShare = fromTelraam;
       } else {
-        const fromTelraam = modeShareFromTelraamPoints(activeObserved);
-        if (fromTelraam.length) {
-          modeShare = fromTelraam;
-        } else {
-          const fromShare = modeShareFromModeBreakdownPoints(activeObserved, false);
-          if (fromShare.some((r) => r.before > 0 || r.after > 0)) {
-            modeShare = fromShare;
-          }
+        const fromShare = modeShareFromModeBreakdownPoints(activeObserved, false);
+        if (fromShare.some((r) => r.before > 0 || r.after > 0)) {
+          modeShare = fromShare;
         }
       }
     }
@@ -1833,20 +1973,38 @@ export function buildObservatoryGraphicPayload(
                         : "Helsinki dangerous-locations / conflicts · SharePoint"
                       : selectedKpi === "kpi1.2" && pilotId === "hel-p1"
                         ? "Helsinki conflict survey travel modes (citywide, n=3,202) · FVH1 SharePoint GPKG"
-                        : "Helsinki Telraam + Viikki lighthouse package · SharePoint"
+                        : selectedKpi === "kpi1.2" && pilotId === "hel-p2"
+                          ? "Mock mode share · Kallio travel mix (no FVH2 Telraam)"
+                          : "Helsinki Telraam + Viikki lighthouse package · SharePoint"
             : zaragozaCards
               ? "Zaragoza SharePoint baseline · school mon / surveys / counts / AQ"
-              : cityName === "Trikala" && pilotId === "tri-p2" && selectedKpi === "kpi1.2"
-                ? "Bike uptake from park-and-ride facilities · illustrative (partner survey pending)"
+              : cityName === "Trikala" && pilotId === "tri-p4" && selectedKpi === "kpi1.2"
+                ? "MOCK mode share — Pilot 4 SMARTA2 / survey proxy"
+                : cityName === "Trikala" && pilotId === "tri-p4" && selectedKpi === "kpi3.2"
+                  ? "MOCK climate — Pilot 4 Smart Citizen Kit fleet proxy"
+                  : cityName === "Trikala" && pilotId === "tri-p4" && selectedKpi === "kpi4.1"
+                    ? "SMARTA2 user satisfaction survey (Pilot 4 · observed)"
+                : cityName === "Trikala" && pilotId === "tri-p2" && selectedKpi === "kpi1.2"
+                ? "MOCK mode share — P+R bike uptake (partner occupancy survey pending)"
                 : cityName === "Trikala" && pilotId === "tri-p2" && selectedKpi === "kpi3.1"
                   ? "Installed P+R hubs · Partner My Maps (SMY · DEH · GiSeMi)"
                   : cityName === "Trikala" && pilotId === "tri-p2" && selectedKpi === "kpi4.1"
                     ? "MOCK satisfaction — no P+R user survey linked"
                     : sourceLabel;
   const effectiveDataClass: ObservatoryDataClass =
-    milanExpansionCards
+    dataClass === "mock"
+      ? "mock"
+      : selectedKpi === "kpi2.1"
+        ? "mock"
+      : cityName === "Trikala" && pilotId === "tri-p4"
+        ? selectedKpi === "kpi4.1"
+          ? "observed"
+          : "mock"
+      : milanExpansionCards
       ? "derived"
-      : cityName === "Trikala" && pilotId === "tri-p2" && selectedKpi === "kpi4.1"
+      : cityName === "Trikala" &&
+          pilotId === "tri-p2" &&
+          (selectedKpi === "kpi1.2" || selectedKpi === "kpi4.1")
         ? "mock"
       : trikalaA11yCards ||
           issyA11yCards ||
@@ -1967,6 +2125,24 @@ export function buildObservatoryGraphicPayload(
             return profile ? copenhagenAccessibilityKpiHeadline(profile, scenario) : null;
           })()
         : null;
+
+  // Map pin / segment hover → highlight matching satisfaction dimension on Overview bars.
+  const highlightedMode =
+    cityName === "Copenhagen" && selectedKpi === "kpi4.1" && selectedSegmentId
+      ? (() => {
+          const focus =
+            observedPoints.find(
+              (p) => String(p.properties?.segmentId ?? p.id) === selectedSegmentId
+            ) ??
+            activeObserved.find(
+              (p) => String(p.properties?.segmentId ?? p.id) === selectedSegmentId
+            );
+          const label = String(
+            focus?.properties?.likertLabel ?? focus?.properties?.category ?? ""
+          ).trim();
+          return label || null;
+        })()
+      : null;
 
   const milanSatisfactionTrend =
     cityName === "Milan" && selectedKpi === "kpi4.1"
@@ -2119,6 +2295,7 @@ export function buildObservatoryGraphicPayload(
             ? view.streetEW
             : view.streetEW,
     highlightArmId: view.armId,
+    highlightedMode,
     cameraBearingDeg:
       cityName === "Milan" && selectedKpi === "kpi1.2"
         ? 0
@@ -2149,11 +2326,15 @@ export function buildObservatoryGraphicPayload(
               : cityName === "Helsinki" && selectedKpi === "kpi1.2"
               ? pilotId === "hel-p3"
                 ? "Viikki dual-sensor junction"
-                : "Near-miss & dangerous-location junction"
+                : pilotId === "hel-p2"
+                  ? "Kallio mode-share hubs (mock)"
+                  : "Mode-share hubs (mock)"
               : cityName === "Copenhagen" && selectedKpi === "kpi3.2"
                 ? view.name
                   ? `${view.name} · sensor emissions`
                   : "Sensor emissions (aggregated)"
+                : cityName === "Copenhagen" && copenhagenTelraamLocationId
+                  ? "Telraam counter · mode arms"
                 : cityName === "Copenhagen"
                 ? view.name ||
                   (copenhagenWorkbookFocus

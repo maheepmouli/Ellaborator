@@ -10,12 +10,33 @@ const SOURCE_BY_SCOPE: Record<MilanPilotId, MilanPilotId[]> = {
   "mil-p3": ["mil-p1", "mil-p2", "mil-p3"],
 };
 
+/**
+ * KPI 4.2 DSS civic-address points only exist for CDM1/CDM2.
+ * Pilot 3 (CDM3) shows the combined Pilot 1 + Pilot 2 inventory as one layer.
+ */
+const ACCESSIBILITY_SOURCE_BY_SCOPE: Record<MilanPilotId, MilanPilotId[]> = {
+  "mil-p1": ["mil-p1"],
+  "mil-p2": ["mil-p2"],
+  "mil-p3": ["mil-p1", "mil-p2"],
+};
+
 export function milanSourcePilotIds(
   pilotId: MilanPilotId | string | null | undefined
 ): MilanPilotId[] {
   if (!pilotId) return ["mil-p1", "mil-p2", "mil-p3"];
   if (pilotId in SOURCE_BY_SCOPE) return SOURCE_BY_SCOPE[pilotId as MilanPilotId];
   return [pilotId as MilanPilotId];
+}
+
+/** Pilot IDs whose DSS accessibility points belong in the active map/panel scope. */
+export function milanAccessibilitySourcePilotIds(
+  pilotId: MilanPilotId | string | null | undefined
+): MilanPilotId[] {
+  if (!pilotId) return ["mil-p1", "mil-p2"];
+  if (pilotId in ACCESSIBILITY_SOURCE_BY_SCOPE) {
+    return ACCESSIBILITY_SOURCE_BY_SCOPE[pilotId as MilanPilotId];
+  }
+  return milanSourcePilotIds(pilotId).filter((id) => id === "mil-p1" || id === "mil-p2");
 }
 
 export function milanIsCombinedPilot(
@@ -34,6 +55,17 @@ export function milanRecordMatchesPilotScope(
   return milanSourcePilotIds(scopePilotId).includes(pid as MilanPilotId);
 }
 
+/** Same as milanRecordMatchesPilotScope but for KPI 4.2 DSS rows (P3 = P1∪P2). */
+export function milanAccessibilityRecordMatchesPilotScope(
+  recordPilotId: string | null | undefined,
+  scopePilotId: string | null | undefined
+): boolean {
+  if (!scopePilotId) return true;
+  const pid = String(recordPilotId ?? "").trim();
+  if (!pid) return false;
+  return milanAccessibilitySourcePilotIds(scopePilotId).includes(pid as MilanPilotId);
+}
+
 export function milanPointMatchesPilotScope(
   properties: Record<string, unknown> | undefined,
   scopePilotId: string | null | undefined
@@ -41,6 +73,16 @@ export function milanPointMatchesPilotScope(
   if (!scopePilotId) return true;
   const pid = String(properties?.pilotId ?? properties?.interventionId ?? "").trim();
   if (pid && milanRecordMatchesPilotScope(pid, scopePilotId)) return true;
+  return false;
+}
+
+export function milanAccessibilityPointMatchesPilotScope(
+  properties: Record<string, unknown> | undefined,
+  scopePilotId: string | null | undefined
+): boolean {
+  if (!scopePilotId) return true;
+  const pid = String(properties?.pilotId ?? properties?.interventionId ?? "").trim();
+  if (pid && milanAccessibilityRecordMatchesPilotScope(pid, scopePilotId)) return true;
   return false;
 }
 

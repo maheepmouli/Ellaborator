@@ -1,0 +1,75 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "AYZGZ1",
+        "name": "AYZGZ1"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -0.9057107960078024,
+          41.63634222400238
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "AYZGZ2",
+        "name": "AYZGZ2"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -0.902734750442428,
+          41.63768547265852
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "AYZGZ3",
+        "name": "AYZGZ3"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -0.901531581866805,
+          41.63338230138601
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "AYZGZ4",
+        "name": "AYZGZ4"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -0.8999014075241741,
+          41.63648205547819
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "Romareda",
+        "name": "Romareda"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -0.9034967828662713,
+          41.63603070825386
+        ]
+      }
+    }
+  ]
+}

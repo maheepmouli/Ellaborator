@@ -1,0 +1,2016 @@
+{
+  "generatedAt": "2026-08-02T16:24:49.432Z",
+  "source": "SharePoint Zaragoza baseline mirror → bundled JSON fallback",
+  "note": "Used when /sharepoint-data/Zaragoza is unavailable (production / Vercel).",
+  "byKpi": {
+    "kpi1.1": [],
+    "kpi1.2": [
+      {
+        "id": "zaragoza-kpi1.2-school-azua",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p1",
+        "kpiId": "kpi1.2",
+        "sourceFile": "bundled://zaragoza/Zaragoza/1. BASELINE DATA from Zaragoza/Monitoring traffic school Azua 16-10-2025.xlsx",
+        "geometryType": "point",
+        "lat": 41.63636,
+        "lng": -0.90574,
+        "geometry": [
+          [
+            41.63636,
+            -0.90574
+          ]
+        ],
+        "value": 77.48815165876776,
+        "baselineValue": 77.48815165876776,
+        "interventionValue": 81.36255924170615,
+        "comparisonValue": 3.8744075829383884,
+        "source": "School traffic monitoring — Doctor Azúa (16 Oct 2025)",
+        "method": "Peak 08:20–09:20 10-min buckets: cars, pedestrians, bikes, parking incidents.",
+        "type": "observed",
+        "spatialQuality": "inferred",
+        "geometryLinkage": "matched",
+        "temporalCoverage": "single-period",
+        "locationMethod": "pilot_area_inference",
+        "segmentId": "AYZG1-Azua",
+        "streetName": "Doctor Azúa school",
+        "spatialNote": "School peak monitoring · baseline · bundled deploy fallback",
+        "parserStatus": "ready",
+        "datasetKind": "school-monitoring",
+        "category": "Active mode share",
+        "observationCount": 422,
+        "modeBreakdown": {
+          "pre": {
+            "bike": 52,
+            "pedestrian": 275,
+            "motorised": 95,
+            "ptw": 0,
+            "total": 422
+          },
+          "post": {
+            "bike": 0,
+            "pedestrian": 0,
+            "motorised": 0,
+            "ptw": 0,
+            "total": 0
+          }
+        }
+      },
+      {
+        "id": "zaragoza-kpi1.2-school-msalas",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p1",
+        "kpiId": "kpi1.2",
+        "sourceFile": "bundled://zaragoza/Zaragoza/1. BASELINE DATA from Zaragoza/Monitoring traffic school M Salas 1-10-2025.xlsx",
+        "geometryType": "point",
+        "lat": 41.63656,
+        "lng": -0.90634,
+        "geometry": [
+          [
+            41.63656,
+            -0.90634
+          ]
+        ],
+        "value": 18.1875,
+        "baselineValue": 18.1875,
+        "interventionValue": 18.915,
+        "comparisonValue": 0.7275,
+        "source": "School traffic monitoring — Margarita Salas (1 Oct 2025)",
+        "method": "Peak-hour cars / parking / bus maneuvers at Asín y Palacios.",
+        "type": "observed",
+        "spatialQuality": "inferred",
+        "geometryLinkage": "matched",
+        "temporalCoverage": "single-period",
+        "locationMethod": "pilot_area_inference",
+        "segmentId": "AYZG1-MSalas",
+        "streetName": "Margarita Salas school",
+        "spatialNote": "School peak monitoring · baseline · bundled deploy fallback",
+        "parserStatus": "ready",
+        "datasetKind": "school-monitoring",
+        "category": "Motor share proxy",
+        "observationCount": 80,
+        "modeBreakdown": {
+          "pre": {
+            "bike": 0,
+            "pedestrian": 0,
+            "motorised": 80,
+            "ptw": 0,
+            "total": 80
+          },
+          "post": {
+            "bike": 0,
+            "pedestrian": 0,
+            "motorised": 0,
+            "ptw": 0,
+            "total": 0
+          }
+        }
+      },
+      {
+        "id": "zaragoza-kpi1.2-manual-0",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p1",
+        "kpiId": "kpi1.2",
+        "sourceFile": "bundled://zaragoza/Zaragoza/1. BASELINE DATA from Zaragoza/ManualCounting_June2025_AYZGZ1.xlsx",
+        "geometryType": "point",
+        "lat": 41.63716,
+        "lng": -0.90534,
+        "geometry": [
+          [
+            41.63716,
+            -0.90534
+          ]
+        ],
+        "value": 8,
+        "baselineValue": 100,
+        "interventionValue": 100,
+        "comparisonValue": 0,
+        "source": "Zaragoza manual counting (June 2025 baseline)",
+        "method": "Manual count sessions; pedestrian/cycle cells marked pending — motor modes only until autumn recount.",
+        "type": "derived",
+        "spatialQuality": "inferred",
+        "geometryLinkage": "matched",
+        "temporalCoverage": "single-period",
+        "locationMethod": "street_name_join",
+        "segmentId": "AYZGZ1",
+        "streetName": "C/ de Pedro III El Grande",
+        "spatialNote": "C/ de Pedro III El Grande · baseline manual count · bundled deploy fallback",
+        "parserStatus": "partial",
+        "datasetKind": "manual-count",
+        "category": "Motor volume",
+        "modeBreakdown": {
+          "pre": {
+            "bike": 0,
+            "pedestrian": 0,
+            "motorised": 66,
+            "ptw": 3,
+            "total": 66
+          },
+          "post": {
+            "bike": 0,
+            "pedestrian": 0,
+            "motorised": 0,
+            "ptw": 0,
+            "total": 0
+          }
+        }
+      },
+      {
+        "id": "zaragoza-kpi1.2-manual-1",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p1",
+        "kpiId": "kpi1.2",
+        "sourceFile": "bundled://zaragoza/Zaragoza/1. BASELINE DATA from Zaragoza/ManualCounting_June2025_AYZGZ1.xlsx",
+        "geometryType": "point",
+        "lat": 41.63606,
+        "lng": -0.90474,
+        "geometry": [
+          [
+            41.63606,
+            -0.90474
+          ]
+        ],
+        "value": 8,
+        "baselineValue": 100,
+        "interventionValue": 100,
+        "comparisonValue": 0,
+        "source": "Zaragoza manual counting (June 2025 baseline)",
+        "method": "Manual count sessions; pedestrian/cycle cells marked pending — motor modes only until autumn recount.",
+        "type": "derived",
+        "spatialQuality": "inferred",
+        "geometryLinkage": "matched",
+        "temporalCoverage": "single-period",
+        "locationMethod": "street_name_join",
+        "segmentId": "AYZGZ1",
+        "streetName": "C/ de Condes de Aragón",
+        "spatialNote": "C/ de Condes de Aragón · baseline manual count · bundled deploy fallback",
+        "parserStatus": "partial",
+        "datasetKind": "manual-count",
+        "category": "Motor volume",
+        "modeBreakdown": {
+          "pre": {
+            "bike": 0,
+            "pedestrian": 0,
+            "motorised": 74,
+            "ptw": 9,
+            "total": 74
+          },
+          "post": {
+            "bike": 0,
+            "pedestrian": 0,
+            "motorised": 0,
+            "ptw": 0,
+            "total": 0
+          }
+        }
+      },
+      {
+        "id": "zaragoza-kpi1.2-manual-2",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p1",
+        "kpiId": "kpi1.2",
+        "sourceFile": "bundled://zaragoza/Zaragoza/1. BASELINE DATA from Zaragoza/ManualCounting_June2025_AYZGZ1.xlsx",
+        "geometryType": "point",
+        "lat": 41.63656,
+        "lng": -0.90634,
+        "geometry": [
+          [
+            41.63656,
+            -0.90634
+          ]
+        ],
+        "value": 8,
+        "baselineValue": 100,
+        "interventionValue": 100,
+        "comparisonValue": 0,
+        "source": "Zaragoza manual counting (June 2025 baseline)",
+        "method": "Manual count sessions; pedestrian/cycle cells marked pending — motor modes only until autumn recount.",
+        "type": "derived",
+        "spatialQuality": "inferred",
+        "geometryLinkage": "matched",
+        "temporalCoverage": "single-period",
+        "locationMethod": "street_name_join",
+        "segmentId": "AYZGZ1",
+        "streetName": "C/ de Miguel Asín y Palacios",
+        "spatialNote": "C/ de Miguel Asín y Palacios · baseline manual count · bundled deploy fallback",
+        "parserStatus": "partial",
+        "datasetKind": "manual-count",
+        "category": "Motor volume",
+        "modeBreakdown": {
+          "pre": {
+            "bike": 0,
+            "pedestrian": 0,
+            "motorised": 90,
+            "ptw": 14,
+            "total": 90
+          },
+          "post": {
+            "bike": 0,
+            "pedestrian": 0,
+            "motorised": 0,
+            "ptw": 0,
+            "total": 0
+          }
+        }
+      },
+      {
+        "id": "zaragoza-kpi1.2-comparativa-romareda",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p2",
+        "kpiId": "kpi1.2",
+        "sourceFile": "bundled://zaragoza/Zaragoza/1. BASELINE DATA from Zaragoza/Comparativa KPIs baselime.xlsx",
+        "geometryType": "point",
+        "lat": 41.63744,
+        "lng": -0.90305,
+        "geometry": [
+          [
+            41.63744,
+            -0.90305
+          ]
+        ],
+        "value": 40,
+        "baselineValue": 40,
+        "interventionValue": 38.8,
+        "comparisonValue": -1.2,
+        "source": "Comparativa KPIs baseline — Romareda corridor",
+        "method": "Current Status aggregates · n=19 slots · mean volume 155 veh · 32.5 km/h",
+        "type": "observed",
+        "spatialQuality": "inferred",
+        "geometryLinkage": "matched",
+        "temporalCoverage": "single-period",
+        "locationMethod": "pilot_area_inference",
+        "segmentId": "AYZG2-Romareda",
+        "streetName": "Romareda corridor",
+        "spatialNote": "Traffic simulation / count baseline · bundled deploy fallback",
+        "parserStatus": "ready",
+        "datasetKind": "comparativa",
+        "category": "Traffic volume proxy",
+        "observationCount": 19,
+        "modeBreakdown": {
+          "pre": {
+            "bike": 0,
+            "pedestrian": 0,
+            "motorised": 155,
+            "ptw": 0,
+            "total": 155
+          },
+          "post": {
+            "bike": 0,
+            "pedestrian": 0,
+            "motorised": 0,
+            "ptw": 0,
+            "total": 0
+          }
+        }
+      },
+      {
+        "id": "zaragoza-kpi1.2-survey-modes",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p2",
+        "kpiId": "kpi1.2",
+        "sourceFile": "bundled://zaragoza/Zaragoza/1. BASELINE DATA from Zaragoza/RoadSafetyCitizenSurvey_BaselinePerceptionAssessment.xlsx",
+        "geometryType": "point",
+        "lat": 41.63744,
+        "lng": -0.90305,
+        "geometry": [
+          [
+            41.63744,
+            -0.90305
+          ]
+        ],
+        "value": 59.57446808510638,
+        "baselineValue": 59.57446808510638,
+        "interventionValue": 62.57446808510638,
+        "comparisonValue": 3,
+        "source": "Road safety citizen survey — usual mode",
+        "method": "47 respondents · Walking 26, Car 14, Bike 2, PT 5",
+        "type": "observed",
+        "spatialQuality": "inferred",
+        "geometryLinkage": "matched",
+        "temporalCoverage": "single-period",
+        "locationMethod": "pilot_area_inference",
+        "segmentId": "AYZG2-survey-modes",
+        "streetName": "La Romareda survey",
+        "parserStatus": "ready",
+        "datasetKind": "survey",
+        "modeBreakdown": {
+          "pre": {
+            "bike": 2,
+            "pedestrian": 26,
+            "motorised": 14,
+            "ptw": 0,
+            "total": 47
+          },
+          "post": {
+            "bike": 0,
+            "pedestrian": 0,
+            "motorised": 0,
+            "ptw": 0,
+            "total": 0
+          }
+        },
+        "spatialNote": "bundled deploy fallback"
+      }
+    ],
+    "kpi2.1": [
+      {
+        "id": "zaragoza-kpi2.1-school-azua",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p1",
+        "kpiId": "kpi2.1",
+        "sourceFile": "bundled://zaragoza/Zaragoza/1. BASELINE DATA from Zaragoza/Monitoring traffic school Azua 16-10-2025.xlsx",
+        "geometryType": "point",
+        "lat": 41.63636,
+        "lng": -0.90574,
+        "geometry": [
+          [
+            41.63636,
+            -0.90574
+          ]
+        ],
+        "value": 34,
+        "baselineValue": 34,
+        "interventionValue": 35.7,
+        "comparisonValue": 1.7000000000000002,
+        "source": "School traffic monitoring — Doctor Azúa (16 Oct 2025)",
+        "method": "Peak 08:20–09:20 10-min buckets: cars, pedestrians, bikes, parking incidents.",
+        "type": "observed",
+        "spatialQuality": "inferred",
+        "geometryLinkage": "matched",
+        "temporalCoverage": "single-period",
+        "locationMethod": "pilot_area_inference",
+        "segmentId": "AYZG1-Azua",
+        "streetName": "Doctor Azúa school",
+        "spatialNote": "School peak monitoring · baseline · bundled deploy fallback",
+        "parserStatus": "ready",
+        "datasetKind": "school-monitoring",
+        "category": "Parking conflicts",
+        "observationCount": 422,
+        "modeBreakdown": {
+          "pre": {
+            "bike": 52,
+            "pedestrian": 275,
+            "motorised": 95,
+            "ptw": 0,
+            "total": 422
+          },
+          "post": {
+            "bike": 0,
+            "pedestrian": 0,
+            "motorised": 0,
+            "ptw": 0,
+            "total": 0
+          }
+        },
+        "hazardCategories": [
+          {
+            "label": "Cars entering U",
+            "count": 91
+          },
+          {
+            "label": "Parking incidents",
+            "count": 11
+          },
+          {
+            "label": "Bus maneuvers",
+            "count": 4
+          },
+          {
+            "label": "Ped crossings",
+            "count": 275
+          }
+        ]
+      },
+      {
+        "id": "zaragoza-kpi2.1-school-msalas",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p1",
+        "kpiId": "kpi2.1",
+        "sourceFile": "bundled://zaragoza/Zaragoza/1. BASELINE DATA from Zaragoza/Monitoring traffic school M Salas 1-10-2025.xlsx",
+        "geometryType": "point",
+        "lat": 41.63656,
+        "lng": -0.90634,
+        "geometry": [
+          [
+            41.63656,
+            -0.90634
+          ]
+        ],
+        "value": 60,
+        "baselineValue": 60,
+        "interventionValue": 62.400000000000006,
+        "comparisonValue": 2.4,
+        "source": "School traffic monitoring — Margarita Salas (1 Oct 2025)",
+        "method": "Peak-hour cars / parking / bus maneuvers at Asín y Palacios.",
+        "type": "observed",
+        "spatialQuality": "inferred",
+        "geometryLinkage": "matched",
+        "temporalCoverage": "single-period",
+        "locationMethod": "pilot_area_inference",
+        "segmentId": "AYZG1-MSalas",
+        "streetName": "Margarita Salas school",
+        "spatialNote": "School peak monitoring · baseline · bundled deploy fallback",
+        "parserStatus": "ready",
+        "datasetKind": "school-monitoring",
+        "category": "Parking conflicts",
+        "observationCount": 80,
+        "modeBreakdown": {
+          "pre": {
+            "bike": 0,
+            "pedestrian": 0,
+            "motorised": 80,
+            "ptw": 0,
+            "total": 80
+          },
+          "post": {
+            "bike": 0,
+            "pedestrian": 0,
+            "motorised": 0,
+            "ptw": 0,
+            "total": 0
+          }
+        },
+        "hazardCategories": [
+          {
+            "label": "Cars entering U",
+            "count": 77
+          },
+          {
+            "label": "Parking incidents",
+            "count": 32
+          },
+          {
+            "label": "Bus maneuvers",
+            "count": 3
+          }
+        ]
+      },
+      {
+        "id": "zaragoza-kpi2.1-manual-0",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p1",
+        "kpiId": "kpi2.1",
+        "sourceFile": "bundled://zaragoza/Zaragoza/1. BASELINE DATA from Zaragoza/ManualCounting_June2025_AYZGZ1.xlsx",
+        "geometryType": "point",
+        "lat": 41.63716,
+        "lng": -0.90534,
+        "geometry": [
+          [
+            41.63716,
+            -0.90534
+          ]
+        ],
+        "value": 59.4,
+        "baselineValue": 59.4,
+        "interventionValue": 59.4,
+        "comparisonValue": 0,
+        "source": "Zaragoza manual counting (June 2025 baseline)",
+        "method": "Manual count sessions; pedestrian/cycle cells marked pending — motor modes only until autumn recount.",
+        "type": "derived",
+        "spatialQuality": "inferred",
+        "geometryLinkage": "matched",
+        "temporalCoverage": "single-period",
+        "locationMethod": "street_name_join",
+        "segmentId": "AYZGZ1",
+        "streetName": "C/ de Pedro III El Grande",
+        "spatialNote": "C/ de Pedro III El Grande · baseline manual count · bundled deploy fallback",
+        "parserStatus": "partial",
+        "datasetKind": "manual-count",
+        "category": "Motor volume",
+        "modeBreakdown": {
+          "pre": {
+            "bike": 0,
+            "pedestrian": 0,
+            "motorised": 66,
+            "ptw": 3,
+            "total": 66
+          },
+          "post": {
+            "bike": 0,
+            "pedestrian": 0,
+            "motorised": 0,
+            "ptw": 0,
+            "total": 0
+          }
+        }
+      },
+      {
+        "id": "zaragoza-kpi2.1-manual-1",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p1",
+        "kpiId": "kpi2.1",
+        "sourceFile": "bundled://zaragoza/Zaragoza/1. BASELINE DATA from Zaragoza/ManualCounting_June2025_AYZGZ1.xlsx",
+        "geometryType": "point",
+        "lat": 41.63606,
+        "lng": -0.90474,
+        "geometry": [
+          [
+            41.63606,
+            -0.90474
+          ]
+        ],
+        "value": 66.60000000000001,
+        "baselineValue": 66.60000000000001,
+        "interventionValue": 66.60000000000001,
+        "comparisonValue": 0,
+        "source": "Zaragoza manual counting (June 2025 baseline)",
+        "method": "Manual count sessions; pedestrian/cycle cells marked pending — motor modes only until autumn recount.",
+        "type": "derived",
+        "spatialQuality": "inferred",
+        "geometryLinkage": "matched",
+        "temporalCoverage": "single-period",
+        "locationMethod": "street_name_join",
+        "segmentId": "AYZGZ1",
+        "streetName": "C/ de Condes de Aragón",
+        "spatialNote": "C/ de Condes de Aragón · baseline manual count · bundled deploy fallback",
+        "parserStatus": "partial",
+        "datasetKind": "manual-count",
+        "category": "Motor volume",
+        "modeBreakdown": {
+          "pre": {
+            "bike": 0,
+            "pedestrian": 0,
+            "motorised": 74,
+            "ptw": 9,
+            "total": 74
+          },
+          "post": {
+            "bike": 0,
+            "pedestrian": 0,
+            "motorised": 0,
+            "ptw": 0,
+            "total": 0
+          }
+        }
+      },
+      {
+        "id": "zaragoza-kpi2.1-manual-2",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p1",
+        "kpiId": "kpi2.1",
+        "sourceFile": "bundled://zaragoza/Zaragoza/1. BASELINE DATA from Zaragoza/ManualCounting_June2025_AYZGZ1.xlsx",
+        "geometryType": "point",
+        "lat": 41.63656,
+        "lng": -0.90634,
+        "geometry": [
+          [
+            41.63656,
+            -0.90634
+          ]
+        ],
+        "value": 81,
+        "baselineValue": 81,
+        "interventionValue": 81,
+        "comparisonValue": 0,
+        "source": "Zaragoza manual counting (June 2025 baseline)",
+        "method": "Manual count sessions; pedestrian/cycle cells marked pending — motor modes only until autumn recount.",
+        "type": "derived",
+        "spatialQuality": "inferred",
+        "geometryLinkage": "matched",
+        "temporalCoverage": "single-period",
+        "locationMethod": "street_name_join",
+        "segmentId": "AYZGZ1",
+        "streetName": "C/ de Miguel Asín y Palacios",
+        "spatialNote": "C/ de Miguel Asín y Palacios · baseline manual count · bundled deploy fallback",
+        "parserStatus": "partial",
+        "datasetKind": "manual-count",
+        "category": "Motor volume",
+        "modeBreakdown": {
+          "pre": {
+            "bike": 0,
+            "pedestrian": 0,
+            "motorised": 90,
+            "ptw": 14,
+            "total": 90
+          },
+          "post": {
+            "bike": 0,
+            "pedestrian": 0,
+            "motorised": 0,
+            "ptw": 0,
+            "total": 0
+          }
+        }
+      },
+      {
+        "id": "zaragoza-kpi2.1-comparativa-romareda",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p2",
+        "kpiId": "kpi2.1",
+        "sourceFile": "bundled://zaragoza/Zaragoza/1. BASELINE DATA from Zaragoza/Comparativa KPIs baselime.xlsx",
+        "geometryType": "point",
+        "lat": 41.63744,
+        "lng": -0.90305,
+        "geometry": [
+          [
+            41.63744,
+            -0.90305
+          ]
+        ],
+        "value": 83.80568421052632,
+        "baselineValue": 83.80568421052632,
+        "interventionValue": 81.29151368421053,
+        "comparisonValue": -2.5141705263157896,
+        "source": "Comparativa KPIs baseline — Romareda corridor",
+        "method": "Current Status aggregates · n=19 slots · mean volume 155 veh · 32.5 km/h",
+        "type": "observed",
+        "spatialQuality": "inferred",
+        "geometryLinkage": "matched",
+        "temporalCoverage": "single-period",
+        "locationMethod": "pilot_area_inference",
+        "segmentId": "AYZG2-Romareda",
+        "streetName": "Romareda corridor",
+        "spatialNote": "Traffic simulation / count baseline · bundled deploy fallback",
+        "parserStatus": "ready",
+        "datasetKind": "comparativa",
+        "category": "Speed / V/C pressure",
+        "observationCount": 19,
+        "modeBreakdown": {
+          "pre": {
+            "bike": 0,
+            "pedestrian": 0,
+            "motorised": 155,
+            "ptw": 0,
+            "total": 155
+          },
+          "post": {
+            "bike": 0,
+            "pedestrian": 0,
+            "motorised": 0,
+            "ptw": 0,
+            "total": 0
+          }
+        }
+      },
+      {
+        "id": "zaragoza-kpi2.1-survey-elements",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p2",
+        "kpiId": "kpi2.1",
+        "sourceFile": "bundled://zaragoza/Zaragoza/1. BASELINE DATA from Zaragoza/RoadSafetyCitizenSurvey_BaselinePerceptionAssessment.xlsx",
+        "geometryType": "point",
+        "lat": 41.63744,
+        "lng": -0.90305,
+        "geometry": [
+          [
+            41.63744,
+            -0.90305
+          ]
+        ],
+        "value": 15,
+        "baselineValue": 15,
+        "source": "Road safety citizen survey — identified elements",
+        "method": "Frequency of reported street elements / hazards.",
+        "type": "observed",
+        "spatialQuality": "inferred",
+        "geometryLinkage": "matched",
+        "temporalCoverage": "single-period",
+        "locationMethod": "pilot_area_inference",
+        "segmentId": "AYZG2-survey-hazards",
+        "streetName": "La Romareda survey",
+        "parserStatus": "ready",
+        "datasetKind": "survey",
+        "hazardCategories": [
+          {
+            "label": "Accident s involving scooters",
+            "count": 15
+          },
+          {
+            "label": "Accidents involving cyclists",
+            "count": 12
+          },
+          {
+            "label": "Bike lane crossing with the sidewalk",
+            "count": 12
+          },
+          {
+            "label": "Damaged sidewalks",
+            "count": 11
+          },
+          {
+            "label": "Raised curbs",
+            "count": 6
+          },
+          {
+            "label": "Collision with pedestrians",
+            "count": 6
+          }
+        ],
+        "spatialNote": "bundled deploy fallback"
+      },
+      {
+        "id": "zaragoza-kpi2.1-mock-p3-servet-main",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p3",
+        "kpiId": "kpi2.1",
+        "sourceFile": "mock://zaragoza-pilot-gap",
+        "geometryType": "point",
+        "lat": 41.633559999999996,
+        "lng": -0.90216,
+        "geometry": [
+          [
+            41.633559999999996,
+            -0.90216
+          ]
+        ],
+        "value": 34,
+        "baselineValue": 34,
+        "interventionValue": 30.6,
+        "comparisonValue": -3.3999999999999986,
+        "source": "Mock hospital corridor speeds · AYZG3 (sensors pending)",
+        "method": "34.0 km/h mean · illustrative until traffic study feeds arrive",
+        "type": "mock",
+        "spatialQuality": "inferred",
+        "geometryLinkage": "matched",
+        "temporalCoverage": "single-period",
+        "locationMethod": "pilot_area_inference",
+        "segmentId": "AYZG3-safety-servet-main",
+        "streetName": "Av. César Augusto · hospital gate",
+        "parserStatus": "ready",
+        "datasetKind": "comparativa",
+        "category": "Hospital access safety",
+        "spatialNote": "Mock · Miguel Servet traffic management · bundled deploy fallback"
+      },
+      {
+        "id": "zaragoza-kpi2.1-mock-p3-servet-tram",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p3",
+        "kpiId": "kpi2.1",
+        "sourceFile": "mock://zaragoza-pilot-gap",
+        "geometryType": "point",
+        "lat": 41.63276,
+        "lng": -0.9013100000000001,
+        "geometry": [
+          [
+            41.63276,
+            -0.9013100000000001
+          ]
+        ],
+        "value": 28,
+        "baselineValue": 28,
+        "interventionValue": 25.2,
+        "comparisonValue": -2.8000000000000007,
+        "source": "Mock hospital corridor speeds · AYZG3 (sensors pending)",
+        "method": "28.0 km/h mean · illustrative until traffic study feeds arrive",
+        "type": "mock",
+        "spatialQuality": "inferred",
+        "geometryLinkage": "matched",
+        "temporalCoverage": "single-period",
+        "locationMethod": "pilot_area_inference",
+        "segmentId": "AYZG3-safety-servet-tram",
+        "streetName": "Tram stop · Miguel Servet",
+        "parserStatus": "ready",
+        "datasetKind": "comparativa",
+        "category": "Hospital access safety",
+        "spatialNote": "Mock · Miguel Servet traffic management · bundled deploy fallback"
+      },
+      {
+        "id": "zaragoza-kpi2.1-mock-p3-servet-side",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p3",
+        "kpiId": "kpi2.1",
+        "sourceFile": "mock://zaragoza-pilot-gap",
+        "geometryType": "point",
+        "lat": 41.63316,
+        "lng": -0.90106,
+        "geometry": [
+          [
+            41.63316,
+            -0.90106
+          ]
+        ],
+        "value": 31,
+        "baselineValue": 31,
+        "interventionValue": 27.900000000000002,
+        "comparisonValue": -3.099999999999998,
+        "source": "Mock hospital corridor speeds · AYZG3 (sensors pending)",
+        "method": "31.0 km/h mean · illustrative until traffic study feeds arrive",
+        "type": "mock",
+        "spatialQuality": "inferred",
+        "geometryLinkage": "matched",
+        "temporalCoverage": "single-period",
+        "locationMethod": "pilot_area_inference",
+        "segmentId": "AYZG3-safety-servet-side",
+        "streetName": "Hospital side access",
+        "parserStatus": "ready",
+        "datasetKind": "comparativa",
+        "category": "Hospital access safety",
+        "spatialNote": "Mock · Miguel Servet traffic management · bundled deploy fallback"
+      }
+    ],
+    "kpi3.1": [],
+    "kpi3.2": [
+      {
+        "id": "zaragoza-kpi3.2-aq-0",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p1",
+        "kpiId": "kpi3.2",
+        "sourceFile": "bundled://zaragoza/Zaragoza/1. BASELINE DATA from Zaragoza/AirQuality.xlsx",
+        "geometryType": "point",
+        "lat": 41.6369,
+        "lng": -0.9052,
+        "geometry": [
+          [
+            41.6369,
+            -0.9052
+          ]
+        ],
+        "value": 33.14829830508473,
+        "baselineValue": 33.14829830508473,
+        "interventionValue": 31.159400406779643,
+        "comparisonValue": -1.9888978983050838,
+        "source": "Nanoenvi EQ air quality (AYZGZ1)",
+        "method": "Mean of 295 Valid=Yes hours · PM2.5 5.0 µg/m³ · NO₂ 21.8 ppb · Noise 59.8 dBA",
+        "type": "observed",
+        "spatialQuality": "matched",
+        "geometryLinkage": "matched",
+        "temporalCoverage": "single-period",
+        "locationMethod": "street_name_join",
+        "segmentId": "AQ-Calle Pedro III El Grand",
+        "streetName": "Calle Pedro III El Grande nº4",
+        "spatialNote": "Air quality sensor · baseline · bundled deploy fallback",
+        "parserStatus": "ready",
+        "datasetKind": "air-quality",
+        "category": "PM2.5 / Noise",
+        "observationCount": 295,
+        "preCo2GPerHour": 496.2169491525426,
+        "postCo2GPerHour": 466.44393220339003
+      },
+      {
+        "id": "zaragoza-kpi3.2-aq-1",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p1",
+        "kpiId": "kpi3.2",
+        "sourceFile": "bundled://zaragoza/Zaragoza/1. BASELINE DATA from Zaragoza/AirQuality.xlsx",
+        "geometryType": "point",
+        "lat": 41.6365,
+        "lng": -0.9064,
+        "geometry": [
+          [
+            41.6365,
+            -0.9064
+          ]
+        ],
+        "value": 27.4775997191012,
+        "baselineValue": 27.4775997191012,
+        "interventionValue": 25.828943735955125,
+        "comparisonValue": -1.6486559831460719,
+        "source": "Nanoenvi EQ air quality (AYZGZ1)",
+        "method": "Mean of 1424 Valid=Yes hours · PM2.5 4.9 µg/m³ · NO₂ 10.7 ppb · Noise 56.1 dBA",
+        "type": "observed",
+        "spatialQuality": "matched",
+        "geometryLinkage": "matched",
+        "temporalCoverage": "single-period",
+        "locationMethod": "street_name_join",
+        "segmentId": "AQ-Calle Asín y Palacios nº",
+        "streetName": "Calle Asín y Palacios nº17",
+        "spatialNote": "Air quality sensor · baseline · bundled deploy fallback",
+        "parserStatus": "ready",
+        "datasetKind": "air-quality",
+        "category": "PM2.5 / Noise",
+        "observationCount": 1424,
+        "preCo2GPerHour": 491.21558988764076,
+        "postCo2GPerHour": 461.7426544943823
+      },
+      {
+        "id": "zaragoza-kpi3.2-mock-romareda-jerusalem",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p2",
+        "kpiId": "kpi3.2",
+        "sourceFile": "bundled://zaragoza/Zaragoza/1. BASELINE DATA from Zaragoza/Comparativa KPIs baselime.xlsx",
+        "geometryType": "point",
+        "lat": 41.63789,
+        "lng": -0.9036000000000001,
+        "geometry": [
+          [
+            41.63789,
+            -0.9036000000000001
+          ]
+        ],
+        "value": 36,
+        "baselineValue": 36,
+        "interventionValue": 33.120000000000005,
+        "comparisonValue": -2.88,
+        "source": "Mock env intensity · Romareda corridor (no Nanoenvi on AYZG2)",
+        "method": "Illustrative climate pins at Romareda pedestrian streets — Nanoenvi EQ baseline is AYZGZ1-only.",
+        "type": "mock",
+        "spatialQuality": "inferred",
+        "geometryLinkage": "matched",
+        "temporalCoverage": "single-period",
+        "locationMethod": "pilot_area_inference",
+        "segmentId": "AQ-mock-romareda-jerusalem",
+        "streetName": "Calle Jerusalén",
+        "spatialNote": "Mock AQ proxy · zar-p2 · bundled deploy fallback",
+        "parserStatus": "ready",
+        "datasetKind": "air-quality",
+        "category": "Env intensity mock",
+        "observationCount": 1,
+        "preCo2GPerHour": 432,
+        "postCo2GPerHour": 396
+      },
+      {
+        "id": "zaragoza-kpi3.2-mock-romareda-eduardo",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p2",
+        "kpiId": "kpi3.2",
+        "sourceFile": "bundled://zaragoza/Zaragoza/1. BASELINE DATA from Zaragoza/Comparativa KPIs baselime.xlsx",
+        "geometryType": "point",
+        "lat": 41.63709,
+        "lng": -0.9025500000000001,
+        "geometry": [
+          [
+            41.63709,
+            -0.9025500000000001
+          ]
+        ],
+        "value": 41,
+        "baselineValue": 41,
+        "interventionValue": 37.72,
+        "comparisonValue": -3.2800000000000002,
+        "source": "Mock env intensity · Romareda corridor (no Nanoenvi on AYZG2)",
+        "method": "Illustrative climate pins at Romareda pedestrian streets — Nanoenvi EQ baseline is AYZGZ1-only.",
+        "type": "mock",
+        "spatialQuality": "inferred",
+        "geometryLinkage": "matched",
+        "temporalCoverage": "single-period",
+        "locationMethod": "pilot_area_inference",
+        "segmentId": "AQ-mock-romareda-eduardo",
+        "streetName": "Calle Eduardo Ibarra",
+        "spatialNote": "Mock AQ proxy · zar-p2 · bundled deploy fallback",
+        "parserStatus": "ready",
+        "datasetKind": "air-quality",
+        "category": "Env intensity mock",
+        "observationCount": 1,
+        "preCo2GPerHour": 492,
+        "postCo2GPerHour": 451
+      }
+    ],
+    "kpi4.1": [
+      {
+        "id": "zaragoza-kpi4.1-aq-site-0",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p1",
+        "kpiId": "kpi4.1",
+        "sourceFile": "bundled://zaragoza/Zaragoza/1. BASELINE DATA from Zaragoza/AirQuality.xlsx",
+        "geometryType": "point",
+        "lat": 41.6369,
+        "lng": -0.9052,
+        "geometry": [
+          [
+            41.6369,
+            -0.9052
+          ]
+        ],
+        "value": 69.85170169491528,
+        "baselineValue": 66.85170169491528,
+        "interventionValue": 69.85170169491528,
+        "comparisonValue": 3,
+        "source": "Mock satisfaction at Nanoenvi EQ sites (AYZGZ1)",
+        "method": "Pinned to AQ location · mock satisfaction from env intensity · n=295 hours",
+        "type": "mock",
+        "spatialQuality": "matched",
+        "geometryLinkage": "matched",
+        "temporalCoverage": "single-period",
+        "locationMethod": "street_name_join",
+        "segmentId": "SAT-Calle Pedro III El Grand",
+        "streetName": "Calle Pedro III El Grande nº4",
+        "spatialNote": "Mock survey pin at Nanoenvi AQ site · bundled deploy fallback",
+        "parserStatus": "ready",
+        "datasetKind": "survey",
+        "likertLabel": "User satisfaction",
+        "category": "Satisfaction mock",
+        "observationCount": 295
+      },
+      {
+        "id": "zaragoza-kpi4.1-aq-site-1",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p1",
+        "kpiId": "kpi4.1",
+        "sourceFile": "bundled://zaragoza/Zaragoza/1. BASELINE DATA from Zaragoza/AirQuality.xlsx",
+        "geometryType": "point",
+        "lat": 41.6365,
+        "lng": -0.9064,
+        "geometry": [
+          [
+            41.6365,
+            -0.9064
+          ]
+        ],
+        "value": 75.52240028089881,
+        "baselineValue": 72.52240028089881,
+        "interventionValue": 75.52240028089881,
+        "comparisonValue": 3,
+        "source": "Mock satisfaction at Nanoenvi EQ sites (AYZGZ1)",
+        "method": "Pinned to AQ location · mock satisfaction from env intensity · n=1424 hours",
+        "type": "mock",
+        "spatialQuality": "matched",
+        "geometryLinkage": "matched",
+        "temporalCoverage": "single-period",
+        "locationMethod": "street_name_join",
+        "segmentId": "SAT-Calle Asín y Palacios nº",
+        "streetName": "Calle Asín y Palacios nº17",
+        "spatialNote": "Mock survey pin at Nanoenvi AQ site · bundled deploy fallback",
+        "parserStatus": "ready",
+        "datasetKind": "survey",
+        "likertLabel": "User satisfaction",
+        "category": "Satisfaction mock",
+        "observationCount": 1424
+      },
+      {
+        "id": "zaragoza-kpi4.1-survey-willingness",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p2",
+        "kpiId": "kpi4.1",
+        "sourceFile": "bundled://zaragoza/Zaragoza/1. BASELINE DATA from Zaragoza/RoadSafetyCitizenSurvey_BaselinePerceptionAssessment.xlsx",
+        "geometryType": "point",
+        "lat": 41.63744,
+        "lng": -0.90305,
+        "geometry": [
+          [
+            41.63744,
+            -0.90305
+          ]
+        ],
+        "value": 61.951219512195124,
+        "baselineValue": 61.951219512195124,
+        "interventionValue": 65.95121951219512,
+        "comparisonValue": 4,
+        "source": "Road safety citizen survey — bike-lane willingness",
+        "method": "Likert willingness mean · n=41",
+        "type": "observed",
+        "spatialQuality": "inferred",
+        "geometryLinkage": "matched",
+        "temporalCoverage": "single-period",
+        "locationMethod": "pilot_area_inference",
+        "segmentId": "AYZG2-survey-sat",
+        "streetName": "La Romareda survey",
+        "parserStatus": "ready",
+        "datasetKind": "survey",
+        "likertLabel": "Bike-lane willingness",
+        "spatialNote": "bundled deploy fallback"
+      },
+      {
+        "id": "zaragoza-kpi4.1-barriers",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p2",
+        "kpiId": "kpi4.1",
+        "sourceFile": "bundled://zaragoza/Zaragoza/1. BASELINE DATA from Zaragoza/ELABORATOR_Survey on the identification of Barriers and Ctizen Expectations.xlsx",
+        "geometryType": "point",
+        "lat": 41.63744,
+        "lng": -0.90305,
+        "geometry": [
+          [
+            41.63744,
+            -0.90305
+          ]
+        ],
+        "value": 66.66666666666667,
+        "baselineValue": 66.66666666666667,
+        "interventionValue": 71.66666666666667,
+        "comparisonValue": 5,
+        "source": "Barriers and citizen expectations survey",
+        "method": "Org satisfaction mean 6.7/10 · n=6",
+        "type": "observed",
+        "spatialQuality": "inferred",
+        "geometryLinkage": "matched",
+        "temporalCoverage": "single-period",
+        "locationMethod": "pilot_area_inference",
+        "segmentId": "AYZG2-barriers",
+        "streetName": "Romareda stakeholders",
+        "parserStatus": "ready",
+        "datasetKind": "survey",
+        "likertLabel": "Satisfaction 6.7/10",
+        "spatialNote": "bundled deploy fallback"
+      }
+    ],
+    "kpi4.2": [
+      {
+        "id": "zaragoza-kpi4.2-zar-a11y-curb-ramp-asin",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p1",
+        "kpiId": "kpi4.2",
+        "sourceFile": "bundled://zaragoza/Zaragoza/1. BASELINE DATA from Zaragoza/AirQuality.xlsx",
+        "geometryType": "point",
+        "lat": 41.6369,
+        "lng": -0.9052,
+        "geometry": [
+          [
+            41.6369,
+            -0.9052
+          ]
+        ],
+        "value": 72,
+        "baselineValue": 62,
+        "interventionValue": 72,
+        "comparisonValue": 10,
+        "source": "Mock accessibility features · AYZG1 school corridor",
+        "method": "Baseline accessibility asset (present before intervention)",
+        "type": "mock",
+        "spatialQuality": "matched",
+        "geometryLinkage": "matched",
+        "temporalCoverage": "single-period",
+        "locationMethod": "street_name_join",
+        "segmentId": "zar-a11y-curb-ramp-asin",
+        "streetName": "Curb ramp · school gate",
+        "spatialNote": "existing · near Calle · bundled deploy fallback",
+        "parserStatus": "ready",
+        "datasetKind": "accessibility",
+        "category": "Accessibility",
+        "facilityCategory": "accessibility",
+        "likertLabel": "Curb ramp · school gate",
+        "status": "existing",
+        "featureStatus": "existing"
+      },
+      {
+        "id": "zaragoza-kpi4.2-zar-a11y-crossing-pedro",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p1",
+        "kpiId": "kpi4.2",
+        "sourceFile": "bundled://zaragoza/Zaragoza/1. BASELINE DATA from Zaragoza/AirQuality.xlsx",
+        "geometryType": "point",
+        "lat": 41.6365,
+        "lng": -0.9064,
+        "geometry": [
+          [
+            41.6365,
+            -0.9064
+          ]
+        ],
+        "value": 70,
+        "baselineValue": 58,
+        "interventionValue": 70,
+        "comparisonValue": 12,
+        "source": "Mock accessibility features · AYZG1 school corridor",
+        "method": "Baseline accessibility asset (present before intervention)",
+        "type": "mock",
+        "spatialQuality": "matched",
+        "geometryLinkage": "matched",
+        "temporalCoverage": "single-period",
+        "locationMethod": "street_name_join",
+        "segmentId": "zar-a11y-crossing-pedro",
+        "streetName": "Accessible crossing",
+        "spatialNote": "existing · near Calle · bundled deploy fallback",
+        "parserStatus": "ready",
+        "datasetKind": "accessibility",
+        "category": "Accessibility",
+        "facilityCategory": "accessibility",
+        "likertLabel": "Accessible crossing",
+        "status": "existing",
+        "featureStatus": "existing"
+      },
+      {
+        "id": "zaragoza-kpi4.2-zar-a11y-tactile-kissgo",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p1",
+        "kpiId": "kpi4.2",
+        "sourceFile": "bundled://zaragoza/Zaragoza/1. BASELINE DATA from Zaragoza/AirQuality.xlsx",
+        "geometryType": "point",
+        "lat": 41.637179999999994,
+        "lng": -0.90478,
+        "geometry": [
+          [
+            41.637179999999994,
+            -0.90478
+          ]
+        ],
+        "value": 78,
+        "baselineValue": 0,
+        "interventionValue": 78,
+        "comparisonValue": 78,
+        "source": "Mock accessibility features · AYZG1 school corridor",
+        "method": "Post-intervention accessibility asset (shown in intervention scenario)",
+        "type": "mock",
+        "spatialQuality": "matched",
+        "geometryLinkage": "matched",
+        "temporalCoverage": "single-period",
+        "locationMethod": "street_name_join",
+        "segmentId": "zar-a11y-tactile-kissgo",
+        "streetName": "Tactile paving · Kiss&Go",
+        "spatialNote": "post-intervention · near Calle · bundled deploy fallback",
+        "parserStatus": "ready",
+        "datasetKind": "accessibility",
+        "category": "Accessibility",
+        "facilityCategory": "accessibility",
+        "likertLabel": "Tactile paving · Kiss&Go",
+        "status": "post-intervention",
+        "featureStatus": "post-intervention"
+      },
+      {
+        "id": "zaragoza-kpi4.2-zar-a11y-dropoff-bay",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p1",
+        "kpiId": "kpi4.2",
+        "sourceFile": "bundled://zaragoza/Zaragoza/1. BASELINE DATA from Zaragoza/AirQuality.xlsx",
+        "geometryType": "point",
+        "lat": 41.63628,
+        "lng": -0.90678,
+        "geometry": [
+          [
+            41.63628,
+            -0.90678
+          ]
+        ],
+        "value": 74,
+        "baselineValue": 0,
+        "interventionValue": 74,
+        "comparisonValue": 74,
+        "source": "Mock accessibility features · AYZG1 school corridor",
+        "method": "Post-intervention accessibility asset (shown in intervention scenario)",
+        "type": "mock",
+        "spatialQuality": "matched",
+        "geometryLinkage": "matched",
+        "temporalCoverage": "single-period",
+        "locationMethod": "street_name_join",
+        "segmentId": "zar-a11y-dropoff-bay",
+        "streetName": "Level drop-off bay",
+        "spatialNote": "post-intervention · near Calle · bundled deploy fallback",
+        "parserStatus": "ready",
+        "datasetKind": "accessibility",
+        "category": "Accessibility",
+        "facilityCategory": "accessibility",
+        "likertLabel": "Level drop-off bay",
+        "status": "post-intervention",
+        "featureStatus": "post-intervention"
+      },
+      {
+        "id": "zaragoza-kpi4.2-survey-0",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p2",
+        "kpiId": "kpi4.2",
+        "sourceFile": "bundled://zaragoza/Zaragoza/1. BASELINE DATA from Zaragoza/RoadSafetyCitizenSurvey_BaselinePerceptionAssessment.xlsx",
+        "geometryType": "point",
+        "lat": 41.636897,
+        "lng": -0.903542,
+        "geometry": [
+          [
+            41.636897,
+            -0.903542
+          ]
+        ],
+        "value": 70,
+        "baselineValue": 70,
+        "interventionValue": 74,
+        "comparisonValue": 4,
+        "source": "Road safety citizen survey — accessibility grade",
+        "method": "Self-reported accessibility grade 1–10 within La Romareda.",
+        "type": "observed",
+        "spatialQuality": "exact",
+        "geometryLinkage": "exact",
+        "temporalCoverage": "single-period",
+        "locationMethod": "coordinates",
+        "segmentId": "survey-0",
+        "streetName": "La Romareda",
+        "spatialNote": "Citizen survey pin · bundled deploy fallback",
+        "parserStatus": "ready",
+        "datasetKind": "survey",
+        "category": "Insufficient parking spaces",
+        "likertLabel": "Grade 7"
+      },
+      {
+        "id": "zaragoza-kpi4.2-survey-1",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p2",
+        "kpiId": "kpi4.2",
+        "sourceFile": "bundled://zaragoza/Zaragoza/1. BASELINE DATA from Zaragoza/RoadSafetyCitizenSurvey_BaselinePerceptionAssessment.xlsx",
+        "geometryType": "point",
+        "lat": 41.636897,
+        "lng": -0.903542,
+        "geometry": [
+          [
+            41.636897,
+            -0.903542
+          ]
+        ],
+        "value": 60,
+        "baselineValue": 60,
+        "interventionValue": 64,
+        "comparisonValue": 4,
+        "source": "Road safety citizen survey — accessibility grade",
+        "method": "Self-reported accessibility grade 1–10 within La Romareda.",
+        "type": "observed",
+        "spatialQuality": "exact",
+        "geometryLinkage": "exact",
+        "temporalCoverage": "single-period",
+        "locationMethod": "coordinates",
+        "segmentId": "survey-1",
+        "streetName": "La Romareda",
+        "spatialNote": "Citizen survey pin · bundled deploy fallback",
+        "parserStatus": "ready",
+        "datasetKind": "survey",
+        "category": "Damaged sidewalks",
+        "likertLabel": "Grade 6"
+      },
+      {
+        "id": "zaragoza-kpi4.2-survey-2",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p2",
+        "kpiId": "kpi4.2",
+        "sourceFile": "bundled://zaragoza/Zaragoza/1. BASELINE DATA from Zaragoza/RoadSafetyCitizenSurvey_BaselinePerceptionAssessment.xlsx",
+        "geometryType": "point",
+        "lat": 41.636897,
+        "lng": -0.903542,
+        "geometry": [
+          [
+            41.636897,
+            -0.903542
+          ]
+        ],
+        "value": 80,
+        "baselineValue": 80,
+        "interventionValue": 84,
+        "comparisonValue": 4,
+        "source": "Road safety citizen survey — accessibility grade",
+        "method": "Self-reported accessibility grade 1–10 within La Romareda.",
+        "type": "observed",
+        "spatialQuality": "exact",
+        "geometryLinkage": "exact",
+        "temporalCoverage": "single-period",
+        "locationMethod": "coordinates",
+        "segmentId": "survey-2",
+        "streetName": "La Romareda",
+        "spatialNote": "Citizen survey pin · bundled deploy fallback",
+        "parserStatus": "ready",
+        "datasetKind": "survey",
+        "category": "Raised curbs",
+        "likertLabel": "Grade 8"
+      },
+      {
+        "id": "zaragoza-kpi4.2-survey-44",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p2",
+        "kpiId": "kpi4.2",
+        "sourceFile": "bundled://zaragoza/Zaragoza/1. BASELINE DATA from Zaragoza/RoadSafetyCitizenSurvey_BaselinePerceptionAssessment.xlsx",
+        "geometryType": "point",
+        "lat": 41.6358238185361,
+        "lng": -0.900563375639878,
+        "geometry": [
+          [
+            41.6358238185361,
+            -0.900563375639878
+          ]
+        ],
+        "value": 70,
+        "baselineValue": 70,
+        "interventionValue": 74,
+        "comparisonValue": 4,
+        "source": "Road safety citizen survey — accessibility grade",
+        "method": "Self-reported accessibility grade 1–10 within La Romareda.",
+        "type": "observed",
+        "spatialQuality": "exact",
+        "geometryLinkage": "exact",
+        "temporalCoverage": "single-period",
+        "locationMethod": "coordinates",
+        "segmentId": "survey-44",
+        "streetName": "La Romareda",
+        "spatialNote": "Citizen survey pin · bundled deploy fallback",
+        "parserStatus": "ready",
+        "datasetKind": "survey",
+        "category": "Accidents involving cyclists",
+        "likertLabel": "Grade 7"
+      },
+      {
+        "id": "zaragoza-kpi4.2-survey-80",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p2",
+        "kpiId": "kpi4.2",
+        "sourceFile": "bundled://zaragoza/Zaragoza/1. BASELINE DATA from Zaragoza/RoadSafetyCitizenSurvey_BaselinePerceptionAssessment.xlsx",
+        "geometryType": "point",
+        "lat": 41.6365839999993,
+        "lng": -0.903015999999985,
+        "geometry": [
+          [
+            41.6365839999993,
+            -0.903015999999985
+          ]
+        ],
+        "value": 50,
+        "baselineValue": 50,
+        "interventionValue": 54,
+        "comparisonValue": 4,
+        "source": "Road safety citizen survey — accessibility grade",
+        "method": "Self-reported accessibility grade 1–10 within La Romareda.",
+        "type": "observed",
+        "spatialQuality": "exact",
+        "geometryLinkage": "exact",
+        "temporalCoverage": "single-period",
+        "locationMethod": "coordinates",
+        "segmentId": "survey-80",
+        "streetName": "La Romareda",
+        "spatialNote": "Citizen survey pin · bundled deploy fallback",
+        "parserStatus": "ready",
+        "datasetKind": "survey",
+        "category": "Access grade",
+        "likertLabel": "Grade 5"
+      },
+      {
+        "id": "zaragoza-kpi4.2-survey-81",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p2",
+        "kpiId": "kpi4.2",
+        "sourceFile": "bundled://zaragoza/Zaragoza/1. BASELINE DATA from Zaragoza/RoadSafetyCitizenSurvey_BaselinePerceptionAssessment.xlsx",
+        "geometryType": "point",
+        "lat": 41.6367788011586,
+        "lng": -0.905044796890236,
+        "geometry": [
+          [
+            41.6367788011586,
+            -0.905044796890236
+          ]
+        ],
+        "value": 50,
+        "baselineValue": 50,
+        "interventionValue": 54,
+        "comparisonValue": 4,
+        "source": "Road safety citizen survey — accessibility grade",
+        "method": "Self-reported accessibility grade 1–10 within La Romareda.",
+        "type": "observed",
+        "spatialQuality": "exact",
+        "geometryLinkage": "exact",
+        "temporalCoverage": "single-period",
+        "locationMethod": "coordinates",
+        "segmentId": "survey-81",
+        "streetName": "La Romareda",
+        "spatialNote": "Citizen survey pin · bundled deploy fallback",
+        "parserStatus": "ready",
+        "datasetKind": "survey",
+        "category": "Damaged sidewalks",
+        "likertLabel": "Grade 5"
+      },
+      {
+        "id": "zaragoza-kpi4.2-survey-90",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p2",
+        "kpiId": "kpi4.2",
+        "sourceFile": "bundled://zaragoza/Zaragoza/1. BASELINE DATA from Zaragoza/RoadSafetyCitizenSurvey_BaselinePerceptionAssessment.xlsx",
+        "geometryType": "point",
+        "lat": 41.6366356047729,
+        "lng": -0.903407272859195,
+        "geometry": [
+          [
+            41.6366356047729,
+            -0.903407272859195
+          ]
+        ],
+        "value": 70,
+        "baselineValue": 70,
+        "interventionValue": 74,
+        "comparisonValue": 4,
+        "source": "Road safety citizen survey — accessibility grade",
+        "method": "Self-reported accessibility grade 1–10 within La Romareda.",
+        "type": "observed",
+        "spatialQuality": "exact",
+        "geometryLinkage": "exact",
+        "temporalCoverage": "single-period",
+        "locationMethod": "coordinates",
+        "segmentId": "survey-90",
+        "streetName": "La Romareda",
+        "spatialNote": "Citizen survey pin · bundled deploy fallback",
+        "parserStatus": "ready",
+        "datasetKind": "survey",
+        "category": "Access grade",
+        "likertLabel": "Grade 7"
+      },
+      {
+        "id": "zaragoza-kpi4.2-survey-91",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p2",
+        "kpiId": "kpi4.2",
+        "sourceFile": "bundled://zaragoza/Zaragoza/1. BASELINE DATA from Zaragoza/RoadSafetyCitizenSurvey_BaselinePerceptionAssessment.xlsx",
+        "geometryType": "point",
+        "lat": 41.6365839999993,
+        "lng": -0.903015999999985,
+        "geometry": [
+          [
+            41.6365839999993,
+            -0.903015999999985
+          ]
+        ],
+        "value": 90,
+        "baselineValue": 90,
+        "interventionValue": 94,
+        "comparisonValue": 4,
+        "source": "Road safety citizen survey — accessibility grade",
+        "method": "Self-reported accessibility grade 1–10 within La Romareda.",
+        "type": "observed",
+        "spatialQuality": "exact",
+        "geometryLinkage": "exact",
+        "temporalCoverage": "single-period",
+        "locationMethod": "coordinates",
+        "segmentId": "survey-91",
+        "streetName": "La Romareda",
+        "spatialNote": "Citizen survey pin · bundled deploy fallback",
+        "parserStatus": "ready",
+        "datasetKind": "survey",
+        "category": "Accidents involving cyclists-pedestrians caused by temporary rerouting",
+        "likertLabel": "Grade 9"
+      },
+      {
+        "id": "zaragoza-kpi4.2-survey-95",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p2",
+        "kpiId": "kpi4.2",
+        "sourceFile": "bundled://zaragoza/Zaragoza/1. BASELINE DATA from Zaragoza/RoadSafetyCitizenSurvey_BaselinePerceptionAssessment.xlsx",
+        "geometryType": "point",
+        "lat": 41.6365839999993,
+        "lng": -0.903015999999985,
+        "geometry": [
+          [
+            41.6365839999993,
+            -0.903015999999985
+          ]
+        ],
+        "value": 80,
+        "baselineValue": 80,
+        "interventionValue": 84,
+        "comparisonValue": 4,
+        "source": "Road safety citizen survey — accessibility grade",
+        "method": "Self-reported accessibility grade 1–10 within La Romareda.",
+        "type": "observed",
+        "spatialQuality": "exact",
+        "geometryLinkage": "exact",
+        "temporalCoverage": "single-period",
+        "locationMethod": "coordinates",
+        "segmentId": "survey-95",
+        "streetName": "La Romareda",
+        "spatialNote": "Citizen survey pin · bundled deploy fallback",
+        "parserStatus": "ready",
+        "datasetKind": "survey",
+        "category": "Access grade",
+        "likertLabel": "Grade 8"
+      },
+      {
+        "id": "zaragoza-kpi4.2-survey-96",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p2",
+        "kpiId": "kpi4.2",
+        "sourceFile": "bundled://zaragoza/Zaragoza/1. BASELINE DATA from Zaragoza/RoadSafetyCitizenSurvey_BaselinePerceptionAssessment.xlsx",
+        "geometryType": "point",
+        "lat": 41.6417916770057,
+        "lng": -0.908890019882574,
+        "geometry": [
+          [
+            41.6417916770057,
+            -0.908890019882574
+          ]
+        ],
+        "value": 80,
+        "baselineValue": 80,
+        "interventionValue": 84,
+        "comparisonValue": 4,
+        "source": "Road safety citizen survey — accessibility grade",
+        "method": "Self-reported accessibility grade 1–10 within La Romareda.",
+        "type": "observed",
+        "spatialQuality": "exact",
+        "geometryLinkage": "exact",
+        "temporalCoverage": "single-period",
+        "locationMethod": "coordinates",
+        "segmentId": "survey-96",
+        "streetName": "La Romareda",
+        "spatialNote": "Citizen survey pin · bundled deploy fallback",
+        "parserStatus": "ready",
+        "datasetKind": "survey",
+        "category": "Bike lane crossing with the sidewalk",
+        "likertLabel": "Grade 8"
+      },
+      {
+        "id": "zaragoza-kpi4.2-survey-98",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p2",
+        "kpiId": "kpi4.2",
+        "sourceFile": "bundled://zaragoza/Zaragoza/1. BASELINE DATA from Zaragoza/RoadSafetyCitizenSurvey_BaselinePerceptionAssessment.xlsx",
+        "geometryType": "point",
+        "lat": 41.6356840151976,
+        "lng": -0.905988843976525,
+        "geometry": [
+          [
+            41.6356840151976,
+            -0.905988843976525
+          ]
+        ],
+        "value": 60,
+        "baselineValue": 60,
+        "interventionValue": 64,
+        "comparisonValue": 4,
+        "source": "Road safety citizen survey — accessibility grade",
+        "method": "Self-reported accessibility grade 1–10 within La Romareda.",
+        "type": "observed",
+        "spatialQuality": "exact",
+        "geometryLinkage": "exact",
+        "temporalCoverage": "single-period",
+        "locationMethod": "coordinates",
+        "segmentId": "survey-98",
+        "streetName": "La Romareda",
+        "spatialNote": "Citizen survey pin · bundled deploy fallback",
+        "parserStatus": "ready",
+        "datasetKind": "survey",
+        "category": "Poor visibility and lack of traffic control at a school-related pedestrian crossing",
+        "likertLabel": "Grade 6"
+      },
+      {
+        "id": "zaragoza-kpi4.2-survey-104",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p2",
+        "kpiId": "kpi4.2",
+        "sourceFile": "bundled://zaragoza/Zaragoza/1. BASELINE DATA from Zaragoza/RoadSafetyCitizenSurvey_BaselinePerceptionAssessment.xlsx",
+        "geometryType": "point",
+        "lat": 41.6368264348445,
+        "lng": -0.904866834628159,
+        "geometry": [
+          [
+            41.6368264348445,
+            -0.904866834628159
+          ]
+        ],
+        "value": 90,
+        "baselineValue": 90,
+        "interventionValue": 94,
+        "comparisonValue": 4,
+        "source": "Road safety citizen survey — accessibility grade",
+        "method": "Self-reported accessibility grade 1–10 within La Romareda.",
+        "type": "observed",
+        "spatialQuality": "exact",
+        "geometryLinkage": "exact",
+        "temporalCoverage": "single-period",
+        "locationMethod": "coordinates",
+        "segmentId": "survey-104",
+        "streetName": "La Romareda",
+        "spatialNote": "Citizen survey pin · bundled deploy fallback",
+        "parserStatus": "ready",
+        "datasetKind": "survey",
+        "category": "Accidents involving cyclists",
+        "likertLabel": "Grade 9"
+      },
+      {
+        "id": "zaragoza-kpi4.2-survey-110",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p2",
+        "kpiId": "kpi4.2",
+        "sourceFile": "bundled://zaragoza/Zaragoza/1. BASELINE DATA from Zaragoza/RoadSafetyCitizenSurvey_BaselinePerceptionAssessment.xlsx",
+        "geometryType": "point",
+        "lat": 41.6333613324777,
+        "lng": -0.903643351604811,
+        "geometry": [
+          [
+            41.6333613324777,
+            -0.903643351604811
+          ]
+        ],
+        "value": 60,
+        "baselineValue": 60,
+        "interventionValue": 64,
+        "comparisonValue": 4,
+        "source": "Road safety citizen survey — accessibility grade",
+        "method": "Self-reported accessibility grade 1–10 within La Romareda.",
+        "type": "observed",
+        "spatialQuality": "exact",
+        "geometryLinkage": "exact",
+        "temporalCoverage": "single-period",
+        "locationMethod": "coordinates",
+        "segmentId": "survey-110",
+        "streetName": "La Romareda",
+        "spatialNote": "Citizen survey pin · bundled deploy fallback",
+        "parserStatus": "ready",
+        "datasetKind": "survey",
+        "category": "Accident s involving scooters",
+        "likertLabel": "Grade 6"
+      },
+      {
+        "id": "zaragoza-kpi4.2-survey-111",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p2",
+        "kpiId": "kpi4.2",
+        "sourceFile": "bundled://zaragoza/Zaragoza/1. BASELINE DATA from Zaragoza/RoadSafetyCitizenSurvey_BaselinePerceptionAssessment.xlsx",
+        "geometryType": "point",
+        "lat": 41.6341837894808,
+        "lng": -0.90463808404869,
+        "geometry": [
+          [
+            41.6341837894808,
+            -0.90463808404869
+          ]
+        ],
+        "value": 70,
+        "baselineValue": 70,
+        "interventionValue": 74,
+        "comparisonValue": 4,
+        "source": "Road safety citizen survey — accessibility grade",
+        "method": "Self-reported accessibility grade 1–10 within La Romareda.",
+        "type": "observed",
+        "spatialQuality": "exact",
+        "geometryLinkage": "exact",
+        "temporalCoverage": "single-period",
+        "locationMethod": "coordinates",
+        "segmentId": "survey-111",
+        "streetName": "La Romareda",
+        "spatialNote": "Citizen survey pin · bundled deploy fallback",
+        "parserStatus": "ready",
+        "datasetKind": "survey",
+        "category": "Damaged sidewalks",
+        "likertLabel": "Grade 7"
+      },
+      {
+        "id": "zaragoza-kpi4.2-barriers",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p2",
+        "kpiId": "kpi4.2",
+        "sourceFile": "bundled://zaragoza/Zaragoza/1. BASELINE DATA from Zaragoza/ELABORATOR_Survey on the identification of Barriers and Ctizen Expectations.xlsx",
+        "geometryType": "point",
+        "lat": 41.63744,
+        "lng": -0.90305,
+        "geometry": [
+          [
+            41.63744,
+            -0.90305
+          ]
+        ],
+        "value": 66.66666666666667,
+        "baselineValue": 66.66666666666667,
+        "interventionValue": 71.66666666666667,
+        "comparisonValue": 5,
+        "source": "Barriers and citizen expectations survey",
+        "method": "Org satisfaction mean 6.7/10 · n=6",
+        "type": "observed",
+        "spatialQuality": "inferred",
+        "geometryLinkage": "matched",
+        "temporalCoverage": "single-period",
+        "locationMethod": "pilot_area_inference",
+        "segmentId": "AYZG2-barriers",
+        "streetName": "Romareda stakeholders",
+        "parserStatus": "ready",
+        "datasetKind": "survey",
+        "likertLabel": "Satisfaction 6.7/10",
+        "spatialNote": "bundled deploy fallback"
+      },
+      {
+        "id": "zaragoza-kpi4.2-barriers-hospital",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p3",
+        "kpiId": "kpi4.2",
+        "sourceFile": "bundled://zaragoza/Zaragoza/1. BASELINE DATA from Zaragoza/ELABORATOR_Survey on the identification of Barriers and Ctizen Expectations.xlsx",
+        "geometryType": "point",
+        "lat": 41.63301,
+        "lng": -0.90181,
+        "geometry": [
+          [
+            41.63301,
+            -0.90181
+          ]
+        ],
+        "value": 58.66666666666667,
+        "baselineValue": 66.66666666666667,
+        "interventionValue": 71.66666666666667,
+        "comparisonValue": 5,
+        "source": "Barriers survey — Miguel Servet / hospital themes",
+        "method": "5 responses mention hospital access issues",
+        "type": "observed",
+        "spatialQuality": "inferred",
+        "geometryLinkage": "matched",
+        "temporalCoverage": "single-period",
+        "locationMethod": "pilot_area_inference",
+        "segmentId": "AYZG3-barriers",
+        "streetName": "Miguel Servet Hospital",
+        "parserStatus": "ready",
+        "datasetKind": "survey",
+        "likertLabel": "Satisfaction 6.7/10",
+        "category": "Hospital access",
+        "spatialNote": "bundled deploy fallback"
+      },
+      {
+        "id": "zaragoza-kpi4.2-mock-p3-hosp-ramp",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p3",
+        "kpiId": "kpi4.2",
+        "sourceFile": "mock://zaragoza-pilot-gap",
+        "geometryType": "point",
+        "lat": 41.63341,
+        "lng": -0.90226,
+        "geometry": [
+          [
+            41.63341,
+            -0.90226
+          ]
+        ],
+        "value": 68,
+        "baselineValue": 58,
+        "interventionValue": 68,
+        "comparisonValue": 10,
+        "source": "Mock accessibility · AYZG3 Miguel Servet",
+        "method": "Baseline hospital-access asset (mock inventory)",
+        "type": "mock",
+        "spatialQuality": "inferred",
+        "geometryLinkage": "matched",
+        "temporalCoverage": "single-period",
+        "locationMethod": "pilot_area_inference",
+        "segmentId": "zar-p3-a11y-hosp-ramp",
+        "streetName": "Curb ramp · main entrance",
+        "parserStatus": "ready",
+        "datasetKind": "accessibility",
+        "category": "Accessibility",
+        "facilityCategory": "accessibility",
+        "status": "existing",
+        "featureStatus": "existing",
+        "likertLabel": "Curb ramp · main entrance",
+        "spatialNote": "bundled deploy fallback"
+      },
+      {
+        "id": "zaragoza-kpi4.2-mock-p3-hosp-crossing",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p3",
+        "kpiId": "kpi4.2",
+        "sourceFile": "mock://zaragoza-pilot-gap",
+        "geometryType": "point",
+        "lat": 41.63266,
+        "lng": -0.90141,
+        "geometry": [
+          [
+            41.63266,
+            -0.90141
+          ]
+        ],
+        "value": 66,
+        "baselineValue": 54,
+        "interventionValue": 66,
+        "comparisonValue": 12,
+        "source": "Mock accessibility · AYZG3 Miguel Servet",
+        "method": "Baseline hospital-access asset (mock inventory)",
+        "type": "mock",
+        "spatialQuality": "inferred",
+        "geometryLinkage": "matched",
+        "temporalCoverage": "single-period",
+        "locationMethod": "pilot_area_inference",
+        "segmentId": "zar-p3-a11y-hosp-crossing",
+        "streetName": "Accessible crossing · tram",
+        "parserStatus": "ready",
+        "datasetKind": "accessibility",
+        "category": "Accessibility",
+        "facilityCategory": "accessibility",
+        "status": "existing",
+        "featureStatus": "existing",
+        "likertLabel": "Accessible crossing · tram",
+        "spatialNote": "bundled deploy fallback"
+      },
+      {
+        "id": "zaragoza-kpi4.2-mock-p3-hosp-tactile",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p3",
+        "kpiId": "kpi4.2",
+        "sourceFile": "mock://zaragoza-pilot-gap",
+        "geometryType": "point",
+        "lat": 41.63321,
+        "lng": -0.90126,
+        "geometry": [
+          [
+            41.63321,
+            -0.90126
+          ]
+        ],
+        "value": 76,
+        "baselineValue": 0,
+        "interventionValue": 76,
+        "comparisonValue": 76,
+        "source": "Mock accessibility · AYZG3 Miguel Servet",
+        "method": "Post-intervention access asset (mock · intervention scenario)",
+        "type": "mock",
+        "spatialQuality": "inferred",
+        "geometryLinkage": "matched",
+        "temporalCoverage": "single-period",
+        "locationMethod": "pilot_area_inference",
+        "segmentId": "zar-p3-a11y-hosp-tactile",
+        "streetName": "Tactile paving · drop-off",
+        "parserStatus": "ready",
+        "datasetKind": "accessibility",
+        "category": "Accessibility",
+        "facilityCategory": "accessibility",
+        "status": "post-intervention",
+        "featureStatus": "post-intervention",
+        "likertLabel": "Tactile paving · drop-off",
+        "spatialNote": "bundled deploy fallback"
+      },
+      {
+        "id": "zaragoza-kpi4.2-mock-p3-hosp-audio",
+        "city": "Zaragoza",
+        "cityId": "zaragoza",
+        "interventionId": "zar-p3",
+        "kpiId": "kpi4.2",
+        "sourceFile": "mock://zaragoza-pilot-gap",
+        "geometryType": "point",
+        "lat": 41.63286,
+        "lng": -0.90241,
+        "geometry": [
+          [
+            41.63286,
+            -0.90241
+          ]
+        ],
+        "value": 74,
+        "baselineValue": 0,
+        "interventionValue": 74,
+        "comparisonValue": 74,
+        "source": "Mock accessibility · AYZG3 Miguel Servet",
+        "method": "Post-intervention access asset (mock · intervention scenario)",
+        "type": "mock",
+        "spatialQuality": "inferred",
+        "geometryLinkage": "matched",
+        "temporalCoverage": "single-period",
+        "locationMethod": "pilot_area_inference",
+        "segmentId": "zar-p3-a11y-hosp-audio",
+        "streetName": "Audible signal · crossing",
+        "parserStatus": "ready",
+        "datasetKind": "accessibility",
+        "category": "Accessibility",
+        "facilityCategory": "accessibility",
+        "status": "post-intervention",
+        "featureStatus": "post-intervention",
+        "likertLabel": "Audible signal · crossing",
+        "spatialNote": "bundled deploy fallback"
+      }
+    ]
+  }
+}

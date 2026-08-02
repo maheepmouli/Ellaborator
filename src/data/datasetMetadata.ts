@@ -137,14 +137,14 @@ export const DATASET_REGISTRY: DatasetMetadata[] = [
   {
     id: "issy-sentiment-field-derived",
     city: "Issy-les-Moulineaux",
-    pilotIds: ["issy-p3"],
+    pilotIds: ["issy-p2", "issy-p3"],
     title: "GecoAir mock satisfaction samples",
     source: "Pilot-scoped mock at src/data/issySentimentMock.ts",
     fileFormat: "mock",
     dataType: "mock",
     geometryType: "point",
     geometryQuality: "matched",
-    spatialLinkageMethod: "junction_arm_placement",
+    spatialLinkageMethod: "mode_share_zone_hub",
     temporalCoverage: "demo scenario",
     beforeAfterStatus: "both",
     linkedKpis: ["kpi4.1"],
@@ -154,12 +154,12 @@ export const DATASET_REGISTRY: DatasetMetadata[] = [
     updateStatus: "periodic",
     responsiblePartner: "Issy-les-Moulineaux",
     notes:
-      "Three mock survey samples on KPI 1.2 corridor arms. Headline 82% matches registry demo anchor; labelled Mock / demo until GecoAir geo-coded responses are delivered.",
+      "Six mock survey samples beside ISSY1 mode-share OD zone hubs (same city footprint as KPI 1.2 / 4.2). Headline 82% is a demo anchor; labelled Mock / demo until GecoAir geo-coded responses are delivered.",
   },
   {
     id: "issy-issy1-flow-od",
     city: "Issy-les-Moulineaux",
-    pilotIds: ["issy-p1"],
+    pilotIds: ["issy-p1", "issy-p2", "issy-p3"],
     title: "ISSY1 Zone-to-Zone Flow — Baseline + Post",
     source:
       "Bundled: /public/data/issy/ISSY1_baseline_traffic_data_november_2024.csv + ISSY1_post_intervention_traffic_data_november_2025.csv",
@@ -177,12 +177,12 @@ export const DATASET_REGISTRY: DatasetMetadata[] = [
     updateStatus: "static",
     responsiblePartner: "Issy-les-Moulineaux",
     notes:
-      "Complete ISSY1 before/after OD pair at Pont d'Issy camera site. Map: city-view flow arcs; sidebar mode-share when KPI 1.2 is active.",
+      "Complete ISSY1 before/after OD pair. Map: city-view sustainable-% hubs for Pilot 2 + Pilot 3 mode share; sidebar when KPI 1.2 is active.",
   },
   {
     id: "issy-flow-baseline-csv",
     city: "Issy-les-Moulineaux",
-    pilotIds: ["issy-p1"],
+    pilotIds: ["issy-p1", "issy-p2", "issy-p3"],
     title: "ISSY1 Zone-to-Zone Flow — Baseline",
     source: "Bundled: /public/data/issy/ISSY1_baseline_traffic_data_november_2024.csv (SharePoint mirror available)",
     fileFormat: "csv",
@@ -199,12 +199,12 @@ export const DATASET_REGISTRY: DatasetMetadata[] = [
     updateStatus: "static",
     responsiblePartner: "Issy-les-Moulineaux",
     notes:
-      "Zone OD matrix by vehicle category (weekday/weekend). Paired with ISSY1 post CSV — both periods available. Map: city-view flow arcs; sidebar mode-share when KPI 1.2 is active.",
+      "Zone OD matrix by vehicle category (weekday/weekend). Shared city lens for Pilot 2 + Pilot 3 mode share.",
   },
   {
     id: "issy-flow-post-csv",
     city: "Issy-les-Moulineaux",
-    pilotIds: ["issy-p1"],
+    pilotIds: ["issy-p1", "issy-p2", "issy-p3"],
     title: "ISSY1 Zone-to-Zone Flow — Post-Intervention",
     source: "Bundled: /public/data/issy/ISSY1_post_intervention_traffic_data_november_2025.csv (SharePoint mirror available)",
     fileFormat: "csv",
@@ -399,7 +399,7 @@ export const DATASET_REGISTRY: DatasetMetadata[] = [
   {
     id: "cph-telraam",
     city: "Copenhagen",
-    pilotIds: ["cph-p1"],
+    pilotIds: ["cph-p1", "cph-p3"],
     title: "Telraam Medieval City counters",
     source:
       "SharePoint: Copenhagen/Telraam/Telraam counts Medieval City Copenhagen 2024 and 2025.xlsx + * SHEET.xlsx",
@@ -410,14 +410,14 @@ export const DATASET_REGISTRY: DatasetMetadata[] = [
     spatialLinkageMethod: "direct-coordinates",
     temporalCoverage: "Mar–Jun 2024 vs Mar–Jun 2025",
     beforeAfterStatus: "both",
-    linkedKpis: ["kpi1.2"],
+    linkedKpis: ["kpi1.2", "kpi2.1"],
     interventionScale: "street",
     parserStatus: "ready",
     realDataStatus: "active",
     updateStatus: "static",
     responsiblePartner: "Copenhagen Municipality",
     notes:
-      "Partner headline at Vestergade 5: -16% motorized, +3% bicycle, +14% pedestrian. Pedestrian counts undercounted; use relative change only. Bundled at /data/copenhagen/telraam-sites.json.",
+      "Partner headline at Vestergade 5: -16% motorized, +3% bicycle, +14% pedestrian. Pedestrian counts undercounted; use relative change only. Shared Medieval City counters on Pilot 1 (mode share) and Pilot 3 (mode share + road safety). Bundled at /data/copenhagen/telraam-sites.json.",
   },
   {
     id: "cph-manual-counts",

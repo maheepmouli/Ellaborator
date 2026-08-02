@@ -18,7 +18,7 @@ import { buildTrikalaRecords } from "@/services/trikalaSurveyParser";
 import { buildMilanSurveyRecords } from "@/services/milanSurveyParser";
 import { MILAN_ACCESSIBILITY_FILES, MILAN_ACCESSIBILITY_JSON, MILAN_MODE_SHARE_JSON } from "@/lib/milanDataPaths";
 import { MILAN_PILOT_ANCHORS } from "@/lib/milanMapConfig";
-import { milanRecordMatchesPilotScope } from "@/lib/milanPilotScope";
+import { milanRecordMatchesPilotScope, milanAccessibilityRecordMatchesPilotScope } from "@/lib/milanPilotScope";
 import {
   fetchHelsinkiJson,
   HELSINKI_DANGEROUS_LOCATIONS_SURVEY_INSIGHTS_JSON,
@@ -77,6 +77,8 @@ const ZARAGOSA_MANUAL_COUNTING =
   "/sharepoint-data/Zaragoza/1. BASELINE DATA from Zaragoza/ManualCounting_June2025_AYZGZ1.xlsx";
 const ZARAGOSA_INTERVENTION_CENTROIDS =
   "/sharepoint-data/Zaragoza/intervention-areas-centroids.geojson";
+const ZARAGOZA_CENTROIDS_FALLBACK =
+  "/data/zaragoza/intervention-areas-centroids.geojson";
 
 const ZARAGOSA_PILOT_ANCHOR = { lat: 41.652, lng: -0.878 };
 
@@ -187,19 +189,13 @@ function averageLikert(rows: Record<string, unknown>[], columnMatch: RegExp): nu
 
 async function loadZaragozaCentroids(): Promise<ZarInterventionCentroid[]> {
   if (zarCentroidCache) return zarCentroidCache;
-  try {
-    const response = await fetch(encodeURI(ZARAGOSA_INTERVENTION_CENTROIDS));
-    if (!response.ok) {
-      zarCentroidCache = [];
-      return zarCentroidCache;
-    }
-    const geojson = (await response.json()) as {
-      features?: Array<{
-        properties?: { id?: string; name?: string };
-        geometry?: { coordinates?: [number, number] };
-      }>;
-    };
-    zarCentroidCache = (geojson.features || [])
+  const parseCentroids = (geojson: {
+    features?: Array<{
+      properties?: { id?: string; name?: string };
+      geometry?: { coordinates?: [number, number] };
+    }>;
+  }): ZarInterventionCentroid[] =>
+    (geojson.features || [])
       .map((feature) => {
         const coords = feature.geometry?.coordinates;
         if (!coords || coords.length < 2) return null;
@@ -207,6 +203,19 @@ async function loadZaragozaCentroids(): Promise<ZarInterventionCentroid[]> {
         return { id, lat: coords[1], lng: coords[0] };
       })
       .filter((item): item is ZarInterventionCentroid => Boolean(item));
+
+  try {
+    for (const url of [ZARAGOSA_INTERVENTION_CENTROIDS, ZARAGOZA_CENTROIDS_FALLBACK]) {
+      try {
+        const response = await fetch(encodeURI(url));
+        if (!response.ok) continue;
+        zarCentroidCache = parseCentroids((await response.json()) as Parameters<typeof parseCentroids>[0]);
+        if (zarCentroidCache.length) return zarCentroidCache;
+      } catch {
+        // try next URL
+      }
+    }
+    zarCentroidCache = [];
     return zarCentroidCache;
   } catch {
     zarCentroidCache = [];
@@ -2295,6 +2304,12 @@ export async function loadLocalCityPoints(
           return copenhagenRecordMatchesPilotScope(record, selectedPilotId);
         }
         if (normalizeCityKey(cityName) === "milan") {
+          if (kpiId === "kpi4.2") {
+            return milanAccessibilityRecordMatchesPilotScope(
+              record.interventionId,
+              selectedPilotId
+            );
+          }
           return milanRecordMatchesPilotScope(record.interventionId, selectedPilotId);
         }
         if (normalizeCityKey(cityName) === "helsinki") {
@@ -2308,7 +2323,12 @@ export async function loadLocalCityPoints(
   if (filtered.length > 0) {
     localCityDiagnosticsCache.set(diagnosticsKey, {
       reason: "ok",
-      message: "Observed records loaded for the selected configuration.",
+      message:
+        normalizeCityKey(cityName) === "milan" &&
+        kpiId === "kpi4.2" &&
+        selectedPilotId === "mil-p3"
+          ? `Observed DSS accessibility — Pilot 1 + Pilot 2 combined (${filtered.length} records).`
+          : "Observed records loaded for the selected configuration.",
     });
     return filtered
       .filter((record) => typeof record.lat === "number" && typeof record.lng === "number")

@@ -19,10 +19,20 @@ export const CLIMATE_ZONE_ITEMS = [
   { label: "Higher pressure", color: "#E02020" },
 ];
 
+/** ELABORATOR travel-mode palette for Issy KPI 1.2 (matches `ISSY_MODE_COLORS`). */
 export const ISSY_FLOW_MODE_ITEMS = [
-  { label: "Bicycle", color: "#10B981" },
   { label: "Pedestrian", color: "#6EE7B7" },
-  { label: "Car", color: "#A78BFA" },
-  { label: "Bus / PT", color: "#60A5FA" },
-  { label: "Other", color: "#96C2EF" },
+  { label: "Cycle", color: "#22D3EE" },
+  { label: "Public Transport", color: "#60A5FA" },
+  { label: "Private Car", color: "#A78BFA" },
+  { label: "PTW", color: "#C084FC" },
 ];
+
+/** Map legend for Issy mode-share hubs (junction study + city view). */
+export const ISSY_MODE_SHARE_HUB_ITEMS = [
+  { label: "Mode-share hub (ripple)", color: "#38bdf8" },
+  ...ISSY_FLOW_MODE_ITEMS,
+];
+
+export const ISSY_MODE_SHARE_HUB_HINT =
+  "Mode-share hub at the study site — ripple marks sustainable mobility %. Observatory shows travel-mode mix (pedestrian / cycle / PT / car / PTW), not camera FOV or street segments.";

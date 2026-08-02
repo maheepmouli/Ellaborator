@@ -41,7 +41,9 @@ type TelraamSiteRow = {
   street: string;
   lat: number;
   lon: number;
-  pilotId: string;
+  /** @deprecated Prefer pilotIds — kept for older bundles. */
+  pilotId?: string;
+  pilotIds?: string[];
   motorizedPctChange?: number;
   bicyclePctChange?: number;
   pedestrianPctChange?: number;
@@ -210,8 +212,16 @@ function streetAnchor(street: string): { lat: number; lon: number } {
 }
 
 function telraamRecords(kpiId: string, rows: TelraamSiteRow[]): CopenhagenExtendedRecord[] {
-  if (kpiId !== "kpi1.2") return [];
-  return rows.map((row) => {
+  // Map hubs use the location registry; these records feed KPI 1.2 / 2.1 aggregates + observatory.
+  if (kpiId !== "kpi1.2" && kpiId !== "kpi2.1") return [];
+  const out: CopenhagenExtendedRecord[] = [];
+  for (const row of rows) {
+    const pilots =
+      row.pilotIds?.length
+        ? row.pilotIds
+        : row.pilotId
+          ? [row.pilotId]
+          : ["cph-p1", "cph-p3"];
     const registry = COPENHAGEN_TELRAAM_OUTCOMES[row.locationId];
     const carDelta = row.motorizedPctChange || registry?.motorizedPctChange || 0;
     const bikeDelta = row.bicyclePctChange ?? registry?.bicyclePctChange ?? 0;
@@ -237,44 +247,53 @@ function telraamRecords(kpiId: string, rows: TelraamSiteRow[]): CopenhagenExtend
             total: 100,
           }
         : { ...preModes, total: 100 };
-    return {
-      id: `copenhagen-telraam-${row.locationId}`,
-      city: "Copenhagen",
-      cityId: "copenhagen",
-      interventionId: row.pilotId,
-      kpiId,
-      sourceFile: `${BUNDLE_BASE}/telraam-sites.json`,
-      geometryType: "point",
-      lat: row.lat,
-      lng: row.lon,
-      geometry: [[row.lat, row.lon]],
-      value: intervention,
-      baselineValue: baseline,
-      interventionValue: intervention,
-      comparisonValue: intervention - baseline,
-      mode: row.street,
-      modeBreakdown: {
-        pre: { ...preModes, total: 100 },
-        post: postModes,
-      },
-      source: row.source || registry?.source || "Telraam relative change",
-      method: "Relative % change Mar–Jun 2024 vs 2025 (weekdays 07–19). Absolute pedestrian volumes excluded per partner methodology.",
-      type: "observed",
-      spatialQuality: "exact",
-      geometryLinkage: "exact",
-      temporalCoverage: "before-after",
-      locationMethod: "coordinates",
-      segmentId: row.locationId,
-      streetName: `Telraam — ${row.street}`,
-      spatialNote: registry?.cautionNote,
-      methodologyWarnings: registry?.pedestrianUndercountWarning
-        ? ["Telraam undercounts pedestrians (<80% capture). Use relative % change only."]
-        : undefined,
-      parserStatus: "ready",
-      datasetKind: "telraam",
-      category: row.street,
-    };
-  });
+
+    for (const pilotId of pilots) {
+      out.push({
+        id: `copenhagen-telraam-${row.locationId}-${pilotId}-${kpiId}`,
+        city: "Copenhagen",
+        cityId: "copenhagen",
+        interventionId: pilotId,
+        kpiId,
+        sourceFile: `${BUNDLE_BASE}/telraam-sites.json`,
+        geometryType: "point",
+        lat: row.lat,
+        lng: row.lon,
+        geometry: [[row.lat, row.lon]],
+        value: intervention,
+        baselineValue: baseline,
+        interventionValue: intervention,
+        comparisonValue: intervention - baseline,
+        mode: row.street,
+        modeBreakdown: {
+          pre: { ...preModes, total: 100 },
+          post: postModes,
+        },
+        properties: {
+          datasetKind: "telraam",
+          segmentId: `loc:${row.locationId}`,
+          streetName: `Telraam — ${row.street}`,
+          locationId: row.locationId,
+          source: row.source || registry?.source || "Telraam relative change",
+          method:
+            "Relative % change Mar–Jun 2024 vs 2025 (weekdays 07–19). Absolute pedestrian volumes excluded per partner methodology.",
+          dataOrigin: "local-city-dataset",
+          type: "observed",
+          spatialQuality: "exact",
+          geometryLinkage: "exact",
+          temporalCoverage: "before-after",
+          locationMethod: "coordinates",
+          spatialNote: registry?.cautionNote,
+          methodologyWarnings: registry?.pedestrianUndercountWarning
+            ? ["Telraam undercounts pedestrians (<80% capture). Use relative % change only."]
+            : undefined,
+          parserStatus: "ready",
+          category: row.street,
+        },
+      });
+    }
+  }
+  return out;
 }
 
 function manualRecords(kpiId: string, bundle: ManualBundle): CopenhagenExtendedRecord[] {

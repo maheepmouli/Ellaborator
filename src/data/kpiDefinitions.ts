@@ -90,11 +90,11 @@ export const ELABORATOR_KPIS: KPIDefinition[] = [
     ref: "KPI4.2",
     name: "Accessibility and Security",
     shortName: "Accessibility & Security",
-    unit: "score",
+    unit: "Index",
     icon: "♿",
     chartType: "bar",
     colorScheme: ["#657DF5", "#8578C3", "#96C2EF"],
-    description: "Accessibility features count, user diversity, and time spent at sites",
+    description: "Accessibility index, user diversity, and time spent at sites",
     question: "How accessible are public spaces for all users?"
   },
 ];
@@ -108,6 +108,19 @@ export interface CityKPIData {
   kpiData: Record<string, KPIValue>;
 }
 
+/** KPI 3.2 residual intensity point. `year` sorts points; `label` is the axis/selector key when set. */
+export interface KpiTimeSeriesPoint {
+  year: number;
+  value: number;
+  /** Display / drill key for available data slots (e.g. "Nov 2024", "08–09"). Defaults to String(year). */
+  label?: string;
+}
+
+export function kpiTimeSeriesPeriodKey(point: KpiTimeSeriesPoint): string {
+  const label = point.label?.trim();
+  return label && label.length > 0 ? label : String(point.year);
+}
+
 export interface KPIValue {
   mainValue: number;
   unit: string;
@@ -116,7 +129,8 @@ export interface KPIValue {
   breakdown?: Record<string, number>;
   /** Optional baseline breakdown for before/after charts (e.g. KPI 2.1 mode share). */
   breakdownBaseline?: Record<string, number>;
-  timeSeries?: { year: number; value: number }[];
+  /** Residual emission intensity over pilot/city data periods (not a fixed 2020–2024 ladder). */
+  timeSeries?: KpiTimeSeriesPoint[];
   distribution?: number[];
 }
 
@@ -181,12 +195,10 @@ export const CITY_DATA: CityKPIData[] = [
         unit: "% reduction",
         change: -17,
         status: "after",
+        // RETE CO₂/noise network: peak-hour windows H08 / H18 (Ex ante 2023–2024)
         timeSeries: [
-          { year: 2020, value: 100 },
-          { year: 2021, value: 94 },
-          { year: 2022, value: 88 },
-          { year: 2023, value: 85 },
-          { year: 2024, value: 83 },
+          { year: 8, label: "08–09", value: 100 },
+          { year: 18, label: "18–19", value: 83 },
         ],
         breakdown: {
           "CO₂ (kg/day)": 12500,
@@ -207,7 +219,7 @@ export const CITY_DATA: CityKPIData[] = [
       },
       "kpi4.2": {
         mainValue: 156,
-        unit: "features",
+        unit: "Index",
         change: 45,
         status: "after",
         breakdown: {
@@ -267,12 +279,10 @@ export const CITY_DATA: CityKPIData[] = [
         unit: "% reduction",
         change: -12,
         status: "after",
+        // Smart Citizen Kit environmental sensors — start dates span 2024–2025
         timeSeries: [
-          { year: 2020, value: 100 },
-          { year: 2021, value: 96 },
-          { year: 2022, value: 92 },
-          { year: 2023, value: 90 },
-          { year: 2024, value: 88 },
+          { year: 2024, label: "2024", value: 100 },
+          { year: 2025, label: "2025", value: 88 },
         ],
         breakdown: {
           "CO₂ (kg/day)": 2800,
@@ -293,7 +303,7 @@ export const CITY_DATA: CityKPIData[] = [
       },
       "kpi4.2": {
         mainValue: 68,
-        unit: "features",
+        unit: "Index",
         change: 22,
         status: "after",
         breakdown: {
@@ -354,12 +364,10 @@ export const CITY_DATA: CityKPIData[] = [
         unit: "% reduction",
         change: -20,
         status: "after",
+        // ASIF Classeur baseline (Nov 2024 traffic) → OD / post window Nov 2025 (scaled reduction)
         timeSeries: [
-          { year: 2020, value: 100 },
-          { year: 2021, value: 92 },
-          { year: 2022, value: 86 },
-          { year: 2023, value: 82 },
-          { year: 2024, value: 80 },
+          { year: 2024, label: "Nov 2024", value: 100 },
+          { year: 2025, label: "Nov 2025", value: 80 },
         ],
         breakdown: {
           "CO₂ (kg/day)": 3200,
@@ -380,7 +388,7 @@ export const CITY_DATA: CityKPIData[] = [
       },
       "kpi4.2": {
         mainValue: 124,
-        unit: "features",
+        unit: "Index",
         change: 38,
         status: "after",
         breakdown: {
@@ -452,12 +460,10 @@ export const CITY_DATA: CityKPIData[] = [
         unit: "% reduction",
         change: -14,
         status: "after",
+        // Nanoenvi EQ baseline campaign Feb–Mar 2025
         timeSeries: [
-          { year: 2020, value: 100 },
-          { year: 2021, value: 96 },
-          { year: 2022, value: 92 },
-          { year: 2023, value: 88 },
-          { year: 2024, value: 86 },
+          { year: 202502, label: "Feb 2025", value: 100 },
+          { year: 202503, label: "Mar 2025", value: 86 },
         ],
         breakdown: {
           "CO₂ (kg/day)": 8500,
@@ -478,7 +484,7 @@ export const CITY_DATA: CityKPIData[] = [
       },
       "kpi4.2": {
         mainValue: 98,
-        unit: "features",
+        unit: "Index",
         change: 28,
         status: "after",
         breakdown: {
@@ -539,12 +545,10 @@ export const CITY_DATA: CityKPIData[] = [
         unit: "% reduction",
         change: -28,
         status: "after",
+        // OTC modelled CO₂ — pre (2024) vs post (2025) count windows
         timeSeries: [
-          { year: 2020, value: 100 },
-          { year: 2021, value: 88 },
-          { year: 2022, value: 78 },
-          { year: 2023, value: 74 },
-          { year: 2024, value: 72 },
+          { year: 2024, label: "2024 pre", value: 100 },
+          { year: 2025, label: "2025 post", value: 72 },
         ],
         breakdown: {
           "CO₂ (kg/day)": 6800,
@@ -565,7 +569,7 @@ export const CITY_DATA: CityKPIData[] = [
       },
       "kpi4.2": {
         mainValue: 245,
-        unit: "features",
+        unit: "Index",
         change: 78,
         status: "after",
         breakdown: {
@@ -637,12 +641,10 @@ export const CITY_DATA: CityKPIData[] = [
         unit: "% reduction",
         change: -19,
         status: "after",
+        // Dangerous-locations / attitude survey coverage 2024–2025 (climate proxy years)
         timeSeries: [
-          { year: 2020, value: 100 },
-          { year: 2021, value: 94 },
-          { year: 2022, value: 88 },
-          { year: 2023, value: 83 },
-          { year: 2024, value: 81 },
+          { year: 2024, label: "2024", value: 100 },
+          { year: 2025, label: "2025", value: 81 },
         ],
         breakdown: {
           "CO₂ (kg/day)": 7200,
@@ -663,7 +665,7 @@ export const CITY_DATA: CityKPIData[] = [
       },
       "kpi4.2": {
         mainValue: 178,
-        unit: "features",
+        unit: "Index",
         change: 52,
         status: "after",
         breakdown: {

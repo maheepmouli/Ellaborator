@@ -10,12 +10,10 @@ import {
   HELSINKI_VIIKKI_UX_SURVEY_JSON,
   type HelsinkiUxSurvey,
 } from "@/lib/helsinkiDataPaths";
-import { renderHubRipplePulseOverlay } from "@/lib/copenhagenMapLayers/copenhagenTrafficPulse";
 import { bindCopenhagenMapTooltip } from "@/lib/copenhagenMapLayers/copenhagenMapTooltips";
 import { scheduleLeafletLayerRepaint } from "@/lib/leafletMapSync";
 import {
   wireCircleMarkerSegment,
-  wireMarkerSegment,
   type SegmentInteractionHandlers,
 } from "@/lib/wireMapSegmentInteraction";
 import {
@@ -27,10 +25,6 @@ import { fitHelsinkiKpiView } from "@/lib/helsinkiMapLayers/helsinkiKpiMapFit";
 import { renderHelsinkiSurveyPointUnderlay } from "@/lib/helsinkiMapLayers/helsinkiMapHelpers";
 import { mapScenarioDisplayValue, type MapScenario } from "@/lib/mapScenarioValue";
 
-/** Match Milan / Helsinki mode-share hub scale. */
-const HELSINKI_SAFETY_RING_SCALE = 2.4;
-const HELSINKI_SAFETY_SECONDARY_RING_SCALE = 1.7;
-const HELSINKI_PULSE_MIN_ZOOM = 10;
 const HELSINKI_SAFETY_HUB_LIMIT = 8;
 
 const FVH3_UX_SEGMENT_ID = "hel-viikki-ux-survey";
@@ -52,23 +46,12 @@ export interface RenderHelsinkiKpi21LayersOptions {
   wireCircleMarker?: typeof wireCircleMarkerSegment;
 }
 
-function helsinkiSafetyHubIcon(selected: boolean): L.DivIcon {
-  const size = selected ? 18 : 14;
-  const half = size / 2;
-  return L.divIcon({
-    className: "milan-hub-center-wrap",
-    html: `<button type="button" class="milan-hub-center${selected ? " milan-hub-center--selected" : ""}" aria-label="Open observatory"></button>`,
-    iconSize: [size, size],
-    iconAnchor: [half, half],
-  });
-}
-
 function nearViikkiViewport(map: L.Map): boolean {
   const viikki = L.latLng(HELSINKI_VIIKKI_ANCHOR.lat, HELSINKI_VIIKKI_ANCHOR.lng);
   return map.distance(map.getCenter(), viikki) < 2500;
 }
 
-function drawSafetyRippleHub(options: {
+function drawSafetyHubMarker(options: {
   map: L.Map;
   hub: HelsinkiHazardHub;
   isPrimary: boolean;
@@ -94,11 +77,9 @@ function drawSafetyRippleHub(options: {
     segmentInteractionEnabled,
     segmentHandlers,
     circlesOut,
-    markersOut,
   } = options;
 
   const hubSelected = Boolean(activeMapSegmentId && activeMapSegmentId === hub.id);
-  const ringScale = isPrimary ? HELSINKI_SAFETY_RING_SCALE : HELSINKI_SAFETY_SECONDARY_RING_SCALE;
   const baselinePressure = Math.min(100, hub.count);
   const interventionPressure = Math.min(100, hub.count * 0.82);
   const pressureScore = mapScenarioDisplayValue(scenario, baselinePressure, interventionPressure, {
@@ -106,12 +87,18 @@ function drawSafetyRippleHub(options: {
     singlePeriodShift: 0.18,
   });
   const highPressure = pressureScore >= 65 || (isPrimary && scenario === "baseline");
+  const fill = highPressure ? "#ef4444" : isPrimary ? "#2ecc71" : "#f97316";
+  const radius = hubSelected ? (isPrimary ? 12 : 10) : isPrimary ? 10 : 8;
 
-  renderHubRipplePulseOverlay(map, hub.lat, hub.lon, highPressure, markersOut, circlesOut, {
-    showAnchorDot: false,
-    minZoom: HELSINKI_PULSE_MIN_ZOOM,
-    ringScale,
-  });
+  // KPI 2.1 — solid safety hubs only (no CSS ripples; ripples reserved for mode share).
+  const marker = L.circleMarker([hub.lat, hub.lon], {
+    radius,
+    fillColor: fill,
+    fillOpacity: hubSelected ? 0.95 : 0.82,
+    color: hubSelected ? "#ffffff" : "rgba(255,255,255,0.85)",
+    weight: hubSelected ? 3 : 2,
+    opacity: 0.98,
+  }).addTo(map);
 
   const detail = {
     segmentId: hub.id,
@@ -127,16 +114,8 @@ function drawSafetyRippleHub(options: {
     },
   };
 
-  const centerMarker = L.marker([hub.lat, hub.lon], {
-    icon: helsinkiSafetyHubIcon(hubSelected),
-    interactive: true,
-    keyboard: true,
-    zIndexOffset: isPrimary ? 2500 : 2200,
-    title: hub.label,
-  }).addTo(map);
-
-  bindCopenhagenMapTooltip(centerMarker, hub.label);
-  centerMarker.bindPopup(`
+  bindCopenhagenMapTooltip(marker, hub.label);
+  marker.bindPopup(`
     <div style="font-family:'DM Sans',sans-serif;padding:8px;min-width:220px;">
       <p style="font-size:10px;color:#8578C3;margin:0 0 4px 0;text-transform:uppercase;">${pilotTag} · ${scenario}</p>
       <p style="font-size:14px;font-weight:700;color:#2F1B6D;margin:0 0 6px 0;">${hub.label}</p>
@@ -148,9 +127,18 @@ function drawSafetyRippleHub(options: {
   `);
 
   if (segmentInteractionEnabled) {
-    wireMarkerSegment(centerMarker, detail, segmentHandlers);
+    wireCircleMarkerSegment(marker, detail, segmentHandlers, {
+      baseRadius: radius,
+      selectedSegmentId: activeMapSegmentId,
+      baseStyle: {
+        fillColor: fill,
+        fillOpacity: hubSelected ? 0.95 : 0.82,
+        color: hubSelected ? "#ffffff" : "rgba(255,255,255,0.85)",
+        weight: hubSelected ? 3 : 2,
+      },
+    });
   }
-  markersOut.push(centerMarker);
+  circlesOut.push(marker);
 }
 
 /**
@@ -257,7 +245,7 @@ function renderFvh3ViikkiUxSafetyHub(options: {
 
 /**
  * KPI 2.1 road safety.
- * FVH1: sampled dangerous-location + conflict clouds under ~8 pressure hubs.
+ * FVH1: sampled dangerous-location + conflict clouds under solid pressure hubs (no ripples).
  * FVH3: single Viikki intersection UX safety survey (pptx p.8) — not area-spread GPKGs.
  */
 export function renderHelsinkiKpi21Layers(
@@ -298,7 +286,7 @@ export function renderHelsinkiKpi21Layers(
     const totalDangerous = dangerousGeoJson.features.length;
     const totalConflicts = conflictsGeoJson.features.length;
 
-    // FVH1 (and default): survey clouds + multi-hub ripples from dangerous-location density
+    // FVH1 (and default): survey clouds + solid multi-hub markers (no CSS ripples)
     renderHelsinkiSurveyPointUnderlay({
       map,
       features: dangerousGeoJson.features,
@@ -354,7 +342,7 @@ export function renderHelsinkiKpi21Layers(
     const finalHubs = enriched;
 
     finalHubs.forEach((hub, index) => {
-      drawSafetyRippleHub({
+      drawSafetyHubMarker({
         map,
         hub,
         isPrimary: index === 0,

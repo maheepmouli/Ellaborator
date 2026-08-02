@@ -115,7 +115,7 @@ export function renderTrikalaSatisfactionZones(
             html: `<div class="tri-pr-hub-pin">
               <span class="tri-pr-hub-dot" aria-hidden="true"></span>
               <span class="tri-pr-hub-text">
-                <span class="tri-pr-hub-label-title">Park and ride</span>
+                <span class="tri-pr-hub-label-title">MOCK · Park and ride</span>
                 <span class="tri-pr-hub-label-name">${loc.name}</span>
               </span>
             </div>`,

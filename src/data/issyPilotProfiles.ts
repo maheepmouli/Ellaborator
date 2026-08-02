@@ -48,3 +48,8 @@ export function getIssyPilotProfile(pilotId: string | null | undefined): IssyPil
   if (!pilotId || !(pilotId in ISSY_PILOT_PROFILES)) return null;
   return ISSY_PILOT_PROFILES[pilotId as IssyPilotId];
 }
+
+/** City-wide OD zone mode-share map (ISSY1 CSV) — Pilot 2 observatory + Pilot 3 same lens. */
+export function isIssyCityWideModeSharePilot(pilotId: string | null | undefined): boolean {
+  return pilotId === "issy-p2" || pilotId === "issy-p3";
+}

@@ -35,7 +35,7 @@ The June 2026 SharePoint drop (~4.2 GB, 11 city archives) is **not committed to 
 | Copenhagen | 4× `Countings_*_sortet.xlsx` | `localCityData.ts` → fallback JSON if mirror missing |
 | Helsinki | Telraam xlsx, dangerous-locations + eScooter GeoJSON | `localCityData.ts` + `helsinkiGeoLayers.ts` |
 | Issy | ISSY1 baseline/post CSV (optional mirror) | `issyFlowData.ts` (bundled CSV fallback) |
-| Zaragoza | KPI1.2 workbooks, manual counting, intervention centroids | `parseZaragozaRecords` |
+| Zaragoza | KPI1.2 workbooks, manual counting, intervention centroids | `parseZaragozaRecords` (+ `/data/zaragoza/observed-records.json` fallback) |
 | Trikala | Smart-crossing + women mobility surveys | `parseTrikalaRecords` |
 | Milan | Not in June drop — separate SharePoint tree | `milanSegmentData.ts` |
 
@@ -54,6 +54,14 @@ Because `public/sharepoint-data/` is gitignored:
 If SharePoint files are unavailable, Copenhagen KPI 1.2 still renders from the bundled fallback:
 
 `public/data/copenhagen/otc-directional-observed.json`
+
+## Zaragoza demo without extraction
+
+If SharePoint files are unavailable, Zaragoza Pilots 1–2 still render from:
+
+`public/data/zaragoza/observed-records.json`
+
+Regenerate after updating the mirror: `npm run build-zaragoza-data`
 
 ## Notes
 

@@ -20,6 +20,7 @@ import { useLocalCityData } from "@/hooks/use-local-city-data";
 import { useIssyFlowData } from "@/hooks/use-issy-flow-data";
 import { useIssyWorkbooks } from "@/hooks/use-issy-workbooks";
 import { getIssyZoneCentroid, getIssyZoneCentroids } from "@/services/issyFlowData";
+import { isIssyCityWideModeSharePilot } from "@/data/issyPilotProfiles";
 import { useMilanEnvironmentSegments, useMilanSpeedSegments } from "@/hooks/use-milan-segment-data";
 import { getStoryPointsForPilot } from "@/data/storyConfig";
 import { SEGMENT_PRESSURE_ITEMS } from "@/lib/mapLayerLegend";
@@ -44,7 +45,7 @@ import {
   wirePolylineSegment,
   type SegmentInteractionHandlers,
 } from "@/lib/wireMapSegmentInteraction";
-import { filterPointsInPilotZone, filterMilanLocalPoints } from "@/lib/interventionZone";
+import { filterPointsInPilotZone, filterMilanLocalPoints, filterMilanAccessibilityPoints } from "@/lib/interventionZone";
 import {
   getCopenhagenCameraIdsForPilot,
   inferOtcWorkbookKey,
@@ -167,8 +168,9 @@ interface HeroMapProps {
   onJunctionSegmentClick?: (detail: {
     segmentId: string;
     segmentName: string;
-    speed: number | null;
-    congestion: number | null;
+    speed?: number | null;
+    congestion?: number | null;
+    properties?: Record<string, unknown>;
   }) => void;
   showInterventionLayer?: boolean;
   onPilotSelect?: (pilot: SelectedPilot | null) => void;
@@ -210,6 +212,7 @@ interface HeroMapProps {
     segmentName: string;
     speed?: number | null;
     congestion?: number | null;
+    properties?: Record<string, unknown>;
   } | null) => void;
   pilotGeometrySpec?: PilotGeometryRenderSpec | null;
   runtimeLinkage?: RuntimeLinkage;
@@ -315,8 +318,8 @@ function fitMapToPilotOverviewCards(
   });
 }
 
-const PILOT_CARD_ICON_SIZE: [number, number] = [280, 210];
-const PILOT_CARD_ICON_ANCHOR: [number, number] = [140, 105];
+const PILOT_CARD_ICON_SIZE: [number, number] = [300, 320];
+const PILOT_CARD_ICON_ANCHOR: [number, number] = [150, 160];
 
 function escapePilotCardHtml(value: string): string {
   return String(value ?? "")
@@ -810,7 +813,7 @@ const HeroMap = ({
     const description = escapePilotCardHtml(pilot.description);
     return `
     <div style="
-      width: 268px;
+      width: 288px;
       box-sizing: border-box;
       padding: 10px 12px;
       border-radius: 10px;
@@ -829,11 +832,11 @@ const HeroMap = ({
         <div style="flex: 1; min-width: 0;">
           <p style="font-size: 11px; font-weight: 800; margin: 0; line-height: 1.15; letter-spacing: 0.55px; color: #EEF0FF;">${city}</p>
           <p style="font-size: 20px; font-weight: 800; margin: 3px 0 0 0; line-height: 1.05; color: #FFFFFF;">${name}</p>
-          <p style="font-size: 12px; font-weight: 600; margin: 5px 0 0 0; color: rgba(255,255,255,0.95); line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${title}</p>
+          <p style="font-size: 12px; font-weight: 600; margin: 5px 0 0 0; color: rgba(255,255,255,0.95); line-height: 1.35;">${title}</p>
         </div>
       </div>
       <div style="margin-top: 8px; border: 1.5px solid rgba(173, 236, 255, 0.7); border-radius: 8px; padding: 8px 10px; background: rgba(12, 10, 40, 0.28);">
-        <p style="font-size: 11px; color: rgba(248,247,255,0.92); margin: 0; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">${description}</p>
+        <p style="font-size: 11px; color: rgba(248,247,255,0.92); margin: 0; line-height: 1.45; white-space: normal; overflow: visible;">${description}</p>
       </div>
     </div>
   `;
@@ -1205,8 +1208,12 @@ const HeroMap = ({
         }
 
         if (selectedKpi === "kpi1.2" || selectedKpi === "kpi2.1") {
-          // Pilot 2 = city-wide observatory: zone sustainable-% dots from ISSY1 OD CSV.
-          if (selectedKpi === "kpi1.2" && selectedPilotId === "issy-p2" && issyFlows?.length) {
+          // Pilot 2 + Pilot 3: city-wide observatory — zone sustainable-% dots from ISSY1 OD CSV.
+          if (
+            selectedKpi === "kpi1.2" &&
+            isIssyCityWideModeSharePilot(selectedPilotId) &&
+            issyFlows?.length
+          ) {
             const zonePoints = buildIssyZoneSustainableModeSharePoints(
               issyFlows,
               getIssyZoneCentroids()
@@ -1221,7 +1228,7 @@ const HeroMap = ({
             return;
           }
 
-          // Sticky #04 (P1/P3): same as Copenhagen — ripple hub only, no street-segment arms.
+          // Sticky #04 (P1): same as Copenhagen — ripple hub only, no street-segment arms.
           const hubSegmentId = ISSY_JUNCTION_ARMS[0]?.segmentId ?? "issy-mode-share-hub";
           addIssyJunctionHubPulse(junctionPulseSegments, {
             showAnchorDot: true,
@@ -1921,12 +1928,13 @@ const HeroMap = ({
       }
 
       // Milan KPI 4.2 — DSS accessibility rows (observed).
+      // Pilot 3 = Pilot 1 + Pilot 2 civic-address points as one combined layer.
       if (isMilanCity && selectedKpi === "kpi4.2" && mapRef.current) {
         if (milanSpeedLoading) {
           addInterventionLayer(cityData, showInterventionLayer);
           return;
         }
-        const scopedA11yPoints = filterMilanLocalPoints(
+        const scopedA11yPoints = filterMilanAccessibilityPoints(
           localCityPoints ?? [],
           milanPilotId
         ).filter((p) => p.properties?.datasetKind === "accessibility");
@@ -2171,15 +2179,36 @@ const HeroMap = ({
             dataType:
               selectedKpi === "kpi4.2"
                 ? "derived accessibility infrastructure proxy"
-                : "observed directional camera counts",
+                : selectedKpi === "kpi2.1" &&
+                    (scenario === "intervention" || scenario === "comparison")
+                  ? "MOCK post/comparison — OTC motor-mix / iRAP proxy"
+                  : selectedKpi === "kpi2.1"
+                    ? "observed OTC motor-mix / iRAP (baseline)"
+                  : "observed directional camera counts",
             temporalCoverage,
-            confidence: cphDiagnostics?.reason === "files-unavailable" ? "Low" : "Medium",
-            provenanceType: selectedKpi === "kpi4.2" ? "derived" : "observed",
+            confidence:
+              cphDiagnostics?.reason === "files-unavailable" ||
+              (selectedKpi === "kpi2.1" &&
+                (scenario === "intervention" || scenario === "comparison"))
+                ? "Low"
+                : "Medium",
+            provenanceType:
+              selectedKpi === "kpi4.2"
+                ? "derived"
+                : selectedKpi === "kpi2.1" &&
+                    (scenario === "intervention" || scenario === "comparison")
+                  ? "mock"
+                  : "observed",
             geometryLinkage: selectedKpi === "kpi4.2" ? "matched" : "exact",
             spatialSystemHint:
               selectedKpi === "kpi4.2"
                 ? "Parking bay before/after categories — not a formal accessibility audit."
-                : "Observed directional mobility count points only.",
+                : selectedKpi === "kpi2.1" &&
+                    (scenario === "intervention" || scenario === "comparison")
+                  ? "MOCK post/comparison — OTC motor mix / iRAP proxy, not direct crash counts."
+                  : selectedKpi === "kpi2.1"
+                    ? "OTC motor mix / iRAP proxy (baseline observed) — not direct crash counts."
+                  : "Observed directional mobility count points only.",
           });
           if (selectedKpi === "kpi4.2" && cphParkingGeo?.features?.length) {
             renderCopenhagenMapLayers({
@@ -2435,7 +2464,7 @@ const HeroMap = ({
           map: mapRef.current!,
           selectedKpi,
           selectedPilotId,
-          activeMapSegmentId: selectedJunctionSegmentId,
+          activeMapSegmentId: hoveredJunctionSegmentId ?? selectedJunctionSegmentId,
           scenario,
           segmentInteractionEnabled,
           segmentHandlers,
@@ -2504,10 +2533,10 @@ const HeroMap = ({
                     segmentHandlers,
                     {
                       baseStyle: {
-                        color: cancelled ? "#a78bfa" : isActive ? "#2ecc71" : "#64748b",
+                        color: isActive ? "#2ecc71" : "#64748b",
                         weight: isActive ? 4 : 1.8,
                         opacity: isActive ? 0.98 : 0.72,
-                        fillColor: cancelled ? "#6d28d9" : isActive ? "#22c55e" : "#334155",
+                        fillColor: isActive ? "#22c55e" : "#334155",
                         fillOpacity: isActive ? 0.24 : 0.08,
                       },
                       highlightStyle: {
@@ -3249,7 +3278,7 @@ const HeroMap = ({
 
             const yearLine =
               kpi32SelectedYear && yearAnchor !== null
-                ? `<p style="font-size: 10px; color: #A78BFA; margin-top: 4px; font-weight: 600;">Chart year ${kpi32SelectedYear} · series intensity ${yearAnchor.toFixed(1)}%</p>`
+                ? `<p style="font-size: 10px; color: #A78BFA; margin-top: 4px; font-weight: 600;">Chart period ${kpi32SelectedYear} · series intensity ${yearAnchor.toFixed(1)}%</p>`
                 : "";
 
             heatCircle.bindPopup(`
@@ -3331,7 +3360,7 @@ const HeroMap = ({
               }</p>
               ${props.radius ? `<p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Radius: ${props.radius.toFixed(2)} km</p>` : ''}
               ${props.coverage ? `<p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">Derived zone extent: ${props.coverage.toFixed(1)}%</p>` : ''}
-              ${selectedKpi === "kpi3.2" && kpi32SelectedYear ? `<p style="font-size: 10px; color: #A78BFA; margin: 2px 0; font-weight: 600;">Chart year ${kpi32SelectedYear} (city time series)</p>` : ''}
+              ${selectedKpi === "kpi3.2" && kpi32SelectedYear ? `<p style="font-size: 10px; color: #A78BFA; margin: 2px 0; font-weight: 600;">Chart period ${kpi32SelectedYear} (city time series)</p>` : ''}
               ${selectedKpi === "kpi3.2" ? `<p style="font-size: 10px; color: #96C2EF; margin: 2px 0;">~ Reduction vs baseline: ${Math.max(0, 100 - area.value).toFixed(1)}%</p>` : ''}
             </div>
           `;
@@ -3459,22 +3488,24 @@ const HeroMap = ({
       const matchedPct = Math.max(0, 100 - inferredPct);
       const joinPct = milanSpeedSegments.stats.cameraJoinRatePct;
       const probabilistic = pilotGeometrySpec?.interactionModel === "network";
+      const postComparisonMock = scenario === "intervention" || scenario === "comparison";
       onDataQualitySummaryChange({
         recordsLabel: `${milanSpeedSegments.stats.parsedSegments.toLocaleString()} segments`,
         spatialQuality: probabilistic
           ? `probabilistic CO₂/noise network${aggregateLabel}${reductionNote}`
           : `${matchedPct}% metric-matched${joinPct != null ? ` · ${joinPct}% camera-linked` : ""}${aggregateLabel}`,
-        dataType: probabilistic
-          ? "derived environmental network proxy"
-          : "observed speed + derived risk index",
-        temporalCoverage: "2024 snapshot",
-        confidence:
-          uncertainty === "high" || milanSpeedSegments.dataConfidence === "unavailable"
-            ? "Low"
-            : "High",
-        provenanceType: probabilistic ? "derived" : "observed",
+        dataType: postComparisonMock
+          ? "MOCK post/comparison — AMAT speed baseline only"
+          : "observed AMAT speed / risk proxy",
+        temporalCoverage: postComparisonMock
+          ? "baseline observed · post/comparison MOCK"
+          : "2024 snapshot",
+        confidence: postComparisonMock ? "Low" : matchedPct >= 50 ? "Medium" : "Low",
+        provenanceType: postComparisonMock ? "mock" : "observed",
         geometryLinkage: probabilistic ? "inferred" : "matched",
-        spatialSystemHint: spatialPlan.legendHint,
+        spatialSystemHint: postComparisonMock
+          ? "MOCK post/comparison — not direct crash evidence."
+          : "AMAT speed / risk proxy — not direct crash evidence.",
       });
       return;
     }
@@ -3493,23 +3524,35 @@ const HeroMap = ({
         ? pickJunctionsForModeSharePresentation(milanSpeedSegments.records).length
         : 0;
       const usingMock = !milanHasObservedModeShareData(localCityPoints, selectedPilotId ?? "mil-p2");
+      const postComparisonMock = scenario === "intervention" || scenario === "comparison";
       const matchedCount = observed.length;
       const hasEvaluation = observed.some((p) => p.properties?.temporalCoverage !== "baseline-only");
       onDataQualitySummaryChange({
         recordsLabel: usingMock
-          ? `${junctionCount || 0} illustrative junction hubs (6–8 target)`
+          ? `${junctionCount || 0} MOCK junction hubs (Copenhagen-style ripples)`
           : `${matchedCount.toLocaleString()} AMAT count site${matchedCount === 1 ? "" : "s"}`,
         spatialQuality: usingMock
-          ? "KPI 2.1 safety network anchors · Copenhagen-style radar"
-          : "AMAT peak-hour counts · camera shapefile linkage",
-        dataType: usingMock ? "illustrative junction mode-share mock" : "observed AMAT road user counts",
+          ? "KPI 2.1 safety network anchors · CPH hub ripples"
+          : "AMAT peak-hour counts · camera shapefile linkage · CPH hub ripples",
+        dataType: usingMock
+          ? "MOCK illustrative junction mode-share"
+          : postComparisonMock
+            ? "MOCK post/comparison — AMAT baseline only"
+            : "observed AMAT road user counts (baseline)",
         temporalCoverage: usingMock
-          ? "illustrative demo"
-          : hasEvaluation
-            ? "baseline vs evaluation (8:30–9:30)"
-            : "baseline counts only",
-        confidence: usingMock ? (junctionCount >= 6 ? "Medium" : "Low") : matchedCount >= 3 ? "High" : "Medium",
-        provenanceType: usingMock ? "mock" : "observed",
+          ? "MOCK demo"
+          : postComparisonMock
+            ? "baseline observed · post/comparison MOCK"
+            : hasEvaluation
+              ? "baseline vs evaluation (8:30–9:30)"
+              : "baseline counts only",
+        confidence:
+          usingMock || postComparisonMock
+            ? "Low"
+            : matchedCount >= 3
+              ? "High"
+              : "Medium",
+        provenanceType: usingMock || postComparisonMock ? "mock" : "observed",
         geometryLinkage: usingMock ? "inferred" : "matched",
         spatialSystemHint: spatialPlan.legendHint,
       });
@@ -3582,7 +3625,7 @@ const HeroMap = ({
       return;
     }
     if (currentCity.toLowerCase() === "milan" && selectedKpi === "kpi4.2") {
-      const scoped = filterMilanLocalPoints(localCityPoints ?? [], selectedPilotId).filter(
+      const scoped = filterMilanAccessibilityPoints(localCityPoints ?? [], selectedPilotId).filter(
         (p) => p.properties?.datasetKind === "accessibility"
       );
       const observed = scoped.filter(
@@ -3590,16 +3633,23 @@ const HeroMap = ({
       );
       const junctionCount = milanJunctionAnchorsForPilot(milanSpeedSegments?.records).length;
       const usingMock = observed.length === 0 && junctionCount > 0;
+      const isCombined = selectedPilotId === "mil-p3";
       onDataQualitySummaryChange({
         recordsLabel: usingMock
           ? `${junctionCount} illustrative accessibility junction hubs`
-          : `${scoped.length.toLocaleString()} DSS civic-address points`,
+          : isCombined
+            ? `${scoped.length.toLocaleString()} DSS points (Pilot 1 + Pilot 2 combined)`
+            : `${scoped.length.toLocaleString()} DSS civic-address points`,
         spatialQuality: usingMock
           ? "KPI 2.1 junction anchors · illustrative accessibility mock"
-          : "matched DSS routing shapefile (EPSG:3003 → WGS84)",
+          : isCombined
+            ? "matched DSS routing · Pilot 1 ∪ Pilot 2"
+            : "matched DSS routing shapefile (EPSG:3003 → WGS84)",
         dataType: usingMock
           ? "illustrative junction accessibility mock"
-          : "DSS civic-address routing points",
+          : isCombined
+            ? "DSS civic-address routing · combined Pilot 1 + 2"
+            : "DSS civic-address routing points",
         temporalCoverage: usingMock ? "illustrative demo" : "baseline vs post-intervention",
         confidence: usingMock ? "Low" : scoped.length > 0 ? "High" : "Low",
         provenanceType: usingMock ? "mock" : scoped.length > 0 ? "observed" : "mock",
@@ -3612,17 +3662,69 @@ const HeroMap = ({
       const total = localCityPoints?.length || 0;
       const linkage =
         localCityPoints?.some((p) => p.properties?.geometryLinkage === "matched") ? "matched" : "inferred";
+      const isP1ModeShareMock = selectedPilotId === "hel-p1" && selectedKpi === "kpi1.2";
+      const isP2ModeShareMock = selectedPilotId === "hel-p2" && selectedKpi === "kpi1.2";
+      const isClimateMock = selectedKpi === "kpi3.2";
+      const isRoadSafety = selectedKpi === "kpi2.1";
+      const roadSafetyPostMock =
+        isRoadSafety && (scenario === "intervention" || scenario === "comparison");
+      const isHelsinkiMock =
+        isP1ModeShareMock || isP2ModeShareMock || isClimateMock || roadSafetyPostMock;
       onDataQualitySummaryChange({
-        recordsLabel: `${total.toLocaleString()} points`,
+        recordsLabel: isP1ModeShareMock
+          ? `${Math.min(8, total || 8)} mock mode-share hubs`
+          : isP2ModeShareMock
+            ? `${Math.min(8, total || 8)} mock mode-share hubs`
+            : isClimateMock
+              ? `${Math.min(220, total || 220)} mock climate points`
+              : isRoadSafety
+                ? `${total.toLocaleString()} road-safety points`
+                : `${total.toLocaleString()} points`,
         spatialQuality:
-          (linkage === "matched" ? "Telraam coordinates when present" : "inferred ring layout") +
+          (isP1ModeShareMock
+            ? "Density hub layout (illustrative)"
+            : isP2ModeShareMock
+              ? "Kallio density anchors (illustrative mode-share hubs)"
+              : isClimateMock
+                ? "Hazard-density climate proxy (illustrative)"
+                : isRoadSafety
+                  ? roadSafetyPostMock
+                    ? "MOCK post/comparison — survey / conflict density proxy"
+                    : "Survey / conflict density proxy (baseline observed)"
+                  : linkage === "matched"
+                    ? "Telraam coordinates when present"
+                    : "inferred ring layout") +
           aggregateLabel +
           reductionNote,
-        dataType: selectedKpi === "kpi1.2" ? "observed Telraam counts" : "derived Telraam proxy",
-        temporalCoverage: "before-after",
-        confidence: uncertainty === "high" || linkage === "inferred" ? "Low" : "Medium",
-        provenanceType: selectedKpi === "kpi1.2" ? "observed" : "derived",
-        geometryLinkage: linkage,
+        dataType: isP1ModeShareMock
+          ? "mock mode-share hubs (no FVH1 Telraam)"
+          : isP2ModeShareMock
+            ? "mock mode-share hubs (no FVH2 Telraam)"
+            : isClimateMock
+              ? "mock climate pressure (not ambient CO₂)"
+              : isRoadSafety
+                ? roadSafetyPostMock
+                  ? "MOCK post/comparison — road safety evaluation pending"
+                  : "observed survey / conflict density (baseline)"
+                : selectedKpi === "kpi1.2"
+                  ? "observed Telraam counts"
+                  : "derived Telraam proxy",
+        temporalCoverage: isHelsinkiMock
+          ? roadSafetyPostMock
+            ? "baseline observed · post/comparison MOCK"
+            : "illustrative single-period"
+          : "before-after",
+        confidence: isHelsinkiMock
+          ? "Low"
+          : uncertainty === "high" || linkage === "inferred"
+            ? "Low"
+            : "Medium",
+        provenanceType: isHelsinkiMock
+          ? "mock"
+          : selectedKpi === "kpi1.2" || isRoadSafety
+            ? "observed"
+            : "derived",
+        geometryLinkage: isHelsinkiMock && !isRoadSafety ? "inferred" : linkage,
         spatialSystemHint: spatialPlan.legendHint,
       });
       return;
@@ -3675,6 +3777,38 @@ const HeroMap = ({
         });
         return;
       }
+      if (selectedKpi === "kpi3.1") {
+        const parking = points.filter((p) => p.properties?.datasetKind === "parking");
+        const n = parking.length;
+        onDataQualitySummaryChange({
+          recordsLabel: n
+            ? `${n.toLocaleString()} bicycle parking / facility bay${n === 1 ? "" : "s"}`
+            : cphDiagnostics?.message || "Parking facility inventory",
+          spatialQuality: "matched street-name join · I100275 Medieval City inventory",
+          dataType: "observed zero-emission facility inventory (bike parking bays)",
+          temporalCoverage: "2024–2025 deployment inventory",
+          confidence: n >= 20 ? "High" : n > 0 ? "Medium" : "Low",
+          provenanceType: "observed",
+          geometryLinkage: "matched",
+          spatialSystemHint:
+            "Source: I100275 parking overview (SharePoint) · Method: bicycle parking / zero-emission facility bay inventory — not OpenTrafficCam counts.",
+        });
+        return;
+      }
+      if (selectedKpi === "kpi3.2") {
+        onDataQualitySummaryChange({
+          recordsLabel: cphDiagnostics?.message || "OTC-derived emissions pressure",
+          spatialQuality: "OTC hub sites · modelled intensity",
+          dataType: "modelled climate / emissions pressure (COPERT-lite proxy)",
+          temporalCoverage: "before-after",
+          confidence: "Medium",
+          provenanceType: "modelled",
+          geometryLinkage: "exact",
+          spatialSystemHint:
+            "Source: COPERT-lite emissions model on OTC hubs · Method: modelled pressure index — not ambient CO₂ sensors.",
+        });
+        return;
+      }
       // Only OTC directional flows — not Telraam / Platomo / survey / etc. merged into localCityPoints.
       const otcDirectional = points.filter((p) => {
         const kind = String(p.properties?.datasetKind ?? "");
@@ -3698,6 +3832,9 @@ const HeroMap = ({
       );
       const flowCount = otcDirectional.length;
       const siteCount = siteKeys.size;
+      const isRoadSafety = selectedKpi === "kpi2.1";
+      const roadSafetyPostMock =
+        isRoadSafety && (scenario === "intervention" || scenario === "comparison");
       const recordsLabel = kpiUnavailable
         ? "KPI preview only — not available yet"
         : cphDiagnostics?.reason === "files-unavailable"
@@ -3710,22 +3847,38 @@ const HeroMap = ({
       onDataQualitySummaryChange({
         recordsLabel,
         spatialQuality: "exact OpenTrafficCam coordinates",
-        dataType: kpiUnavailable ? "preview state" : "observed",
+        dataType: kpiUnavailable
+          ? "preview state"
+          : roadSafetyPostMock
+            ? "MOCK post/comparison — OTC motor-mix / iRAP proxy"
+            : isRoadSafety
+              ? "observed OTC motor-mix / iRAP pressure (baseline)"
+              : "observed",
         temporalCoverage:
           !kpiUnavailable && cphDiagnostics?.reason === "files-unavailable"
             ? "source unavailable"
-            : "before-after",
+            : roadSafetyPostMock
+              ? "baseline observed · post/comparison MOCK"
+              : "before-after",
         confidence:
-          kpiUnavailable || cphDiagnostics?.reason === "files-unavailable"
+          kpiUnavailable || cphDiagnostics?.reason === "files-unavailable" || roadSafetyPostMock
             ? "Low"
             : flowCount >= 4
               ? "High"
               : "Medium",
-        provenanceType: kpiUnavailable ? "derived" : "observed",
+        provenanceType: kpiUnavailable
+          ? "derived"
+          : roadSafetyPostMock
+            ? "mock"
+            : "observed",
         geometryLinkage: "exact",
         spatialSystemHint: kpiUnavailable
           ? spatialPlan.legendHint
-          : "Source: OpenTrafficCam Excel · Method: observed counts by camera direction and movement category (not city-wide modal share).",
+          : roadSafetyPostMock
+            ? "MOCK post/comparison — OTC motor mix / iRAP proxy, not direct crash counts."
+            : isRoadSafety
+              ? "OTC motor mix / iRAP proxy (baseline observed) — not direct crash counts."
+              : "Source: OpenTrafficCam Excel · Method: observed counts by camera direction and movement category (not city-wide modal share).",
       });
       return;
     }
@@ -3810,11 +3963,11 @@ const HeroMap = ({
           ? ` + Wintics site (${issyWintics.overall.modalSharePct.cyclists?.toFixed(1) ?? "?"}% cyclists at camera)`
           : "";
       const zoneCount =
-        selectedPilotId === "issy-p2" ? getIssyZoneCentroids().length : null;
+        isIssyCityWideModeSharePilot(selectedPilotId) ? getIssyZoneCentroids().length : null;
       onDataQualitySummaryChange({
         recordsLabel: `${issyFlows.length.toLocaleString()} zone flows${winticsNote}`,
         spatialQuality:
-          selectedPilotId === "issy-p2"
+          isIssyCityWideModeSharePilot(selectedPilotId)
             ? `city OD zones (${zoneCount ?? 6} centroids)`
             : "zone-flow linkage",
         dataType: "observed baseline/post flows",
@@ -3823,7 +3976,7 @@ const HeroMap = ({
         provenanceType: "observed",
         geometryLinkage: "matched",
         spatialSystemHint:
-          selectedPilotId === "issy-p2"
+          isIssyCityWideModeSharePilot(selectedPilotId)
             ? "City-scale sustainable mobility % at OD zone centroids"
             : spatialPlan.legendHint,
       });
@@ -3871,7 +4024,14 @@ const HeroMap = ({
       let provenanceType: "observed" | "derived" | "mock" = "mock";
       let dataType = "illustrative placeholder";
       let confidence: "High" | "Medium" | "Low" = "Low";
-      if (observedCount > 0 && observedCount >= mockCount) {
+      if (selectedKpi === "kpi2.1") {
+        const postMock = scenario === "intervention" || scenario === "comparison";
+        provenanceType = postMock ? "mock" : "observed";
+        dataType = postMock
+          ? "MOCK post/comparison — corridor / school pressure"
+          : "observed corridor / school pressure (baseline)";
+        confidence = postMock ? "Low" : observedCount >= 2 ? "Medium" : "Low";
+      } else if (observedCount > 0 && observedCount >= mockCount) {
         provenanceType = "observed";
         dataType = `observed ${kindHint}`;
         confidence = observedCount >= 2 ? "Medium" : "Low";
@@ -3893,9 +4053,7 @@ const HeroMap = ({
               ? "mock accessibility features"
               : selectedKpi === "kpi3.2"
                 ? "mock climate / env intensity pins"
-                : selectedKpi === "kpi2.1"
-                  ? "mock road-safety speeds"
-                  : "mock placeholder pins";
+                : "mock placeholder pins";
         confidence = "Low";
       } else {
         // Intervention GIS only — no KPI point series for this selection.
@@ -3922,6 +4080,14 @@ const HeroMap = ({
     if (currentCity.toLowerCase().includes("trikala")) {
       const total = localCityPoints?.length || 0;
       const infraCount = trikalaInfrastructureLocations.length;
+      const triP2MockKpi =
+        selectedPilotId === "tri-p2" && (selectedKpi === "kpi1.2" || selectedKpi === "kpi4.1");
+      const triRoadSafety = selectedKpi === "kpi2.1";
+      const triRoadSafetyPostMock =
+        triRoadSafety && (scenario === "intervention" || scenario === "comparison");
+      const triP4Mock = selectedPilotId === "tri-p4" && selectedKpi !== "kpi4.1";
+      const triP4ObservedSatisfaction = selectedPilotId === "tri-p4" && selectedKpi === "kpi4.1";
+      const triMockKpi = triP2MockKpi || triRoadSafetyPostMock || triP4Mock;
       const spatialQuality =
         infraCount > 0
           ? `partner GIS (${infraCount} mapped features)`
@@ -3931,12 +4097,52 @@ const HeroMap = ({
           ? `${infraCount.toLocaleString()} GIS features · ${total.toLocaleString()} survey aggregates`
           : `${total.toLocaleString()} survey aggregates`;
       onDataQualitySummaryChange({
-        recordsLabel,
+        recordsLabel: triP4ObservedSatisfaction
+          ? "Observed SMARTA2 user satisfaction (Pilot 4)"
+          : triP4Mock
+          ? selectedKpi === "kpi3.2"
+            ? "MOCK climate · Smart Citizen Kit geography (Pilot 4)"
+            : selectedKpi === "kpi1.2"
+              ? "MOCK mode share · Pilot 4 SMARTA2 / survey proxy"
+              : "MOCK · Pilot 4"
+          : triP2MockKpi
+          ? selectedKpi === "kpi1.2"
+            ? "MOCK mode share · 3 P+R hubs (partner occupancy survey pending)"
+            : "MOCK satisfaction · 3 P+R hubs (no user survey linked)"
+          : triRoadSafetyPostMock
+            ? "MOCK post/comparison — occupancy / speed evaluation pending"
+            : triRoadSafety
+              ? "Observed LoRa occupancy / speed (baseline)"
+              : recordsLabel,
         spatialQuality,
-        dataType: infraCount > 0 ? "observed GIS + survey aggregates" : "observed survey Likert aggregates",
-        temporalCoverage: total > 0 ? "before-after" : "unavailable",
-        confidence: infraCount > 0 || total > 0 ? "Medium" : "Low",
-        provenanceType: "observed",
+        dataType: triP4ObservedSatisfaction
+          ? "observed SMARTA2 user satisfaction survey"
+          : triP4Mock
+          ? "MOCK — Pilot 4 illustrative / proxy data"
+          : triP2MockKpi
+          ? selectedKpi === "kpi1.2"
+            ? "MOCK bike uptake / mode-share mix at P+R hubs"
+            : "MOCK user satisfaction at P+R hubs"
+          : triRoadSafetyPostMock
+            ? "MOCK post/comparison — LoRa occupancy / constructed speed"
+            : triRoadSafety
+              ? "observed LoRa occupancy / constructed speed (baseline)"
+              : infraCount > 0
+                ? "observed GIS + survey aggregates"
+                : "observed survey Likert aggregates",
+        temporalCoverage: triMockKpi
+          ? triRoadSafetyPostMock
+            ? "baseline observed · post/comparison MOCK"
+            : "mock placeholder"
+          : triP4ObservedSatisfaction || total > 0
+            ? "before-after"
+            : "unavailable",
+        confidence: triMockKpi
+          ? "Low"
+          : triP4ObservedSatisfaction || infraCount > 0 || total > 0
+            ? "Medium"
+            : "Low",
+        provenanceType: triMockKpi ? "mock" : "observed",
         geometryLinkage: infraCount > 0 ? "matched" : "inferred",
         spatialSystemHint: spatialPlan.legendHint,
       });

@@ -323,8 +323,8 @@ export function buildIssyCityClimateStudyView(
     interventionType: interventionCopy.title,
     coordinates: [lat, lon],
     monitoringPeriod: usesClasseur
-      ? `ASIF city model · chart year ${options.kpi32Year ?? "latest"}`
-      : `City time series · chart year ${options.kpi32Year ?? "latest"}`,
+      ? `ASIF city model · chart period ${options.kpi32Year ?? "latest"}`
+      : `City time series · chart period ${options.kpi32Year ?? "latest"}`,
     sensors: 0,
     approachesCovered: 1,
     totalApproaches: 1,
