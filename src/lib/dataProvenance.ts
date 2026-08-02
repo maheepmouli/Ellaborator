@@ -20,15 +20,34 @@ export const TRUST_CLASS_BLURBS: Record<TrustClass, string> = {
   mock: "Illustrative fill where partner evidence is missing",
 };
 
-/** City×KPI pairs that reuse observed files as mock survey/accessibility placeholders. */
+/**
+ * Authoritative Europe-map city popup chips.
+ * Overrides win over loose registry links (e.g. location registries tagged to every KPI).
+ * City bubble = best city-level claim for the KPI, not the worst pilot.
+ */
 const CITY_OVERVIEW_TRUST_OVERRIDES: Record<string, TrustClass> = {
+  // Copenhagen — satisfaction / accessibility are mode-share-site placeholders; climate is COPERT-lite.
   "Copenhagen|kpi4.1": "mock",
   "Copenhagen|kpi4.2": "mock",
+  "Copenhagen|kpi3.2": "derived",
+
+  // Zaragoza — Nanoenvi climate is observed (P1); satisfaction/accessibility pins are mock reuse; no ZEF inventory.
   "Zaragoza|kpi4.1": "mock",
   "Zaragoza|kpi4.2": "mock",
-  "Zaragoza|kpi3.2": "observed", // Nanoenvi for p1; p2 mock handled in-pilot
+  "Zaragoza|kpi3.1": "mock",
+  "Zaragoza|kpi3.2": "observed",
+
+  // Milan — CDM3 satisfaction mock until survey workbooks land.
   "Milan|kpi4.1": "mock",
-  "Trikala|kpi4.1": "mock",
+
+  // Trikala — mode share & climate KPI figures are mock (P2/P4); satisfaction has SMARTA2 + crossing surveys;
+  // zero-emission facilities use observed P+R / infrastructure geography (kpi3.1 stays registry-driven OBSERVED).
+  "Trikala|kpi1.2": "mock",
+  "Trikala|kpi3.2": "mock",
+  "Trikala|kpi4.1": "observed",
+
+  // Helsinki — climate KPI remains illustrative (no partner emissions feed).
+  "Helsinki|kpi3.2": "mock",
 };
 
 function datasetOverviewTrust(dataset: DatasetMetadata): TrustClass {
