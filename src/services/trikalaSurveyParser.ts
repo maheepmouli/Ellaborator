@@ -25,6 +25,9 @@ export const TRIKALA_SURVEY_FILES = {
   smartaAppPost: "/sharepoint-data/Trikala/post/Survey of SMARTA app_row data.xlsx",
 } as const;
 
+/** Bundled when SharePoint XLSX is unavailable (Vercel). */
+export const TRIKALA_SURVEY_ROWS_FALLBACK = "/data/trikala/survey-rows-fallback.json";
+
 export type TrikalaSegmentId =
   | "all"
   | "caregiver"
@@ -58,7 +61,12 @@ export interface TrikalaSurveyBundle {
   smartaAppPost: Record<string, unknown>[];
 }
 
+interface TrikalaSurveyRowsFallback {
+  sheets?: Partial<Record<keyof TrikalaSurveyBundle, Record<string, unknown>[]>>;
+}
+
 let surveyBundleCache: TrikalaSurveyBundle | null = null;
+let surveyFallbackCache: TrikalaSurveyRowsFallback | null | undefined;
 let segmentInsightCache: TrikalaSegmentInsight[] | null = null;
 const recordCache = new Map<string, NormalizedCityRecord[]>();
 
@@ -130,17 +138,51 @@ export function resolveResponseSheet(workbook: XLSX.WorkBook): string {
   return preferred ?? workbook.SheetNames[0];
 }
 
+/** Reject Vercel SPA HTML mistaken for workbook bytes. */
 async function fetchSurveyRows(path: string): Promise<Record<string, unknown>[]> {
   try {
     const response = await fetch(encodeURI(path));
     if (!response.ok) return [];
-    const workbook = XLSX.read(await response.arrayBuffer(), { type: "array" });
+    const contentType = (response.headers.get("content-type") || "").toLowerCase();
+    if (contentType.includes("text/html")) return [];
+    const buffer = await response.arrayBuffer();
+    if (buffer.byteLength < 8) return [];
+    const head = new Uint8Array(buffer.slice(0, 16));
+    // XLSX/ZIP starts with PK; HTML often starts with <! or <h
+    if (head[0] === 0x3c /* < */) return [];
+    const workbook = XLSX.read(buffer, { type: "array" });
     const sheetName = resolveResponseSheet(workbook);
     return XLSX.utils.sheet_to_json<Record<string, unknown>>(workbook.Sheets[sheetName], {
       defval: null,
     });
   } catch {
     return [];
+  }
+}
+
+async function loadSurveyRowsFallback(): Promise<TrikalaSurveyRowsFallback | null> {
+  if (surveyFallbackCache !== undefined) return surveyFallbackCache;
+  try {
+    const response = await fetch(TRIKALA_SURVEY_ROWS_FALLBACK);
+    if (!response.ok) {
+      surveyFallbackCache = null;
+      return null;
+    }
+    const contentType = (response.headers.get("content-type") || "").toLowerCase();
+    if (contentType.includes("text/html")) {
+      surveyFallbackCache = null;
+      return null;
+    }
+    const text = await response.text();
+    if (text.trimStart().startsWith("<")) {
+      surveyFallbackCache = null;
+      return null;
+    }
+    surveyFallbackCache = JSON.parse(text) as TrikalaSurveyRowsFallback;
+    return surveyFallbackCache;
+  } catch {
+    surveyFallbackCache = null;
+    return null;
   }
 }
 
@@ -161,7 +203,8 @@ export async function loadTrikalaSurveyBundle(): Promise<TrikalaSurveyBundle> {
     fetchSurveyRows(TRIKALA_SURVEY_FILES.bikeLanePost),
     fetchSurveyRows(TRIKALA_SURVEY_FILES.smartaAppPost),
   ]);
-  surveyBundleCache = {
+
+  const live: TrikalaSurveyBundle = {
     smartCrossingBaseline,
     smartCrossingPost,
     womenMobility,
@@ -169,6 +212,21 @@ export async function loadTrikalaSurveyBundle(): Promise<TrikalaSurveyBundle> {
     bikeLanePost,
     smartaAppPost,
   };
+
+  const needsFallback = Object.values(live).some((rows) => rows.length === 0);
+  if (needsFallback) {
+    const fallback = await loadSurveyRowsFallback();
+    const sheets = fallback?.sheets;
+    if (sheets) {
+      (Object.keys(live) as Array<keyof TrikalaSurveyBundle>).forEach((key) => {
+        if (live[key].length === 0 && sheets[key]?.length) {
+          live[key] = sheets[key]!;
+        }
+      });
+    }
+  }
+
+  surveyBundleCache = live;
   return surveyBundleCache;
 }
 

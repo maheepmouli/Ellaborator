@@ -9,6 +9,9 @@ import {
 export const TRIKALA_ENVIRONMENTAL_FILE =
   "/sharepoint-data/Trikala/smart_citizen_kit_environmental_metrics.xlsx";
 
+/** Bundled sensor registry when SharePoint XLSX is unavailable (Vercel). */
+export const TRIKALA_ENVIRONMENTAL_JSON_FALLBACK = "/data/trikala/environmental-sensors.json";
+
 const CAPABILITY_COLUMNS = ["CO2", "eCO2", "O3", "NO2", "PM1", "PM2.5", "PM4", "PM10", "Noise"] as const;
 
 export interface TrikalaSensorRow {
@@ -89,18 +92,62 @@ function parseSensorRows(
   return sensors;
 }
 
+async function loadSensorRowsFromJsonFallback(): Promise<Record<string, unknown>[]> {
+  try {
+    const response = await fetch(TRIKALA_ENVIRONMENTAL_JSON_FALLBACK);
+    if (!response.ok) return [];
+    const contentType = (response.headers.get("content-type") || "").toLowerCase();
+    if (contentType.includes("text/html")) return [];
+    const text = await response.text();
+    if (text.trimStart().startsWith("<")) return [];
+    const bundle = JSON.parse(text) as {
+      sensors?: Array<{
+        sensorId: number;
+        inOutdoor?: string;
+        status?: string;
+        capabilities?: string[];
+        locationLabel?: string;
+      }>;
+    };
+    return (bundle.sensors ?? []).map((sensor) => {
+      const row: Record<string, unknown> = {
+        Sensor: sensor.sensorId,
+        "In/outdoor": sensor.inOutdoor ?? "",
+        Status: sensor.status ?? "",
+        Location: sensor.locationLabel ?? "",
+      };
+      CAPABILITY_COLUMNS.forEach((col) => {
+        row[col] = sensor.capabilities?.includes(col) ? "X" : "";
+      });
+      return row;
+    });
+  } catch {
+    return [];
+  }
+}
+
 async function loadSensorRows(): Promise<TrikalaSensorRow[]> {
   const registry = await loadTrikalaLocationsBundle();
   try {
     const response = await fetch(encodeURI(TRIKALA_ENVIRONMENTAL_FILE));
-    if (!response.ok) return [];
-    const workbook = XLSX.read(await response.arrayBuffer(), { type: "array" });
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: "" });
-    return parseSensorRows(rows, registry);
+    if (response.ok) {
+      const contentType = (response.headers.get("content-type") || "").toLowerCase();
+      if (!contentType.includes("text/html")) {
+        const buffer = await response.arrayBuffer();
+        const head = new Uint8Array(buffer.slice(0, 1));
+        if (buffer.byteLength >= 8 && head[0] !== 0x3c) {
+          const workbook = XLSX.read(buffer, { type: "array" });
+          const sheet = workbook.Sheets[workbook.SheetNames[0]];
+          const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: "" });
+          if (rows.length) return parseSensorRows(rows, registry);
+        }
+      }
+    }
   } catch {
-    return [];
+    /* fall through to bundled JSON */
   }
+  const fallbackRows = await loadSensorRowsFromJsonFallback();
+  return parseSensorRows(fallbackRows, registry);
 }
 
 export async function buildTrikalaEnvironmentalRecords(
