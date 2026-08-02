@@ -4,19 +4,19 @@ import {
   X,
   ChevronRight,
   ChevronLeft,
-  AlertCircle,
   MapPinned,
   GitCompare,
   ClipboardCheck,
+  Building2,
 } from "lucide-react";
 import { Button } from "./ui/button";
-import { MAP_TOUR_POLICYMAKER, MAP_TOUR_STANDARD, type MapTourArcStep } from "@/data/storyConfig";
+import { MAP_TOUR_STANDARD, type MapTourArcStep } from "@/data/storyConfig";
 
 function stepIcon(icon: MapTourArcStep["icon"]) {
   const cls = "h-8 w-8";
   switch (icon) {
     case "problem":
-      return <AlertCircle className={cls} />;
+      return <Building2 className={cls} />;
     case "explore":
       return <MapPinned className={cls} />;
     case "compare":
@@ -31,14 +31,13 @@ function stepIcon(icon: MapTourArcStep["icon"]) {
 interface MapTourProps {
   isOpen: boolean;
   onClose: () => void;
-  /** Optional city label for contextual one-line hints from story config */
+  /** Optional city label for contextual tip */
   optionalCityName?: string;
 }
 
 const MapTour = ({ isOpen, onClose, optionalCityName }: MapTourProps) => {
   const [currentStep, setCurrentStep] = useState(0);
-  const [policymakerVariant, setPolicymakerVariant] = useState(false);
-  const tourSteps = policymakerVariant ? MAP_TOUR_POLICYMAKER : MAP_TOUR_STANDARD;
+  const tourSteps = MAP_TOUR_STANDARD;
   const step = tourSteps[currentStep];
 
   useEffect(() => {
@@ -46,10 +45,6 @@ const MapTour = ({ isOpen, onClose, optionalCityName }: MapTourProps) => {
       setCurrentStep(0);
     }
   }, [isOpen]);
-
-  useEffect(() => {
-    setCurrentStep(0);
-  }, [policymakerVariant]);
 
   const handleNext = () => {
     if (currentStep < tourSteps.length - 1) {
@@ -95,6 +90,7 @@ const MapTour = ({ isOpen, onClose, optionalCityName }: MapTourProps) => {
               <button
                 onClick={onClose}
                 className="absolute top-3 right-3 p-1.5 rounded-full hover:bg-primary-foreground/20 transition-colors"
+                aria-label="Close tour"
               >
                 <X className="h-4 w-4 text-primary-foreground" />
               </button>
@@ -110,38 +106,10 @@ const MapTour = ({ isOpen, onClose, optionalCityName }: MapTourProps) => {
                   <h3 className="text-lg font-bold text-primary-foreground">{step.title}</h3>
                 </div>
               </div>
-
-              <div className="mt-3 flex flex-wrap gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => setPolicymakerVariant(false)}
-                  className={`text-[10px] px-2 py-1 rounded-full border transition-colors ${
-                    !policymakerVariant
-                      ? "bg-primary-foreground/25 border-primary-foreground/50 text-primary-foreground"
-                      : "border-primary-foreground/25 text-primary-foreground/80 hover:bg-primary-foreground/15"
-                  }`}
-                >
-                  Standard narrative
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPolicymakerVariant(true)}
-                  className={`text-[10px] px-2 py-1 rounded-full border transition-colors ${
-                    policymakerVariant
-                      ? "bg-primary-foreground/25 border-primary-foreground/50 text-primary-foreground"
-                      : "border-primary-foreground/25 text-primary-foreground/80 hover:bg-primary-foreground/15"
-                  }`}
-                >
-                  For policymakers (short)
-                </button>
-              </div>
             </div>
 
             <div className="p-4">
               <p className="text-sm text-foreground leading-relaxed mb-4">{step.description}</p>
-              <p className="text-[11px] text-muted-foreground leading-snug mb-4">
-                Narrative arc: Problem → Explore → Compare → Data quality.
-              </p>
 
               <div className="flex justify-center gap-2 mb-4">
                 {tourSteps.map((_, idx) => (
@@ -149,6 +117,7 @@ const MapTour = ({ isOpen, onClose, optionalCityName }: MapTourProps) => {
                     key={idx}
                     type="button"
                     onClick={() => setCurrentStep(idx)}
+                    aria-label={`Go to step ${idx + 1}`}
                     className={`w-2 h-2 rounded-full transition-all ${
                       idx === currentStep ? "bg-violet w-6" : idx < currentStep ? "bg-green" : "bg-border-color"
                     }`}
@@ -172,7 +141,7 @@ const MapTour = ({ isOpen, onClose, optionalCityName }: MapTourProps) => {
                   onClick={handleNext}
                   className="flex-1 gap-1 bg-violet hover:bg-violet/90 text-primary-foreground"
                 >
-                  {currentStep === tourSteps.length - 1 ? "Start Exploring" : "Next"}
+                  {currentStep === tourSteps.length - 1 ? "Start exploring" : "Next"}
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
@@ -181,8 +150,7 @@ const MapTour = ({ isOpen, onClose, optionalCityName }: MapTourProps) => {
             {optionalCityName && optionalCityName.length > 0 && (
               <div className="px-4 pb-2">
                 <p className="text-[10px] text-muted-foreground leading-snug">
-                  Tip: narrative layers and pins follow the pilot you choose for {optionalCityName}; always confirm mocks vs
-                  observed in Data Summary before external use.
+                  Viewing {optionalCityName}: stay on the selected pilot and check MOCK vs observed before exporting.
                 </p>
               </div>
             )}

@@ -39,65 +39,43 @@ export type MapTourArcStep = {
   position: "center" | "left" | "right";
 };
 
-/** Full stakeholder arc Problem → Explore → Compare → Data quality */
+/**
+ * Map how-to: only the actions users need today —
+ * city → pilot → KPI/scenario → trust labels.
+ */
 export const MAP_TOUR_STANDARD: MapTourArcStep[] = [
   {
     icon: "problem",
-    title: "Start with the problem",
+    title: "Choose a Living Lab",
     description:
-      "City bubbles summarise headline KPI aggregates. Zoom in only when you need pilot-level evidence — aggregates can mix illustrative demo values with real map layers.",
+      "Click a city on the Europe map (or use the city list). Headline bubbles are city-level summaries — open a city for pilot evidence on the map.",
     position: "center",
   },
   {
     icon: "explore",
-    title: "Explore the geography",
+    title: "Open a pilot",
     description:
-      "Pick a pilot, then inspect segments, zones, or flows. Use the intervention toggle to relate the KPI layer to the planned change area.",
+      "Select a pilot to see its intervention area and short description. The left panel then follows that pilot’s KPIs and available map layers.",
     position: "left",
   },
   {
     icon: "compare",
-    title: "Compare scenarios",
+    title: "Pick KPI and scenario",
     description:
-      "Baseline, intervention, and comparison modes show what is available within each city’s temporal coverage — not every pair is symmetric across pilots.",
+      "Choose a KPI, then Baseline, Post, or Comparison when available. Not every pilot has every KPI or both periods — empty or limited views are expected.",
     position: "center",
   },
   {
     icon: "quality",
-    title: "Check data quality",
+    title: "Trust the labels",
     description:
-      "Badges and the Data Summary record spatial accuracy, mocks, parsers, and fallbacks before you cite numbers externally.",
+      "Use MOCK / observed badges, the legend, and Data Summary before citing figures. Click map features to open the observatory when it is offered.",
     position: "right",
   },
 ];
 
-/** Short tour for policymakers (same arc, condensed) */
-export const MAP_TOUR_POLICYMAKER: MapTourArcStep[] = [
-  {
-    icon: "problem",
-    title: "What we measure",
-    description: "EU-wide map with city KPI headlines — distinguish illustrative demo values from layer-backed readings.",
-    position: "center",
-  },
-  {
-    icon: "explore",
-    title: "Where it happens",
-    description: "Select a pilot to open the KPI panel aligned to street-scale evidence where available.",
-    position: "left",
-  },
-  {
-    icon: "compare",
-    title: "Before vs after",
-    description: "Use scenario toggles when the city exposes both periods.",
-    position: "center",
-  },
-  {
-    icon: "quality",
-    title: "Prove it",
-    description: "Open Data Summary — never export numbers without confirming observed vs mock labels.",
-    position: "right",
-  },
-];
+/** @deprecated Kept for type compatibility — MapTour uses MAP_TOUR_STANDARD only. */
+export const MAP_TOUR_POLICYMAKER: MapTourArcStep[] = MAP_TOUR_STANDARD;
 
 /** One step in `/story/:pilotId` scrolly (IntersectionObserver; no Scrollama to keep bundle small). */
 export type PilotScrollStoryStep = {
@@ -352,7 +330,8 @@ export const PILOT_SCROLL_STORIES: Record<string, PilotScrollStoryStep[]> = {
 };
 
 export const TOUR_CITY_EXAMPLES: Partial<Record<string, string>> = {
-  milan: "Example: Pilot 2 uses AMAT speed segments for safety KPIs when shapefile joins succeed.",
-  copenhagen: "Example: OTC camera counts underpin several pilots; KPI card may separately show demo aggregates.",
-  helsinki: "Example: Telraam flows support Helsinki before/after KPIs — check inferred spatial badges.",
+  milan: "Milan: AMAT counts and corridor layers — check MOCK on post / comparison mode share.",
+  zaragoza: "Zaragoza: school, stadium, and hospital pilots — confirm observed school/survey layers vs MOCK hospital safety.",
+  copenhagen: "Copenhagen: OTC / Telraam sites on the map; KPI cards may still show scaffolding — use Data Summary.",
+  helsinki: "Helsinki: Telraam before/after flows — watch inferred spatial badges.",
 };

@@ -151,8 +151,14 @@ type DataQualitySummary = {
 
 const MapContent = () => {
   const intel = useMapIntelligence();
-  // Start with the tour open when the map first loads
-  const [showTour, setShowTour] = useState(true);
+  // First visit: show how-to tour once; reopen anytime via "How to Use"
+  const [showTour, setShowTour] = useState(() => {
+    try {
+      return localStorage.getItem("elaborator-map-tour-seen") !== "1";
+    } catch {
+      return true;
+    }
+  });
   const [selectedCity, setSelectedCity] = useState("");
   const [selectedPilot, setSelectedPilot] = useState<SelectedPilot | null>(null);
   const issyJunctionStudy = isIssyStudyPilot(selectedPilot?.id);
@@ -1227,6 +1233,11 @@ const MapContent = () => {
 
   const handleTourClose = () => {
     setShowTour(false);
+    try {
+      localStorage.setItem("elaborator-map-tour-seen", "1");
+    } catch {
+      /* ignore */
+    }
   };
 
   const handleZoomIn = useCallback(() => {
