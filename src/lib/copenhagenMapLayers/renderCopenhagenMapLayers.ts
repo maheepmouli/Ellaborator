@@ -426,8 +426,8 @@ const CPH_A11Y_CROSSING_HALF_M = 52;
 const CPH_A11Y_CROSSING_COLOR = "#00ffff";
 
 /**
- * KPI 4.2 — Issy-style blue hub point + CSS ripple + cyan dashed crossing vector.
- * Sample dimension pins stay as satellites via renderCopenhagenIconPoints.
+ * KPI 4.2 — cyan dashed crossing vector only.
+ * Sample dimension pins stay as satellites via renderCopenhagenIconPoints (no hub ripple).
  */
 function renderCopenhagenAccessibilitySafetyCorridor(options: {
   map: L.Map;
@@ -445,8 +445,6 @@ function renderCopenhagenAccessibilitySafetyCorridor(options: {
     observedPoints,
     selectedSegmentId,
     segmentHandlers,
-    markersOut,
-    circlesOut,
     polylinesOut,
   } = options;
 
@@ -498,20 +496,6 @@ function renderCopenhagenAccessibilitySafetyCorridor(options: {
     selectedSegmentId,
   });
   polylinesOut.push(core);
-
-  // Issy-style: animated CSS ripple + solid blue hub point (no icon badge).
-  renderHubRipplePulseOverlay(map, hubLat, hubLon, false, markersOut, circlesOut, {
-    showAnchorDot: true,
-    ringColor: "#38bdf8",
-    ringScale: 1.15,
-    minZoom: 12,
-    interaction: {
-      segmentId: hubSegmentId,
-      segmentName: hubName,
-      segmentHandlers,
-      selectedSegmentId,
-    },
-  });
 }
 
 function buildEmissionsPopup(point: CopenhagenObservedPoint): string {

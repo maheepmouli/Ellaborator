@@ -286,12 +286,11 @@ export function resolveMapLegend(
     return {
       marker: "point",
       items: [
-        { label: "Hub (blue point + ripple)", color: "#38bdf8" },
         { label: "Crossing vector", color: "#00ffff" },
         { label: "Sample pin (A / W / P)", color: "#22c55e" },
         { label: "Pilot area (inferred)", color: "rgba(255,255,255,0.35)" },
       ],
-      hint: "Issy-style blue hub + CSS ripple + cyan dashed crossing vector. 3 baseline / 4 intervention sample pins along the corridor.",
+      hint: "Cyan dashed crossing vector with sample accessibility pins. No hub ripple on KPI 4.2.",
     };
   }
 
