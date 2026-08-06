@@ -22,6 +22,8 @@ import {
   type PipelineStageValue,
   type RuntimeStatus,
 } from "@/data/sharepointIntegrationAudit";
+import { useZaragozaUnlocked } from "@/hooks/useZaragozaUnlocked";
+import { isZaragozaCityName } from "@/lib/zaragozaAccess";
 
 const INTEGRATION_COLORS: Record<IntegrationStatus, string> = {
   integrated: "bg-emerald-500/30 text-emerald-50 border-emerald-400/50",
@@ -94,6 +96,7 @@ export interface SharePointIntegrationSectionProps {
 
 export function SharePointIntegrationSection({ manifest }: SharePointIntegrationSectionProps) {
   const [appendixOpen, setAppendixOpen] = useState(false);
+  const { unlocked: zaragozaUnlocked } = useZaragozaUnlocked();
   const manifestLabels = useMemo(
     () => new Set((manifest?.files ?? []).map((f) => f.label).filter(Boolean) as string[]),
     [manifest]
@@ -107,6 +110,14 @@ export function SharePointIntegrationSection({ manifest }: SharePointIntegration
       })),
     [manifestLabels]
   );
+
+  const cityRows = zaragozaUnlocked
+    ? CITY_INTEGRATION_ROWS
+    : CITY_INTEGRATION_ROWS.filter((row) => !isZaragozaCityName(row.city));
+
+  const kpiSourceRows = zaragozaUnlocked
+    ? KPI_SOURCE_MATRIX
+    : KPI_SOURCE_MATRIX.filter((row) => !isZaragozaCityName(row.city));
 
   return (
     <div className="space-y-6">
@@ -155,7 +166,7 @@ export function SharePointIntegrationSection({ manifest }: SharePointIntegration
               </TableRow>
             </TableHeader>
             <TableBody>
-              {CITY_INTEGRATION_ROWS.map((row) => (
+              {cityRows.map((row) => (
                 <TableRow key={row.city} className="border-white/5">
                   <TableCell className="text-[12px] text-white/85 font-medium">{row.city}</TableCell>
                   <TableCell>
@@ -191,7 +202,7 @@ export function SharePointIntegrationSection({ manifest }: SharePointIntegration
               </TableRow>
             </TableHeader>
             <TableBody>
-              {KPI_SOURCE_MATRIX.map((row) => (
+              {kpiSourceRows.map((row) => (
                 <TableRow key={row.city} className="border-white/5">
                   <TableCell className="text-[12px] text-white/85 font-medium">{row.city}</TableCell>
                   <TableCell className="text-[11px] text-white/60">{row.kpi1_2}</TableCell>

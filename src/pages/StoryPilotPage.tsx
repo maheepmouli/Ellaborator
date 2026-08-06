@@ -3,6 +3,8 @@ import { Link, useParams } from "react-router-dom";
 import Header from "@/components/Header";
 import { findPilotByIdGlobally } from "@/data/pilotDefinitions";
 import { PILOT_SCROLL_STORIES } from "@/data/storyConfig";
+import { ZaragozaAccessWall } from "@/components/ZaragozaPasswordGate";
+import { isZaragozaCityName, isZaragozaPilotId } from "@/lib/zaragozaAccess";
 
 function cityLabelFromPilotsKey(key: string): string {
   const labels: Record<string, string> = {
@@ -117,8 +119,10 @@ export default function StoryPilotPage() {
   const cityName = match ? cityLabelFromPilotsKey(String(match.pilotsKey)) : "";
   const pilot = match?.pilot;
   const activeStep = steps[active] ?? steps[0];
+  const needsZaragozaGate =
+    isZaragozaCityName(cityName) || isZaragozaPilotId(pilotId) || isZaragozaPilotId(pilot?.id);
 
-  return (
+  const page = (
     <div className="min-h-screen bg-background text-foreground">
       <Header />
 
@@ -259,4 +263,10 @@ export default function StoryPilotPage() {
       </div>
     </div>
   );
+
+  if (needsZaragozaGate) {
+    return <ZaragozaAccessWall title="Zaragoza">{page}</ZaragozaAccessWall>;
+  }
+
+  return page;
 }

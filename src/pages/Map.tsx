@@ -57,6 +57,12 @@ import {
 } from "@/lib/copenhagenMapSelection";
 import { getCopenhagenPilotLatLngBounds } from "@/data/copenhagenCameraSites";
 import { getZaragozaPilotLatLngBounds } from "@/data/zaragozaPilotProfiles";
+import {
+  isZaragozaCityName,
+  isZaragozaPilotId,
+  isZaragozaUnlocked,
+} from "@/lib/zaragozaAccess";
+import { ZaragozaPasswordDialog } from "@/components/ZaragozaPasswordGate";
 import type { MapSelectionState } from "@/types/mapSelection";
 import { useMilanEnvironmentSegments, useMilanSpeedSegments } from "@/hooks/use-milan-segment-data";
 import {
@@ -161,6 +167,9 @@ const MapContent = () => {
   });
   const [selectedCity, setSelectedCity] = useState("");
   const [selectedPilot, setSelectedPilot] = useState<SelectedPilot | null>(null);
+  const [zaragozaGateOpen, setZaragozaGateOpen] = useState(false);
+  const pendingZaragozaCityRef = useRef<string | null>(null);
+  const pendingZaragozaPilotRef = useRef<SelectedPilot | null>(null);
   const issyJunctionStudy = isIssyStudyPilot(selectedPilot?.id);
   const isCopenhagenMap = isCopenhagenObservatoryContext(selectedCity, selectedPilot?.id);
   const isTrikalaMap = isTrikalaCityName(selectedCity);
@@ -1256,9 +1265,22 @@ const MapContent = () => {
     }
   };
 
+  const applyCitySelect = useCallback(
+    (city: string) => {
+      setSelectedCity(city);
+      setIntelCity(city);
+    },
+    [setIntelCity]
+  );
+
   const handleCitySelect = (city: string) => {
-    setSelectedCity(city);
-    setIntelCity(city);
+    if (city && isZaragozaCityName(city) && !isZaragozaUnlocked()) {
+      pendingZaragozaCityRef.current = city;
+      pendingZaragozaPilotRef.current = null;
+      setZaragozaGateOpen(true);
+      return;
+    }
+    applyCitySelect(city);
   };
 
   const resolveCityLabelFromPilot = useCallback((pilot: SelectedPilot): string => {
@@ -1294,7 +1316,7 @@ const MapContent = () => {
     return currentKpi;
   }, []);
 
-  const handlePilotSelect = useCallback(
+  const applyPilotSelect = useCallback(
     (pilot: SelectedPilot | null) => {
       setSelectedPilot(pilot);
       if (pilot) {
@@ -1326,6 +1348,36 @@ const MapContent = () => {
     },
     [resolveCityLabelFromPilot, setIntelCity, resolvePilotDefaultKpi, selectedKpi, setIntelKpiId, patchSelection, setSelectedJunctionSegmentId]
   );
+
+  const handlePilotSelect = useCallback(
+    (pilot: SelectedPilot | null) => {
+      if (pilot && isZaragozaPilotId(pilot.id) && !isZaragozaUnlocked()) {
+        pendingZaragozaPilotRef.current = pilot;
+        pendingZaragozaCityRef.current = resolveCityLabelFromPilot(pilot);
+        setZaragozaGateOpen(true);
+        return;
+      }
+      applyPilotSelect(pilot);
+    },
+    [applyPilotSelect, resolveCityLabelFromPilot]
+  );
+
+  const handleZaragozaUnlocked = useCallback(() => {
+    const pilot = pendingZaragozaPilotRef.current;
+    const city = pendingZaragozaCityRef.current;
+    pendingZaragozaPilotRef.current = null;
+    pendingZaragozaCityRef.current = null;
+    if (pilot) {
+      applyPilotSelect(pilot);
+    } else if (city) {
+      applyCitySelect(city);
+    }
+  }, [applyPilotSelect, applyCitySelect]);
+
+  const handleZaragozaGateCancel = useCallback(() => {
+    pendingZaragozaPilotRef.current = null;
+    pendingZaragozaCityRef.current = null;
+  }, []);
 
   const handleSegmentHover = useCallback(
     (detail: {
@@ -1423,6 +1475,13 @@ const MapContent = () => {
     <div className="h-screen w-screen overflow-hidden bg-background relative">
       {/* Map Tour Popup */}
       <MapTour isOpen={showTour} onClose={handleTourClose} optionalCityName={selectedCity} />
+
+      <ZaragozaPasswordDialog
+        open={zaragozaGateOpen}
+        onOpenChange={setZaragozaGateOpen}
+        onUnlocked={handleZaragozaUnlocked}
+        onCancel={handleZaragozaGateCancel}
+      />
 
       {/* Simple Header with Logo only */}
       <Header
@@ -1553,7 +1612,7 @@ const MapContent = () => {
             selectedPilotName={selectedPilot?.name}
             selectedPilotId={selectedPilot?.id}
             selectedKpi={selectedKpi}
-            onCityChange={setSelectedCity}
+            onCityChange={handleCitySelect}
             onPilotChange={handlePilotChange}
             onKpiChange={(kpi) => {
               setSelectedKpi(kpi);

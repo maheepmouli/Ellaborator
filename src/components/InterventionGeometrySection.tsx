@@ -14,6 +14,8 @@ import {
   type DashboardFirstMode,
   type GeometryConfidence,
 } from "@/data/interventionGeometryAudit";
+import { useZaragozaUnlocked } from "@/hooks/useZaragozaUnlocked";
+import { isZaragozaCityName } from "@/lib/zaragozaAccess";
 
 const MODE_COLORS: Record<DashboardFirstMode, string> = {
   "corridor-first": "bg-violet-500/30 text-violet-50 border-violet-400/50",
@@ -41,6 +43,14 @@ function Chip({ label, className }: { label: string; className: string }) {
 }
 
 export function InterventionGeometrySection() {
+  const { unlocked: zaragozaUnlocked } = useZaragozaUnlocked();
+  const citySummary = zaragozaUnlocked
+    ? CITY_DASHBOARD_FIRST_SUMMARY
+    : CITY_DASHBOARD_FIRST_SUMMARY.filter((row) => !isZaragozaCityName(row.city));
+  const pilotRows = zaragozaUnlocked
+    ? PILOT_GEOMETRY_ROWS
+    : PILOT_GEOMETRY_ROWS.filter((row) => !isZaragozaCityName(row.city));
+
   return (
     <div className="space-y-6">
       <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3">
@@ -66,7 +76,7 @@ export function InterventionGeometrySection() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {CITY_DASHBOARD_FIRST_SUMMARY.map((row) => (
+              {citySummary.map((row) => (
                 <TableRow key={row.city} className="border-white/5">
                   <TableCell className="text-[12px] text-white/85 font-medium">{row.city}</TableCell>
                   <TableCell>
@@ -97,7 +107,7 @@ export function InterventionGeometrySection() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {PILOT_GEOMETRY_ROWS.map((row) => (
+              {pilotRows.map((row) => (
                 <TableRow key={row.pilotId} className="border-white/5 align-top">
                   <TableCell className="text-[11px] text-white/80 font-medium">{row.city}</TableCell>
                   <TableCell className="text-[11px] text-white/70">{row.pilotLabel}</TableCell>
@@ -121,7 +131,7 @@ export function InterventionGeometrySection() {
       <div>
         <p className="text-[12px] font-semibold text-white/75 mb-2">Implementation gaps (current vs recommended)</p>
         <ul className="space-y-2">
-          {PILOT_GEOMETRY_ROWS.filter((r) => r.currentImplementationGap).map((row) => (
+          {pilotRows.filter((r) => r.currentImplementationGap).map((row) => (
             <li
               key={`gap-${row.pilotId}`}
               className="rounded-lg border border-amber-400/25 bg-amber-500/8 px-3 py-2 text-[11px] text-amber-100/85"

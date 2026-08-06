@@ -15,6 +15,7 @@ import {
   Download,
   Info,
   FileText,
+  Lock,
 } from "lucide-react";
 import Header from "@/components/Header";
 import IssyKpiMethodologySection from "@/components/IssyKpiMethodologySection";
@@ -68,6 +69,13 @@ import {
 } from "@/data/sharepointIntegrationAudit";
 import { PILOT_GEOMETRY_ROWS, CITY_DASHBOARD_FIRST_SUMMARY } from "@/data/interventionGeometryAudit";
 import { useWorkflowHealth } from "@/hooks/use-workflow-health";
+import { ZaragozaPasswordDialog } from "@/components/ZaragozaPasswordGate";
+import { useZaragozaUnlocked } from "@/hooks/useZaragozaUnlocked";
+import {
+  filterOutZaragozaCities,
+  isZaragozaCityName,
+  isZaragozaUnlocked,
+} from "@/lib/zaragozaAccess";
 
 // ─── Badge helpers ────────────────────────────────────────────────────────────
 
@@ -340,7 +348,7 @@ function DatasetRow({ dataset }: { dataset: DatasetMetadata }) {
 
 // ─── KPI Readiness Matrix ─────────────────────────────────────────────────────
 
-function ReadinessMatrix() {
+function ReadinessMatrix({ cities }: { cities: readonly string[] }) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-[11px]">
@@ -364,7 +372,7 @@ function ReadinessMatrix() {
           </tr>
         </thead>
         <tbody>
-          {ALL_CITIES.map((city) => {
+          {cities.map((city) => {
             const summary = getCityReadinessSummary(city);
             const coveragePct = Math.round(
               ((summary.ready + summary.partial * 0.5) / summary.total) * 100
@@ -462,10 +470,10 @@ const LINKAGE_COLORS: Record<string, string> = {
   "none": "bg-white/15",
 };
 
-function SpatialLinkageSection() {
+function SpatialLinkageSection({ cities }: { cities: readonly string[] }) {
   return (
     <div className="space-y-4">
-      {ALL_CITIES.map((city) => {
+      {cities.map((city) => {
         const datasets = DATASET_REGISTRY.filter((d) => d.city === city);
         const byMethod = datasets.reduce<Record<string, number>>((acc, d) => {
           acc[d.spatialLinkageMethod] = (acc[d.spatialLinkageMethod] ?? 0) + 1;
@@ -537,9 +545,13 @@ const FILTER_ALL = "all";
 function FilterBar({
   filters,
   onChange,
+  cities,
+  onRequestZaragozaUnlock,
 }: {
   filters: FilterState;
   onChange: (f: FilterState) => void;
+  cities: readonly string[];
+  onRequestZaragozaUnlock?: () => void;
 }) {
   const set = (key: keyof FilterState) => (val: string) =>
     onChange({ ...filters, [key]: val });
@@ -551,15 +563,29 @@ function FilterBar({
         Filter
       </div>
 
-      <Select value={filters.city} onValueChange={set("city")}>
+      <Select
+        value={filters.city}
+        onValueChange={(val) => {
+          if (isZaragozaCityName(val) && !isZaragozaUnlocked()) {
+            onRequestZaragozaUnlock?.();
+            return;
+          }
+          set("city")(val);
+        }}
+      >
         <SelectTrigger className="h-7 w-[148px] text-[11px] bg-white/[0.04] border-white/10 text-white/75">
           <SelectValue placeholder="City" />
         </SelectTrigger>
         <SelectContent className={CATALOGUE_SELECT_CONTENT}>
           <SelectItem value={FILTER_ALL} className={CATALOGUE_SELECT_ITEM}>All cities</SelectItem>
-          {ALL_CITIES.map((c) => (
+          {cities.map((c) => (
             <SelectItem key={c} value={c} className={CATALOGUE_SELECT_ITEM}>{c}</SelectItem>
           ))}
+          {!cities.some((c) => isZaragozaCityName(c)) && (
+            <SelectItem value="Zaragoza" className={CATALOGUE_SELECT_ITEM}>
+              Zaragoza (locked)
+            </SelectItem>
+          )}
         </SelectContent>
       </Select>
 
@@ -687,6 +713,12 @@ const DataCatalogue = () => {
     geoQuality: FILTER_ALL,
     parserStatus: FILTER_ALL,
   });
+  const { unlocked: zaragozaUnlocked } = useZaragozaUnlocked();
+  const [zaragozaGateOpen, setZaragozaGateOpen] = useState(false);
+  const visibleCities = useMemo(
+    () => filterOutZaragozaCities(ALL_CITIES),
+    [zaragozaUnlocked]
+  );
 
   const { data: sharepointManifest } = useQuery({
     queryKey: ["sharepoint-manifest-full"],
@@ -697,6 +729,7 @@ const DataCatalogue = () => {
 
   const filtered = useMemo(() => {
     return DATASET_REGISTRY.filter((d) => {
+      if (!zaragozaUnlocked && isZaragozaCityName(d.city)) return false;
       if (filters.city !== FILTER_ALL && d.city !== filters.city) return false;
       if (filters.kpi !== FILTER_ALL && !d.linkedKpis.includes(filters.kpi)) return false;
       if (filters.dataType !== FILTER_ALL && d.dataType !== filters.dataType) return false;
@@ -704,13 +737,21 @@ const DataCatalogue = () => {
       if (filters.parserStatus !== FILTER_ALL && d.parserStatus !== filters.parserStatus) return false;
       return true;
     });
-  }, [filters]);
+  }, [filters, zaragozaUnlocked]);
+
+  const visibleRegistry = useMemo(
+    () =>
+      zaragozaUnlocked
+        ? DATASET_REGISTRY
+        : DATASET_REGISTRY.filter((d) => !isZaragozaCityName(d.city)),
+    [zaragozaUnlocked]
+  );
 
   // Summary counts
-  const totalDatasets = DATASET_REGISTRY.length;
-  const activeDatasets = DATASET_REGISTRY.filter((d) => d.realDataStatus === "active").length;
-  const readyParsers = DATASET_REGISTRY.filter((d) => d.parserStatus === "ready").length;
-  const withGeometry = DATASET_REGISTRY.filter((d) => d.geometryType !== "none").length;
+  const totalDatasets = visibleRegistry.length;
+  const activeDatasets = visibleRegistry.filter((d) => d.realDataStatus === "active").length;
+  const readyParsers = visibleRegistry.filter((d) => d.parserStatus === "ready").length;
+  const withGeometry = visibleRegistry.filter((d) => d.geometryType !== "none").length;
 
   return (
     <div
@@ -721,6 +762,11 @@ const DataCatalogue = () => {
       }}
     >
       <Header />
+      <ZaragozaPasswordDialog
+        open={zaragozaGateOpen}
+        onOpenChange={setZaragozaGateOpen}
+        onUnlocked={() => setFilters((f) => ({ ...f, city: "Zaragoza" }))}
+      />
 
       <main className="container mx-auto px-4 pt-24 pb-16 max-w-[1320px]">
             <motion.div
@@ -761,16 +807,22 @@ const DataCatalogue = () => {
               onClick={() => {
                 const payload = {
                   exportedAt: new Date().toISOString(),
-                  datasets: DATASET_REGISTRY,
-                  kpiReadiness: KPI_READINESS_MATRIX,
+                  datasets: visibleRegistry,
+                  kpiReadiness: zaragozaUnlocked
+                    ? KPI_READINESS_MATRIX
+                    : KPI_READINESS_MATRIX.filter((c) => !isZaragozaCityName(c.city)),
                   sharepointIntegration: {
-                    cities: CITY_INTEGRATION_ROWS,
+                    cities: zaragozaUnlocked
+                      ? CITY_INTEGRATION_ROWS
+                      : CITY_INTEGRATION_ROWS.filter((c) => !isZaragozaCityName(c.city)),
                     kpiSources: KPI_SOURCE_MATRIX,
                     dropPipeline: DROP_PIPELINE_ROWS,
                     manifest: sharepointManifest,
                   },
                   interventionGeometry: {
-                    pilots: PILOT_GEOMETRY_ROWS,
+                    pilots: zaragozaUnlocked
+                      ? PILOT_GEOMETRY_ROWS
+                      : PILOT_GEOMETRY_ROWS.filter((p) => !isZaragozaCityName(p.city)),
                     cityDashboardFirst: CITY_DASHBOARD_FIRST_SUMMARY,
                   },
                 };
@@ -791,12 +843,31 @@ const DataCatalogue = () => {
             </div>
           </div>
 
+          {!zaragozaUnlocked && (
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-rose-400/30 bg-rose-500/10 px-4 py-3">
+              <div className="flex items-start gap-2.5 min-w-0">
+                <Lock className="h-4 w-4 text-rose-300 flex-shrink-0 mt-0.5" />
+                <p className="text-[12px] text-rose-50/90 leading-relaxed">
+                  Zaragoza catalogue entries are hidden — partners restricted publication of this city’s data.
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-rose-300/40 bg-rose-400/10 text-rose-50 hover:bg-rose-400/20"
+                onClick={() => setZaragozaGateOpen(true)}
+              >
+                Unlock Zaragoza
+              </Button>
+            </div>
+          )}
+
           {/* ── Summary cards ── */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8">
             <StatCard
               value={totalDatasets}
               label="Datasets registered"
-              sub={`across ${ALL_CITIES.length} lighthouse cities`}
+              sub={`across ${visibleCities.length} lighthouse cities`}
             />
             <StatCard value={activeDatasets} label="Active real data" sub="live or static file" />
             <StatCard value={readyParsers} label="Parsers ready" sub="feeding map layers" />
@@ -833,7 +904,7 @@ const DataCatalogue = () => {
               title="KPI Readiness Matrix"
               sub="Which cities can currently produce each KPI — derived from the dataset registry"
             />
-            <ReadinessMatrix />
+            <ReadinessMatrix cities={visibleCities} />
           </GlassCard>
 
           {/* ── Issy SharePoint file inventory ── */}
@@ -863,7 +934,7 @@ const DataCatalogue = () => {
               sub="Meaning, calculation, limitations, and sources per city using a shared Issy-style methodology contract"
             />
             <div className="space-y-5">
-              {ALL_CITIES.filter((city) => city !== "Issy-les-Moulineaux").map((city) => (
+              {visibleCities.filter((city) => city !== "Issy-les-Moulineaux").map((city) => (
                 <section key={city} className="space-y-2">
                   <h3 className="text-[13px] font-semibold text-white">{city}</h3>
                   <CityKpiMethodologySection city={city} />
@@ -880,7 +951,12 @@ const DataCatalogue = () => {
               sub="All datasets with source, type, geometry, KPI linkage, and parser status. Click a row to expand."
             />
 
-            <FilterBar filters={filters} onChange={setFilters} />
+            <FilterBar
+              filters={filters}
+              onChange={setFilters}
+              cities={visibleCities}
+              onRequestZaragozaUnlock={() => setZaragozaGateOpen(true)}
+            />
 
             <div className="overflow-x-auto rounded-xl border border-white/[0.07]">
               <Table className="[&_tbody_tr]:hover:!bg-transparent">
@@ -927,7 +1003,7 @@ const DataCatalogue = () => {
               title="Spatial Linkage Coverage"
               sub="How each city's datasets connect data values to map geometry"
             />
-            <SpatialLinkageSection />
+            <SpatialLinkageSection cities={visibleCities} />
           </GlassCard>
 
           {/* ── System Health ── */}

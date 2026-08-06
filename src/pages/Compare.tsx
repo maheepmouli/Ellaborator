@@ -29,10 +29,25 @@ import {
 } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
 import { CITY_DATA, ELABORATOR_KPIS } from "@/data/kpiDefinitions";
+import { ZaragozaPasswordDialog } from "@/components/ZaragozaPasswordGate";
+import { isZaragozaCityName, isZaragozaUnlocked } from "@/lib/zaragozaAccess";
+import { useZaragozaUnlocked } from "@/hooks/useZaragozaUnlocked";
 
 const Compare = () => {
   const [selectedCity, setSelectedCity] = useState(CITY_DATA[0]?.city || "Milan");
   const [selectedKPI, setSelectedKPI] = useState(ELABORATOR_KPIS[0]?.id || "kpi1.2");
+  const { unlocked: zaragozaUnlocked } = useZaragozaUnlocked();
+  const [zaragozaGateOpen, setZaragozaGateOpen] = useState(false);
+  const [pendingCity, setPendingCity] = useState<string | null>(null);
+
+  const handleCityChange = (city: string) => {
+    if (isZaragozaCityName(city) && !isZaragozaUnlocked()) {
+      setPendingCity(city);
+      setZaragozaGateOpen(true);
+      return;
+    }
+    setSelectedCity(city);
+  };
 
   const cities = CITY_DATA.map((city) => ({
     id: city.city,
@@ -103,6 +118,15 @@ const Compare = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-blue-light/10 to-green/10">
+      <ZaragozaPasswordDialog
+        open={zaragozaGateOpen}
+        onOpenChange={setZaragozaGateOpen}
+        onUnlocked={() => {
+          if (pendingCity) setSelectedCity(pendingCity);
+          setPendingCity(null);
+        }}
+        onCancel={() => setPendingCity(null)}
+      />
       <Header />
       
       <main className="container mx-auto px-4 pt-24 pb-8">
@@ -153,14 +177,16 @@ const Compare = () => {
               <Card className="p-4 h-full bg-card/80 backdrop-blur-xl border-border-color/50 shadow-lg">
                 <div className="flex items-center gap-4">
                   <MapPin className="h-5 w-5 text-violet" />
-                  <Select value={selectedCity} onValueChange={setSelectedCity}>
+                  <Select value={selectedCity} onValueChange={handleCityChange}>
                     <SelectTrigger className="w-[200px] bg-background/50">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-card border-border-color">
                       {cities.map((city) => (
                         <SelectItem key={city.id} value={city.id}>
-                          {city.name}, {city.country}
+                          {city.name}
+                          {isZaragozaCityName(city.name) && !zaragozaUnlocked ? " (locked)" : ""}
+                          , {city.country}
                         </SelectItem>
                       ))}
                     </SelectContent>

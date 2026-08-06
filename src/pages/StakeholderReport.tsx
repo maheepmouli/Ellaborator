@@ -21,6 +21,8 @@ import {
   computeBaselineMainValue,
 } from "@/lib/kpiBaselineVersusIntervention";
 import { formatKpiFigure } from "@/lib/formatKpiFigure";
+import { ZaragozaAccessWall } from "@/components/ZaragozaPasswordGate";
+import { isZaragozaCityName, isZaragozaPilotId } from "@/lib/zaragozaAccess";
 
 /**
  * MVP print-friendly stakeholder summary — no speculative metrics beyond CITY_DATA + selected KPI labels.
@@ -33,6 +35,7 @@ const StakeholderReport = () => {
   const pilotName = params.get("pilotName") || "";
   const kpiId = params.get("kpi") || "kpi1.2";
   const scenario = (params.get("scenario") as "baseline" | "intervention" | "comparison") || "intervention";
+  const needsZaragozaGate = isZaragozaCityName(city) || isZaragozaPilotId(pilotId);
 
   const cityData = CITY_DATA.find((c) => c.city === city);
   const kpiMeta = ELABORATOR_KPIS.find((k) => k.id === kpiId);
@@ -144,7 +147,7 @@ const StakeholderReport = () => {
   ]);
 
   if (!cityData || !kpiMeta || !kpiValue) {
-    return (
+    const missing = (
       <div className="min-h-screen bg-background text-foreground">
         <Header />
         <main className="max-w-xl mx-auto p-8 report-print-root">
@@ -155,11 +158,16 @@ const StakeholderReport = () => {
         </main>
       </div>
     );
+    return needsZaragozaGate ? (
+      <ZaragozaAccessWall title="Zaragoza">{missing}</ZaragozaAccessWall>
+    ) : (
+      missing
+    );
   }
 
   const kd = getKpiDefinition(kpiId);
 
-  return (
+  const report = (
     <div className="min-h-screen bg-background text-foreground print:bg-white">
       <div className="print:hidden">
         <Header />
@@ -319,6 +327,12 @@ const StakeholderReport = () => {
         </section>
       </main>
     </div>
+  );
+
+  return needsZaragozaGate ? (
+    <ZaragozaAccessWall title="Zaragoza">{report}</ZaragozaAccessWall>
+  ) : (
+    report
   );
 };
 
