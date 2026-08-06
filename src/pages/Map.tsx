@@ -159,13 +159,7 @@ type DataQualitySummary = {
 const MapContent = () => {
   const intel = useMapIntelligence();
   // First visit: show how-to tour once; reopen anytime via "How to Use"
-  const [showTour, setShowTour] = useState(() => {
-    try {
-      return localStorage.getItem("elaborator-map-tour-seen") !== "1";
-    } catch {
-      return true;
-    }
-  });
+  const [showTour, setShowTour] = useState(true);
   const [selectedCity, setSelectedCity] = useState("");
   const [selectedPilot, setSelectedPilot] = useState<SelectedPilot | null>(null);
   const [zaragozaGateOpen, setZaragozaGateOpen] = useState(false);
@@ -1243,11 +1237,6 @@ const MapContent = () => {
 
   const handleTourClose = () => {
     setShowTour(false);
-    try {
-      localStorage.setItem("elaborator-map-tour-seen", "1");
-    } catch {
-      /* ignore */
-    }
   };
 
   const handleZoomIn = useCallback(() => {
