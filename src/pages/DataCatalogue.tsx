@@ -1,4 +1,4 @@
-﻿import { useState, useMemo } from "react";
+﻿import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -75,6 +75,7 @@ import {
   filterOutZaragozaCities,
   isZaragozaCityName,
   isZaragozaUnlocked,
+  lockZaragoza,
 } from "@/lib/zaragozaAccess";
 
 // ─── Badge helpers ────────────────────────────────────────────────────────────
@@ -720,6 +721,19 @@ const DataCatalogue = () => {
     [zaragozaUnlocked]
   );
 
+  useEffect(() => {
+    return () => {
+      lockZaragoza();
+    };
+  }, []);
+
+  const handleFiltersChange = (next: FilterState) => {
+    if (isZaragozaCityName(filters.city) && !isZaragozaCityName(next.city)) {
+      lockZaragoza();
+    }
+    setFilters(next);
+  };
+
   const { data: sharepointManifest } = useQuery({
     queryKey: ["sharepoint-manifest-full"],
     queryFn: fetchSharepointManifestFull,
@@ -953,7 +967,7 @@ const DataCatalogue = () => {
 
             <FilterBar
               filters={filters}
-              onChange={setFilters}
+              onChange={handleFiltersChange}
               cities={visibleCities}
               onRequestZaragozaUnlock={() => setZaragozaGateOpen(true)}
             />

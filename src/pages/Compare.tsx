@@ -30,7 +30,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { CITY_DATA, ELABORATOR_KPIS } from "@/data/kpiDefinitions";
 import { ZaragozaPasswordDialog } from "@/components/ZaragozaPasswordGate";
-import { isZaragozaCityName, isZaragozaUnlocked } from "@/lib/zaragozaAccess";
+import { isZaragozaCityName, isZaragozaUnlocked, lockZaragoza } from "@/lib/zaragozaAccess";
 import { useZaragozaUnlocked } from "@/hooks/useZaragozaUnlocked";
 
 const Compare = () => {
@@ -45,6 +45,9 @@ const Compare = () => {
       setPendingCity(city);
       setZaragozaGateOpen(true);
       return;
+    }
+    if (isZaragozaCityName(selectedCity) && !isZaragozaCityName(city)) {
+      lockZaragoza();
     }
     setSelectedCity(city);
   };

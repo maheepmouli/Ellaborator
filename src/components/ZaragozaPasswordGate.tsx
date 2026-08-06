@@ -66,7 +66,8 @@ export function ZaragozaPasswordDialog({
           </DialogTitle>
           <DialogDescription className="text-muted-foreground text-sm leading-relaxed">
             Zaragoza partners have restricted publication of this city’s data and visuals.
-            Enter the project password to unlock Zaragoza for this browser session.
+            Enter the project password to unlock Zaragoza. Access ends when you leave Zaragoza or
+            refresh the page.
           </DialogDescription>
         </DialogHeader>
 
@@ -126,9 +127,15 @@ export function ZaragozaAccessWall({
   title = "Zaragoza",
   showHeader = true,
 }: AccessWallProps) {
-  const { unlocked, tryUnlock } = useZaragozaUnlocked();
+  const { unlocked, tryUnlock, lock } = useZaragozaUnlocked();
   const [password, setPassword] = useState("");
   const [error, setError] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      lock();
+    };
+  }, [lock]);
 
   if (unlocked) return <>{children}</>;
 
@@ -152,7 +159,7 @@ export function ZaragozaAccessWall({
           <h1 className="text-2xl font-bold text-ink mb-2">{title} is password protected</h1>
           <p className="text-sm text-muted-foreground leading-relaxed mb-6">
             Zaragoza partners have restricted publication of this city’s data and visuals.
-            Enter the project password to continue.
+            Enter the project password to continue. Access ends when you leave or refresh.
           </p>
           <form onSubmit={submit} className="space-y-3">
             <Input

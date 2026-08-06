@@ -61,6 +61,7 @@ import {
   isZaragozaCityName,
   isZaragozaPilotId,
   isZaragozaUnlocked,
+  lockZaragoza,
 } from "@/lib/zaragozaAccess";
 import { ZaragozaPasswordDialog } from "@/components/ZaragozaPasswordGate";
 import type { MapSelectionState } from "@/types/mapSelection";
@@ -1260,6 +1261,9 @@ const MapContent = () => {
   const handleViewLevelChange = (level: ViewState) => {
     setViewLevel(level);
     if (level === "EUROPE") {
+      if (isZaragozaCityName(selectedCity)) {
+        lockZaragoza();
+      }
       setSelectedCity("");
       setSelectedPilot(null);
     }
@@ -1267,10 +1271,14 @@ const MapContent = () => {
 
   const applyCitySelect = useCallback(
     (city: string) => {
+      // Leaving Zaragoza requires a fresh password next time.
+      if (isZaragozaCityName(selectedCity) && !isZaragozaCityName(city)) {
+        lockZaragoza();
+      }
       setSelectedCity(city);
       setIntelCity(city);
     },
-    [setIntelCity]
+    [setIntelCity, selectedCity]
   );
 
   const handleCitySelect = (city: string) => {
@@ -1318,9 +1326,13 @@ const MapContent = () => {
 
   const applyPilotSelect = useCallback(
     (pilot: SelectedPilot | null) => {
-      setSelectedPilot(pilot);
       if (pilot) {
         const cityLabel = resolveCityLabelFromPilot(pilot);
+        // Switching away from a Zaragoza pilot re-locks access.
+        if (isZaragozaCityName(selectedCity) && !isZaragozaCityName(cityLabel)) {
+          lockZaragoza();
+        }
+        setSelectedPilot(pilot);
         setSelectedCity(cityLabel);
         setIntelCity(cityLabel);
         const nextKpi = resolvePilotDefaultKpi(pilot, selectedKpi);
@@ -1344,9 +1356,14 @@ const MapContent = () => {
           setMapContext(null);
           patchSelection({ segmentId: null });
         }
+      } else {
+        if (isZaragozaCityName(selectedCity) || isZaragozaPilotId(selectedPilot?.id)) {
+          lockZaragoza();
+        }
+        setSelectedPilot(null);
       }
     },
-    [resolveCityLabelFromPilot, setIntelCity, resolvePilotDefaultKpi, selectedKpi, setIntelKpiId, patchSelection, setSelectedJunctionSegmentId]
+    [resolveCityLabelFromPilot, setIntelCity, resolvePilotDefaultKpi, selectedKpi, setIntelKpiId, patchSelection, setSelectedJunctionSegmentId, selectedCity, selectedPilot?.id]
   );
 
   const handlePilotSelect = useCallback(

@@ -1,9 +1,25 @@
-/** Partner-restricted Zaragoza access (client gate for UI + visuals). */
+/** Partner-restricted Zaragoza access (client gate for UI + visuals).
+ * Unlock is in-memory only: refresh or leaving Zaragoza locks again.
+ */
 
 export const ZARAGOZA_PASSWORD = "ElaboratorDataVisTool";
 
-const STORAGE_KEY = "elaborator-zaragoza-unlocked";
+const LEGACY_STORAGE_KEY = "elaborator-zaragoza-unlocked";
 export const ZARAGOZA_UNLOCK_EVENT = "elaborator-zaragoza-unlock";
+export const ZARAGOZA_LOCK_EVENT = "elaborator-zaragoza-lock";
+
+/** Ephemeral unlock — cleared on refresh and when lockZaragoza() runs. */
+let zaragozaUnlockedInMemory = false;
+
+function clearLegacyStorage(): void {
+  try {
+    sessionStorage.removeItem(LEGACY_STORAGE_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
+clearLegacyStorage();
 
 export function isZaragozaCityName(city: string | null | undefined): boolean {
   return (city ?? "").toLowerCase().includes("zaragoza");
@@ -15,21 +31,24 @@ export function isZaragozaPilotId(pilotId: string | null | undefined): boolean {
 }
 
 export function isZaragozaUnlocked(): boolean {
-  try {
-    return sessionStorage.getItem(STORAGE_KEY) === "1";
-  } catch {
-    return false;
-  }
+  return zaragozaUnlockedInMemory;
 }
 
 export function unlockZaragoza(): void {
-  try {
-    sessionStorage.setItem(STORAGE_KEY, "1");
-  } catch {
-    /* ignore quota / private mode */
-  }
+  zaragozaUnlockedInMemory = true;
+  clearLegacyStorage();
   if (typeof window !== "undefined") {
     window.dispatchEvent(new Event(ZARAGOZA_UNLOCK_EVENT));
+  }
+}
+
+/** Re-lock Zaragoza (e.g. after leaving the city or ending the view). */
+export function lockZaragoza(): void {
+  if (!zaragozaUnlockedInMemory) return;
+  zaragozaUnlockedInMemory = false;
+  clearLegacyStorage();
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event(ZARAGOZA_LOCK_EVENT));
   }
 }
 
