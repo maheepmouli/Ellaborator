@@ -23,6 +23,7 @@ import { getIssyZoneCentroid, getIssyZoneCentroids } from "@/services/issyFlowDa
 import { isIssyCityWideModeSharePilot } from "@/data/issyPilotProfiles";
 import { useMilanEnvironmentSegments, useMilanSpeedSegments } from "@/hooks/use-milan-segment-data";
 import { getStoryPointsForPilot } from "@/data/storyConfig";
+import { getLeafletBasemap } from "@/lib/leafletBasemap";
 import { SEGMENT_PRESSURE_ITEMS } from "@/lib/mapLayerLegend";
 import { buildMilanSpeedLegendItems } from "@/lib/milanMapLayers";
 import { placeMilanZeroEmissionAlongNetwork, filterMilanFacilityPointsForScenario, aggregateMilanFacilitySiteKpi } from "@/data/milanZeroEmissionMock";
@@ -4650,9 +4651,12 @@ const HeroMap = ({
     setLeafletMapUi(map);
     onMapReady?.(map);
 
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-      attribution: "&copy; OpenStreetMap &copy; CARTO",
-      maxZoom: 19,
+    const basemap = getLeafletBasemap();
+    L.tileLayer(basemap.url, {
+      attribution: basemap.attribution,
+      maxZoom: basemap.maxZoom,
+      ...(basemap.maxNativeZoom != null ? { maxNativeZoom: basemap.maxNativeZoom } : {}),
+      ...(basemap.subdomains ? { subdomains: basemap.subdomains } : {}),
     }).addTo(map);
 
     addCityMarkers();
