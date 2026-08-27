@@ -30,19 +30,29 @@ export function ZaragozaPasswordDialog({
   const [password, setPassword] = useState("");
   const [error, setError] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const unlockedThisOpenRef = useRef(false);
 
   useEffect(() => {
     if (!open) return;
+    unlockedThisOpenRef.current = false;
     setPassword("");
     setError(false);
     const t = window.setTimeout(() => inputRef.current?.focus(), 50);
     return () => window.clearTimeout(t);
   }, [open]);
 
+  const dismiss = () => {
+    if (!unlockedThisOpenRef.current) {
+      onCancel?.();
+    }
+    onOpenChange(false);
+  };
+
   const submit = (e?: FormEvent) => {
     e?.preventDefault();
     if (tryUnlock(password)) {
       setError(false);
+      unlockedThisOpenRef.current = true;
       onOpenChange(false);
       onUnlocked?.();
       return;
@@ -54,8 +64,14 @@ export function ZaragozaPasswordDialog({
     <Dialog
       open={open}
       onOpenChange={(next) => {
-        if (!next) onCancel?.();
-        onOpenChange(next);
+        if (!next) {
+          if (!unlockedThisOpenRef.current) {
+            onCancel?.();
+          }
+          onOpenChange(false);
+          return;
+        }
+        onOpenChange(true);
       }}
     >
       <DialogContent className="max-w-md border-border-color bg-card sm:rounded-2xl">
@@ -91,14 +107,7 @@ export function ZaragozaPasswordDialog({
             </p>
           )}
           <div className="flex justify-end gap-2 pt-1">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => {
-                onCancel?.();
-                onOpenChange(false);
-              }}
-            >
+            <Button type="button" variant="ghost" onClick={dismiss}>
               Cancel
             </Button>
             <Button type="submit" className="bg-violet text-primary-foreground hover:bg-violet/90">

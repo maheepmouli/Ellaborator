@@ -24,6 +24,11 @@ import { isIssyCityWideModeSharePilot } from "@/data/issyPilotProfiles";
 import { useMilanEnvironmentSegments, useMilanSpeedSegments } from "@/hooks/use-milan-segment-data";
 import { getStoryPointsForPilot } from "@/data/storyConfig";
 import { getLeafletBasemap } from "@/lib/leafletBasemap";
+import {
+  isZaragozaCityName,
+  isZaragozaPilotId,
+  isZaragozaUnlocked,
+} from "@/lib/zaragozaAccess";
 import { SEGMENT_PRESSURE_ITEMS } from "@/lib/mapLayerLegend";
 import { buildMilanSpeedLegendItems } from "@/lib/milanMapLayers";
 import { placeMilanZeroEmissionAlongNetwork, filterMilanFacilityPointsForScenario, aggregateMilanFacilitySiteKpi } from "@/data/milanZeroEmissionMock";
@@ -4247,6 +4252,11 @@ const HeroMap = ({
       });
 
       marker.on("click", () => {
+        // Zaragoza is password-gated — do not enter city/pilot view until unlocked.
+        if (isZaragozaCityName(city.city) && !isZaragozaUnlocked()) {
+          onCitySelect?.(city.city);
+          return;
+        }
         setCurrentCity(city.city);
         setCurrentPilot(null);
         onPilotSelect?.(null);
@@ -4281,6 +4291,11 @@ const HeroMap = ({
             const pilotMarker = L.marker(spreadPts[pi], { icon }).addTo(mapRef.current);
             markersRef.current.push(pilotMarker);
             pilotMarker.on("click", () => {
+              if (isZaragozaCityName(city.city) && !isZaragozaUnlocked()) {
+                onPilotSelect?.(pilot);
+                onCitySelect?.(city.city);
+                return;
+              }
               setCurrentCity(city.city);
               setCurrentPilot(pilot);
               onPilotSelect?.(pilot);
@@ -4490,6 +4505,13 @@ const HeroMap = ({
               const pilotMarker = L.marker(spreadPts[pi], { icon }).addTo(mapRef.current);
               markersRef.current.push(pilotMarker);
               pilotMarker.on("click", () => {
+                if (
+                  (isZaragozaCityName(selectedCity) || isZaragozaPilotId(pilot.id)) &&
+                  !isZaragozaUnlocked()
+                ) {
+                  onPilotSelect?.(pilot);
+                  return;
+                }
                 setCurrentPilot(pilot);
                 onPilotSelect?.(pilot);
                 setViewLevel("PILOT_DATA");

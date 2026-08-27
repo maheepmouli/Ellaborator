@@ -1383,6 +1383,9 @@ const MapContent = () => {
   const handleZaragozaGateCancel = useCallback(() => {
     pendingZaragozaPilotRef.current = null;
     pendingZaragozaCityRef.current = null;
+    lockZaragoza();
+    // Map may have been mid-navigation; always return to Europe on cancel.
+    resetToEuropeRef.current?.();
   }, []);
 
   const handleSegmentHover = useCallback(
